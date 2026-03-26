@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 import java.util.Scanner;
 public class Bidder extends User {
     private double balance = 0; 
@@ -16,6 +16,6 @@ public class Bidder extends User {
         }
         else balance+=a;
     }
-    
+
     
 }

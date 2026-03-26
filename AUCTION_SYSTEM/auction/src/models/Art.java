@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 
 public class Art extends Item {
     String author;

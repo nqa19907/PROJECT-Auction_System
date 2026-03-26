@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 import java.time.LocalDateTime;
 public class BidTransaction {
     private String bidder;

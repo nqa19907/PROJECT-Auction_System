@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 public abstract class Item  {
     public String itemName;
     private double startPrice;

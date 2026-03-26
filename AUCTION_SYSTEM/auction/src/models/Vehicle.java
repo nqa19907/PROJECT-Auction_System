@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 public class Vehicle extends Item {
     public String vehicleBrand;
     public void getInfo(){

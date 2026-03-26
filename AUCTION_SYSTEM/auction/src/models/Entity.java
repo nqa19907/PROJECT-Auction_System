@@ -1,4 +1,4 @@
-package basicClasses;
+package models;
 public abstract class Entity{
     private String createdAt;
     private String id;
