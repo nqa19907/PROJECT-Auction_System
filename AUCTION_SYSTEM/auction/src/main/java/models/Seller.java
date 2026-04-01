@@ -1,21 +1,23 @@
 package models;
-import java.util.List;
-import java.util.ArrayList;
+
 public class Seller extends User {
     private double balance;
-    private List<Item> items = new ArrayList<>();
-    public Seller(String a,String b, String c, String d){
-        super(a, b, c, d);
+
+    public Seller(String username, String userId, String email, String password) {
+        super(username, userId, email, password);
     }
-    public void addItem(Item i){
-        items.add(i);
-    }
-    public double getBalance(){
+
+    public double getBalance() {
         return balance;
     }
-    public void getItems(){
-        for (Item i : items){
-            System.out.printf("",i.itemName,i.getStartPrice());
-        }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    @Override
+    public String toString(){
+        return "userId: " + getUserId() + ", username: " + getUsername() + ", password: " + getPassword() + ", email:"
+                + getEmail() + ", balance:" + getBalance();
     }
 }

@@ -2,16 +2,24 @@ package models;
 
 public class Art extends Item {
     String author;
-    String electronicBrand;
 
-    public Art(String itemName, String itemId, String author, Double startPrice) {
+    public Art(String itemName, String itemId, Double startPrice, String author) {
         super(itemName, itemId, startPrice);
         this.author = author;
     }
 
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
     @Override
-    public void getInfo() {
-        System.out.printf("name:%d id:%d% author:%d price:%f\n", getItemId(), itemName, author, getStartPrice());
+    public String toString() {
+        return "itemId: " + getItemId() + ", itemName: " + getItemId() + ", currentPrice: " + getCurrentPrice()
+                + ", author:" + getAuthor();
     }
 
 }

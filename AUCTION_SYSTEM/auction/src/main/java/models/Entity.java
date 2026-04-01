@@ -20,7 +20,6 @@ public abstract class Entity {
         return createdAt;
     }
 
-    public abstract void printInfo();
 
     @Override
     public String toString() {
