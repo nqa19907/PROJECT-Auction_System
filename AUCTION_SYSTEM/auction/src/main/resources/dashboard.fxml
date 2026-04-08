@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.chart.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      spacing="16"
+      style="-fx-padding: 24; -fx-background-color: #F0F2F5;">
+
+    <!-- HEADER -->
+    <HBox alignment="CENTER_LEFT">
+        <Label text="Auction Dashboard"
+               HBox.hgrow="ALWAYS"
+               style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <Label fx:id="lblDateTime" text="08/04/2026"
+               style="-fx-font-size: 13px; -fx-text-fill: #888;"/>
+    </HBox>
+
+    <!-- METRIC CARDS -->
+    <HBox spacing="12">
+        <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" spacing="6"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Phien Dau Gia" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblAuction" text="148" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="+12 tuan nay" style="-fx-font-size: 11px; -fx-text-fill: #2e7d32;"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" spacing="6"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Nguoi Dau Gia (Bidder)" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblBidder" text="2,340" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="+87 moi" style="-fx-font-size: 11px; -fx-text-fill: #2e7d32;"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" spacing="6"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Nguoi Ban (Seller)" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblSeller" text="512" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="+24 moi" style="-fx-font-size: 11px; -fx-text-fill: #2e7d32;"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" spacing="6"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Giao Dich (BidTransaction)" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblTransaction" text="6,892" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="+341 hom nay" style="-fx-font-size: 11px; -fx-text-fill: #2e7d32;"/>
+        </VBox>
+
+        <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" spacing="6"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Nguoi Dung (User)" style="-fx-font-size: 12px; -fx-text-fill: #888;"/>
+            <Label fx:id="lblUser" text="2,852" style="-fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <Label text="+111 moi" style="-fx-font-size: 11px; -fx-text-fill: #2e7d32;"/>
+        </VBox>
+    </HBox>
+
+    <!-- CHARTS ROW -->
+    <HBox spacing="12">
+        <VBox HBox.hgrow="ALWAYS" spacing="8"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Doanh Thu Theo Thang"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <BarChart fx:id="revenueChart" prefHeight="220" legendVisible="false"
+                      style="-fx-background-color: transparent; -fx-border-width: 0;">
+                <xAxis><CategoryAxis fx:id="xAxis"/></xAxis>
+                <yAxis><NumberAxis fx:id="yAxis"/></yAxis>
+            </BarChart>
+        </VBox>
+
+        <VBox prefWidth="260" spacing="8"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Loai Vat Pham (Item)"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <PieChart fx:id="itemChart" prefHeight="180" legendVisible="false"
+                      style="-fx-background-color: transparent; -fx-border-width: 0;"/>
+            <VBox spacing="4">
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <Rectangle width="10" height="10" fill="#1565C0"/>
+                    <Label text="Electronic (38%)" style="-fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <Rectangle width="10" height="10" fill="#2E7D32"/>
+                    <Label text="Vehicle (27%)" style="-fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <Rectangle width="10" height="10" fill="#E65100"/>
+                    <Label text="Art (20%)" style="-fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="6" alignment="CENTER_LEFT">
+                    <Rectangle width="10" height="10" fill="#888888"/>
+                    <Label text="Khac (15%)" style="-fx-font-size: 12px;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </HBox>
+
+    <!-- AUCTION TABLE -->
+    <VBox spacing="8"
+          style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Danh Sach Auction" HBox.hgrow="ALWAYS"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <Button fx:id="btnAddAuction" text="+ Them Phien"/>
+        </HBox>
+        <TableView fx:id="auctionTable" prefHeight="180">
+            <columns>
+                <TableColumn fx:id="colAuctionId"   text="ID"            prefWidth="60"/>
+                <TableColumn fx:id="colAuctionName" text="Ten Phien"     prefWidth="200"/>
+                <TableColumn fx:id="colSeller"      text="Seller"        prefWidth="130"/>
+                <TableColumn fx:id="colStartPrice"  text="Gia Khoi Diem" prefWidth="130"/>
+                <TableColumn fx:id="colCurrentBid"  text="Gia Hien Tai"  prefWidth="130"/>
+                <TableColumn fx:id="colStatus"      text="Trang Thai"    prefWidth="100"/>
+                <TableColumn fx:id="colEndTime"     text="Ket Thuc"      prefWidth="130"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- BOTTOM ROW -->
+    <HBox spacing="12">
+        <VBox HBox.hgrow="ALWAYS" spacing="8"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Giao Dich Gan Day (BidTransaction)"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <TableView fx:id="transactionTable" prefHeight="160">
+                <columns>
+                    <TableColumn fx:id="colTxId"      text="Ma GD"     prefWidth="80"/>
+                    <TableColumn fx:id="colTxBidder"  text="Bidder"    prefWidth="120"/>
+                    <TableColumn fx:id="colTxAuction" text="Auction"   prefWidth="150"/>
+                    <TableColumn fx:id="colTxAmount"  text="So Tien"   prefWidth="110"/>
+                    <TableColumn fx:id="colTxTime"    text="Thoi Gian" prefWidth="120"/>
+                    <TableColumn fx:id="colTxWin"     text="Thang"     prefWidth="70"/>
+                </columns>
+            </TableView>
+        </VBox>
+
+        <VBox prefWidth="260" spacing="8"
+              style="-fx-background-color: white; -fx-padding: 16; -fx-background-radius: 8; -fx-border-color: #DDD; -fx-border-radius: 8; -fx-border-width: 1;">
+            <Label text="Top Bidder"
+                   style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <ListView fx:id="topBidderList" prefHeight="160"/>
+        </VBox>
+    </HBox>
+
+</VBox>
