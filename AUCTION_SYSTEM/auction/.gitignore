@@ -7,9 +7,18 @@ target/
 
 .idea/
 .vscode/
+
 target/
 **/target/
+
 *.class
+*.log
+
+.project
+.classpath
+.settings/
+
+.DS_Store 
 
 .vscode/
 
