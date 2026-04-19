@@ -5,6 +5,21 @@ target/
 *.jar
 *.war
 
+.idea/
+.vscode/
+
+target/
+**/target/
+
+*.class
+*.log
+
+.project
+.classpath
+.settings/
+
+.DS_Store 
+
 .vscode/
 
 .idea/
