@@ -1,0 +1,17 @@
+# Compiled Java files
+*.class
+
+# Maven build output (thư mục target bạn đang có)
+target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Maven wrapper (tuỳ, có thể giữ hoặc bỏ)
+# .mvn/
+
+# OS files
+.DS_Store
+Thumbs.db

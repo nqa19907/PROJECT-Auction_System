@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.shape.*?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml/1"
+           prefWidth="360" prefHeight="720"
+           style="-fx-background-color: #1565C0;">
+
+    <!-- Sóng nước phía trên (giả lập bằng Rectangle bo góc) -->
+    <VBox alignment="BOTTOM_CENTER">
+        <Ellipse radiusX="300" radiusY="80"
+                 style="-fx-fill: #1976D2;"
+                 translateY="40"/>
+    </VBox>
+
+    <VBox alignment="TOP_LEFT" spacing="0">
+        <!-- Logo -->
+        <Label text="vwater"
+               style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 20 0 0 20;"/>
+
+        <!-- Bong bóng trang trí (dùng Circle) -->
+        <StackPane prefHeight="380">
+            <Circle radius="60" style="-fx-fill: #1976D2;" translateX="-60" translateY="-40"/>
+            <Circle radius="30" style="-fx-fill: #1976D2;" translateX="100" translateY="-80"/>
+            <Circle radius="20" style="-fx-fill: #0D47A1;" translateX="60" translateY="20"/>
+            <Circle radius="45" style="-fx-fill: #0D47A1;" translateX="-100" translateY="60"/>
+        </StackPane>
+    </VBox>
+
+    <!-- Nội dung dưới (phần trắng) -->
+    <VBox alignment="BOTTOM_CENTER">
+        <VBox alignment="CENTER" spacing="14"
+              style="-fx-background-color: white; -fx-background-radius: 30 30 0 0; -fx-padding: 40 30 40 30;">
+
+            <!-- Title -->
+            <Label text="Water delivery"
+                   style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+            <Label text="We deliver water at any point of the Earth&#10;in 30 minutes"
+                   style="-fx-font-size: 12; -fx-text-fill: #999; -fx-text-alignment: center;"
+                   wrapText="true" maxWidth="260" alignment="CENTER"/>
+
+            <!-- Nút Log In -->
+            <Button text="Log In"
+                    prefWidth="280" prefHeight="45"
+                    style="-fx-background-color: #1565C0; -fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 25; -fx-cursor: hand;"/>
+
+            <!-- Nút Sign Up -->
+            <Button text="Sign up"
+                    prefWidth="280" prefHeight="45"
+                    style="-fx-background-color: transparent; -fx-text-fill: #1565C0; -fx-font-size: 15; -fx-background-radius: 25; -fx-border-color: #1565C0; -fx-border-radius: 25; -fx-cursor: hand;"/>
+        </VBox>
+    </VBox>
+
+</StackPane>
