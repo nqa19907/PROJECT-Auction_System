@@ -5,6 +5,12 @@ target/
 *.jar
 *.war
 
+.idea/
+.vscode/
+target/
+**/target/
+*.class
+
 .vscode/
 
 .idea/
