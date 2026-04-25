@@ -3,6 +3,8 @@ package auction_system.common.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import auction_system.common.exceptions.InvalidItemException;
+
 public class Seller extends Participant {
     private float rating;
     private List<Item> managedItems;
@@ -19,7 +21,7 @@ public class Seller extends Participant {
 
     public void listItemForAuction(Item item) {
         if (item == null) {
-            throw new IllegalArgumentException("Sản phẩm không hợp lệ!");
+            throw new InvalidItemException("Sản phẩm không hợp lệ!");
         }
 
         // Đảm bảo item do chính seller này sở hữu
@@ -31,7 +33,7 @@ public class Seller extends Participant {
         // Hàm remove tự động trả về true nếu xóa thành công, false nếu không có trong list
         boolean removed = this.managedItems.remove(item);
         if (!removed) {
-            throw new IllegalArgumentException("Không tìm thấy sản phẩm này trong danh sách của bạn.");
+            throw new InvalidItemException("Không tìm thấy sản phẩm này trong danh sách của bạn.");
         }
     }
 

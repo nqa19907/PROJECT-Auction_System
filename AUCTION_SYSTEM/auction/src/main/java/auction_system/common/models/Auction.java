@@ -2,6 +2,8 @@ package auction_system.common.models;
 
 import auction_system.common.enums.AuctionStatus;
 import auction_system.common.patterns.observer.AuctionObserver;
+import auction_system.common.exceptions.AuctionClosedException;
+import auction_system.common.exceptions.InvalidBidException;
 
 import java.util.List;
 import java.time.LocalDateTime;
@@ -30,10 +32,10 @@ public class Auction extends Entity {
         this.status = AuctionStatus.OPEN;
     }
 
-    public synchronized boolean placeBid(BidTransaction bid) {
+    public synchronized void placeBid(BidTransaction bid) {
         // 1. Kiểm tra trạng thái phiên đấu giá
         if (this.status != AuctionStatus.RUNNING) {
-            throw new IllegalStateException("Phiên đấu giá này không ở trạng thái mở");
+            throw new AuctionClosedException("Phiên đấu giá này không ở trạng thái mở hoặc đã đóng!");
         }
 
         double newAmount = bid.getAmount();
@@ -41,7 +43,7 @@ public class Auction extends Entity {
 
         // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
         if (newAmount <= currentHighest) {
-            return false;
+            throw new InvalidBidException("Giá đặt phải lớn hơn giá cao nhất hiện tại (" + currentHighest + ")");
         }
 
         // 3. Cập nhật thông tin giá mới nhất
@@ -51,7 +53,6 @@ public class Auction extends Entity {
 
         // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
         notifyObservers();
-        return true;
     }
 
     public Bidder calculateWinner() {
