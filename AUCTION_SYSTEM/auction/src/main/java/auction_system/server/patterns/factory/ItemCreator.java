@@ -1,7 +1,8 @@
 package auction_system.server.patterns.factory;
 
 import auction_system.common.models.Item;
+import java.util.Map;
 
 public interface ItemCreator {
-    public Item createItem();
+    Item createItem(Map<String, Object> properties);
 }

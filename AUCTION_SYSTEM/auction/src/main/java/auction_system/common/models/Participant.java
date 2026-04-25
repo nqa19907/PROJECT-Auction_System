@@ -11,17 +11,19 @@ public abstract class Participant extends User implements AuctionObserver {
     }
 
     public void addFunds(double amount) {
-        // to be coded
+        if  (amount <= 0) {
+            throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0");
+        }
+        this.balance += amount;
     }
 
     public boolean withdrawFunds(double amount) {
-        // to be coded
-        return true;
-    }
+        if (amount <= 0 || this.balance < amount) {
+            return false;
+        }
 
-    @Override
-    public void displayDashboard() {
-        // to be coded
+        this.balance -= amount;
+        return true;
     }
 
     public double getBalance() {

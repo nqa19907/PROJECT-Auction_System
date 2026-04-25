@@ -8,11 +8,6 @@ public class Admin extends User {
     }
 
     @Override
-    public void displayDashboard() {
-
-    }
-
-    @Override
     public void update(String msg) {
 
     }

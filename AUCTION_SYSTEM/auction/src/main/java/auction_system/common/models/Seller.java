@@ -7,6 +7,9 @@ public class Seller extends Participant {
     private float rating;
     private List<Item> managedItems;
 
+    @Override
+    public void update(String message) {}
+
     public Seller(String username, String email, String password, double balance,
                   float rating) {
         super(username, email, password, balance);
@@ -14,25 +17,22 @@ public class Seller extends Participant {
         managedItems = new ArrayList<>();
     }
 
-    @Override
-    public void displayDashboard() {
-        // to be coded
+    public void listItemForAuction(Item item) {
+        if (item == null) {
+            throw new IllegalArgumentException("Sản phẩm không hợp lệ!");
+        }
+
+        // Đảm bảo item do chính seller này sở hữu
+        item.setSellerId(this.getId());
+        this.managedItems.add(item);
     }
 
-    public void createAuction (Item item) {
-        // to be coded
-    }
-
-    public void updateAuction(Item item) {
-        // to be coded
-    }
-
-    public void deleteAuction(Item item) {
-        // to be coded
-    }
-
-    public void endAuction(Item item) {
-        // to be coded
+    public void delistItem(Item item) {
+        // Hàm remove tự động trả về true nếu xóa thành công, false nếu không có trong list
+        boolean removed = this.managedItems.remove(item);
+        if (!removed) {
+            throw new IllegalArgumentException("Không tìm thấy sản phẩm này trong danh sách của bạn.");
+        }
     }
 
     public float getRating() {

@@ -11,45 +11,110 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Auction extends Entity {
     private Item item;
     private Seller seller;
-    private List<BidTransaction> bids;
+    private final List<BidTransaction> bids;
     private BidTransaction currentHighestBid;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private AuctionStatus status;
-    private List<AuctionObserver> observers;
+    private final List<AuctionObserver> observers;
 
-    public Auction(Item item, Seller seller, LocalDateTime startTime) {
+    public Auction(Item item, Seller seller, LocalDateTime startTime, LocalDateTime endTime) {
         super();
         this.item = item;
         this.seller = seller;
         this.startTime = startTime;
+        this.endTime = endTime;
 
         this.bids = new ArrayList<>();
         this.observers = new CopyOnWriteArrayList<>();
+        this.status = AuctionStatus.OPEN;
     }
 
-    public boolean placeBid(BidTransaction bid) {
-        // to be coded
+    public synchronized boolean placeBid(BidTransaction bid) {
+        // 1. Kiểm tra trạng thái phiên đấu giá
+        if (this.status != AuctionStatus.RUNNING) {
+            throw new IllegalStateException("Phiên đấu giá này không ở trạng thái mở");
+        }
+
+        double newAmount = bid.getAmount();
+        double currentHighest = (currentHighestBid != null) ? currentHighestBid.getAmount() : item.getStartPrice();
+
+        // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
+        if (newAmount <= currentHighest) {
+            return false;
+        }
+
+        // 3. Cập nhật thông tin giá mới nhất
+        this.currentHighestBid = bid;
+        this.bids.add(bid);
+        this.item.setCurrentPrice(newAmount);
+
+        // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
+        notifyObservers();
         return true;
     }
 
     public Bidder calculateWinner() {
-        // to be coded
+        // Chỉ được tiính người thắng khi phiên đấu giá đã kết thúc
+        if (this.status != AuctionStatus.FINISHED) {
+            throw new IllegalStateException("Phiên đấu giá chưa kết thúc, chưa thể tìm được người thắng!");
+        }
+
+        if (this.currentHighestBid != null) {
+            return currentHighestBid.getBidder();
+        }
+
+        // Trường hợp không ai đặt giá
         return null;
     }
 
+    // Thêm người theo dõi
     public void attach(AuctionObserver observer) {
-        // to be coded
-
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+        }
     }
 
+    // Gỡ người theo dõi
     public void detach(AuctionObserver observer) {
-        // to be coded
+        observers.remove(observer);
     }
 
     public void notifyObservers() {
-        // to be coded
+        // Đóng gói thông báo thành một chuỗi chuẩn để đẩy qua Socket
+        // (UPDATE_PRICE|giá_mới)
+        double currentPrice = (currentHighestBid != null) ? currentHighestBid.getAmount() : item.getStartPrice();
+        String message = "UPDATE_PRICE|" + this.getId() + "|" + currentPrice;
 
+        for (AuctionObserver observer :  observers) {
+            observer.update(message);
+        }
+    }
+
+    public void notifyObservers(String message) {
+        for (AuctionObserver observer :  observers) {
+            observer.update(message);
+        }
+    }
+
+    public void startAuction() {
+        // Chỉ bắt đầu khi đang OPEN và đã tới giờ bắt đầu
+        if (this.status == AuctionStatus.OPEN && LocalDateTime.now().isAfter(startTime)) {
+            setStatus(AuctionStatus.RUNNING);
+            String message = "AUCTION_STARTED|" + this.getId();
+            notifyObservers(message);
+        }
+    }
+
+    public void endAuction() {
+        // Chỉ kết thúc khi đang RUNNING và đã qua giờ kết thúc
+        if (this.status == AuctionStatus.RUNNING && LocalDateTime.now().isAfter(this.endTime)) {
+            setStatus(AuctionStatus.FINISHED);
+            Bidder winner = calculateWinner();
+            String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";
+            String message = "AUCTION_ENDED|" + this.getId() + "|" + winnerUsername;
+            notifyObservers(message);
+        }
     }
 
     public Seller getSeller() {

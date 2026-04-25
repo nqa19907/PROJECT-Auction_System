@@ -16,8 +16,9 @@ public class Art extends Item {
 
     @Override
     public String getDisplayDetails() {
-        // to be coded
-        return "";
+        String certificate = hasAuthenticityCertificate ? "Đã xác thực" : "Chưa xác thực";
+        return String.format("Nghệ thuật: %s | Nghệ sĩ: %s | Năm sáng tác: %s | Chứng nhận: %s",
+                getItemName(), this.artistName, this.creationYear, certificate);
     }
 
     public String getArtistName() {
