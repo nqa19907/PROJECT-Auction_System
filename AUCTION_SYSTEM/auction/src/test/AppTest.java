@@ -1,5 +1,4 @@
-package auction_system;
-
+package com.auction.client;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
