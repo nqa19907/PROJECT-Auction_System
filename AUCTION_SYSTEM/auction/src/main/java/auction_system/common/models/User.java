@@ -1,7 +1,6 @@
 package auction_system.common.models;
 
 import auction_system.common.patterns.observer.AuctionObserver;
-
 public abstract class User extends Entity implements AuctionObserver {
     private String username;
     // PASSWORD SHOULD BE HASHED

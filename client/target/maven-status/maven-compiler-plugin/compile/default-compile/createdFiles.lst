@@ -1,0 +1,4 @@
+com\auction\client\controller\RegisterController.class
+com\auction\client\controller\LoginController.class
+com\auction\client\App.class
+com\auction\client\controller\DashboardController.class
