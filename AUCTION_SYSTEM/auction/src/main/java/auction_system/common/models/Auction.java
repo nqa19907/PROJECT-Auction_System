@@ -1,6 +1,7 @@
-package com.auction.shared.model;
+package auction_system.common.models;
 
-import com.auction.shared.enums.AuctionStatus;import com.auction.shared.patterns.AuctionObserver;
+import auction_system.common.enums.AuctionStatus;
+import auction_system.common.patterns.observer.AuctionObserver;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

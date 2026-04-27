@@ -1,4 +1,4 @@
-package com.auction.shared.model;
+package auction_system.common.models;
 
 public class Vehicle extends Item {
     private String make;

@@ -1,4 +1,4 @@
-package com.auction.shared.model;
+package auction_system.common.models;
 
 public class Bidder extends Participant {
     public Bidder(String username, String email, String password, double balance) {

@@ -1,4 +1,4 @@
-package com.auction.client.controller;
+package auction_system.client.controllers;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,44 +9,46 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import java.io.IOException;
 
-public class LoginController {
+public class RegisterController {
 
+    @FXML private TextField nameField;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     @FXML private Label errorLabel;
 
     @FXML
-    private void handleLogin() {
+    private void handleRegister() {
+        String name     = nameField.getText().trim();
         String email    = emailField.getText().trim();
         String password = passwordField.getText();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            showError("Vui lòng nhập email và mật khẩu.");
+        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showError("Vui lòng điền đầy đủ thông tin.");
+            return;
+        }
+        if (!email.contains("@")) {
+            showError("Email không hợp lệ.");
+            return;
+        }
+        if (password.length() < 6) {
+            showError("Mật khẩu phải có ít nhất 6 ký tự.");
             return;
         }
 
-        if (email.equals("admin@auction.com") && password.equals("123456")) {
-            navigateTo("/fxml/dashboard.fxml", "Dashboard");
-        } else {
-            showError("Email hoặc mật khẩu không đúng.");
-        }
+        System.out.println("Đăng ký: " + name + " | " + email);
+        navigateTo("/fxml/login.fxml", "Đăng nhập");
     }
 
     @FXML
-    private void handleGoToRegister() {
-        navigateTo("/fxml/register.fxml", "Đăng ký");
-    }
-
-    @FXML
-    private void handleForgotPassword() {
-        showError("Tính năng đang phát triển.");
+    private void handleGoToLogin() {
+        navigateTo("/fxml/login.fxml", "Đăng nhập");
     }
 
     private void navigateTo(String path, String title) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             Parent root = loader.load();
-            Stage stage = (Stage) emailField.getScene().getWindow();
+            Stage stage = (Stage) nameField.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle(title);
         } catch (IOException e) {
@@ -61,4 +63,3 @@ public class LoginController {
         }
     }
 }
-

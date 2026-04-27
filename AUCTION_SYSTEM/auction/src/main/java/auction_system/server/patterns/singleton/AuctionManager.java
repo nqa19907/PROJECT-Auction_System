@@ -1,7 +1,7 @@
 package auction_system.server.patterns.singleton;
 
-import com.auction.shared.model.Auction;
-import com.auction.shared.model.User;
+import auction_system.common.models.Auction;
+import auction_system.common.models.User;
 
 import java.util.List;
 import java.util.Map;

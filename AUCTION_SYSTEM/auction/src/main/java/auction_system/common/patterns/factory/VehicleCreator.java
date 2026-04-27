@@ -1,6 +1,6 @@
-package com.auction.server.patterns.factory;
-import com.auction.shared.model.Item;
-import com.auction.shared.model.Vehicle;
+package auction_system.common.patterns.factory;
+import auction_system.common.models.Item;
+import auction_system.common.models.Vehicle;
 
 public class VehicleCreator implements ItemCreator {
     @Override

@@ -1,6 +1,6 @@
-package com.auction.server.patterns.factory;
-import com.auction.shared.model.Electronic;
-import com.auction.shared.model.Item;
+package auction_system.common.patterns.factory;
+import auction_system.common.models.Electronic;
+import auction_system.common.models.Item;
 
 public class ElectronicCreator implements ItemCreator {
     @Override

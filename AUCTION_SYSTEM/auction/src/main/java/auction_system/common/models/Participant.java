@@ -1,7 +1,6 @@
-package com.auction.shared.model;
+package auction_system.common.models;
 
-import com.auction.shared.patterns.AuctionObserver;
-public abstract class Participant extends User implements AuctionObserver {
+public abstract class Participant extends User  {
     protected double balance;
 
     public Participant(String username, String password, String email, double balance) {

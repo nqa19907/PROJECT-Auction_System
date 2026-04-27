@@ -1,4 +1,4 @@
-package com.auction.shared.model;
+package auction_system.common.models;
 
 public abstract class Item extends Entity {
     private String itemName;

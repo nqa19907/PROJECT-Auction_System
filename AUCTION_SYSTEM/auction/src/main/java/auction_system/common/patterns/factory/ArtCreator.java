@@ -1,6 +1,6 @@
-package com.auction.server.patterns.factory;
-import com.auction.shared.model.Art;
-import com.auction.shared.model.Item;
+package auction_system.common.patterns.factory;
+import auction_system.common.models.Art;
+import auction_system.common.models.Item;
 
 public class ArtCreator implements ItemCreator {
     @Override
