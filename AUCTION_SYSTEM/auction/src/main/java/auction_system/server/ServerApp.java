@@ -1,7 +1,5 @@
-package auction_system;
-
+package auction_system.server;
 import javafx.application.Application;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,7 +8,7 @@ import javafx.stage.Stage;
 /**
  * This is the main application class for the auction system.
  */
-public class App extends Application {
+public class ServerApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/dashboard.fxml"));

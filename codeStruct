@@ -1,0 +1,45 @@
+AUCTION_SYSTEM/
+└── auction/
+    ├── src/
+    │   ├── main/
+    │   │   ├── java/
+    │   │   │   └── auction_system/
+    │   │   │       ├── common/              # SHARED CODE
+    │   │   │       │   ├── models/          # Entity classes
+    │   │   │       │   ├── enums/           # AuctionStatus, UserRole...
+    │   │   │       │   ├── dto/             # Data Transfer Objects
+    │   │   │       │   ├── exceptions/      # Custom exceptions
+    │   │   │       │   └── patterns/
+    │   │   │       │       ├── observer/    # Observer interfaces (shared)
+    │   │   │       │       └── factory/     # ItemFactory
+    │   │   │       │
+    │   │   │       ├── server/              # SERVER CODE
+    │   │   │       │   ├── ServerApp.java
+    │   │   │       │   ├── controllers/     # API/Socket handlers
+    │   │   │       │   ├── services/        # Business logic
+    │   │   │       │   ├── dao/             # Database access
+    │   │   │       │   └── patterns/
+    │   │   │       │       ├── singleton/   # AuctionManager, DBConnection
+    │   │   │       │       └── observer/    # Server-side observers
+    │   │   │       │
+    │   │   │       └── client/              # CLIENT CODE (JavaFX)
+    │   │   │           ├── ClientApp.java
+    │   │   │           ├── controllers/     # JavaFX Controllers
+    │   │   │           ├── services/        # ServerConnection
+    │   │   │           └── patterns/
+    │   │   │               └── singleton/   # SessionManager, ServerConnection
+    │   │   │
+    │   │   └── resources/
+    │   │       ├── server/                  # Server configs
+    │   │       │   └── application.properties
+    │   │       └── client/                  # JavaFX resources
+    │   │           ├── fxml/                # Login.fxml, Dashboard.fxml...
+    │   │           ├── css/
+    │   │           └── images/
+    │   │
+    │   └── test/
+    │       └── java/auction_system/
+    │
+    ├── pom.xml
+    ├── .gitignore
+    └── README.md
