@@ -1,5 +1,0 @@
-com\auction\server\patterns\factory\ItemCreator.class
-com\auction\server\patterns\factory\VehicleCreator.class
-com\auction\server\patterns\factory\ArtCreator.class
-auction_system\server\patterns\singleton\AuctionManager.class
-com\auction\server\patterns\factory\ElectronicCreator.class
