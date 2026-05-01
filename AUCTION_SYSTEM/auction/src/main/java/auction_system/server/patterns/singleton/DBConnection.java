@@ -1,5 +1,8 @@
 package auction_system.server.patterns.singleton;
 
-public class DBConnection {
+/**
+ * Lớp quản lý kết nối cơ sở dữ liệu áp dụng mẫu thiết kế Singleton.
+ */
+public class DbConnection {
     
 }
