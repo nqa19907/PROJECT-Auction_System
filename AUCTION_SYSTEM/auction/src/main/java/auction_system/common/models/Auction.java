@@ -54,12 +54,12 @@ public class Auction extends Entity {
                     "Phiên đấu giá này không ở trạng thái mở hoặc đã đóng!");
         }
 
-        double newAmount = bid.getAmount();
+        double newBidAmount = bid.getAmount();
         double currentHighest = (currentHighestBid != null) 
                 ? currentHighestBid.getAmount() : item.getStartPrice();
 
         // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
-        if (newAmount <= currentHighest) {
+        if (newBidAmount <= currentHighest) {
             throw new InvalidBidException(
                     "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + currentHighest + ")");
         }
@@ -67,7 +67,7 @@ public class Auction extends Entity {
         // 3. Cập nhật thông tin giá mới nhất
         this.currentHighestBid = bid;
         this.bids.add(bid);
-        this.item.setCurrentPrice(newAmount);
+        this.item.setCurrentPrice(newBidAmount);
 
         // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
         notifyObservers();
@@ -144,7 +144,7 @@ public class Auction extends Entity {
      */
     public void startAuction() {
         // Chỉ bắt đầu khi đang OPEN và đã tới giờ bắt đầu
-        if (this.status == AuctionStatus.OPEN && LocalDateTime.now().isAfter(startTime)) {
+        if (this.status == AuctionStatus.OPEN && !LocalDateTime.now().isBefore(startTime)) {
             setStatus(AuctionStatus.RUNNING);
             String message = "AUCTION_STARTED|" + this.getId();
             notifyObservers(message);
@@ -156,7 +156,7 @@ public class Auction extends Entity {
      */
     public void endAuction() {
         // Chỉ kết thúc khi đang RUNNING và đã qua giờ kết thúc
-        if (this.status == AuctionStatus.RUNNING && LocalDateTime.now().isAfter(this.endTime)) {
+        if (this.status == AuctionStatus.RUNNING && !LocalDateTime.now().isBefore(this.endTime)) {
             setStatus(AuctionStatus.FINISHED);
             Bidder winner = calculateWinner();
             String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";

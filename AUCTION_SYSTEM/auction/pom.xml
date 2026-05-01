@@ -4,23 +4,38 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- Thông tin định danh của dự án trên Maven -->
   <groupId>auction_system</groupId>
   <artifactId>auction</artifactId>
   <version>1.4</version>
   <name>auction</name>
 
   <properties>
+    <!-- Thiết lập bộ mã hóa ký tự và phiên bản Java cho dự án -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
   </properties>
 
   <dependencies>
+    <!-- Thư viện Logging (Ghi log): Giúp theo dõi quá trình hoạt động của hệ thống -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>2.0.12</version>
+    </dependency>
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.5.3</version>
+    </dependency>
+    <!-- Thư viện JUnit 5: Phục vụ việc viết và chạy các bài kiểm thử (Unit Test) -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.10.2</version>
       <scope>test</scope>
     </dependency>
+    <!-- Các thư viện JavaFX: Thành phần cốt lõi để xây dựng giao diện người dùng (GUI) -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
@@ -40,6 +55,7 @@
 
   <build>
     <plugins>
+      <!-- Plugin JavaFX: Hỗ trợ chạy ứng dụng JavaFX trực tiếp qua Maven -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
@@ -52,6 +68,7 @@
           </options>
         </configuration>
       </plugin>
+      <!-- Plugin Checkstyle: Tự động kiểm tra xem mã nguồn có tuân thủ chuẩn lập trình không -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -72,6 +89,7 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Plugin Surefire: Chạy các bài kiểm thử tự động trong quá trình xây dựng dự án -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
