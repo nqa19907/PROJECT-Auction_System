@@ -1,11 +1,9 @@
 package auction_system.common.models;
 
-import auction_system.common.patterns.observer.AuctionObserver;
-
 /**
  * Lớp đại diện cho người tham gia hệ thống, có tài khoản và số dư.
  */
-public abstract class Participant extends User implements AuctionObserver {
+public abstract class Participant extends User {
     protected double balance;
 
     /**

@@ -7,7 +7,6 @@ import auction_system.common.patterns.observer.AuctionObserver;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
