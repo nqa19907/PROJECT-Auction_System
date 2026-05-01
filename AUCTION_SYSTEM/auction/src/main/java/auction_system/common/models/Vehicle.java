@@ -17,8 +17,8 @@ public class Vehicle extends Item {
 
     @Override
     public String getDisplayDetails() {
-        // to be coded
-        return "";
+        return String.format("Xe: %s | Hãng: %s | Model: %s | Đời: %d | ODO: %,.1f km",
+                getItemName(), this.make, this.model, this.manufacturingYear, this.mileage);
     }
 
     public String getMake() {

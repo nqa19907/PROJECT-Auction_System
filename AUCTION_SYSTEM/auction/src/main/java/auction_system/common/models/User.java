@@ -16,8 +16,6 @@ public abstract class User extends Entity implements AuctionObserver {
         this.isOnline = false;
     }
 
-    public abstract void displayDashboard();
-
     @Override
     public String toString() {
         return super.toString() + " -> User{" +

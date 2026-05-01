@@ -13,8 +13,8 @@ public class Electronic extends Item {
 
     @Override
     public String getDisplayDetails() {
-        // to be coded
-        return "";
+        return String.format("Điện tử: %s | Hãng: %s | Bảo hành: %d tháng | Tình trạng: %s",
+                            getItemName(), this.brand, this.warrantyMonths, getCondition());
     }
 
     public String getBrand() {

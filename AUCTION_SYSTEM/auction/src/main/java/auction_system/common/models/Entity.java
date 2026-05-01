@@ -15,13 +15,13 @@ public abstract class Entity {
     }
 
     // Constructor 2: Dùng khi LOAD từ DATABASE (Đã có ID sẵn)
-    public Entity(String id) {
+    public Entity(String id, LocalDateTime createdAt) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID không được để trống!");
         }
 
         this.id = id;
-        this.createdAt = LocalDateTime.now(); // Hoặc bạn sẽ load thời gian từ DB
+        this.createdAt = createdAt; // Hoặc bạn sẽ load thời gian từ DB
     }
 
     @Override

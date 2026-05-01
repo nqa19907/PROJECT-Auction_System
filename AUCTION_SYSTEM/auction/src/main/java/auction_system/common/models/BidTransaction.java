@@ -1,9 +1,9 @@
 package auction_system.common.models;
 import java.time.LocalDateTime;
 public class BidTransaction extends Entity {
-    private Bidder bidder;
-    private double amount;
-    private LocalDateTime timestamp;
+    private final Bidder bidder;
+    private final double amount;
+    private final LocalDateTime timestamp;
 
     public BidTransaction(Bidder bidder, double amount) {
         super(); // Tự động tạo ID
@@ -16,23 +16,11 @@ public class BidTransaction extends Entity {
         return bidder;
     }
 
-    public void setBidder(Bidder bidder) {
-        this.bidder = bidder;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public Double getAmount() {
+    public double getAmount() {
         return amount;
     }
 
     public LocalDateTime getTimestamp() {
         return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
     }
 }
