@@ -5,7 +5,6 @@ import auction_system.common.models.Item;
 import auction_system.common.models.Seller;
 import auction_system.common.models.User;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package auction_system.server.patterns.factory;
+package auction_system.common.patterns.factory;
 
 import auction_system.common.models.Item;
 import auction_system.common.models.Vehicle;

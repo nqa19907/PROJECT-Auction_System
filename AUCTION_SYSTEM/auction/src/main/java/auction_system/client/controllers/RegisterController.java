@@ -1,4 +1,4 @@
-package controllers;
+package auction_system.client.controllers;
 
 import java.io.IOException;
 import javafx.fxml.FXML;
