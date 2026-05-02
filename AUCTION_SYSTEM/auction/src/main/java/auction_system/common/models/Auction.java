@@ -54,12 +54,12 @@ public class Auction extends Entity {
                     "Phiên đấu giá này không ở trạng thái mở hoặc đã đóng!");
         }
 
-        double newAmount = bid.getAmount();
+        double newBidAmount = bid.getAmount();
         double currentHighest = (currentHighestBid != null) 
                 ? currentHighestBid.getAmount() : item.getStartPrice();
 
         // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
-        if (newAmount <= currentHighest) {
+        if (newBidAmount <= currentHighest) {
             throw new InvalidBidException(
                     "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + currentHighest + ")");
         }
