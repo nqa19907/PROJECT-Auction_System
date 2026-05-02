@@ -1,9 +1,9 @@
 package auction_system.common.models;
 
 import auction_system.common.enums.AuctionStatus;
+import auction_system.common.patterns.observer.AuctionObserver;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
-import auction_system.common.patterns.observer.AuctionObserver;
 import java.util.List;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
