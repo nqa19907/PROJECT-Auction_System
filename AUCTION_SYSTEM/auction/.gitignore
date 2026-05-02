@@ -25,6 +25,9 @@ target/
 .idea/
 *.iml
 
+.idea/workspace.xml
+.idea/*
+
 .classpath
 .project
 .settings/
