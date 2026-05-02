@@ -9,8 +9,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import java.io.IOException;
 
+/**
+ * Controller xử lý các sự kiện trên giao diện đăng nhập.
+ */
 public class LoginController {
 
     @FXML private TextField emailField;
@@ -63,4 +65,3 @@ public class LoginController {
         }
     }
 }
-

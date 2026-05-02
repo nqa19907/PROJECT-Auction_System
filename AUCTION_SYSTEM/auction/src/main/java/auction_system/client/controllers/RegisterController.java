@@ -9,8 +9,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import java.io.IOException;
 
+/**
+ * Controller xử lý các sự kiện trên giao diện đăng ký.
+ */
 public class RegisterController {
 
     @FXML private TextField nameField;
