@@ -1,5 +1,8 @@
 package auction_system.common.models;
 
+/**
+ * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
+ */
 public abstract class Item extends Entity {
     private String itemName;
     private String description;
@@ -10,8 +13,18 @@ public abstract class Item extends Entity {
     private String imagePath;
 
 
-    // to be coded
-    public Item(String itemName, String description, double startPrice, String sellerId, String condition, String imagePath) {
+    /**
+     * Khởi tạo một sản phẩm đấu giá mới.
+     *
+     * @param itemName    Tên sản phẩm.
+     * @param description Mô tả sản phẩm.
+     * @param startPrice  Giá khởi điểm.
+     * @param sellerId    ID của người bán.
+     * @param condition   Tình trạng sản phẩm.
+     * @param imagePath   Đường dẫn ảnh minh họa.
+     */
+    public Item(String itemName, String description, double startPrice, String sellerId, 
+                String condition, String imagePath) {
         super();
         this.itemName = itemName;
         this.description = description;
@@ -22,6 +35,11 @@ public abstract class Item extends Entity {
         this.imagePath = imagePath;
     }
 
+    /**
+     * Lấy thông tin chi tiết của sản phẩm để hiển thị lên giao diện.
+     *
+     * @return Chuỗi chứa thông tin chi tiết.
+     */
     public abstract String getDisplayDetails();
 
     public double getStartPrice() {
@@ -82,14 +100,14 @@ public abstract class Item extends Entity {
 
     @Override
     public String toString() {
-        return super.toString() + " -> Item{" +
-                "itemName='" + itemName + '\'' +
-                ", description='" + description + '\'' +
-                ", startPrice=" + startPrice +
-                ", currentPrice=" + currentPrice +
-                ", sellerId='" + sellerId + '\'' +
-                ", condition='" + condition + '\'' +
-                ", imagePath='" + imagePath + '\'' +
-                '}';
+        return super.toString() + " -> Item{"
+                + "itemName='" + itemName + '\''
+                + ", description='" + description + '\''
+                + ", startPrice=" + startPrice
+                + ", currentPrice=" + currentPrice
+                + ", sellerId='" + sellerId + '\''
+                + ", condition='" + condition + '\''
+                + ", imagePath='" + imagePath + '\''
+                + '}';
     }
 }

@@ -1,20 +1,31 @@
 package auction_system.common.models;
 
-import java.util.UUID;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
+/**
+ * Lớp cơ sở đại diện cho một thực thể trong hệ thống.
+ * Cung cấp các thuộc tính chung như id và thời gian tạo.
+ */
 public abstract class Entity {
     protected String id;
     protected LocalDateTime createdAt;
 
-    // Constructor 1: Dùng khi TẠO MÓI (Tự động sinh UUID)
+    /**
+     * Khởi tạo một thực thể mới (tự động sinh UUID).
+     */
     public Entity() {
         this.id = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
 
-    // Constructor 2: Dùng khi LOAD từ DATABASE (Đã có ID sẵn)
+    /**
+     * Khởi tạo một thực thể với thông tin có sẵn (dùng khi load từ database).
+     *
+     * @param id        ID của thực thể.
+     * @param createdAt Thời gian tạo thực thể.
+     */
     public Entity(String id, LocalDateTime createdAt) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID không được để trống!");
@@ -26,8 +37,12 @@ public abstract class Entity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Entity)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Entity)) {
+            return false;
+        }
         Entity entity = (Entity) o;
 
         // Dùng Objects.equal để tránh lỗi NullPointerException
@@ -49,17 +64,17 @@ public abstract class Entity {
 
     @Override
     public String toString() {
-        return "Entity{" +
-                "id='" + id + '\'' +
-                ", createdAt='" + createdAt + '\'' +
-                '}';
+        return "Entity{"
+                + "id='" + id + '\''
+                + ", createdAt='" + createdAt + '\''
+                + '}';
     }
 
     //    @Override
-//    public String toString() {
-//        return String.format("%s{id='%s', createdAt='%s'}",
-//                this.getClass().getSimpleName(), // Tự động trả về tên lớp con
-//                id,
-//                createdAt);
-//    }
+    //    public String toString() {
+    //        return String.format("%s{id='%s', createdAt='%s'}",
+    //                this.getClass().getSimpleName(), // Tự động trả về tên lớp con
+    //                id,
+    //                createdAt);
+    //    }
 }
