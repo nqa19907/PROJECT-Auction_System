@@ -1,6 +1,10 @@
 package auction_system.common.models;
 
 import auction_system.common.patterns.observer.AuctionObserver;
+
+/**
+ * Lớp trừu tượng đại diện cho người dùng trong hệ thống.
+ */
 public abstract class User extends Entity implements AuctionObserver {
     private String username;
     // PASSWORD SHOULD BE HASHED
@@ -8,6 +12,13 @@ public abstract class User extends Entity implements AuctionObserver {
     private String email;
     private boolean isOnline;
 
+    /**
+     * Khởi tạo một người dùng mới.
+     *
+     * @param username Tên đăng nhập.
+     * @param email    Địa chỉ email.
+     * @param password Mật khẩu.
+     */
     public User(String username, String email, String password) {
         super();
         this.username = username;
@@ -18,10 +29,10 @@ public abstract class User extends Entity implements AuctionObserver {
 
     @Override
     public String toString() {
-        return super.toString() + " -> User{" +
-                "username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+        return super.toString() + " -> User{"
+                + "username='" + username + '\''
+                + ", email='" + email + '\''
+                + '}';
     }
 
     public String getUsername() {
