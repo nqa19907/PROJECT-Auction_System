@@ -37,18 +37,18 @@ public class Auction extends Entity {
             throw new AuctionClosedException("Phiên đấu giá này không ở trạng thái mở hoặc đã đóng!");
         }
 
-        double newAmount = bid.getAmount();
+        double newBidAmount = bid.getAmount();
         double currentHighest = (currentHighestBid != null) ? currentHighestBid.getAmount() : item.getStartPrice();
 
         // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
-        if (newAmount <= currentHighest) {
+        if (newBidAmount <= currentHighest) {
             throw new InvalidBidException("Giá đặt phải lớn hơn giá cao nhất hiện tại (" + currentHighest + ")");
         }
 
         // 3. Cập nhật thông tin giá mới nhất
         this.currentHighestBid = bid;
         this.bids.add(bid);
-        this.item.setCurrentPrice(newAmount);
+        this.item.setCurrentPrice(newBidAmount);
 
         // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
         notifyObservers();
