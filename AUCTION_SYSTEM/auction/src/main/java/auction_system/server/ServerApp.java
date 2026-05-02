@@ -7,16 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
-<<<<<<< HEAD
-<<<<<<< HEAD
- * Hello world!
- *
-=======
  * Lớp chính để khởi chạy ứng dụng máy chủ (Server) cho hệ thống đấu giá.
->>>>>>> main
-=======
- * Lớp chính để khởi chạy ứng dụng máy chủ (Server) cho hệ thống đấu giá.
->>>>>>> b0fb4130f2604c301b7c387274233639f63a848d
  */
 public class ServerApp extends Application {
     @Override
