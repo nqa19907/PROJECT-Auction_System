@@ -1,4 +1,5 @@
 package auction_system.server;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -6,8 +7,12 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
+<<<<<<< HEAD
  * Hello world!
  *
+=======
+ * Lớp chính để khởi chạy ứng dụng máy chủ (Server) cho hệ thống đấu giá.
+>>>>>>> main
  */
 public class ServerApp extends Application {
     @Override

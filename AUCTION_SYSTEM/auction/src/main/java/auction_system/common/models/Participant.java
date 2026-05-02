@@ -1,5 +1,4 @@
 package auction_system.common.models;
-
 /**
  * Lớp đại diện cho người tham gia hệ thống, có tài khoản và số dư.
  */

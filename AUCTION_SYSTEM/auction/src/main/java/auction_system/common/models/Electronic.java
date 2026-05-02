@@ -19,7 +19,7 @@ public class Electronic extends Item {
      * @param brand          Thương hiệu.
      * @param warrantyMonths Số tháng bảo hành.
      */
-    public Electronic(String itemName, String description, Double startPrice, String sellerId, 
+    public Electronic(String itemName, String description, double startPrice, String sellerId, 
                       String condition, String imagePath, String brand, int warrantyMonths) {
         super(itemName, description, startPrice, sellerId, condition, imagePath);
         this.brand = brand;
