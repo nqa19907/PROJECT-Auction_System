@@ -21,9 +21,9 @@ public class Art extends Item {
      * @param creationYear               Năm sáng tác.
      * @param hasAuthenticityCertificate Có chứng nhận xác thực hay không.
      */
-    public Art(String itemName, String description, Double startPrice, String sellerId, 
-               String condition, String imagePath, String artistName, String creationYear, 
-               boolean hasAuthenticityCertificate) {
+    public Art(String itemName, String description, Double startPrice, String sellerId,
+            String condition, String imagePath, String artistName, String creationYear,
+            boolean hasAuthenticityCertificate) {
         super(itemName, description, startPrice, sellerId, condition, imagePath);
         this.artistName = artistName;
         this.creationYear = creationYear;

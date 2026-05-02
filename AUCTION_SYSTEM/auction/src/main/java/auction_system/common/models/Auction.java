@@ -55,8 +55,9 @@ public class Auction extends Entity {
         }
 
         double newBidAmount = bid.getAmount();
-        double currentHighest = (currentHighestBid != null) 
-                ? currentHighestBid.getAmount() : item.getStartPrice();
+        double currentHighest = (currentHighestBid != null)
+                ? currentHighestBid.getAmount()
+                : item.getStartPrice();
 
         // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
         if (newBidAmount <= currentHighest) {
@@ -119,11 +120,12 @@ public class Auction extends Entity {
     public void notifyObservers() {
         // Đóng gói thông báo thành một chuỗi chuẩn để đẩy qua Socket
         // (UPDATE_PRICE|giá_mới)
-        double currentPrice = (currentHighestBid != null) 
-                ? currentHighestBid.getAmount() : item.getStartPrice();
+        double currentPrice = (currentHighestBid != null)
+                ? currentHighestBid.getAmount()
+                : item.getStartPrice();
         String message = "UPDATE_PRICE|" + this.getId() + "|" + currentPrice;
 
-        for (AuctionObserver observer :  observers) {
+        for (AuctionObserver observer : observers) {
             observer.update(message);
         }
     }
@@ -134,7 +136,7 @@ public class Auction extends Entity {
      * @param message Nội dung thông báo.
      */
     public void notifyObservers(String message) {
-        for (AuctionObserver observer :  observers) {
+        for (AuctionObserver observer : observers) {
             observer.update(message);
         }
     }

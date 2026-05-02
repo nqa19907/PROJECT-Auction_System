@@ -1,4 +1,5 @@
 package auction_system.common.models;
+
 /**
  * Lớp đại diện cho người tham gia hệ thống, có tài khoản và số dư.
  */
@@ -24,7 +25,7 @@ public abstract class Participant extends User {
      * @param amount Số tiền cần nạp (phải lớn hơn 0).
      */
     public void addFunds(double amount) {
-        if  (amount <= 0) {
+        if (amount <= 0) {
             throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0");
         }
         this.balance += amount;
@@ -34,7 +35,8 @@ public abstract class Participant extends User {
      * Rút tiền khỏi tài khoản.
      *
      * @param amount Số tiền cần rút.
-     * @return true nếu rút thành công, false nếu số dư không đủ hoặc số tiền không hợp lệ.
+     * @return true nếu rút thành công, false nếu số dư không đủ hoặc số tiền không
+     *         hợp lệ.
      */
     public boolean withdrawFunds(double amount) {
         if (amount <= 0 || this.balance < amount) {
