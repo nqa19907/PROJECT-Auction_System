@@ -6,7 +6,8 @@
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml/1"
            prefWidth="360" prefHeight="720"
-           style="-fx-background-color: #1565C0;">
+           style="-fx-background-color: #1565C0;"
+           fx:controller="auction_system.client.controllers.LoginController">
 
     <!-- Bong bóng trang trí phía trên -->
     <VBox alignment="TOP_LEFT" spacing="0">
@@ -20,7 +21,13 @@
             <VBox alignment="BOTTOM_LEFT" style="-fx-padding: 0 0 20 30;">
                 <Label text="Welcome" style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: white;"/>
                 <Label text="Back" style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <!-- Nut quay lai -->
+                <Button fx:id="btnBackDashboard"
+                        onAction="#handleBackDashboard"
+                        text=" Web Đấu Giá"
+                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14; -fx-font-weight: bold; -fx-cursor: hand; -fx-border-color: transparent; -fx-padding: 5 0 0 0;"/>
             </VBox>
+
         </StackPane>
     </VBox>
 
@@ -33,7 +40,8 @@
             <HBox alignment="CENTER_LEFT" spacing="10"
                   style="-fx-background-color: #f5f5f5; -fx-background-radius: 10; -fx-padding: 12 16;">
                 <Label text="✉" style="-fx-font-size: 14; -fx-text-fill: #999;"/>
-                <TextField promptText="water@gmail.com"
+                <TextField fx:id="emailField"
+                           promptText="water@gmail.com"
                            style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13;"
                            prefWidth="240" HBox.hgrow="ALWAYS"/>
                 <Label text="✓" style="-fx-font-size: 14; -fx-text-fill: #00b67a;"/>
@@ -43,7 +51,8 @@
             <HBox alignment="CENTER_LEFT" spacing="10"
                   style="-fx-background-color: #f5f5f5; -fx-background-radius: 10; -fx-padding: 12 16;">
                 <Label text="🔒" style="-fx-font-size: 14; -fx-text-fill: #999;"/>
-                <PasswordField promptText="Password"
+                <PasswordField  fx:id="passwordField"
+                               promptText="Password"
                                style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13;"
                                prefWidth="240" HBox.hgrow="ALWAYS"/>
             </HBox>

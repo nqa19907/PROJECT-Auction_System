@@ -61,7 +61,7 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>auction_system.App</mainClass>
+          <mainClass>auction_system.server.ServerApp</mainClass>
           <options>
             <option>--add-modules</option>
             <option>javafx.controls,javafx.fxml</option>
