@@ -19,8 +19,8 @@ public class Electronic extends Item {
      * @param brand          Thương hiệu.
      * @param warrantyMonths Số tháng bảo hành.
      */
-    public Electronic(String itemName, String description, double startPrice, String sellerId, 
-                      String condition, String imagePath, String brand, int warrantyMonths) {
+    public Electronic(String itemName, String description, double startPrice, String sellerId,
+            String condition, String imagePath, String brand, int warrantyMonths) {
         super(itemName, description, startPrice, sellerId, condition, imagePath);
         this.brand = brand;
         this.warrantyMonths = warrantyMonths;
@@ -29,7 +29,7 @@ public class Electronic extends Item {
     @Override
     public String getDisplayDetails() {
         return String.format("Điện tử: %s | Hãng: %s | Bảo hành: %d tháng | Tình trạng: %s",
-                            getItemName(), this.brand, this.warrantyMonths, getCondition());
+                getItemName(), this.brand, this.warrantyMonths, getCondition());
     }
 
     public String getBrand() {

@@ -11,6 +11,7 @@ public abstract class User extends Entity implements AuctionObserver {
     private String password;
     private String email;
     private boolean isOnline;
+    private boolean isBanned = false;
 
     /**
      * Khởi tạo một người dùng mới.
@@ -65,5 +66,8 @@ public abstract class User extends Entity implements AuctionObserver {
 
     public void setOnline(boolean online) {
         isOnline = online;
+    }
+    public void setBanned(boolean isBanned) {
+        this.isBanned = isBanned;
     }
 }

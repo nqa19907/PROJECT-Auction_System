@@ -18,8 +18,8 @@ public class Admin extends User {
     }
 
     @Override
-    public void update(String msg) {
-
+    public void update(String message) {
+        System.out.println("[NOTIFY]: " + message);
     }
 
     /**
@@ -27,8 +27,9 @@ public class Admin extends User {
      *
      * @param user Người dùng cần cấm.
      */
-    public void banUser(User user) {
-        // to be coded
+    public void banUser(User user,String reason) {
+        user.setBanned(true);
+        System.out.println("Bạn đã bị ban với lý do: " + reason);
     }
 
     /**
@@ -37,13 +38,6 @@ public class Admin extends User {
      * @param item Sản phẩm cần xóa.
      */
     public void removeInvalidItem(Item item) {
-        // to be coded
-    }
-
-    /**
-     * Giải quyết tranh chấp giữa các bên tham gia.
-     */
-    public void resolveDispute() {
         // to be coded
     }
 

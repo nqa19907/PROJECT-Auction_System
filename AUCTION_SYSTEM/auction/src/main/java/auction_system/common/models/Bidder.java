@@ -1,5 +1,7 @@
 package auction_system.common.models;
 
+import auction_system.common.exceptions.InvalidBidException;
+
 /**
  * Lớp đại diện cho người đấu giá (người mua) trong hệ thống.
  */
@@ -20,7 +22,7 @@ public class Bidder extends Participant {
 
     @Override
     public void update(String message) {
-        // to be coded
+        System.out.println("[NOTIFY]: " + message);
     }
 
     /**
@@ -29,8 +31,15 @@ public class Bidder extends Participant {
      * @param item   Sản phẩm cần đặt giá.
      * @param amount Số tiền đặt giá.
      */
-    public void placeBid(Item item, double amount) {
-        // to be coded
+    public void placeBid(Auction auction, double amount) {
+        if (amount > this.balance){
+            throw new InvalidBidException("Không đủ số dư");
+        }
+        if (auction == null){
+            throw new InvalidBidException("Phiên đấu giá không tồn tại");
+        }
+        BidTransaction bid = new BidTransaction(this, amount);
+        auction.placeBid(bid);
     }
 
     /**
