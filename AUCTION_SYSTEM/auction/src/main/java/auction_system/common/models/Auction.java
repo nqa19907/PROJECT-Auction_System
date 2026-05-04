@@ -4,6 +4,8 @@ import auction_system.common.enums.AuctionStatus;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.patterns.observer.AuctionObserver;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,9 @@ public class Auction extends Entity {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private AuctionStatus status;
-    private final List<AuctionObserver> observers;
+    // Dùng transient để bỏ qua thuộc tính, không
+    // lưu xuống file và không gửi qua mạng.
+    private transient List<AuctionObserver> observers;
 
     /**
      * Khởi tạo một phiên đấu giá mới.
@@ -55,7 +59,7 @@ public class Auction extends Entity {
         }
 
         double newBidAmount = bid.getAmount();
-        double currentHighest = (currentHighestBid != null)
+        double currentHighest = (currentHighestBid != null) 
                 ? currentHighestBid.getAmount()
                 : item.getStartPrice();
 
@@ -165,6 +169,16 @@ public class Auction extends Entity {
             String message = "AUCTION_ENDED|" + this.getId() + "|" + winnerUsername;
             notifyObservers(message);
         }
+    }
+
+    /**
+     * Khôi phục lại danh sách observers sau khi được nhận từ mạng (deserialize)
+     * vì thuộc tính này là transient (không được truyền đi) nên ban đầu sẽ bị null.
+     */
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject(); // Đọc các thuộc tính bình thường khác
+        // Khởi tạo lại danh sách rỗng để không bị lỗi NullPointerException
+        this.observers = new CopyOnWriteArrayList<>();
     }
 
     public Seller getSeller() {

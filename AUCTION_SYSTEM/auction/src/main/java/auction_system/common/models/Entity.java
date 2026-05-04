@@ -1,5 +1,6 @@
 package auction_system.common.models;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -8,7 +9,9 @@ import java.util.UUID;
  * Lớp cơ sở đại diện cho một thực thể trong hệ thống.
  * Cung cấp các thuộc tính chung như id và thời gian tạo.
  */
-public abstract class Entity {
+public abstract class Entity implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     protected String id;
     protected LocalDateTime createdAt;
 
@@ -62,19 +65,12 @@ public abstract class Entity {
         return createdAt;
     }
 
+
     @Override
     public String toString() {
-        return "Entity{"
-                + "id='" + id + '\''
-                + ", createdAt='" + createdAt + '\''
-                + '}';
+        return String.format("%s{id='%s', createdAt='%s'}",
+                this.getClass().getSimpleName(), // Tự động trả về tên lớp con
+                id,
+                createdAt);
     }
-
-    //    @Override
-    //    public String toString() {
-    //        return String.format("%s{id='%s', createdAt='%s'}",
-    //                this.getClass().getSimpleName(), // Tự động trả về tên lớp con
-    //                id,
-    //                createdAt);
-    //    }
 }

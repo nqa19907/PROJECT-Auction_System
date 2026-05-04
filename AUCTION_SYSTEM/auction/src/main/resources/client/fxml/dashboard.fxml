@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.StackPane?>
-<BorderPane style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane minWidth="960" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.DashboardController">
     <top>
         <VBox style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 4, 0, 0, 2);">
 
             <!-- ===== NAVBAR ===== -->
-            <HBox alignment="CENTER_LEFT" prefHeight="64" spacing="12" style="-fx-background-color: white; -fx-padding: 12 24 12 24;">
+            <HBox alignment="CENTER_LEFT" minWidth="960" prefHeight="64" spacing="12" style="-fx-background-color: white; -fx-padding: 12 24 12 24;">
 
                 <!-- Logo -->
                 <HBox alignment="CENTER_LEFT" spacing="8">
@@ -48,7 +48,7 @@
                 </HBox>
 
                 <!-- Right side -->
-                <HBox alignment="CENTER" spacing="16">
+                <HBox alignment="CENTER" minWidth="300" spacing="16">
                     <Label style="-fx-font-size: 13; -fx-text-fill: #333; -fx-cursor: hand;" text="How it works?" />
                     <Label style="-fx-font-size: 13; -fx-text-fill: #333; -fx-cursor: hand;" text="Help" />
                     <Label style="-fx-font-size: 18; -fx-text-fill: #333; -fx-cursor: hand;" text="♡" />
@@ -61,8 +61,8 @@
                             <MenuItem text="🌐  Deutsch (DE)" />
                         </items>
                     </MenuButton>
-
-                    <Button style="-fx-background-color: #0045FF; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-cursor: hand;" text="Sign in" />
+                    <!-- button sign in -->
+                    <Button fx:id="btnSignIn" onAction="#handleSignIn" style="-fx-background-color: #0045FF; -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-cursor: hand;" text="Sign in" />
                 </HBox>
             </HBox>
 
@@ -126,8 +126,10 @@
     </top>
 
     <center>
-
-        <HBox spacing="20.0">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: #f0f0f0; -fx-background: #f0f0f0;" vbarPolicy="AS_NEEDED">
+        <content>
+        <VBox style="-fx-background-color: #f0f0f0;">
+        <HBox spacing="20.0" style="-fx-padding: 20;">
             <children>
 
                 <VBox prefWidth="220.0" spacing="8.0" styleClass="product-card">
@@ -239,88 +241,86 @@
                 </VBox>
 
             </children>
+
         </HBox>
+        <VBox style="-fx-background-color: #1a1a1a;">
 
-    </center>
-    <bottom>
-        <HBox alignment="CENTER" spacing="80.0" style="-fx-padding: 60 20 60 20; -fx-background-color: white;">
-            <children>
-                <VBox alignment="TOP_CENTER" prefWidth="250.0" spacing="15.0">
-                    <children>
-                        <SVGPath content="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 19.93V2.93l7 3.11v4.96c0 4.52-2.98 8.69-7 9.93z" fill="#0045FF" scaleX="2.0" scaleY="2.0" />
-                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Bảo vệ người mua">
-                            <VBox.margin><Insets top="10.0" /></VBox.margin>
-                        </Label>
-                        <Label text="Chúng tôi giữ tiền an toàn cho đến khi bạn nhận được hàng và xác nhận hài lòng." textAlignment="CENTER" textFill="#555555" wrapText="true" />
-                    </children>
-                </VBox>
-
-                <VBox alignment="TOP_CENTER" prefWidth="250.0" spacing="15.0">
-                    <children>
-                        <SVGPath content="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="#0045FF" scaleX="2.0" scaleY="2.0" />
-                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Đội ngũ chuyên gia">
-                            <VBox.margin><Insets top="10.0" /></VBox.margin>
-                        </Label>
-                        <Label text="Mọi sản phẩm đấu giá đều được kiểm duyệt gắt gao bởi các chuyên gia hàng đầu." textAlignment="CENTER" textFill="#555555" wrapText="true" />
-                    </children>
-                </VBox>
-
-            </children>
-
+            <!-- Phần review giữ nguyên -->
             <VBox alignment="CENTER" spacing="30.0" style="-fx-background-color: #f9f9f9; -fx-padding: 50 20 50 20;">
-                <children>
-                    <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Khách hàng nói gì về chúng tôi?" />
-
-                    <HBox alignment="CENTER" spacing="10.0">
-                        <children>
-                            <Button fx:id="btnScrollLeft" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&lt;" />
-
-                            <ScrollPane fx:id="reviewScrollPane" hbarPolicy="NEVER" prefHeight="160.0" prefWidth="850.0" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER">
-                                <content>
-                                    <HBox fx:id="reviewContainer" spacing="20.0" style="-fx-padding: 10;">
-                                    </HBox>
-                                </content>
-                            </ScrollPane>
-
-                            <Button fx:id="btnScrollRight" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&gt;" />
-                        </children>
-                    </HBox>
-                </children>
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Khách hàng nói gì về chúng tôi?" />
+                <HBox alignment="CENTER" spacing="10.0">
+                    <Button fx:id="btnScrollLeft" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&lt;" />
+                    <ScrollPane fx:id="reviewScrollPane" hbarPolicy="NEVER" prefHeight="160.0" prefWidth="850.0" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER">
+                        <content>
+                            <HBox fx:id="reviewContainer" spacing="20.0" style="-fx-padding: 10;" />
+                        </content>
+                    </ScrollPane>
+                    <Button fx:id="btnScrollRight" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&gt;" />
+                </HBox>
             </VBox>
 
-            <HBox alignment="CENTER" spacing="150.0" style="-fx-background-color: #222222; -fx-padding: 50 50 20 50;">
-                <children>
-                    <VBox spacing="10.0">
-                        <children>
-                            <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;" text="Web Đấu Giá của 4 ae" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Đồ án môn Lập trình Java" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Thành viên 1: Phương" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Thành viên 2: [Tên]" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Thành viên 3: [Tên]" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Thành viên 4: [Tên]" />
-                        </children>
-                    </VBox>
+            <!-- FOOTER CHÍNH -->
+            <HBox spacing="40" style="-fx-background-color: #1a1a1a; -fx-padding: 40 60 40 60;">
 
-                    <VBox spacing="10.0">
-                        <children>
-                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;" text="Hỗ trợ khách hàng" />
-                            <Label style="-fx-text-fill: #bbbbbb; -fx-cursor: hand;" text="Làm sao để đấu giá?" />
-                            <Label style="-fx-text-fill: #bbbbbb; -fx-cursor: hand;" text="Chính sách bảo mật" />
-                            <Label style="-fx-text-fill: #bbbbbb; -fx-cursor: hand;" text="Quy định người bán" />
-                        </children>
-                    </VBox>
+                <!-- Cột 1: Thông tin nhóm -->
+                <VBox maxWidth="260" spacing="10" HBox.hgrow="ALWAYS">
+                    <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Web Đấu Giá của 4 ae" />
+                    <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Đồ án môn Lập trình Java" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 1: Phương" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 2: [Tên]" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 3: [Tên]" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 4: [Tên]" />
+                </VBox>
 
-                    <VBox spacing="10.0">
-                        <children>
-                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;" text="Liên hệ" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="Email: nhom4@university.edu.vn" />
-                            <Label style="-fx-text-fill: #bbbbbb;" text="GitHub: github.com/phuong/auction-web" />
-                        </children>
-                    </VBox>
-                </children>
+                <!-- Cột 2: Về chúng tôi -->
+                <VBox spacing="14" HBox.hgrow="ALWAYS">
+                    <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Về chúng tôi" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Giới thiệu" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Quy chế hoạt động" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Hướng dẫn sử dụng" />
+                </VBox>
+
+                <!-- Cột 3: Hỗ trợ -->
+                <VBox spacing="14" HBox.hgrow="ALWAYS">
+                    <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Hỗ trợ khách hàng" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Làm sao để đấu giá?" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Chính sách bảo mật" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Quy định người bán" />
+                </VBox>
+
+                <!-- Cột 4: Liên hệ + Email -->
+                <VBox maxWidth="280" spacing="14" HBox.hgrow="ALWAYS">
+                    <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Liên hệ" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Email: nhom4@university.edu.vn" />
+                    <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="GitHub: github.com/phuong/auction-web" />
+
+                    <!-- Ô đăng ký email -->
+                    <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Đăng ký nhận tin:" />
+                    <HBox spacing="0" style="-fx-background-color: #2a2a2a; -fx-background-radius: 25; -fx-border-color: #555; -fx-border-radius: 25;">
+                        <TextField promptText="Nhập Email" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-prompt-text-fill: #888; -fx-font-size: 13px; -fx-padding: 10 15 10 15; -fx-background-radius: 25 0 0 25; -fx-border-color: transparent;" HBox.hgrow="ALWAYS" />
+                        <Button style="-fx-background-color: #0045FF; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 0 25 25 0; -fx-padding: 10 20 10 20; -fx-cursor: hand; -fx-border-color: transparent;" text="Đăng ký" />
+                    </HBox>
+                </VBox>
+
             </HBox>
 
-        </HBox>
-    </bottom>
+            <!-- Đường kẻ -->
+            <HBox style="-fx-background-color: #333333; -fx-min-height: 1; -fx-pref-height: 1;" />
+
+            <!-- Copyright -->
+            <HBox alignment="CENTER_LEFT" style="-fx-background-color: #111111; -fx-padding: 15 60 15 60;">
+                <HBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Copyright 2025 © " />
+                    <Label style="-fx-text-fill: #0045FF; -fx-font-size: 13px;" text="Web Đấu Giá - Nhóm 4" />
+                </HBox>
+                <Label style="-fx-text-fill: #555555; -fx-font-size: 12px;" text="Đồ án Lập trình Java" />
+            </HBox>
+
+        </VBox>
+
+        </VBox>
+        </content>
+        </ScrollPane>
+    </center>
 
 </BorderPane>
