@@ -17,7 +17,7 @@ public class AuctionLifecycleTest {
     @BeforeEach
     void setUp() {
         Item item = new Electronic("iPhone 15", "Apple smartphone",
-                2000, "SN001", "New", "", "Apple", 12);
+                2000., "SN001", "New", "", "Apple", 12);
         Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
         auction = new Auction(item, seller,
                 LocalDateTime.now(), LocalDateTime.now().plusHours(1));
