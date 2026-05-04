@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -18,6 +19,7 @@ public class LoginController {
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     @FXML private Label errorLabel;
+    @FXML private Button btnBackDashboard;
 
     @FXML
     private void handleLogin() {
@@ -62,6 +64,21 @@ public class LoginController {
         if (errorLabel != null) {
             errorLabel.setText(msg);
             errorLabel.setVisible(true);
+        }
+    }
+
+    @FXML
+    private void handleBackDashboard() {
+        try {
+            var url = getClass().getResource("/client/fxml/dashboard.fxml");
+            System.out.println("URL dashboard: " + url);
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+            Stage stage = (Stage) passwordField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Dashboard");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
