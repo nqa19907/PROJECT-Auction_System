@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
+import auction_system.common.models.Bidder;
+import auction_system.common.models.BidTransaction;
 
 public class AuctionLifecycleTest {
 
@@ -43,5 +45,30 @@ public class AuctionLifecycleTest {
         // Assert
         assertEquals(AuctionStatus.FINISHED, auction.getStatus(),
                 "Sau khi end, trạng thái phải là FINISHED");
+    }
+    @Test
+    void testNewAuction_StatusIsOpen() {
+        // Assert: Auction mới tạo phải có status OPEN
+        assertEquals(AuctionStatus.OPEN, auction.getStatus(),
+                "Auction mới tạo phải có trạng thái OPEN");
+    }
+
+    @Test
+    void testMultipleBids_HighestBidWins() {
+        // Arrange
+        auction.startAuction();
+        Bidder bidder1 = new Bidder("Alice", "alice@gmail.com", "123", 10000);
+        Bidder bidder2 = new Bidder("Bob", "bob@gmail.com", "456", 20000);
+
+        // Act
+        auction.placeBid(new BidTransaction(bidder1, 3000));
+        auction.placeBid(new BidTransaction(bidder2, 5000));
+
+        auction.setEndTime(LocalDateTime.MIN);
+        auction.endAuction();
+
+        // Assert
+        assertSame(bidder2, auction.calculateWinner(),
+                "Người đặt giá cao nhất phải thắng");
     }
 }
