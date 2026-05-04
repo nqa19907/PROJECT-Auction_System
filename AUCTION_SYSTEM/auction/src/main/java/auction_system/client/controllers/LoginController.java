@@ -1,84 +1,48 @@
 package auction_system.client.controllers;
 
-import java.io.IOException;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 /**
- * Controller xử lý các sự kiện trên giao diện đăng nhập.
+ * Controller for the Login screen.
  */
 public class LoginController {
 
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
-    @FXML private Label errorLabel;
-    @FXML private Button btnBackDashboard;
-
     @FXML
     private void handleLogin() {
-        String email    = emailField.getText().trim();
-        String password = passwordField.getText();
-
-        if (email.isEmpty() || password.isEmpty()) {
-            showError("Vui lòng nhập email và mật khẩu.");
-            return;
-        }
-
-        if (email.equals("admin@auction.com") && password.equals("123456")) {
-            navigateTo("/fxml/dashboard.fxml", "Dashboard");
-        } else {
-            showError("Email hoặc mật khẩu không đúng.");
-        }
     }
 
     @FXML
-    private void handleGoToRegister() {
-        navigateTo("/fxml/register.fxml", "Đăng ký");
+    private void handleGoogleLogin() {
     }
 
     @FXML
-    private void handleForgotPassword() {
-        showError("Tính năng đang phát triển.");
-    }
-
-    private void navigateTo(String path, String title) {
+    private void handleBackToDashboard(MouseEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/client/fxml/dashboard.fxml")
+            );
             Parent root = loader.load();
-            Stage stage = (Stage) emailField.getScene().getWindow();
+            Stage stage = (Stage) ((Node) event.getSource())
+                    .getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle(title);
-        } catch (IOException e) {
-            System.err.println("Lỗi: " + e.getMessage());
-        }
-    }
-
-    private void showError(String msg) {
-        if (errorLabel != null) {
-            errorLabel.setText(msg);
-            errorLabel.setVisible(true);
-        }
-    }
-
-    @FXML
-    private void handleBackDashboard() {
-        try {
-            var url = getClass().getResource("/client/fxml/dashboard.fxml");
-            System.out.println("URL dashboard: " + url);
-            FXMLLoader loader = new FXMLLoader(url);
-            Parent root = loader.load();
-            Stage stage = (Stage) passwordField.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Dashboard");
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void handleClose(ActionEvent event) {
+        Stage stage = (Stage) ((Node) event.getSource())
+                .getScene().getWindow();
+        stage.close();
+    }
+
 }
