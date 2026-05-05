@@ -1,7 +1,7 @@
 package auction_system.common.patterns.factory;
 
-import auction_system.common.models.Electronic;
 import auction_system.common.models.Item;
+import auction_system.common.patterns.builder.ElectronicBuilder;
 import java.util.Map;
 
 /**
@@ -10,7 +10,7 @@ import java.util.Map;
 public class ElectronicCreator implements ItemCreator {
     @Override
     public Item createItem(Map<String, Object> properties) {
-        return new Electronic.Builder()
+        return new ElectronicBuilder()
                 .itemName((String) properties.getOrDefault("itemName", "New Electronic Item"))
                 .description((String) properties.getOrDefault("description", "Description here"))
                 .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())

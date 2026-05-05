@@ -1,8 +1,8 @@
 import auction_system.common.enums.AuctionStatus;
 import auction_system.common.models.Auction;
-import auction_system.common.models.Electronic;
 import auction_system.common.models.Item;
 import auction_system.common.models.Seller;
+import auction_system.common.patterns.builder.ElectronicBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
@@ -16,8 +16,16 @@ public class AuctionLifecycleTest {
 
     @BeforeEach
     void setUp() {
-        Item item = new Electronic("iPhone 15", "Apple smartphone",
-                2000., "SN001", "New", "", "Apple", 12);
+        Item item = new ElectronicBuilder()
+                .itemName("iPhone 15")
+                .description("Apple smartphone")
+                .startPrice(2000.0)
+                .sellerId("SN001")
+                .condition("New")
+                .imagePath("")
+                .brand("Apple")
+                .warrantyMonths(12)
+                .build();
         Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
         auction = new Auction(item, seller,
                 LocalDateTime.now(), LocalDateTime.now().plusHours(1));
