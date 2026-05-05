@@ -7,6 +7,5 @@ import java.util.Map;
  * Giao diện định nghĩa phương thức Factory để tạo ra các loại sản phẩm đấu giá (Item).
  */
 public interface ItemCreator {
-    // TODO: Review this version of createItem with properties as parameter
     Item createItem(Map<String, Object> properties);
 }

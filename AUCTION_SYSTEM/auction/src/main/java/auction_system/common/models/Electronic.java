@@ -1,35 +1,112 @@
 package auction_system.common.models;
 
 /**
- * Lớp đại diện cho sản phẩm đấu giá là đồ điện tử.
+ * Lớp đại diện cho sản phẩm đấu giá là thiết bị điện tử.
  */
 public class Electronic extends Item {
+
     private String brand;
     private int warrantyMonths;
 
     /**
-     * Khởi tạo một sản phẩm điện tử.
+     * Khởi tạo một thiết bị điện tử.
      *
-     * @param itemName       Tên sản phẩm.
-     * @param description    Mô tả chi tiết.
-     * @param startPrice     Giá khởi điểm.
-     * @param sellerId       ID của người bán.
-     * @param condition      Tình trạng sản phẩm.
-     * @param imagePath      Đường dẫn hình ảnh.
-     * @param brand          Thương hiệu.
+     * @param itemName Tên sản phẩm.
+     * @param description Mô tả chi tiết.
+     * @param startPrice Giá khởi điểm.
+     * @param sellerId ID của người bán.
+     * @param condition Tình trạng sản phẩm.
+     * @param imagePath Đường dẫn hình ảnh.
+     * @param brand Thương hiệu.
      * @param warrantyMonths Số tháng bảo hành.
      */
-    public Electronic(String itemName, String description, double startPrice, String sellerId, 
-                      String condition, String imagePath, String brand, int warrantyMonths) {
+    public Electronic(String itemName, String description, Double startPrice, String sellerId,
+            String condition, String imagePath, String brand, int warrantyMonths) {
         super(itemName, description, startPrice, sellerId, condition, imagePath);
         this.brand = brand;
         this.warrantyMonths = warrantyMonths;
     }
 
+    /**
+     * Lớp Builder giúp khởi tạo đối tượng Electronic.
+     */
+    public static class Builder {
+
+        private String itemName;
+        private String description;
+        private double startPrice;
+        private double currentPrice;
+        private String sellerId;
+        private String condition;
+        private String imagePath;
+        private String brand;
+        private int warrantyMonths;
+
+        public Builder itemName(String itemName) {
+            this.itemName = itemName;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder startPrice(double startPrice) {
+            this.startPrice = startPrice;
+            return this;
+        }
+
+        public Builder currentPrice(double currentPrice) {
+            this.currentPrice = currentPrice;
+            return this;
+        }
+
+        public Builder sellerId(String sellerId) {
+            this.sellerId = sellerId;
+            return this;
+        }
+
+        public Builder condition(String condition) {
+            this.condition = condition;
+            return this;
+        }
+
+        public Builder imagePath(String imagePath) {
+            this.imagePath = imagePath;
+            return this;
+        }
+
+        public Builder brand(String brand) {
+            this.brand = brand;
+            return this;
+        }
+
+        public Builder warrantyMonths(int warrantyMonths) {
+            this.warrantyMonths = warrantyMonths;
+            return this;
+        }
+
+        /**
+         * Xây dựng và trả về đối tượng Electronic.
+         *
+         * @return Đối tượng Electronic đã được khởi tạo.
+         */
+        public Electronic build() {
+            Electronic electronic = new Electronic(
+                    itemName, description, startPrice, sellerId, condition, imagePath,
+                    brand, warrantyMonths);
+            if (this.currentPrice > 0) {
+                electronic.setCurrentPrice(this.currentPrice);
+            }
+            return electronic;
+        }
+    }
+
     @Override
     public String getDisplayDetails() {
         return String.format("Điện tử: %s | Hãng: %s | Bảo hành: %d tháng | Tình trạng: %s",
-                            getItemName(), this.brand, this.warrantyMonths, getCondition());
+                getItemName(), this.brand, this.warrantyMonths, getCondition());
     }
 
     public String getBrand() {
