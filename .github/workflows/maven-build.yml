@@ -20,11 +20,11 @@ jobs:
 
     steps:
     # CI: Lấy mã nguồn mới nhất từ kho lưu trữ về máy ảo build
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     # CI: Thiết lập môi trường Java (Infrastructure as Code)
     - name: Set up JDK 21
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -46,7 +46,7 @@ jobs:
 
     # CD: Lưu trữ file .jar vừa build được vào bộ nhớ tạm của GitHub Actions
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: auction-system-jar
         path: AUCTION_SYSTEM/auction/target/*.jar
@@ -56,7 +56,7 @@ jobs:
     - name: Create GitHub Release
       # Điều kiện quan trọng: Chỉ chạy CD khi code đã gộp (push) vào nhánh chính 'main'
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
         name: Release Build ${{ github.run_number }}
