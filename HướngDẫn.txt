@@ -1,0 +1,144 @@
+[cite_start]Hướng dẫn Bài tập lớn Lập trình nâng cao Học kỳ II, 2025-2026 [cite: 1, 3]
+[cite_start]Đề tài: Hệ thống Đấu giá trực tuyến [cite: 4]
+
+Lưu ý quan trọng
+- [cite_start]Bây giờ là Tuần 6. Tuần 15 các nhóm sẽ trình bày và chấm điểm. [cite: 7]
+- [cite_start]Bạn có 9 tuần để hoàn thành toàn bộ dự án. [cite: 8]
+- Bài giảng chỉ còn 5 buổi (tuần 6-10). [cite_start]Từ tuần 11 trở đi không còn bài giảng, chỉ còn thời gian làm dự án. [cite: 9]
+- [cite_start]Lập trình mạng, JavaFX (UI), Lưu trữ dữ liệu là nội dung tự học, cần bắt đầu ngay từ tuần này. [cite: 10]
+- [cite_start]Mỗi thành viên phải hiểu toàn bộ mã nguồn; nếu không giải thích được, cả nhóm bị 0 điểm. [cite: 11]
+- [cite_start]Commit thường xuyên lên GitHub; không chấp nhận chỉ 1 commit cuối kỳ. [cite: 12]
+
+Tổng quan Bài tập lớn
+[cite_start]Xây dựng hệ thống đấu giá trực tuyến (Online Auction System) theo kiến trúc Client-Server, sử dụng Java, JavaFX và mô hình MVC. [cite: 14]
+
+Các chức năng bắt buộc:
+1. [cite_start]Quản lý người dùng (Bidder / Seller / Admin) [cite: 16]
+2. [cite_start]Quản lý sản phẩm đấu giá (CRUD) [cite: 17]
+3. [cite_start]Tham gia đấu giá (đặt giá, kiểm tra hợp lệ, cập nhật realtime) [cite: 18]
+4. [cite_start]Kết thúc phiên đấu giá (tự động đóng, xác định người thắng) [cite: 19]
+5. [cite_start]Xử lý lỗi & ngoại lệ [cite: 20]
+6. [cite_start]Giao diện GUI (JavaFX) [cite: 21]
+7. [cite_start]Thiết kế OOP (kế thừa, đa hình, trừu tượng, đóng gói) [cite: 22]
+8. [cite_start]Design Patterns (Singleton, Factory, Observer) [cite: 23]
+9. [cite_start]Kiến trúc Client-Server + MVC [cite: 24]
+10. [cite_start]Xử lý đấu giá đồng thời (concurrency) [cite: 25]
+11. [cite_start]Unit Test (JUnit), CI/CD (GitHub Actions) [cite: 26]
+
+Chức năng nâng cao (tuỳ chọn, tối đa +1.5 điểm):
+- [cite_start]Auto-Bidding (đấu giá tự động) [cite: 27, 28]
+- [cite_start]Anti-sniping (gia hạn phiên đấu giá) [cite: 29]
+- [cite_start]Bid History Visualization (biểu đồ giá realtime) [cite: 30]
+
+Nội dung giảng dạy & Nội dung tự học
+Khoá học có 10 bài giảng (tuần 1-10). [cite_start]Từ tuần 11 trở đi không còn bài giảng. [cite: 34] Các nội dung sau không được dạy trên lớp mà sinh viên phải tự học:
+- [cite_start]Lập trình mạng (Socket, Client-Server) [cite: 36]
+- [cite_start]Giao diện người dùng (JavaFX, SceneBuilder, MVC) [cite: 37]
+- [cite_start]Lưu trữ dữ liệu (Serialization, File I/O) [cite: 38]
+[cite_start]Bắt đầu tự học các nội dung này ngay từ bây giờ. [cite: 39]
+
+Lộ trình thực hiện theo tuần
+
+[cite_start]Tuần 6 - Khởi động, Thiết kế OOP & Bắt đầu JavaFX [cite: 41]
+[cite_start]Bài giảng: Mẫu thiết kế và nguyên lý thiết kế. [cite: 42]
+Công việc:
+1. [cite_start]Đọc kỹ đề bài, thảo luận nhóm về scope và phân công. [cite: 43]
+2. [cite_start]Tạo GitHub repository, thiết lập nhánh main và dev. [cite: 44]
+3. Thiết kế sơ đồ lớp (class diagram): User (abstract) -> Bidder, Seller, Admin; Item (abstract) -> Electronics, Art, Vehicle; [cite_start]Auction, Bid. [cite: 45, 46]
+4. [cite_start]Code các lớp cơ bản, áp dụng OOP (encapsulation, inheritance, polymorphism). [cite: 47]
+5. [cite_start]Triển khai Singleton (Auction Manager) và Factory Method (tạo Item). [cite: 48]
+6. [cite_start]TỰ HỌC: Cài đặt JavaFX + SceneBuilder, chạy thử ứng dụng Hello World. [cite: 49]
+
+[cite_start]Tuần 7 - Đa luồng, Observer & Phát triển GUI [cite: 64]
+[cite_start]Bài giảng: Lập trình đa luồng và song song. [cite: 65]
+Công việc:
+1. [cite_start]Triển khai Observer Pattern để notify khi có bid mới. [cite: 66]
+2. [cite_start]Code logic nghiệp vụ: tạo phiên đấu giá, đặt giá, kiểm tra hợp lệ. [cite: 67]
+3. [cite_start]Viết logic chuyển trạng thái: OPEN -> RUNNING -> FINISHED -> PAID/CANCELED. [cite: 68, 69, 70]
+4. [cite_start]Xử lý đấu giá đồng thời (concurrent bidding) tránh lost update, race condition. [cite: 71, 72]
+5. [cite_start]Sử dụng synchronized, ReentrantLock cho các thao tác quan trọng. [cite: 73]
+6. [cite_start]TỰ HỌC: Tiếp tục học JavaFX: xây dựng các màn hình cơ bản (Login, Danh sách). [cite: 74]
+
+[cite_start]Tuần 8 - Kiểm thử, Ngoại lệ & GUI nâng cao [cite: 80]
+[cite_start]Bài giảng: Kiểm thử và Tái cấu trúc mã nguồn. [cite: 81]
+Công việc:
+1. [cite_start]Tạo custom exceptions: Invalid BidException, AuctionClosedException, AuthenticationException. [cite: 82]
+2. [cite_start]Xử lý ngoại lệ cho: đặt giá thấp hơn hiện tại, đấu giá khi phiên đóng, lỗi dữ liệu. [cite: 83]
+3. [cite_start]Viết unit test (JUnit) cho logic đấu giá: đặt giá hợp lệ không hợp lệ, kết thúc phiên. [cite: 84]
+4. [cite_start]Refactor code: loại bỏ code smells, áp dụng SOLID. [cite: 85]
+5. [cite_start]TỰ HỌC: Hoàn thiện GUI JavaFX áp dụng MVC, tách logic khỏi Controller, dùng FXML. [cite: 86, 87]
+
+[cite_start]Tuần 9 - Tích hợp, CI/CD & Lập trình mạng [cite: 97]
+[cite_start]Bài giảng: Tích hợp và triển khai. [cite: 98]
+Công việc:
+1. [cite_start]Cấu hình Maven: quản lý dependencies, build tự động. [cite: 99]
+2. [cite_start]Tích hợp Checkstyle vào Maven để enforce coding convention. [cite: 100]
+3. [cite_start]Thiết lập GitHub Actions: tự động build + chạy test khi push. [cite: 101]
+4. [cite_start]TỰ HỌC: Bắt đầu triển khai Client-Server bằng Java Socket. [cite: 102]
+5. [cite_start]TỰ HỌC: Triển khai Serialization để lưu/tải dữ liệu. [cite: 103]
+
+[cite_start]Tuần 10 - Hướng dẫn tự học nâng cao & Ôn tập (Buổi giảng cuối) [cite: 123]
+[cite_start]Bài giảng: Hướng dẫn tự học các nội dung nâng cao và Ôn tập. [cite: 124]
+Công việc:
+1. [cite_start]TỰ HỌC: Hoàn thiện kiến trúc Client-Server: Server xử lý nhiều client đồng thời. [cite: 125]
+2. [cite_start]TỰ HỌC: Tích hợp Observer Pattern qua Socket để realtime update. [cite: 126]
+3. [cite_start]Hoàn thiện các màn hình JavaFX chính: Đăng nhập / Đăng ký, Danh sách phiên đấu giá, Chi tiết sản phẩm, Màn hình đấu giá trực tiếp, Quản lý sản phẩm. [cite: 127, 128, 129, 130, 131, 132]
+4. [cite_start]Bổ sung thêm unit test, đạt code coverage >= 60%. [cite: 133]
+
+[cite_start]Tuần 11-12 - Tích hợp toàn bộ hệ thống [cite: 134]
+[cite_start]Không còn bài giảng - tập trung hoàn toàn vào dự án. [cite: 135]
+[cite_start]Công việc: Tích hợp toàn bộ (GUI - Logic - Network - Data), kiểm thử end-to-end (chạy Server + nhiều Client đồng thời), fix bugs, xử lý edge cases, hoàn thiện Serialization, đảm bảo CI/CD chạy xanh trên GitHub. [cite: 137, 138, 139, 140, 141]
+
+[cite_start]Tuần 13-14 - Hoàn thiện & Chức năng nâng cao [cite: 142]
+[cite_start]Công việc: Polish giao diện, cải thiện UX, kiểm thử kỹ lưỡng toàn bộ hệ thống. [cite: 144, 145] [cite_start]Nếu kịp, triển khai chức năng nâng cao (Auto-Bidding, Anti-sniping, Biểu đồ giá realtime). [cite: 146, 147, 148, 149] [cite_start]Viết README.md đầy đủ trên GitHub. [cite: 150]
+
+[cite_start]Tuần 15 - Trình bày & Chấm điểm [cite: 155, 156]
+[cite_start]Công việc: Chuẩn bị slide trình bày, mỗi thành viên phải giải thích được mọi phần code, demo trực tiếp hệ thống. [cite: 158, 159, 160] [cite_start]Phân chia điểm theo đóng góp thực tế. [cite: 161]
+
+[cite_start]Bảng tổng hợp lộ trình [cite: 162]
+Tuần 6: Bài giảng: Mẫu thiết kế & Nguyên lý thiết kế | Việc cần làm: Khởi tạo dự án, thiết kế OOP, Singleton, Factory | [cite_start]Tự học: JavaFX + SceneBuilder. [cite: 163]
+Tuần 7: Bài giảng: Đa luồng & Song song | Việc cần làm: Observer, logic đấu giá, concurrency | [cite_start]Tự học: JavaFX màn hình cơ bản. [cite: 163]
+Tuần 8: Bài giảng: Kiểm thử & Tái cấu trúc | Việc cần làm: Custom exceptions, JUnit, refactor SOLID | [cite_start]Tự học: MVC trong JavaFX. [cite: 163]
+Tuần 9: Bài giảng: Tích hợp & Triển khai | Việc cần làm: Maven, Checkstyle, GitHub Actions | [cite_start]Tự học: Socket, Serialization. [cite: 163]
+Tuần 10: Bài giảng: Hướng dẫn tự học & Ôn tập (buổi cuối) | Việc cần làm: Client-Server, hoàn thiện GUI | [cite_start]Tự học: Networking, lưu trữ. [cite: 163]
+Tuần 11-12: Bài giảng: Không còn bài giảng | Việc cần làm: Tích hợp toàn bộ, e2e testing, fix bugs | [cite_start]Tự học: Tổng hợp. [cite: 163]
+Tuần 13-14: Bài giảng: Không còn bài giảng | Việc cần làm: Polish UI, chức năng nâng cao | [cite_start]Tự học: Tổng hợp. [cite: 166]
+Tuần 15: Trình bày | [cite_start]Demo & Chấm điểm. [cite: 166]
+
+[cite_start]Thang điểm tóm tắt [cite: 176]
+[cite_start]Thiết kế lớp và cây kế thừa: 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]Áp dụng OOP (Encapsulation, Inheritance, Polymorphism, Abstraction): 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Design Patterns phù hợp: 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Quản lý người dùng, sản phẩm: 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Chức năng đấu giá: 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Xử lý lỗi & ngoại lệ: 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Xử lý đấu giá đồng thời (concurrency): 1.0 điểm (Bắt buộc) [cite: 177]
+[cite_start]Realtime update (Observer/Socket): 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]Kiến trúc Client-Server: 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]MVC (JavaFX FXML, Controller-Model-DAO): 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]Maven/Gradle, coding convention: 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]Unit Test (JUnit): 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]CI/CD (GitHub Actions): 0.5 điểm (Bắt buộc) [cite: 177]
+[cite_start]Auto-Bidding: 0.5 điểm (Tuỳ chọn) [cite: 177]
+[cite_start]Anti-sniping: 0.5 điểm (Tuỳ chọn) [cite: 177]
+[cite_start]Bid History Visualization: 0.5 điểm (Tuỳ chọn) [cite: 177]
+[cite_start]Tổng: 10+1.5 [cite: 177]
+
+[cite_start]Dự án tham khảo trên GitHub [cite: 167]
+1. [cite_start]Auction System (Multi-client, JavaFX): [https://github.com/nlintas/Auction-System-in-Java](https://github.com/nlintas/Auction-System-in-Java) [cite: 168, 169]
+2. [cite_start]Socket Auction (Kotlin + JavaFX): [https://github.com/gangulwar/socket-programming-auction-system](https://github.com/gangulwar/socket-programming-auction-system) [cite: 170, 171]
+3. [cite_start]Auction + MySQL Database: [https://github.com/Prasanna-icefire/AuctionSystem](https://github.com/Prasanna-icefire/AuctionSystem) [cite: 172, 173]
+4. [cite_start]Auction + Google Gson + Azure: [https://github.com/AqibMughal1/Auction-System-JavaFX](https://github.com/AqibMughal1/Auction-System-JavaFX) [cite: 174, 175]
+
+[cite_start]Lời khuyên (Mẹo) [cite: 180, 181]
+1. [cite_start]Bắt đầu học JavaFX ngay từ tuần này - đây là nội dung tự học, không chờ bài giảng. [cite: 182]
+2. [cite_start]Lập trình mạng cũng là tự học - bắt đầu đọc tài liệu Socket từ tuần 9 để kịp tích hợp. [cite: 183]
+3. Commit thường xuyên: mỗi ngày hoặc mỗi tính năng hoàn thành. [cite_start]Dùng Conventional Commits. [cite: 184]
+4. Mỗi người phải code: không để 1 người làm hết. [cite_start]Phân công theo module (Server, Client GUI, Logic, Test). [cite: 185]
+5. [cite_start]Chạy song song: trong khi 1-2 người làm backend logic, người khác học và làm GUI. [cite: 186]
+6. [cite_start]Đọc code tham khảo: clone các repo mẫu, chạy thử, đọc hiểu cấu trúc trước khi tự viết. [cite: 187]
+7. [cite_start]Review code lẫn nhau: dùng Pull Request trên GitHub để review trước khi merge. [cite: 188]
+
+[cite_start]Lưu ý quan trọng: Nội dung tự học rất quan trọng. [cite: 189] [cite_start]Ba nội dung JavaFX, Lập trình mạng (Socket) và Lưu trữ dữ liệu (Serialization) đều không được dạy trên lớp nhưng là yêu cầu bắt buộc của bài tập lớn. [cite: 190] [cite_start]Hãy chủ động tự học ngay từ bây giờ. [cite: 191]
+
+[cite_start]Chúc các bạn hoàn thành tốt Bài tập lớn! [cite: 192]

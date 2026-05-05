@@ -1,0 +1,49 @@
+.button {
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
+}
+.hero-container {
+    -fx-background-color: #2E2117;
+    -fx-background-radius: 15;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);
+}
+
+.hero-title {
+    -fx-font-size: 48px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-line-spacing: -5;
+}
+
+.hero-subtitle {
+    -fx-text-fill: #C9A84C; /* Màu vàng Gold của bạn */
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 2px;
+}
+
+.hero-description {
+    -fx-text-fill: #E0D6C8;
+    -fx-font-size: 16px;
+}
+
+.btn-primary-gold {
+    -fx-background-color: #C9A84C;
+    -fx-text-fill: #2E2117;
+    -fx-font-weight: bold;
+    -fx-padding: 12 30;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+
+.btn-primary-gold:hover {
+    -fx-background-color: #DFB55A;
+}
+
+.slider-dot {
+    -fx-fill: rgba(255, 255, 255, 0.3);
+}
+
+.slider-dot.active {
+    -fx-fill: #C9A84C;
+}

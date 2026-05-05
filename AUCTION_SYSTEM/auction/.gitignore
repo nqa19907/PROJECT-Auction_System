@@ -5,10 +5,28 @@ target/
 *.jar
 *.war
 
+.idea/
+.vscode/
+
+target/
+**/target/
+
+*.class
+*.log
+
+.project
+.classpath
+.settings/
+
+.DS_Store 
+
 .vscode/
 
 .idea/
 *.iml
+
+.idea/workspace.xml
+.idea/*
 
 .classpath
 .project
@@ -17,3 +35,4 @@ target/
 .DS_Store
 
 Thumbs.db
+target/
