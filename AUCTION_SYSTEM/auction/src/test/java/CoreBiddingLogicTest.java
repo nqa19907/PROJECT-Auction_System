@@ -3,9 +3,9 @@ import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.Auction;
 import auction_system.common.models.BidTransaction;
 import auction_system.common.models.Bidder;
-import auction_system.common.models.Electronic;
 import auction_system.common.models.Item;
 import auction_system.common.models.Seller;
+import auction_system.common.patterns.builder.ElectronicBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,9 +26,16 @@ public class CoreBiddingLogicTest {
     void setUp() {
         // Arrange: Chuẩn bị dữ liệu mặc định cho mỗi bài test (khởi tạo Item, Seller, Auction)
         startPrice = 2000;
-        item = new Electronic("OPPO Find X9 Ultra", "The best smartphone camera",
-                                    startPrice, "61h23s1", "Sealed",  "", "OPPO",
-                                    12);
+        item = new ElectronicBuilder()
+                .itemName("OPPO Find X9 Ultra")
+                .description("The best smartphone camera")
+                .startPrice(startPrice)
+                .sellerId("61h23s1")
+                .condition("Sealed")
+                .imagePath("")
+                .brand("OPPO")
+                .warrantyMonths(12)
+                .build();
         seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
                                     "69420", 69420, 4.69f);
         
