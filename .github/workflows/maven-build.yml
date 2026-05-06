@@ -37,7 +37,7 @@ jobs:
     - name: Build and Package with Maven
       # CI: Lệnh này sẽ biên dịch code và chạy các bài Unit Test (JUnit)
       # Nếu test lỗi hoặc code sai cú pháp, quy trình CI dừng tại đây (Báo Đỏ)
-      run: mvn -B clean package --file AUCTION_SYSTEM/auction/pom.xml
+      run: mvn -B clean package -P cross-platform --file AUCTION_SYSTEM/auction/pom.xml
 
     # ---------------------------------------------------------
     # PHẦN 3: CD (CONTINUOUS DELIVERY - Chuyển giao liên tục)
