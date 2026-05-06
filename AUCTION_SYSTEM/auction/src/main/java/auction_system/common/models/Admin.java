@@ -27,7 +27,7 @@ public class Admin extends User {
      *
      * @param user Người dùng cần cấm.
      */
-    public void banUser(User user,String reason) {
+    public void banUser(User user, String reason) {
         user.setBanned(true);
         System.out.println("Bạn đã bị ban với lý do: " + reason);
     }

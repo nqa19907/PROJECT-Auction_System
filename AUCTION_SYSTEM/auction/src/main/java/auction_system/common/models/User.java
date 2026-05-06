@@ -67,6 +67,7 @@ public abstract class User extends Entity implements AuctionObserver {
     public void setOnline(boolean online) {
         isOnline = online;
     }
+    
     public void setBanned(boolean isBanned) {
         this.isBanned = isBanned;
     }
