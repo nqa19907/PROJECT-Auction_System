@@ -1,6 +1,8 @@
 package auction_system.server.patterns.singleton;
 
+import auction_system.common.enums.AuctionStatus;
 import auction_system.common.models.Auction;
+import auction_system.common.models.Bidder;
 import auction_system.common.models.Item;
 import auction_system.common.models.Seller;
 import auction_system.common.models.User;
@@ -10,93 +12,294 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
- * Lớp quản lý trung tâm cho các phiên đấu giá và người dùng đang hoạt động.
- * Sử dụng mẫu thiết kế Singleton để đảm bảo chỉ có một instance duy nhất trong toàn hệ thống.
+ * Quản lý trung tâm cho các phiên đấu giá và người dùng — Singleton.
+ *
+ * <p>Trách nhiệm:
+ * <ul>
+ *   <li>Tạo và tra cứu phiên đấu giá ({@link Auction}).</li>
+ *   <li>Theo dõi trạng thái online của người dùng.</li>
+ *   <li>Lưu trữ registry người dùng đã đăng ký (in-memory).</li>
+ *   <li>Scheduler tự động chuyển trạng thái phiên theo thời gian.</li>
+ * </ul>
  */
 public class AuctionManager {
-    private static AuctionManager instance;
-    private final List<Auction> auctionList;
-    private final Map<String, User> activeUsers;
 
-    private AuctionManager() {
-        // Sử dụng list thread-safe để tránh lỗi khi nhiều client cùng tương tác
-        this.auctionList = new CopyOnWriteArrayList<>();
-        // Dùng ConcurrentHashMap để an toàn trong môi trường đa luồng
-        this.activeUsers = new ConcurrentHashMap<>();
-    }
+    private static final Logger LOGGER = Logger.getLogger(AuctionManager.class.getName());
+    private static final int SCHEDULER_INTERVAL_SECONDS = 10;
+
+    // =========================================================================
+    // Singleton
+    // =========================================================================
+
+    private static AuctionManager instance;
 
     /**
-     * Lấy instance duy nhất của hệ thống quản lý đấu giá.
+     * Lấy instance duy nhất của AuctionManager.
      *
-     * @return Instance của AuctionManager.
+     * @return Instance duy nhất.
      */
     public static synchronized AuctionManager getInstance() {
         if (instance == null) {
             instance = new AuctionManager();
         }
-
         return instance;
     }
 
-    // --- Quản lý phiên đấu giá ---
+    // =========================================================================
+    // State
+    // =========================================================================
+
+    /** Danh sách phiên đấu giá (thread-safe). */
+    private final List<Auction> auctionList;
+
+    /** Map người dùng đang ONLINE: userId → User. */
+    private final Map<String, User> activeUsers;
+
     /**
-     * Tạo một phiên đấu giá mới và thêm vào hệ thống quản lý.
-     *
-     * @param item      Sản phẩm được đưa ra đấu giá.
-     * @param seller    Người bán sản phẩm.
-     * @param startTime Thời gian bắt đầu.
-     * @param endTime   Thời gian kết thúc.
+     * Registry toàn bộ người dùng đã đăng ký: username → User.
+     * Trong thực tế nên lưu xuống database.
      */
-    public void createAuction(Item item, Seller seller, 
-                              LocalDateTime startTime, LocalDateTime endTime) {
-        Auction newAuction = new Auction(item, seller, startTime, endTime);
-        auctionList.add(newAuction);
-        // Có thể thêm logic thông báo cho mọi người về phiên đấu giá
-        // to be coded
+    private final Map<String, User> userRegistry;
+
+    /** Scheduler kiểm tra thời gian phiên đấu giá định kỳ. */
+    private final ScheduledExecutorService scheduler;
+
+    private AuctionManager() {
+        this.auctionList = new CopyOnWriteArrayList<>();
+        this.activeUsers = new ConcurrentHashMap<>();
+        this.userRegistry = new ConcurrentHashMap<>();
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        startAuctionScheduler();
+    }
+
+    // =========================================================================
+    // Scheduler
+    // =========================================================================
+
+    /**
+     * Khởi động scheduler kiểm tra trạng thái phiên mỗi
+     * {@value #SCHEDULER_INTERVAL_SECONDS} giây.
+     * Tự động gọi {@code startAuction()} và {@code endAuction()} theo thời gian.
+     */
+    private void startAuctionScheduler() {
+        scheduler.scheduleAtFixedRate(() -> {
+            for (Auction auction : auctionList) {
+                try {
+                    AuctionStatus status = auction.getStatus();
+                    if (status == AuctionStatus.OPEN) {
+                        auction.startAuction();
+                    } else if (status == AuctionStatus.RUNNING) {
+                        auction.endAuction();
+                    }
+                } catch (Exception ex) {
+                    LOGGER.warning("Lỗi scheduler phiên " + auction.getId()
+                            + ": " + ex.getMessage());
+                }
+            }
+        }, 0, SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
 
     /**
-     * Tìm kiếm một phiên đấu giá đang quản lý dựa vào ID.
+     * Dừng scheduler khi server tắt.
+     */
+    public void shutdown() {
+        scheduler.shutdown();
+    }
+
+    // =========================================================================
+    // Quản lý phiên đấu giá
+    // =========================================================================
+
+    /**
+     * Tạo một phiên đấu giá mới và thêm vào hệ thống.
      *
-     * @param auctionId ID của phiên đấu giá cần tìm.
-     * @return Phiên đấu giá tương ứng, hoặc null nếu không tìm thấy.
+     * @param item      Sản phẩm đưa ra đấu giá.
+     * @param seller    Người bán.
+     * @param startTime Thời gian bắt đầu.
+     * @param endTime   Thời gian kết thúc.
+     * @return Phiên đấu giá vừa tạo.
+     */
+    public Auction createAuction(Item item, Seller seller,
+                                 LocalDateTime startTime, LocalDateTime endTime) {
+        Auction newAuction = new Auction(item, seller, startTime, endTime);
+        auctionList.add(newAuction);
+        LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()
+                + " | Item: " + item.getItemName());
+        return newAuction;
+    }
+
+    /**
+     * Tìm phiên đấu giá theo ID.
+     *
+     * @param auctionId ID cần tìm.
+     * @return Phiên đấu giá, hoặc null nếu không tìm thấy.
      */
     public Auction getAuctionById(String auctionId) {
         return auctionList.stream()
-                .filter(auction -> auction.getId().equals(auctionId))
+                .filter(a -> a.getId().equals(auctionId))
                 .findFirst()
                 .orElse(null);
     }
 
     /**
-     * Lấy danh sách toàn bộ các phiên đấu giá trong hệ thống.
+     * Lấy danh sách tất cả phiên đấu giá (chỉ đọc).
      *
-     * @return Danh sách các phiên đấu giá (chỉ đọc, không thể sửa đổi trực tiếp).
+     * @return Unmodifiable list các phiên đấu giá.
      */
     public List<Auction> getAllAuctions() {
-        // Trả về một view không thể sửa đổi của danh sách để bên
-        // ngoài không thể thay đổi trực tiếp
         return Collections.unmodifiableList(auctionList);
     }
 
-    // -- Quản lý người dùng --
     /**
-     * Đánh dấu và lưu trữ trạng thái một người dùng vừa đăng nhập.
+     * Huỷ một phiên đấu giá theo ID.
      *
-     * @param user Người dùng đã đăng nhập.
+     * @param auctionId ID phiên cần huỷ.
+     * @return true nếu huỷ thành công, false nếu không tìm thấy.
+     */
+    public boolean cancelAuction(String auctionId) {
+        Auction auction = getAuctionById(auctionId);
+        if (auction == null) {
+            return false;
+        }
+        auction.setStatus(AuctionStatus.CANCELED);
+        auction.notifyObservers("AUCTION_ENDED|" + auctionId + "|NONE");
+        LOGGER.info("Huỷ phiên đấu giá: " + auctionId);
+        return true;
+    }
+
+    // =========================================================================
+    // Quản lý trạng thái online
+    // =========================================================================
+
+    /**
+     * Đánh dấu người dùng đang online.
+     *
+     * @param user Người dùng vừa đăng nhập.
      */
     public void userLoggedIn(User user) {
         activeUsers.put(user.getId(), user);
+        LOGGER.fine("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
-    
+
     /**
-     * Loại bỏ trạng thái đăng nhập của một người dùng.
+     * Xoá trạng thái online của người dùng.
      *
-     * @param user Người dùng đã đăng xuất.
+     * @param user Người dùng vừa đăng xuất hoặc mất kết nối.
      */
     public void userLoggedOut(User user) {
         activeUsers.remove(user.getId());
+        LOGGER.fine("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+    }
+
+    /**
+     * Kiểm tra người dùng có đang online không.
+     *
+     * @param userId ID cần kiểm tra.
+     * @return true nếu đang online.
+     */
+    public boolean isAlreadyOnline(String userId) {
+        return activeUsers.containsKey(userId);
+    }
+
+    /**
+     * Lấy số lượng người dùng đang online.
+     *
+     * @return Số người online.
+     */
+    public int getOnlineCount() {
+        return activeUsers.size();
+    }
+
+    /**
+     * Lấy danh sách người dùng đang online (chỉ đọc).
+     *
+     * @return Unmodifiable map userId → User.
+     */
+    public Map<String, User> getActiveUsers() {
+        return Collections.unmodifiableMap(activeUsers);
+    }
+
+    // =========================================================================
+    // Quản lý registry người dùng
+    // =========================================================================
+
+    /**
+     * Đăng ký người dùng mới vào hệ thống.
+     *
+     * @param user Người dùng mới (username phải chưa tồn tại).
+     */
+    public void registerUser(User user) {
+        userRegistry.put(user.getUsername(), user);
+        LOGGER.info("Đăng ký mới: " + user.getUsername());
+    }
+
+    /**
+     * Kiểm tra username đã tồn tại chưa.
+     *
+     * @param username Tên cần kiểm tra.
+     * @return true nếu đã tồn tại.
+     */
+    public boolean isUsernameTaken(String username) {
+        return userRegistry.containsKey(username);
+    }
+
+    /**
+     * Xác thực đăng nhập theo username và password.
+     *
+     * <p><b>Lưu ý:</b> trong thực tế password phải được hash
+     * (bcrypt/SHA-256) trước khi so sánh.
+     *
+     * @param username Tên đăng nhập.
+     * @param password Mật khẩu plaintext.
+     * @return User nếu khớp, null nếu sai thông tin.
+     */
+    public User findUserByCredentials(String username, String password) {
+        User user = userRegistry.get(username);
+        if (user != null && user.getPassword().equals(password)) {
+            return user;
+        }
+        return null;
+    }
+
+    /**
+     * Tìm người dùng theo ID.
+     *
+     * @param userId ID cần tìm.
+     * @return User tương ứng, hoặc null.
+     */
+    public User findUserById(String userId) {
+        return userRegistry.values().stream()
+                .filter(u -> u.getId().equals(userId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Lấy danh sách tất cả Bidder đã đăng ký.
+     *
+     * @return List Bidder.
+     */
+    public List<User> getAllBidders() {
+        return userRegistry.values().stream()
+                .filter(u -> u instanceof Bidder)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy danh sách tất cả Seller đã đăng ký.
+     *
+     * @return List Seller.
+     */
+    public List<User> getAllSellers() {
+        return userRegistry.values().stream()
+                .filter(u -> u instanceof Seller)
+                .collect(Collectors.toList());
     }
 }
