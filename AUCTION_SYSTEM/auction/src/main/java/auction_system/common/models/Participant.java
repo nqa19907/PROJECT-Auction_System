@@ -57,7 +57,7 @@ public abstract class Participant extends User {
 
     @Override
     public String toString() {
-        return "Participant{"
+        return super.toString() + " -> Participant{"
                 + "balance=" + balance
                 + '}';
     }
