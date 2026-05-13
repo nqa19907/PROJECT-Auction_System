@@ -1,6 +1,6 @@
 package auction_system.common.patterns.factory;
 
-import auction_system.common.models.Item;
+import auction_system.common.models.items.Item;
 import auction_system.common.patterns.builder.ElectronicBuilder;
 import java.util.Map;
 

@@ -1,4 +1,6 @@
-package auction_system.common.models;
+package auction_system.common.models.users;
+
+import auction_system.common.models.items.Item;
 
 /**
  * Lớp đại diện cho quản trị viên hệ thống.
@@ -20,6 +22,11 @@ public class Admin extends User {
     @Override
     public void update(String msg) {
 
+    }
+
+    @Override
+    public String getRoleName() {
+        return "ADMIN";
     }
 
     /**

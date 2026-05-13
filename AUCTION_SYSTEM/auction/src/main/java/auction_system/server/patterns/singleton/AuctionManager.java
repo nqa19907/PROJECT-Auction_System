@@ -1,11 +1,12 @@
 package auction_system.server.patterns.singleton;
 
 import auction_system.common.enums.AuctionStatus;
-import auction_system.common.models.Auction;
-import auction_system.common.models.Bidder;
-import auction_system.common.models.Item;
-import auction_system.common.models.Seller;
-import auction_system.common.models.User;
+import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.User;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;

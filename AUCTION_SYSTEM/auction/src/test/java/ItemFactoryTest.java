@@ -1,5 +1,5 @@
-import auction_system.common.models.Item;
 import auction_system.common.patterns.factory.ElectronicCreator;
+import auction_system.common.models.items.Item;
 import auction_system.common.patterns.factory.ArtCreator;
 import auction_system.common.patterns.factory.VehicleCreator;
 import org.junit.jupiter.api.Test;

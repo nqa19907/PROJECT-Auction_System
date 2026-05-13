@@ -1,8 +1,11 @@
-package auction_system.common.models;
+package auction_system.common.models.auctions;
 
 import auction_system.common.enums.AuctionStatus;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
 import auction_system.common.patterns.observer.AuctionObserver;
 import java.io.IOException;
 import java.io.ObjectInputStream;

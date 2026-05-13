@@ -1,5 +1,6 @@
 package auction_system.server.patterns.singleton;
 
+import auction_system.server.network.ClientHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,13 +14,17 @@ import java.util.logging.Logger;
  * Lắng nghe kết nối TCP từ client và tạo một {@link ClientHandler}
  * trên thread riêng cho mỗi kết nối mới.
  *
- * <p>Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
+ * <p>
+ * Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
+ * 
  * <pre>
  *   Client → Server : COMMAND|param1|param2|...
  *   Server → Client : RESPONSE_CODE|data...
  * </pre>
  *
- * <p>Lệnh client gửi lên:
+ * <p>
+ * Lệnh client gửi lên:
+ * 
  * <pre>
  *   LOGIN|username|password
  *   REGISTER|username|email|password|role   (role: BIDDER / SELLER)
@@ -31,7 +36,9 @@ import java.util.logging.Logger;
  *   LOGOUT
  * </pre>
  *
- * <p>Phản hồi server gửi xuống:
+ * <p>
+ * Phản hồi server gửi xuống:
+ * 
  * <pre>
  *   LOGIN_OK|userId|username|role
  *   LOGIN_FAIL|message
@@ -48,7 +55,9 @@ import java.util.logging.Logger;
  *   ERROR|message
  * </pre>
  *
- * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
+ * <p>
+ * Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
+ * 
  * <pre>
  *   UPDATE_PRICE|auctionId|newPrice
  *   AUCTION_STARTED|auctionId
@@ -59,9 +68,9 @@ public class SocketServer {
 
     private static final Logger LOGGER = Logger.getLogger(SocketServer.class.getName());
 
-    private static final int DEFAULT_PORT      = 5000;
-    private static final int THREAD_POOL_SIZE  = 20;
-    private static final int SHUTDOWN_TIMEOUT  = 5; // giây
+    private static final int DEFAULT_PORT = 5000;
+    private static final int THREAD_POOL_SIZE = 20;
+    private static final int SHUTDOWN_TIMEOUT = 5; // giây
 
     // Singleton
 
@@ -69,6 +78,8 @@ public class SocketServer {
 
     /**
      * Lấy instance duy nhất của server.
+     *
+     * @return Instance duy nhất của {@link SocketServer}.
      */
     public static synchronized SocketServer getInstance() {
         if (instance == null) {
@@ -79,13 +90,13 @@ public class SocketServer {
 
     // State
 
-    private final int             port;
-    private volatile boolean      running = false;
-    private ServerSocket          serverSocket;
+    private final int port;
+    private volatile boolean running = false;
+    private ServerSocket serverSocket;
     private final ExecutorService threadPool;
 
     private SocketServer(int port) {
-        this.port       = port;
+        this.port = port;
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 
@@ -98,7 +109,7 @@ public class SocketServer {
     public void start() {
         try {
             serverSocket = new ServerSocket(port);
-            running      = true;
+            running = true;
 
             LOGGER.info("Server khởi động trên cổng " + port);
             System.out.println("[SERVER] Đang lắng nghe tại cổng " + port + "...");
@@ -136,7 +147,8 @@ public class SocketServer {
 
     /**
      * Dừng server và giải phóng tài nguyên.
-     * Thread pool sẽ hoàn thành các task đang chạy trong {@value #SHUTDOWN_TIMEOUT} giây.
+     * Thread pool sẽ hoàn thành các task đang chạy trong {@value #SHUTDOWN_TIMEOUT}
+     * giây.
      */
     public void stop() {
         if (!running) {
@@ -169,6 +181,11 @@ public class SocketServer {
         System.out.println("[SERVER] Đã dừng.");
     }
 
+    /**
+     * Kiểm tra xem server có đang chạy hay không.
+     *
+     * @return true nếu server đang chạy, false nếu đã dừng.
+     */
     public boolean isRunning() {
         return running;
     }
@@ -178,6 +195,8 @@ public class SocketServer {
     /**
      * Khởi chạy server độc lập qua dòng lệnh.
      * Có thể truyền cổng qua tham số: {@code java SocketServer 6000}
+     *
+     * @param args Tham số dòng lệnh (phần tử đầu tiên có thể là số cổng cần lắng nghe).
      */
     public static void main(String[] args) {
         int port = DEFAULT_PORT;

@@ -1,6 +1,8 @@
-package auction_system.common.models;
+package auction_system.common.models.users;
 
 import auction_system.common.exceptions.InvalidItemException;
+import auction_system.common.models.items.Item;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,11 @@ public class Seller extends Participant {
         super(username, email, password, balance);
         this.rating = rating;
         managedItems = new ArrayList<>();
+    }
+
+    @Override
+    public String getRoleName() {
+        return "SELLER";
     }
 
     /**

@@ -1,4 +1,6 @@
-package auction_system.common.models;
+package auction_system.common.models.users;
+
+import auction_system.common.models.items.Item;
 
 /**
  * Lớp đại diện cho người đấu giá (người mua) trong hệ thống.
@@ -21,6 +23,11 @@ public class Bidder extends Participant {
     @Override
     public void update(String message) {
         // to be coded
+    }
+
+    @Override
+    public String getRoleName() {
+        return "BIDDER";
     }
 
     /**
