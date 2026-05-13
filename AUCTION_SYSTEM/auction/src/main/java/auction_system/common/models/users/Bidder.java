@@ -22,7 +22,7 @@ public class Bidder extends Participant {
 
     @Override
     public void update(String message) {
-        // to be coded
+        // TODO: Cập nhật thông báo trạng thái từ phiên đấu giá cho Bidder
     }
 
     @Override
@@ -37,14 +37,14 @@ public class Bidder extends Participant {
      * @param amount Số tiền đặt giá.
      */
     public void placeBid(Item item, double amount) {
-        // to be coded
+        // TODO: Cài đặt logic đặt giá cho sản phẩm
     }
 
     /**
      * Xem lịch sử đặt giá của người đấu giá.
      */
     public void viewBidHistory() {
-        // to be coded
+        // TODO: Cài đặt logic xem lịch sử đặt giá
     }
 
     /**
@@ -54,6 +54,6 @@ public class Bidder extends Participant {
      * @param maxPrice Mức giá tối đa cho phép hệ thống tự động đặt.
      */
     public void setupAutoBid(Item item, double maxPrice) {
-        // to be coded
+        // TODO: Cài đặt tính năng tự động đặt giá (Auto-bid)
     }
 }

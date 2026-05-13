@@ -2,7 +2,6 @@ package auction_system.common.models.users;
 
 import auction_system.common.exceptions.InvalidItemException;
 import auction_system.common.models.items.Item;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +13,9 @@ public class Seller extends Participant {
     private List<Item> managedItems;
 
     @Override
-    public void update(String message) {}
+    public void update(String message) {
+        // Không thực hiện thao tác nào
+    }
 
     /**
      * Khởi tạo một người bán mới.

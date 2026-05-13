@@ -1,12 +1,11 @@
 package auction_system.server.patterns.command;
 
-import auction_system.common.models.users.User;
-import auction_system.common.models.users.Seller;
-import auction_system.common.models.users.Bidder;
-import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.common.models.constants.Protocol;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.User;
+import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.server.session.ClientSession;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,8 +17,8 @@ public class RegisterCommand implements Command {
 
     /**
      * Thực thi lệnh đăng ký tài khoản mới.
-     * <p>
-     * Lệnh:       {@code REGISTER|username|email|password|role}
+     *
+     * <p>Lệnh:       {@code REGISTER|username|email|password|role}
      * Thành công: {@code REGISTER_OK}
      * Thất bại:   {@code REGISTER_FAIL|message}
      *
@@ -47,7 +46,8 @@ public class RegisterCommand implements Command {
             }
 
             if (password.length() < 6) {
-                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR + "Mật khẩu phải có ít nhất 6 ký tự";
+                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR 
+                        + "Mật khẩu phải có ít nhất 6 ký tự";
             }
 
             String role = parts[4].toUpperCase();
@@ -61,8 +61,10 @@ public class RegisterCommand implements Command {
             return Protocol.RES_REGISTER_OK;
         } catch (Exception e) {
             String username = (parts.length > 1) ? parts[1] : "unknown";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng ký cho " + username, e);
-            return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng ký cho " 
+                    + username, e);
+            return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR 
+                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
 }

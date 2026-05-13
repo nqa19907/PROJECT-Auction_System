@@ -14,16 +14,14 @@ import java.util.logging.Logger;
  * Lắng nghe kết nối TCP từ client và tạo một {@link ClientHandler}
  * trên thread riêng cho mỗi kết nối mới.
  *
- * <p>
- * Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
+ * <p>Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
  * 
  * <pre>
  *   Client → Server : COMMAND|param1|param2|...
  *   Server → Client : RESPONSE_CODE|data...
  * </pre>
  *
- * <p>
- * Lệnh client gửi lên:
+ * <p>Lệnh client gửi lên:
  * 
  * <pre>
  *   LOGIN|username|password
@@ -36,8 +34,7 @@ import java.util.logging.Logger;
  *   LOGOUT
  * </pre>
  *
- * <p>
- * Phản hồi server gửi xuống:
+ * <p>Phản hồi server gửi xuống:
  * 
  * <pre>
  *   LOGIN_OK|userId|username|role
@@ -55,8 +52,7 @@ import java.util.logging.Logger;
  *   ERROR|message
  * </pre>
  *
- * <p>
- * Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
+ * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
  * 
  * <pre>
  *   UPDATE_PRICE|auctionId|newPrice
@@ -112,7 +108,6 @@ public class SocketServer {
             running = true;
 
             LOGGER.info("Server khởi động trên cổng " + port);
-            System.out.println("[SERVER] Đang lắng nghe tại cổng " + port + "...");
 
             acceptLoop();
 
@@ -132,7 +127,6 @@ public class SocketServer {
             try {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info("Client kết nối: " + clientSocket.getInetAddress());
-                System.out.println("[SERVER] Client mới: " + clientSocket.getInetAddress());
 
                 threadPool.execute(new ClientHandler(clientSocket));
 
@@ -178,7 +172,6 @@ public class SocketServer {
         }
 
         LOGGER.info("Server đã dừng.");
-        System.out.println("[SERVER] Đã dừng.");
     }
 
     /**

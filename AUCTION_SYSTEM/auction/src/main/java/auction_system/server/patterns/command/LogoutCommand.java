@@ -4,7 +4,6 @@ import auction_system.common.models.constants.Protocol;
 import auction_system.common.models.users.User;
 import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.server.session.ClientSession;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,8 +15,8 @@ public class LogoutCommand implements Command {
 
     /**
      * Thực thi lệnh đăng xuất.
-     * <p>
-     * Lệnh:       {@code LOGOUT}
+     *
+     * <p>Lệnh:       {@code LOGOUT}
      * Thành công: {@code LOGOUT_OK}
      * Thất bại:   {@code ERROR|message}
      *
@@ -39,7 +38,8 @@ public class LogoutCommand implements Command {
             session.leaveAllAuctions();
             return Protocol.RES_LOGOUT_OK;
         } catch (Exception e) {
-            String username = session.isLoggedIn() ? session.getCurrentUser().getUsername() : "guest";
+            String username = session.isLoggedIn() 
+                    ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
             return Protocol.RES_ERROR + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ khi đăng xuất.";
         }

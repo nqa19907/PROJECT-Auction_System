@@ -1,8 +1,7 @@
 package auction_system.common.patterns.factory;
 
-import java.util.Map;
-
 import auction_system.common.models.items.Item;
+import java.util.Map;
 
 /**
  * Giao diện định nghĩa phương thức Factory để tạo ra các loại sản phẩm đấu giá (Item).

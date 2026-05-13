@@ -1,8 +1,7 @@
 package auction_system.common.models.auctions;
 
-import java.time.LocalDateTime;
-
 import auction_system.common.models.users.Bidder;
+import java.time.LocalDateTime;
 
 /**
  * Lớp đại diện cho một giao dịch đặt giá trong phiên đấu giá.

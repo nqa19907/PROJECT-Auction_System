@@ -21,7 +21,7 @@ public class Admin extends User {
 
     @Override
     public void update(String msg) {
-
+        // Không thực hiện thao tác nào
     }
 
     @Override
@@ -35,7 +35,7 @@ public class Admin extends User {
      * @param user Người dùng cần cấm.
      */
     public void banUser(User user) {
-        // to be coded
+        // TODO: Cài đặt logic cấm người dùng
     }
 
     /**
@@ -44,14 +44,14 @@ public class Admin extends User {
      * @param item Sản phẩm cần xóa.
      */
     public void removeInvalidItem(Item item) {
-        // to be coded
+        // TODO: Cài đặt logic xóa sản phẩm không hợp lệ
     }
 
     /**
      * Giải quyết tranh chấp giữa các bên tham gia.
      */
     public void resolveDispute() {
-        // to be coded
+        // TODO: Cài đặt logic giải quyết tranh chấp
     }
 
     public int getAdminRoleLevel() {

@@ -2,7 +2,6 @@ package auction_system.server.patterns.command;
 
 import auction_system.common.models.constants.Protocol;
 import auction_system.server.session.ClientSession;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,8 +13,8 @@ public class LeaveAuctionCommand implements Command {
 
     /**
      * Thực thi lệnh rời phiên đấu giá.
-     * <p>
-     * Lệnh:       {@code LEAVE_AUCTION|auctionId}
+     *
+     * <p>Lệnh:       {@code LEAVE_AUCTION|auctionId}
      * Thành công: {@code LEAVE_OK|auctionId}
      * Thất bại:   {@code ERROR|message}
      *
@@ -35,9 +34,12 @@ public class LeaveAuctionCommand implements Command {
 
             return Protocol.RES_LEAVE_OK + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
-            String username = session.isLoggedIn() ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho " + username, e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            String username = session.isLoggedIn() 
+                    ? session.getCurrentUser().getUsername() : "guest";
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho " 
+                    + username, e);
+            return Protocol.RES_ERROR + Protocol.SEPARATOR 
+                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
 }

@@ -16,10 +16,12 @@ public class LoginController {
 
     @FXML
     private void handleLogin() {
+        // TODO: Xử lý logic đăng nhập
     }
 
     @FXML
     private void handleGoogleLogin() {
+        // TODO: Xử lý logic đăng nhập qua Google
     }
 
     @FXML

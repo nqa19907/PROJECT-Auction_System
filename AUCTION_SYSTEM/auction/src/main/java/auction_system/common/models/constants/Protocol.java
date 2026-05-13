@@ -4,6 +4,11 @@ package auction_system.common.models.constants;
  * Lớp chứa tất cả các lệnh và phản hồi giao tiếp qua Socket.
  */
 public class Protocol {
+
+    private Protocol() {
+        // Ngăn chặn khởi tạo lớp tiện ích từ bên ngoài
+    }
+
     // --- CÁC LỆNH TỪ CLIENT GỬI LÊN ---
     public static final String CMD_LOGIN = "LOGIN";
     public static final String CMD_REGISTER = "REGISTER";

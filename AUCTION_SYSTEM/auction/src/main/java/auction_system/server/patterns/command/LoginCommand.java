@@ -1,21 +1,22 @@
 package auction_system.server.patterns.command;
 
+import auction_system.common.models.constants.Protocol;
 import auction_system.common.models.users.User;
 import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.server.session.ClientSession;
-import auction_system.common.models.constants.Protocol;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Xử lý lệnh đăng nhập.
+ */
 public class LoginCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(LoginCommand.class.getName());
 
-
     /**
      * Xử lý đăng nhập.
-     * <p>
-     * Lệnh:       {@code LOGIN|username|password}
+     *
+     * <p>Lệnh:       {@code LOGIN|username|password}
      * Thành công: {@code LOGIN_OK|userId|username|role}
      * Thất bại:   {@code LOGIN_FAIL|message}
      *
@@ -52,7 +53,9 @@ public class LoginCommand implements Command {
             String role = user.getRoleName();
             LOGGER.info("Đăng nhập thành công: " + username + " [" + role + "]");
 
-            return Protocol.RES_LOGIN_OK + Protocol.SEPARATOR + user.getId() + Protocol.SEPARATOR + user.getUsername() + Protocol.SEPARATOR + role;
+            return Protocol.RES_LOGIN_OK + Protocol.SEPARATOR 
+                    + user.getId() + Protocol.SEPARATOR 
+                    + user.getUsername() + Protocol.SEPARATOR + role;
         } catch (Exception e) {
             // Bắt mọi lỗi hệ thống để không làm chết thread
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng nhập cho user: " + username, e);

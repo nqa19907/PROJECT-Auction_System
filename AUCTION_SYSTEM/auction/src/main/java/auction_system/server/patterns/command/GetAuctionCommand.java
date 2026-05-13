@@ -1,11 +1,10 @@
 package auction_system.server.patterns.command;
 
 import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.items.Item;
 import auction_system.common.models.constants.Protocol;
+import auction_system.common.models.items.Item;
 import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.server.session.ClientSession;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,9 +16,10 @@ public class GetAuctionCommand implements Command {
 
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
-     * <p>
-     * Lệnh:       {@code GET_AUCTION|auctionId}
-     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName}
+     *
+     * <p>Lệnh:       {@code GET_AUCTION|auctionId}
+     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status
+     * |endTime|sellerName}
      * Thất bại:   {@code ERROR|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
@@ -57,8 +57,10 @@ public class GetAuctionCommand implements Command {
                     + Protocol.SEPARATOR + auction.getSeller().getUsername();
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy chi tiết phiên đấu giá " + auctionId, e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
+                    + auctionId, e);
+            return Protocol.RES_ERROR + Protocol.SEPARATOR 
+                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
 }

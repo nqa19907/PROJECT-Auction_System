@@ -5,7 +5,6 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.constants.Protocol;
 import auction_system.server.patterns.singleton.AuctionManager;
 import auction_system.server.session.ClientSession;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,8 +16,8 @@ public class JoinAuctionCommand implements Command {
 
     /**
      * Thực thi lệnh tham gia phiên đấu giá.
-     * <p>
-     * Lệnh:       {@code JOIN_AUCTION|auctionId}
+     *
+     * <p>Lệnh:       {@code JOIN_AUCTION|auctionId}
      * Thành công: {@code JOIN_OK|auctionId}
      * Thất bại:   {@code JOIN_FAIL|message}
      *
@@ -46,7 +45,8 @@ public class JoinAuctionCommand implements Command {
             // Không cho phép theo dõi nếu phiên đấu giá đã kết thúc hoặc bị huỷ
             if (auction.getStatus() == AuctionStatus.FINISHED
                     || auction.getStatus() == AuctionStatus.CANCELED) {
-                return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR + "Phiên đấu giá đã kết thúc hoặc bị huỷ";
+                return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR 
+                        + "Phiên đấu giá đã kết thúc hoặc bị huỷ";
             }
 
             session.joinAuction(auctionId);
@@ -54,9 +54,12 @@ public class JoinAuctionCommand implements Command {
             LOGGER.info(session.getCurrentUser().getUsername() + " tham gia phiên: " + auctionId);
             return Protocol.RES_JOIN_OK + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
-            String username = session.isLoggedIn() ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " + username, e);
-            return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            String username = session.isLoggedIn() 
+                    ? session.getCurrentUser().getUsername() : "guest";
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " 
+                    + username, e);
+            return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR 
+                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
 }

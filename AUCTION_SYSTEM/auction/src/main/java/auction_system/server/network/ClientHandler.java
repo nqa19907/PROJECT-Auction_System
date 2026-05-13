@@ -3,7 +3,6 @@ package auction_system.server.network;
 import auction_system.common.models.constants.Protocol;
 import auction_system.common.models.users.User;
 import auction_system.common.patterns.observer.AuctionObserver;
-import auction_system.server.session.ClientSession;
 import auction_system.server.patterns.command.Command;
 import auction_system.server.patterns.command.GetAuctionCommand;
 import auction_system.server.patterns.command.JoinAuctionCommand;
@@ -14,6 +13,7 @@ import auction_system.server.patterns.command.LogoutCommand;
 import auction_system.server.patterns.command.PlaceBidCommand;
 import auction_system.server.patterns.command.RegisterCommand;
 import auction_system.server.patterns.singleton.AuctionManager;
+import auction_system.server.session.ClientSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,10 +38,15 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private BufferedReader inputReader;
     private PrintWriter outputWriter;
 
-    /** Phiên làm việc lưu trữ trạng thái của client hiện tại (người dùng, phiên đấu giá đang xem). */
+    /**
+     * Phiên làm việc lưu trữ trạng thái của client hiện tại
+     * (người dùng, phiên đấu giá đang xem).
+     */
     private final ClientSession session;
 
-    /** Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng. */
+    /**
+     * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
+     */
     private static final Map<String, Command> commandMap = Map.ofEntries(
         Map.entry(Protocol.CMD_LOGIN, new LoginCommand()),
         Map.entry(Protocol.CMD_REGISTER, new RegisterCommand()),
@@ -74,8 +79,13 @@ public class ClientHandler implements Runnable, AuctionObserver {
     @Override
     public void run() {
         try {
-            inputReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), java.nio.charset.StandardCharsets.UTF_8));
-            outputWriter = new PrintWriter(socket.getOutputStream(), true, java.nio.charset.StandardCharsets.UTF_8);
+            inputReader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream(), 
+                            java.nio.charset.StandardCharsets.UTF_8)
+            );
+            outputWriter = new PrintWriter(
+                    socket.getOutputStream(), true, java.nio.charset.StandardCharsets.UTF_8
+            );
 
             String line;
             while ((line = inputReader.readLine()) != null) {
