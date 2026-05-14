@@ -1,15 +1,16 @@
-import auction_system.common.enums.AuctionStatus;
 import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
-import auction_system.common.patterns.builder.ElectronicBuilder;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Item;
+import auction_system.common.models.items.builder.ElectronicBuilder;
 
 public class AuctionLifecycleTest {
 

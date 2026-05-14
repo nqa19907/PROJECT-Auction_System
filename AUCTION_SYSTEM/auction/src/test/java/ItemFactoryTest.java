@@ -1,7 +1,8 @@
-import auction_system.common.patterns.factory.ElectronicCreator;
 import auction_system.common.models.items.Item;
-import auction_system.common.patterns.factory.ArtCreator;
-import auction_system.common.patterns.factory.VehicleCreator;
+import auction_system.common.models.items.factory.ArtCreator;
+import auction_system.common.models.items.factory.ElectronicCreator;
+import auction_system.common.models.items.factory.VehicleCreator;
+
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
