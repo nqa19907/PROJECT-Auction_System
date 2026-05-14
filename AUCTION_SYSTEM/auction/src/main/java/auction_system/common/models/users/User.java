@@ -1,5 +1,6 @@
-package auction_system.common.models;
+package auction_system.common.models.users;
 
+import auction_system.common.models.auctions.Entity;
 import auction_system.common.patterns.observer.AuctionObserver;
 
 /**
@@ -66,4 +67,11 @@ public abstract class User extends Entity implements AuctionObserver {
     public void setOnline(boolean online) {
         isOnline = online;
     }
+
+    /**
+     * Lấy tên vai trò của người dùng (VD: "ADMIN", "SELLER", "BIDDER").
+     *
+     * @return Chuỗi đại diện cho vai trò.
+     */
+    public abstract String getRoleName();
 }

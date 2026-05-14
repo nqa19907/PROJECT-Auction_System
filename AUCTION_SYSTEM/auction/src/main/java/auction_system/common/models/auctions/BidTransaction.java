@@ -1,5 +1,6 @@
-package auction_system.common.models;
+package auction_system.common.models.auctions;
 
+import auction_system.common.models.users.Bidder;
 import java.time.LocalDateTime;
 
 /**

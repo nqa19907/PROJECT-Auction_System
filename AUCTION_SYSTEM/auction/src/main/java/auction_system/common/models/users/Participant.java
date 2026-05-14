@@ -1,10 +1,10 @@
-package auction_system.common.models;
+package auction_system.common.models.users;
 
 /**
  * Lớp đại diện cho người tham gia hệ thống, có tài khoản và số dư.
  */
 public abstract class Participant extends User {
-    protected double balance;
+    private double balance;
 
     /**
      * Khởi tạo một người tham gia mới.
@@ -57,7 +57,7 @@ public abstract class Participant extends User {
 
     @Override
     public String toString() {
-        return "Participant{"
+        return super.toString() + " -> Participant{"
                 + "balance=" + balance
                 + '}';
     }

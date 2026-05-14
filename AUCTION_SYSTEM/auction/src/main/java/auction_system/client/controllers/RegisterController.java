@@ -1,6 +1,8 @@
 package auction_system.client.controllers;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,6 +17,8 @@ import javafx.stage.Stage;
  */
 public class RegisterController {
 
+    private static final Logger LOGGER = Logger.getLogger(RegisterController.class.getName());
+
     @FXML private TextField nameField;
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
@@ -22,8 +26,8 @@ public class RegisterController {
 
     @FXML
     private void handleRegister() {
-        String name     = nameField.getText().trim();
-        String email    = emailField.getText().trim();
+        String name = nameField.getText().trim();
+        String email = emailField.getText().trim();
         String password = passwordField.getText();
 
         if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -39,7 +43,7 @@ public class RegisterController {
             return;
         }
 
-        System.out.println("Đăng ký: " + name + " | " + email);
+        LOGGER.info("Đăng ký: " + name + " | " + email);
         navigateTo("/fxml/login.fxml", "Đăng nhập");
     }
 
@@ -56,7 +60,7 @@ public class RegisterController {
             stage.setScene(new Scene(root));
             stage.setTitle(title);
         } catch (IOException e) {
-            System.err.println("Lỗi: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Lỗi điều hướng: " + e.getMessage(), e);
         }
     }
 

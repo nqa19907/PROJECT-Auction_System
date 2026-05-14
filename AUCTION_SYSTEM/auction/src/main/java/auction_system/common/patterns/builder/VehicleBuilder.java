@@ -1,6 +1,6 @@
 package auction_system.common.patterns.builder;
 
-import auction_system.common.models.Vehicle;
+import auction_system.common.models.items.Vehicle;
 
 /**
  * Lớp Builder giúp khởi tạo đối tượng Vehicle.

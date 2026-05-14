@@ -1,8 +1,11 @@
-package auction_system.common.models;
+package auction_system.common.models.auctions;
 
 import auction_system.common.enums.AuctionStatus;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
 import auction_system.common.patterns.observer.AuctionObserver;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -174,6 +177,10 @@ public class Auction extends Entity {
     /**
      * Khôi phục lại danh sách observers sau khi được nhận từ mạng (deserialize)
      * vì thuộc tính này là transient (không được truyền đi) nên ban đầu sẽ bị null.
+     *
+     * @param in Luồng đối tượng đầu vào
+     * @throws IOException Lỗi nhập/xuất trong quá trình đọc luồng
+     * @throws ClassNotFoundException Lỗi không tìm thấy lớp của đối tượng
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject(); // Đọc các thuộc tính bình thường khác

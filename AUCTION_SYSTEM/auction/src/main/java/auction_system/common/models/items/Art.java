@@ -1,4 +1,4 @@
-package auction_system.common.models;
+package auction_system.common.models.items;
 
 /**
  * Lớp đại diện cho sản phẩm đấu giá là một tác phẩm nghệ thuật.

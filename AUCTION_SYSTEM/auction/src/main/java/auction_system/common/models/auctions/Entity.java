@@ -1,4 +1,4 @@
-package auction_system.common.models;
+package auction_system.common.models.auctions;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

@@ -1,10 +1,10 @@
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
-import auction_system.common.models.Auction;
-import auction_system.common.models.BidTransaction;
-import auction_system.common.models.Bidder;
-import auction_system.common.models.Item;
-import auction_system.common.models.Seller;
+import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.BidTransaction;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
 import auction_system.common.patterns.builder.ElectronicBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -6,6 +6,11 @@ package auction_system.server;
  * nhằm tránh lỗi "JavaFX runtime components are missing".
  */
 public class Launcher {
+
+    private Launcher() {
+        // Ngăn chặn khởi tạo lớp tiện ích từ bên ngoài
+    }
+
     public static void main(String[] args) {
         ServerApp.main(args);
     }

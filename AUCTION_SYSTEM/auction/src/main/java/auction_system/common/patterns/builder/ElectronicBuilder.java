@@ -1,6 +1,6 @@
 package auction_system.common.patterns.builder;
 
-import auction_system.common.models.Electronic;
+import auction_system.common.models.items.Electronic;
 
 /**
  * Lớp Builder giúp khởi tạo đối tượng Electronic.

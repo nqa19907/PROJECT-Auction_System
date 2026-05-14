@@ -1,6 +1,6 @@
 package auction_system.common.patterns.builder;
 
-import auction_system.common.models.Art;
+import auction_system.common.models.items.Art;
 
 /**
  * Lớp Builder giúp khởi tạo đối tượng Art.

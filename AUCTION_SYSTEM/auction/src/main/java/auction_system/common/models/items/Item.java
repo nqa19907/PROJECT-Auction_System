@@ -1,4 +1,6 @@
-package auction_system.common.models;
+package auction_system.common.models.items;
+
+import auction_system.common.models.auctions.Entity;
 
 /**
  * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
