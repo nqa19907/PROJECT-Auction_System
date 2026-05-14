@@ -69,16 +69,21 @@ public class SocketServer {
 
     // Singleton
 
-    private static SocketServer instance;
+    private static volatile SocketServer instance;
 
     /**
      * Lấy instance duy nhất của server.
      *
      * @return Instance duy nhất của {@link SocketServer}.
      */
-    public static synchronized SocketServer getInstance() {
+    public static SocketServer getInstance() {
         if (instance == null) {
             instance = new SocketServer(DEFAULT_PORT);
+            synchronized (SocketServer.class) {
+                if (instance == null) {
+                    instance = new SocketServer(DEFAULT_PORT);
+                }
+            }
         }
         return instance;
     }

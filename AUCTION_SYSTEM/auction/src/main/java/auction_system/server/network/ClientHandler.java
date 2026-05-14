@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -80,11 +81,12 @@ public class ClientHandler implements Runnable, AuctionObserver {
     public void run() {
         try {
             inputReader = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream(), 
-                            java.nio.charset.StandardCharsets.UTF_8)
+                            new InputStreamReader(socket.getInputStream(), 
+                            StandardCharsets.UTF_8)
             );
             outputWriter = new PrintWriter(
-                    socket.getOutputStream(), true, java.nio.charset.StandardCharsets.UTF_8
+                            socket.getOutputStream(), true,
+                            StandardCharsets.UTF_8
             );
 
             String line;
