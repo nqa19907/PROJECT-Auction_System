@@ -1,9 +1,9 @@
 package auction_system.server.session;
 
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
-import auction_system.common.patterns.observer.AuctionObserver;
-import auction_system.server.patterns.singleton.AuctionManager;
+import auction_system.server.core.AuctionManager;
 import java.util.HashSet;
 import java.util.Set;
 

@@ -1,7 +1,7 @@
 package auction_system.common.models.users;
 
+import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.auctions.Entity;
-import auction_system.common.patterns.observer.AuctionObserver;
 
 /**
  * Lớp trừu tượng đại diện cho người dùng trong hệ thống.
