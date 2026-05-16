@@ -1,11 +1,12 @@
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
-import auction_system.common.models.Auction;
-import auction_system.common.models.BidTransaction;
-import auction_system.common.models.Bidder;
-import auction_system.common.models.Item;
-import auction_system.common.models.Seller;
-import auction_system.common.patterns.builder.ElectronicBuilder;
+import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.BidTransaction;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.items.builder.ElectronicBuilder;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -31,10 +32,6 @@ public class CoreBiddingLogicTest {
                 .description("The best smartphone camera")
                 .startPrice(startPrice)
                 .sellerId("61h23s1")
-                .condition("Sealed")
-                .imagePath("")
-                .brand("OPPO")
-                .warrantyMonths(12)
                 .build();
         seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
                                     "69420", 69420, 4.69f);

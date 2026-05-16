@@ -1,14 +1,16 @@
-import auction_system.common.enums.AuctionStatus;
-import auction_system.common.models.Auction;
-import auction_system.common.models.Item;
-import auction_system.common.models.Seller;
-import auction_system.common.patterns.builder.ElectronicBuilder;
+import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Seller;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
-import auction_system.common.models.Bidder;
-import auction_system.common.models.BidTransaction;
+
+import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.AuctionStatus;
+import auction_system.common.models.auctions.BidTransaction;
+import auction_system.common.models.items.Item;
+import auction_system.common.models.items.builder.ElectronicBuilder;
 
 public class AuctionLifecycleTest {
 
@@ -21,10 +23,6 @@ public class AuctionLifecycleTest {
                 .description("Apple smartphone")
                 .startPrice(2000.0)
                 .sellerId("SN001")
-                .condition("New")
-                .imagePath("")
-                .brand("Apple")
-                .warrantyMonths(12)
                 .build();
         Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
         auction = new Auction(item, seller,

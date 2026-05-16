@@ -1,5 +1,9 @@
-name: Java CI with Maven
+name: Java CI/CD with Maven
 
+# ---------------------------------------------------------
+# PHẦN 1: CẤU HÌNH TRIGGER (Kích hoạt quy trình)
+# Đây là khởi đầu của cả CI và CD
+# ---------------------------------------------------------
 on:
   push:
     branches: [ "main", "develop", "feature/**" ]
@@ -9,13 +13,57 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # CD: Cần quyền write để hệ thống có thể tự tạo bản Release và upload file
+    permissions:
+      contents: write
+
     steps:
-    - uses: actions/checkout@v3
+    # CI: Lấy mã nguồn mới nhất từ kho lưu trữ về máy ảo build
+    - uses: actions/checkout@v4
+
+    # CI: Thiết lập môi trường Java (Infrastructure as Code)
     - name: Set up JDK 21
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    - name: Build with Maven
-      run: mvn -B package --file AUCTION_SYSTEM/auction/pom.xml
+
+    # ---------------------------------------------------------
+    # PHẦN 2: CI (CONTINUOUS INTEGRATION - Tích hợp liên tục)
+    # Mục tiêu: Đảm bảo code mới "sạch", không lỗi và đúng quy chuẩn
+    # ---------------------------------------------------------
+    - name: Build and Package with Maven
+      # CI: Lệnh này sẽ biên dịch code và chạy các bài Unit Test (JUnit)
+      # Nếu test lỗi hoặc code sai cú pháp, quy trình CI dừng tại đây (Báo Đỏ)
+      run: mvn -B clean package -P cross-platform --file AUCTION_SYSTEM/auction/pom.xml
+
+    # ---------------------------------------------------------
+    # PHẦN 3: CD (CONTINUOUS DELIVERY - Chuyển giao liên tục)
+    # Mục tiêu: Đóng gói sản phẩm và đưa đến tay người dùng (hoặc giảng viên)
+    # ---------------------------------------------------------
+
+    # CD: Lưu trữ file .jar vừa build được vào bộ nhớ tạm của GitHub Actions
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: auction-system-jar
+        path: AUCTION_SYSTEM/auction/target/*.jar
+
+    # CD: Tự động tạo bản Release trên GitHub
+    # Bước này "quyền lực" nhất: Nó biến đống code thành một phiên bản có thể tải về
+    - name: Create GitHub Release
+      # Điều kiện quan trọng: Chỉ chạy CD khi code đã gộp (push) vào nhánh chính 'main'
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.run_number }}
+        name: Release Build ${{ github.run_number }}
+        draft: false
+        prerelease: false
+        # Đính kèm sản phẩm (file .jar) vào bản Release
+        files: |
+          AUCTION_SYSTEM/auction/target/*.jar
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
