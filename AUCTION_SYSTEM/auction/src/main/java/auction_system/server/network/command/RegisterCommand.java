@@ -30,7 +30,8 @@ public class RegisterCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (parts.length < 5) {
-                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR + "Thiếu thông tin đăng ký";
+                return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
+                        + "Thiếu thông tin đăng ký";
             }
 
             String username = parts[1];
@@ -38,15 +39,17 @@ public class RegisterCommand implements Command {
             String password = parts[3];
 
             if (AuctionManager.getInstance().isUsernameTaken(username)) {
-                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR + "Tên đăng nhập đã tồn tại";
+                return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
+                        + "Tên đăng nhập đã tồn tại";
             }
 
             if (!email.contains("@")) {
-                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR + "Email không hợp lệ";
+                return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
+                        + "Email không hợp lệ";
             }
 
             if (password.length() < 6) {
-                return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR 
+                return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                         + "Mật khẩu phải có ít nhất 6 ký tự";
             }
 
@@ -58,12 +61,12 @@ public class RegisterCommand implements Command {
 
             AuctionManager.getInstance().registerUser(newUser);
             LOGGER.info("Đăng ký mới: " + username + " [" + role + "]");
-            return Protocol.RES_REGISTER_OK;
+            return Protocol.Response.REGISTER_OK.name();
         } catch (Exception e) {
             String username = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng ký cho " 
                     + username, e);
-            return Protocol.RES_REGISTER_FAIL + Protocol.SEPARATOR 
+            return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

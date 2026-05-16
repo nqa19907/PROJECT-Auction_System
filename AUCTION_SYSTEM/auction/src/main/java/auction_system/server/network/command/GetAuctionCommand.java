@@ -18,8 +18,8 @@ public class GetAuctionCommand implements Command {
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
      *
      * <p>Lệnh:       {@code GET_AUCTION|auctionId}
-     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status
-     * |endTime|sellerName}
+     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice}
+     *             {@code |status|endTime|sellerName}
      * Thất bại:   {@code ERROR|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
@@ -30,12 +30,13 @@ public class GetAuctionCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (parts.length < 2) {
-                return Protocol.RES_ERROR + Protocol.SEPARATOR + "Thiếu auctionId";
+                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
             Auction auction = AuctionManager.getInstance().getAuctionById(parts[1]);
             if (auction == null) {
-                return Protocol.RES_ERROR + Protocol.SEPARATOR + "Không tìm thấy phiên đấu giá";
+                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
+                        + "Không tìm thấy phiên đấu giá";
             }
 
             Item item = auction.getItem();
@@ -46,7 +47,7 @@ public class GetAuctionCommand implements Command {
 
             // TODO: Review this longass return;
             // Trả về toàn bộ chi tiết phiên đấu giá nối với nhau bằng dấu phân cách
-            return Protocol.RES_AUCTION_DETAIL
+            return Protocol.Response.AUCTION_DETAIL.name()
                     + Protocol.SEPARATOR + auction.getId()
                     + Protocol.SEPARATOR + item.getItemName()
                     + Protocol.SEPARATOR + item.getDescription()
@@ -59,7 +60,7 @@ public class GetAuctionCommand implements Command {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
                     + auctionId, e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR 
+            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

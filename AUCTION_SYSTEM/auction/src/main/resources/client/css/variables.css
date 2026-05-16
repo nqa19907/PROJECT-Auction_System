@@ -1,0 +1,109 @@
+.root {
+    /*
+    ========================================================================
+    TẦNG 1: MÀU NGUYÊN THỦY (PRIMITIVE COLORS)
+    Định nghĩa "kho sơn" - Không dùng các biến này trực tiếp vào component.
+    ======================================================================== */
+
+    /* --- BRAND: ORANGE (H: 37) --- */
+    -color-orange-100: #FFF7EB;
+    -color-orange-120: #FFEDD1;
+    -color-orange-200: #FCBF5D;
+    -color-orange-300: #F7AB31;
+    -color-orange-400: #F2A11F;
+    -color-orange-500: #EB9813;
+    -color-orange-600: #E08F0B;
+    -color-orange-700: #CC8006;
+    -color-orange-800: #A86802;
+    -color-orange-900: #3D2600;
+
+    /* --- SUPPORTING: GREEN (H: 107) --- */
+    -color-green-100: #EFFFEB;
+    -color-green-200: #80FC5D;
+    -color-green-300: #5CF731;
+    -color-green-400: #4DF21F;
+    -color-green-500: #42EB13;
+    -color-green-600: #39E00B;
+    -color-green-700: #31CC06;
+    -color-green-800: #26A802;
+    -color-green-900: #0D3D00;
+
+    /* --- SUPPORTING: RED (H: 0) --- */
+    -color-red-100: #FFEBEB;
+    -color-red-200: #FC5D5D;
+    -color-red-300: #F73131;
+    -color-red-400: #F21F1F;
+    -color-red-500: #EB1313;
+    -color-red-600: #E00B0B;
+    -color-red-700: #CC0606;
+    -color-red-800: #A80202;
+    -color-red-900: #3D0000;
+
+    /* --- SUPPORTING: YELLOW (H: 52) --- */
+    -color-yellow-100: #FFFCEB;
+    -color-yellow-200: #FCE75D;
+    -color-yellow-300: #F7DD31;
+    -color-yellow-400: #F2D61F;
+    -color-yellow-500: #EBCE13;
+    -color-yellow-600: #E0C40B;
+    -color-yellow-700: #CCB206;
+    -color-yellow-800: #A89202;
+    -color-yellow-900: #3D3500;
+
+    /* --- NEUTRAL: GREY (H: 37) --- */
+    -color-grey-100: #FFFFFF;
+    -color-grey-200: #E6E1E0;
+    -color-grey-300: #B3ADAB;
+    -color-grey-400: #807A78;
+    -color-grey-500: #4D4846;
+    -color-grey-600: #332E2C;
+    -color-grey-700: #1A1716;
+    -color-grey-800: #0D0B0A;
+    -color-grey-900: #000000;
+
+    /* ========================================================================
+    TẦNG 2: MÀU CHỨC NĂNG (SEMANTIC COLORS)
+    ======================================================================== */
+
+    /* Trạng thái Chính (Brand/Primary) */
+    -color-primary: -color-orange-500;
+    -color-primary-hover: -color-orange-400;
+    /* Màu glow của orange-300 */
+    -color-primary-hover-glow: rgba(247, 172, 49, 0.6);
+    -color-primary-bg: -color-orange-100;
+    -color-primary-bg-hover: -color-orange-120;
+
+    /* Trạng thái Lỗi (Danger/Error) */
+    -color-error: -color-red-500;
+    -color-error-bg: -color-red-100;
+    -color-error-text: -color-red-600;
+
+    /* Trạng thái Thành công (Success) */
+    -color-success: -color-green-500;
+    -color-success-bg: -color-green-100;
+
+    /* Trạng thái Cảnh báo/Rating (Warning) */
+    -color-warning: -color-yellow-500;
+    -color-star-icon: -color-yellow-400;
+
+    /* Màu Chữ (Text) */
+    -color-text-main: -color-grey-800;       /* Chữ chính (đen xám) */
+    -color-text-sub: -color-grey-500;        /* Chữ phụ, mô tả */
+    -color-text-hint: -color-grey-400;       /* Chữ gợi ý mờ (placeholder) */
+    -color-text-inverse: -color-grey-100;    /* Chữ trên nền đậm (nút) */
+    -color-text-brand: -color-orange-700;
+    -color-text-brand-hover: -color-orange-800;
+    -color-error-text: -color-red-600;
+
+    /* Bề mặt & Đường viền (Surfaces & Borders) */
+    -color-bg-main: -color-grey-200;
+    -color-surface: -color-grey-100;
+
+    -color-border-input: -color-grey-300;
+    -color-border-focus: -color-orange-500;
+    -color-border-focus-glow: rgba(235, 152, 19, 0.6);
+
+    /* Màu Divider */
+    -color-divider: -color-primary;
+
+}
