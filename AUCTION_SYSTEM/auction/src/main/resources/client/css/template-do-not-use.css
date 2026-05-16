@@ -1,7 +1,22 @@
+/* Áp dụng cho toàn bộ ứng dụng */
+.root {
+    -fx-font-family: "Young";
+    -fx-font-size: 15px;
+    -fx-text-fill: #333333;
+}
+
 .button {
+    -fx-font-family: "Young Display Bold";
+    -fx-font-weight: bold;
     -fx-border-width: 0;
     -fx-background-radius: 0;
 }
+
+.label {
+    /* Giúp chữ mảnh và sắc nét hơn */
+    -fx-font-smoothing-type: lcd;
+}
+
 .hero-container {
     -fx-background-color: #2E2117;
     -fx-background-radius: 15;

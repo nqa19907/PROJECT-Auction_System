@@ -1,0 +1,67 @@
+/* ========================================================================
+   TYPOGRAPHY SYSTEM
+======================================================================== */
+
+/* Font mặc định cho toàn app */
+.root {
+    -fx-font-family: 'Google Sans'; 
+}
+
+.label {
+    /* Giúp chữ mảnh và sắc nét hơn */
+    -fx-font-smoothing-type: lcd;
+}
+
+/* Tiêu đề lớn (Bold) */
+.text-header {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;
+    -fx-text-fill: -color-primary;
+}
+
+/* Tiêu đề phụ */
+.text-header-secondary {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-brand;
+}
+
+/* Chữ nội dung bình thường */
+.text-body {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-sub;
+}
+
+/* Chữ in hoa nhỏ dùng cho các nhãn như EMAIL, MẬT KHẨU */
+.text-label-code {
+    -fx-font-family: 'Google Sans Code';
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-text-sub;
+}
+
+/* Chữ gợi ý phụ (như: placeholder hoặc text nhỏ) */
+.text-hint {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-text-hint;
+}
+
+/* Chữ báo lỗi */
+.text-error {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-error-text;
+}
+
+/* Chữ nhấn mạnh màu Primary (dùng cho Quên mật khẩu) */
+.text-primary {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-text-brand;
+    -fx-cursor: hand;
+}
+.text-primary:hover {
+    -fx-text-fill: -color-text-brand-hover;
+}

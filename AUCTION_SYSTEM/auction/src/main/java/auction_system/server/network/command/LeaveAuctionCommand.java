@@ -26,19 +26,19 @@ public class LeaveAuctionCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (parts.length < 2) {
-                return Protocol.RES_ERROR + Protocol.SEPARATOR + "Thiếu auctionId";
+                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
             String auctionId = parts[1];
             session.leaveAuction(auctionId);
 
-            return Protocol.RES_LEAVE_OK + Protocol.SEPARATOR + auctionId;
+            return Protocol.Response.LEAVE_OK.name() + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho " 
                     + username, e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR 
+            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

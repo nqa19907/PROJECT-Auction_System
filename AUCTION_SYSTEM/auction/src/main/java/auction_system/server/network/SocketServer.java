@@ -1,5 +1,6 @@
 package auction_system.server.network;
 
+import auction_system.common.network.NetworkConfig;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -63,7 +64,6 @@ public class SocketServer {
 
     private static final Logger LOGGER = Logger.getLogger(SocketServer.class.getName());
 
-    private static final int DEFAULT_PORT = 5000;
     private static final int THREAD_POOL_SIZE = 20;
     private static final int SHUTDOWN_TIMEOUT = 5; // giây
 
@@ -78,10 +78,10 @@ public class SocketServer {
      */
     public static SocketServer getInstance() {
         if (instance == null) {
-            instance = new SocketServer(DEFAULT_PORT);
+            instance = new SocketServer(NetworkConfig.SERVER_PORT);
             synchronized (SocketServer.class) {
                 if (instance == null) {
-                    instance = new SocketServer(DEFAULT_PORT);
+                    instance = new SocketServer(NetworkConfig.SERVER_PORT);
                 }
             }
         }
@@ -196,12 +196,13 @@ public class SocketServer {
      * @param args Tham số dòng lệnh (phần tử đầu tiên có thể là số cổng cần lắng nghe).
      */
     public static void main(String[] args) {
-        int port = DEFAULT_PORT;
+        int port = NetworkConfig.SERVER_PORT;
         if (args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException e) {
-                System.err.println("Cổng không hợp lệ, dùng cổng mặc định " + DEFAULT_PORT);
+                System.err.println("Cổng không hợp lệ, dùng cổng mặc định "
+                                    + NetworkConfig.SERVER_PORT);
             }
         }
 

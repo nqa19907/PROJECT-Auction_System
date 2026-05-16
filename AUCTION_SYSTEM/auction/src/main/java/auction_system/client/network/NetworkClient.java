@@ -91,13 +91,16 @@ public class NetworkClient {
      * Gửi một lệnh (Command) lên Server.
      *
      * @param command Chuỗi lệnh cần gửi.
+     * @return true nếu gửi thành công, false nếu chưa kết nối hoặc có lỗi.
      */
-    public void sendCommand(String command) {
+    public boolean sendCommand(String command) {
         if (out != null && !socket.isClosed()) {
             out.println(command);
             LOGGER.info("Gửi tới Server: " + command);
+            return true;
         } else {
             LOGGER.warning("Không thể gửi lệnh, chưa kết nối: " + command);
+            return false;
         }
     }
 
@@ -113,6 +116,7 @@ public class NetworkClient {
 
                 if (messageHandler != null) {
                     // Ép việc cập nhật giao diện chạy trên JavaFX Application Thread
+                    // tránh lỗi crash ứng dụng khi cập nhật UI từ một luồng mạng
                     Platform.runLater(() -> messageHandler.accept(msg));
                 }
             }
@@ -148,14 +152,15 @@ public class NetworkClient {
      */
     private void cleanupConnection() {
         try {
+            // Phải đóng Socket TRƯỚC để bẻ gãy blocking I/O (readLine) đang kẹt ở luồng lắng nghe
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
             if (in != null) {
                 in.close();
             }
             if (out != null) {
                 out.close();
-            }
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
             }
             LOGGER.info("Đã ngắt kết nối và dọn dẹp tài nguyên.");
         } catch (IOException e) {

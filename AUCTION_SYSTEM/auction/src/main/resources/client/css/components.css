@@ -1,0 +1,140 @@
+/* ========================================================================
+   COMPONENTS STYLES
+======================================================================== */
+
+/* --- INPUT STYLES --- */
+.input-field {
+    -fx-font-family: 'Google Sans Code'; /* Override font cho input */
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border-input;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 12 16 12 16;
+    -fx-text-fill: -color-text-main;
+    -fx-prompt-text-fill: -color-text-hint;
+    -fx-font-size: 14px;
+    /* Giữ trước không gian cho bóng đổ bằng màu trong suốt để không làm xê dịch layout */
+    -fx-effect: dropshadow(three-pass-box, transparent, 5, 0, 0, 0);
+}
+
+.input-field:focused {
+    -fx-border-color: -color-border-focus;
+    -fx-border-width: 2;
+    -fx-padding: 11 15 11 15; /* Giảm padding 1px để bù trừ cho viền dày lên */
+    -fx-background-color: -color-surface;
+    -fx-effect: dropshadow(three-pass-box, -color-border-focus-glow, 5, 0, 0, 0); 
+}
+
+/* --- LAYOUT COMPONENTS --- */
+.login-background {
+    -fx-background-color: -color-bg-main;
+}
+
+.login-card {
+    -fx-background-color: -color-primary-bg;
+    -fx-background-radius: 24; /* Mức bo góc này sẽ đồng điệu với độ cong thực tế của các nút bấm */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10);
+    -fx-padding: 30;
+}
+
+/* --- DIVIDER --- */
+.divider-line {
+    -fx-background-color: -color-divider; /* Màu xám nhạt để hiển thị tốt trên nền cam */
+    -fx-pref-height: 1; /* Chiều cao/Độ dày của nét kẻ */
+    -fx-max-height: 1;
+}
+
+/* --- BUTTON STYLES --- */
+.btn-primary {
+    -fx-font-family: 'Google Sans';
+    -fx-background-color: -color-primary;
+    -fx-background-radius: 50;
+    -fx-text-fill: -color-text-inverse;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 13 24; /* Tăng padding 2 bên lên 24px để chữ không bị lẹm vào đường cong */
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -color-primary-hover;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}
+
+/* Nút phụ: Nền nhạt, viền đậm */
+.btn-secondary {
+    -fx-font-family: 'Google Sans';
+    -fx-background-color: -color-primary-bg;
+    -fx-border-color: -color-primary;
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;
+    -fx-border-width: 2;
+    -fx-text-fill: -color-text-brand;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 11 24; 
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: -color-primary-bg-hover; 
+}
+
+.btn-outline {
+    -fx-font-family: 'Google Sans';
+    -fx-background-color: rgba(255, 255, 255, 0.07);
+    -fx-border-color: rgba(255, 255, 255, 0.15);
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;
+    -fx-border-width: 1;
+    -fx-text-fill: -color-text-main;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 11 24;
+    -fx-cursor: hand;
+}
+
+.btn-outline:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* --- REGISTER PROMPT (Khối nhắc đăng ký) --- */
+.register-prompt {
+    -fx-background-color: transparent; /* Nền trong suốt ở trạng thái bình thường */
+    -fx-border-color: -color-primary;
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;
+    -fx-border-width: 1;
+    -fx-padding: 11 24; 
+    -fx-cursor: hand;
+}
+
+/* Áp dụng màu và font chữ đích danh cho các thẻ Label bên trong khối */
+.register-prompt .label {
+    -fx-text-fill: -color-text-brand;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+/* Đổi nền thành cam nhạt khi di chuột vào khối */
+.register-prompt:hover {
+    -fx-background-color: -color-primary-bg-hover;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}
+
+/* ICONS */
+.font-icon {
+    -fx-icon-color: -color-primary;
+    -fx-icon-size: 24px;
+}
+
+/* --- CUSTOM SVG ICONS --- */
+.icon-gavel {
+    /* Dán mã SVG của bạn vào giữa 2 dấu ngoặc kép bên dưới */
+    -fx-shape: "M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z";
+    -fx-background-color: -color-primary; /* Màu của cái búa */
+    /* Đảm bảo tỉ lệ luôn được giữ nguyên khi thay đổi kích thước */
+    -fx-scale-shape: true;
+}

@@ -5,6 +5,7 @@ import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
+import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.time.LocalDateTime;
@@ -128,7 +129,9 @@ public class Auction extends Entity {
         double currentPrice = (currentHighestBid != null)
                 ? currentHighestBid.getAmount()
                 : item.getStartPrice();
-        String message = "UPDATE_PRICE|" + this.getId() + "|" + currentPrice;
+        String message = Protocol.Response.UPDATE_PRICE.name() 
+                + Protocol.SEPARATOR + this.getId() 
+                + Protocol.SEPARATOR + currentPrice;
 
         for (AuctionObserver observer : observers) {
             observer.update(message);
@@ -153,7 +156,8 @@ public class Auction extends Entity {
         // Chỉ bắt đầu khi đang OPEN và đã tới giờ bắt đầu
         if (this.status == AuctionStatus.OPEN && !LocalDateTime.now().isBefore(startTime)) {
             setStatus(AuctionStatus.RUNNING);
-            String message = "AUCTION_STARTED|" + this.getId();
+            String message = Protocol.Response.AUCTION_STARTED.name() 
+                    + Protocol.SEPARATOR + this.getId();
             notifyObservers(message);
         }
     }
@@ -167,7 +171,9 @@ public class Auction extends Entity {
             setStatus(AuctionStatus.FINISHED);
             Bidder winner = calculateWinner();
             String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";
-            String message = "AUCTION_ENDED|" + this.getId() + "|" + winnerUsername;
+            String message = Protocol.Response.AUCTION_ENDED.name() 
+                    + Protocol.SEPARATOR + this.getId() 
+                    + Protocol.SEPARATOR + winnerUsername;
             notifyObservers(message);
         }
     }

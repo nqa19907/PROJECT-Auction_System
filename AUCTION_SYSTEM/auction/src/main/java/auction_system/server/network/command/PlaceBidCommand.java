@@ -33,18 +33,20 @@ public class PlaceBidCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
-                return Protocol.RES_ERROR + Protocol.SEPARATOR + "Bạn cần đăng nhập trước";
+                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
+                        + "Bạn cần đăng nhập trước";
             }
 
             User currentUser = session.getCurrentUser();
             // Xác minh quyền: chỉ người mua (Bidder) mới được phép đặt giá
             if (!(currentUser instanceof Bidder)) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR 
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
                         + "Chỉ người mua (Bidder) mới có thể đặt giá";
             }
 
             if (parts.length < 3) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR + "Thiếu thông tin đặt giá";
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
+                        + "Thiếu thông tin đặt giá";
             }
 
             String auctionId = parts[1];
@@ -52,16 +54,19 @@ public class PlaceBidCommand implements Command {
             try {
                 amount = Double.parseDouble(parts[2]);
             } catch (NumberFormatException ex) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR + "Số tiền không hợp lệ";
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
+                        + "Số tiền không hợp lệ";
             }
 
             if (amount <= 0) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR + "Số tiền phải lớn hơn 0";
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
+                        + "Số tiền phải lớn hơn 0";
             }
 
             Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
             if (auction == null) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR + "Không tìm thấy phiên đấu giá";
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
+                        + "Không tìm thấy phiên đấu giá";
             }
 
             Bidder bidder = (Bidder) currentUser;
@@ -72,17 +77,17 @@ public class PlaceBidCommand implements Command {
             try {
                 auction.placeBid(bid);
                 LOGGER.info(bidder.getUsername() + " đặt " + amount + " cho phiên " + auctionId);
-                return Protocol.RES_BID_OK + Protocol.SEPARATOR 
+                return Protocol.Response.BID_OK.name() + Protocol.SEPARATOR 
                         + auctionId + Protocol.SEPARATOR + amount;
             } catch (AuctionClosedException | InvalidBidException ex) {
-                return Protocol.RES_BID_FAIL + Protocol.SEPARATOR + ex.getMessage();
+                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR + ex.getMessage();
             }
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đặt giá cho " 
                     + username, e);
-            return Protocol.RES_BID_FAIL + Protocol.SEPARATOR 
+            return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

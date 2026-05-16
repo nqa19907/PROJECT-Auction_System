@@ -32,7 +32,7 @@ public class ListAuctionsCommand implements Command {
         try {
             List<Auction> auctions = AuctionManager.getInstance().getAllAuctions();
             StringBuilder response = new StringBuilder();
-            response.append(Protocol.RES_AUCTION_LIST)
+            response.append(Protocol.Response.AUCTION_LIST.name())
                     .append(Protocol.SEPARATOR).append(auctions.size());
 
             for (Auction auction : auctions) {
@@ -52,7 +52,7 @@ public class ListAuctionsCommand implements Command {
             return response.toString();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy danh sách phiên đấu giá", e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR 
+            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

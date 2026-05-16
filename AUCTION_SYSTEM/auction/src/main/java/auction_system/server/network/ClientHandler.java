@@ -49,14 +49,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
      */
     private static final Map<String, Command> commandMap = Map.ofEntries(
-        Map.entry(Protocol.CMD_LOGIN, new LoginCommand()),
-        Map.entry(Protocol.CMD_REGISTER, new RegisterCommand()),
-        Map.entry(Protocol.CMD_LIST_AUCTIONS, new ListAuctionsCommand()),
-        Map.entry(Protocol.CMD_GET_AUCTION, new GetAuctionCommand()),
-        Map.entry(Protocol.CMD_JOIN_AUCTION, new JoinAuctionCommand()),
-        Map.entry(Protocol.CMD_LEAVE_AUCTION, new LeaveAuctionCommand()),
-        Map.entry(Protocol.CMD_PLACE_BID, new PlaceBidCommand()),
-        Map.entry(Protocol.CMD_LOGOUT, new LogoutCommand())
+        Map.entry(Protocol.Command.LOGIN.name(), new LoginCommand()),
+        Map.entry(Protocol.Command.REGISTER.name(), new RegisterCommand()),
+        Map.entry(Protocol.Command.LIST_AUCTIONS.name(), new ListAuctionsCommand()),
+        Map.entry(Protocol.Command.GET_AUCTION.name(), new GetAuctionCommand()),
+        Map.entry(Protocol.Command.JOIN_AUCTION.name(), new JoinAuctionCommand()),
+        Map.entry(Protocol.Command.LEAVE_AUCTION.name(), new LeaveAuctionCommand()),
+        Map.entry(Protocol.Command.PLACE_BID.name(), new PlaceBidCommand()),
+        Map.entry(Protocol.Command.LOGOUT.name(), new LogoutCommand())
     );
 
     /**
@@ -129,7 +129,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 }
             }
         } else {
-            send(Protocol.RES_ERROR + Protocol.SEPARATOR + "Lệnh không hợp lệ: " + commandName);
+            send(Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
+                    + "Lệnh không hợp lệ: " + commandName);
         }
     }
 
