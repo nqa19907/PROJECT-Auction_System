@@ -12,14 +12,12 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.SVGPath?>
-
-<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
-<BorderPane minWidth="960" style="-fx-background-color: #F7F4EF;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.DashboardController">
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="mainLayout" minWidth="960" style="-fx-background-color: #F7F4EF;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.DashboardController">
     <top>
         <VBox style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 4, 0, 0, 2);">
 
@@ -58,9 +56,14 @@
                     <Label style="-fx-font-size: 13; -fx-text-fill: #c0cce0; -fx-cursor: hand;" text="How it works?" />
                     <Label style="-fx-font-size: 13; -fx-text-fill: #c0cce0; -fx-cursor: hand;" text="Help" />
                     <Label style="-fx-font-size: 18; -fx-text-fill: #C9A84C; -fx-cursor: hand;" text="♡" />
+
+                    <!-- Nút đăng bán  -->
+                    <Button onAction="#handleDangBan" style="-fx-background-color: transparent; -fx-text-fill: #4ade80;-fx-border-color: #4ade80; -fx-border-width: 1.5; -fx-border-radius: 6; -fx-background-radius: 6 -fx-font-size: 13; -fx-font-weight: bold;  -fx-padding: 6 14; -fx-cursor: hand;" text="+ Đăng bán" />
+
                     <!-- button sign in -->
                     <Button fx:id="btnSignIn" onAction="#handleSignIn" style="-fx-background-color: #C9A84C; -fx-text-fill: #1A2744; -fx-font-size: 13; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-cursor: hand;" text="Sign in" />
                 </HBox>
+
             </HBox>
 
             <!-- ===== TRUSTPILOT ===== -->
@@ -85,7 +88,7 @@
                     </graphic>
                 </Button>
 
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
+                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
                     <graphic>
 
                         <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
@@ -105,7 +108,7 @@
                     </graphic>
                 </Button>
 
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
+                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
                     <graphic>
 
                         <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
@@ -115,7 +118,7 @@
                     </graphic>
                 </Button>
 
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
+                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
                     <graphic>
 
                         <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
@@ -125,7 +128,7 @@
                     </graphic>
                 </Button>
 
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
+                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
                     <graphic>
 
                         <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
@@ -190,7 +193,7 @@
                                     </children>
                                 </HBox>
 
-                                <VBox alignment="CENTER_LEFT" spacing="20" mouseTransparent="false">
+                                <VBox alignment="CENTER_LEFT" mouseTransparent="false" spacing="20">
                                     <padding>
                                         <Insets left="350" /> </padding>
                                     <children>
@@ -212,73 +215,36 @@
 
                             <VBox spacing="16" style="-fx-background-color: #F7F4EF; -fx-padding: 30 40 20 40;">
 
-                                <Label text="Tài sản nổi bật"
-                                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
+                                <Label style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Tài sản nổi bật" />
 
                                 <HBox spacing="20">
 
                                     <!-- Card 1 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Đồng hồ Rolex Submariner Date 2004"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €15,500"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
+                                    <VBox alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" style="-fx-background-color: white; -fx-background-radius: 16;                      -fx-border-color: #e8e8e8; -fx-border-radius: 16;                      -fx-border-width: 1; -fx-padding: 30 24 24 24;">
+                                        <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Đồng hồ Rolex Submariner Date 2004" wrapText="true" />
+                                        <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €15,500" />
+                                        <Button style="-fx-background-color: #8B5E52; -fx-text-fill: white;                            -fx-font-size: 13; -fx-background-radius: 30;                            -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;" text="Đấu giá ngay" />
                                     </VBox>
 
                                     <!-- Card 2 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Tượng đồng chiến binh Hy Lạp cổ đại"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €3,200"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
+                                    <VBox alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" style="-fx-background-color: white; -fx-background-radius: 16;                      -fx-border-color: #e8e8e8; -fx-border-radius: 16;                      -fx-border-width: 1; -fx-padding: 30 24 24 24;">
+                                        <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Tượng đồng chiến binh Hy Lạp cổ đại" wrapText="true" />
+                                        <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €3,200" />
+                                        <Button style="-fx-background-color: #8B5E52; -fx-text-fill: white;                            -fx-font-size: 13; -fx-background-radius: 30;                            -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;" text="Đấu giá ngay" />
                                     </VBox>
 
                                     <!-- Card 3 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Bộ xu bạc La Mã thế kỷ 18 nguyên bản"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €850"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
+                                    <VBox alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" style="-fx-background-color: white; -fx-background-radius: 16;                      -fx-border-color: #e8e8e8; -fx-border-radius: 16;                      -fx-border-width: 1; -fx-padding: 30 24 24 24;">
+                                        <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Bộ xu bạc La Mã thế kỷ 18 nguyên bản" wrapText="true" />
+                                        <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €850" />
+                                        <Button style="-fx-background-color: #8B5E52; -fx-text-fill: white;                            -fx-font-size: 13; -fx-background-radius: 30;                            -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;" text="Đấu giá ngay" />
                                     </VBox>
 
                                     <!-- Card 4 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Tranh sơn dầu trừu tượng hiện đại"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €1,400"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
+                                    <VBox alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" style="-fx-background-color: white; -fx-background-radius: 16;                      -fx-border-color: #e8e8e8; -fx-border-radius: 16;                      -fx-border-width: 1; -fx-padding: 30 24 24 24;">
+                                        <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Tranh sơn dầu trừu tượng hiện đại" wrapText="true" />
+                                        <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €1,400" />
+                                        <Button style="-fx-background-color: #8B5E52; -fx-text-fill: white;                            -fx-font-size: 13; -fx-background-radius: 30;                            -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;" text="Đấu giá ngay" />
                                     </VBox>
 
                                 </HBox>
