@@ -65,6 +65,10 @@ public abstract class Entity implements Serializable {
     return createdAt;
   }
 
+  public static long getSerialversionuid() {
+    return serialVersionUID;
+  }
+
   @Override
   public String toString() {
     return String.format("%s{id='%s', createdAt='%s'}",
