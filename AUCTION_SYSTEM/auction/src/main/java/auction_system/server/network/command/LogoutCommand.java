@@ -36,12 +36,13 @@ public class LogoutCommand implements Command {
             }
             // Đảm bảo client hủy theo dõi tất cả các phiên đấu giá đang tham gia
             session.leaveAllAuctions();
-            return Protocol.RES_LOGOUT_OK;
+            return Protocol.Response.LOGOUT_OK.name();
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
-            return Protocol.RES_ERROR + Protocol.SEPARATOR + "Lỗi máy chủ nội bộ khi đăng xuất.";
+            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
+                    + "Lỗi máy chủ nội bộ khi đăng xuất.";
         }
     }
 }

@@ -1,0 +1,12 @@
+/* ========================================================================
+   GLOBAL STYLESHEET ENTRY POINT
+   Sử dụng để gộp các thành phần CSS nhỏ lại. 
+   Gắn file này vào Root/Scene của JavaFX.
+======================================================================== */
+@import url("variables.css");
+@import url("typography.css");
+@import url("layout.css");
+@import url("inputs.css");
+@import url("buttons.css");
+@import url("icons.css");
+@import url("images.css"); 

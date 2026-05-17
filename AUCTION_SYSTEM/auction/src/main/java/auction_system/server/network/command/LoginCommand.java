@@ -14,9 +14,9 @@ public class LoginCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(LoginCommand.class.getName());
 
     /**
-     * Xử lý đăng nhập.
+     * Xử lý đăng nhập bằng Email và Password.
      *
-     * <p>Lệnh:       {@code LOGIN|username|password}
+     * <p>Lệnh:       {@code LOGIN|email|password}
      * Thành công: {@code LOGIN_OK|userId|username|role}
      * Thất bại:   {@code LOGIN_FAIL|message}
      *
@@ -25,42 +25,49 @@ public class LoginCommand implements Command {
      */
     @Override
     public String execute(String[] parts, ClientSession session) {
+        // Gom chung chuỗi tiền tố báo lỗi để tái sử dụng
+        String failPrefix = Protocol.Response.LOGIN_FAIL.name() + Protocol.SEPARATOR;
+
         if (parts.length < 3) {
-            LOGGER.warning("Từ chối đăng nhập: Sai cú pháp lệnh");
-            return Protocol.RES_LOGIN_FAIL + Protocol.SEPARATOR + "Thiếu thông tin đăng nhập";
+            LOGGER.warning("Từ chối đăng nhập: " + "Sai cú pháp lệnh");
+            return failPrefix + "Thiếu thông tin đăng nhập";
         }
 
-        String username = parts[1].trim();
+        // CHỈNH SỬA: Đổi tên biến từ username thành email để phản ánh 
+        // đúng dữ liệu từ Client gửi lên
+        String email = parts[1].trim();
         String password = parts[2].trim();
 
         try {
-            User user = AuctionManager.getInstance().findUserByCredentials(username, password);
+            // Gọi hàm findUserByCredentials (đã được sửa ở AuctionManager để quét theo email)
+            User user = AuctionManager.getInstance().findUserByCredentials(email, password);
             if (user == null) {
-                return Protocol.RES_LOGIN_FAIL + Protocol.SEPARATOR
-                        + "Tên đăng nhập hoặc mật khẩu không đúng";
+                return failPrefix + "Email hoặc mật khẩu không đúng";
             }
 
             // Ngăn chặn đăng nhập đồng thời trên nhiều thiết bị
             if (AuctionManager.getInstance().isAlreadyOnline(user.getId())) {
-                return Protocol.RES_LOGIN_FAIL + Protocol.SEPARATOR
-                        + "Tài khoản này đang đăng nhập ở nơi khác";
+                return failPrefix + "Tài khoản này đang đăng nhập ở nơi khác";
             }
 
             session.setCurrentUser(user);
+            // Sử dụng hành vi của đối tượng thay vì thay đổi trạng thái trực tiếp
             user.setOnline(true);
             AuctionManager.getInstance().userLoggedIn(user);
 
             String role = user.getRoleName();
-            LOGGER.info("Đăng nhập thành công: " + username + " [" + role + "]");
+            LOGGER.info("Đăng nhập thành công: " + email
+                    + " [" + role + "]");
 
-            return Protocol.RES_LOGIN_OK + Protocol.SEPARATOR 
-                    + user.getId() + Protocol.SEPARATOR 
-                    + user.getUsername() + Protocol.SEPARATOR + role;
+            // Trả về gói tin thành công, tầng network phía dưới sẽ tự bắn chuỗi này về Client
+            return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR
+                    + user.getId() + Protocol.SEPARATOR
+                    + user.getUsername() + Protocol.SEPARATOR
+                    + role;
         } catch (Exception e) {
-            // Bắt mọi lỗi hệ thống để không làm chết thread
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng nhập cho user: " + username, e);
-            return Protocol.RES_LOGIN_FAIL + Protocol.SEPARATOR
-                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            // Bắt mọi lỗi hệ thống để không làm chết thread của client
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng nhập cho email: " + email, e);
+            return failPrefix + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
 }

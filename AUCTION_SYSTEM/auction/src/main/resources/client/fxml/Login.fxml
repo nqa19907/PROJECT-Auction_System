@@ -5,164 +5,95 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.paint.LinearGradient?>
-<?import javafx.scene.paint.Stop?>
 <?import javafx.scene.shape.Circle?>
-<?import javafx.scene.shape.Rectangle?>
 
-<StackPane fx:id="rootPane"
-           prefHeight="600"
-           prefWidth="900"
-           minHeight="500"
-           minWidth="700"
-           xmlns="http://javafx.com/javafx/25"
-           xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="auction_system.client.controllers.LoginController">
-
-    <!-- Background Navy -->
-    <Rectangle height="${rootPane.height}" width="${rootPane.width}">
-        <fill>
-            <LinearGradient endX="1" endY="1" startX="0" startY="0">
-                <stops>
-                    <Stop color="#1a2540" offset="0.0" />
-                    <Stop color="#111827" offset="1.0" />
-                </stops>
-            </LinearGradient>
-        </fill>
-    </Rectangle>
+<StackPane prefHeight="700.0" prefWidth="900" styleClass="login-background" stylesheets="@../css/global.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.LoginController">
 
     <!-- Decorative circles -->
-    <Circle fill="#c8872a" opacity="0.07" radius="220" translateX="260" translateY="-260" />
-    <Circle fill="#c8872a" opacity="0.05" radius="180" translateX="-330" translateY="250" />
-
-    <Button onAction="#handleClose" text="✕"
-            style="-fx-background-color: transparent;
-               -fx-text-fill: rgba(255,255,255,0.6);
-               -fx-font-size: 16;
-               -fx-cursor: hand;
-               -fx-border-width: 0;">
-        <StackPane.alignment>TOP_RIGHT</StackPane.alignment>
-        <StackPane.margin><Insets top="12" right="16"/></StackPane.margin>
-    </Button>
-
+    <Circle fill="#c8872a" opacity="0.07" radius="200" translateX="230" translateY="-270" />
+    <Circle fill="#c8872a" opacity="0.05" radius="160" translateX="-310" translateY="250" />
     <!-- Main card -->
-    <VBox fx:id="loginCard"
-          alignment="CENTER"
-          minWidth="320"
-          prefWidth="420"
-          maxWidth="520"
-          spacing="0"
-          style="-fx-background-color: rgba(255,255,255,0.07);
-                 -fx-background-radius: 16;
-                 -fx-border-color: rgba(255,255,255,0.13);
-                 -fx-border-radius: 16;
-                 -fx-border-width: 1;">
-        <padding>
-            <Insets bottom="36" left="40" right="40" top="40" />
-        </padding>
+    <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="400.0" spacing="8.0" styleClass="login-card">
 
         <!-- Logo row -->
-        <HBox alignment="CENTER" onMouseClicked="#handleBackToDashboard" spacing="10">
-            <ImageView fitHeight="47.0" fitWidth="63.0" pickOnBounds="true" preserveRatio="true">
-                <image><Image url="@/client/images/logo.png" /></image>
-            </ImageView>
-            <Label style="-fx-font-family: 'Georgia';
-                          -fx-font-size: 24;
-                          -fx-font-weight: bold;
-                          -fx-text-fill: white;" text="AuctionHub" />
+        <HBox alignment="CENTER" onMouseClicked="#handleBackToDashboard" spacing="10" styleClass="font-icon">
+         <Region prefHeight="50.0" prefWidth="50.0" styleClass="icon-gavel" />
+            <Label styleClass="text-header" text="AuctionHub" />
         </HBox>
 
-        <Label style="-fx-font-size: 13; -fx-text-fill: rgba(255,255,255,0.5);" text="Đăng nhập để tiếp tục đấu giá">
-            <VBox.margin><Insets bottom="24" top="8" /></VBox.margin>
+        <Label styleClass="text-header-secondary" text="Đăng nhập để tiếp tục đấu giá">
+            <VBox.margin><Insets bottom="10.0" top="10.0" /></VBox.margin>
         </Label>
-
-        <!-- Email label -->
-        <Label maxWidth="Infinity" style="-fx-font-size: 11; -fx-text-fill: rgba(255,255,255,0.6);" text="EMAIL" />
-
-        <!-- Email field -->
-        <TextField fx:id="emailField" promptText="ten@example.com" maxWidth="Infinity" style="-fx-background-color: rgba(255,255,255,0.08);
-                          -fx-background-radius: 8;
-                          -fx-border-color: rgba(255,255,255,0.2);
-                          -fx-border-radius: 8;
-                          -fx-border-width: 1;
-                          -fx-text-fill: white;
-                          -fx-prompt-text-fill: rgba(255,255,255,0.3);
-                          -fx-font-size: 14;
-                          -fx-padding: 11 14 11 14;">
-            <VBox.margin><Insets bottom="16" top="6" /></VBox.margin>
-        </TextField>
-
-        <!-- Password label -->
-        <Label maxWidth="Infinity" style="-fx-font-size: 11; -fx-text-fill: rgba(255,255,255,0.6);" text="MẬT KHẨU" />
-
-        <!-- Password field -->
-        <PasswordField fx:id="passwordField" promptText="••••••••" maxWidth="Infinity" style="-fx-background-color: rgba(255,255,255,0.08);
-                              -fx-background-radius: 8;
-                              -fx-border-color: rgba(255,255,255,0.2);
-                              -fx-border-radius: 8;
-                              -fx-border-width: 1;
-                              -fx-text-fill: white;
-                              -fx-prompt-text-fill: rgba(255,255,255,0.3);
-                              -fx-font-size: 14;
-                              -fx-padding: 11 14 11 14;">
-            <VBox.margin><Insets top="6" /></VBox.margin>
-        </PasswordField>
+      <VBox spacing="11.0">
+         <children>
+            <VBox spacing="3.0">
+               <children>
+            
+                    <!-- Email label -->
+                    <Label maxWidth="Infinity" styleClass="text-label-code" text="EMAIL" />
+            
+                    <!-- Email field -->
+                    <TextField fx:id="emailField" promptText="ten@example.com" styleClass="input-field" />
+               </children>
+            </VBox>
+            <VBox spacing="3.0">
+               <children>
+            
+                    <!-- Password label -->
+                    <Label maxWidth="Infinity" styleClass="text-label-code" text="MẬT KHẨU" />
+            
+                    <!-- Password field -->
+                    <PasswordField fx:id="passwordField" promptText="••••••••" styleClass="input-field" />
+               </children>
+            </VBox>
+         </children>
+      </VBox>
 
         <!-- Forgot password -->
         <HBox alignment="CENTER_RIGHT" maxWidth="Infinity">
             <VBox.margin><Insets bottom="20" top="8" /></VBox.margin>
-            <Label fx:id="forgotLabel" style="-fx-text-fill: #c8872a; -fx-font-size: 12; -fx-cursor: hand;" text="Quên mật khẩu?" />
+   
+           <!-- Error label -->
+           <Label fx:id="errorLabel" styleClass="text-error" />
+         <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="forgotLabel" styleClass="text-primary" text="Quên mật khẩu?" />
         </HBox>
 
         <!-- Login button -->
-        <Button fx:id="loginButton" maxWidth="Infinity" style="-fx-background-color: #c8872a;
-                       -fx-background-radius: 8;
-                       -fx-text-fill: white;
-                       -fx-font-size: 15;
-                       -fx-font-weight: bold;
-                       -fx-padding: 13 0 13 0;
-                       -fx-cursor: hand;
-                       -fx-border-width: 0;" text="Đăng nhập">
-            <VBox.margin><Insets bottom="20" /></VBox.margin>
+        <Button fx:id="loginButton" maxWidth="1.7976931348623157E308" minHeight="-Infinity" onAction="#handleLogin" styleClass="btn-primary" text="Đăng nhập">
+            <VBox.margin><Insets /></VBox.margin>
         </Button>
 
         <!-- Divider -->
-        <HBox alignment="CENTER" spacing="10" maxWidth="Infinity">
-            <VBox.margin><Insets bottom="16" /></VBox.margin>
-            <Region maxHeight="1" prefHeight="1" style="-fx-background-color: rgba(255,255,255,0.15);" HBox.hgrow="ALWAYS" />
-            <Label style="-fx-text-fill: rgba(255,255,255,0.3); -fx-font-size: 12;" text="hoặc" />
-            <Region maxHeight="1" prefHeight="1" style="-fx-background-color: rgba(255,255,255,0.15);" HBox.hgrow="ALWAYS" />
+        <HBox alignment="CENTER" spacing="10">
+            <VBox.margin><Insets /></VBox.margin>
+         <Region styleClass="divider-line" HBox.hgrow="ALWAYS" />
+            <Label minWidth="-Infinity" styleClass="text-primary" text="hoặc" />
+         <Region styleClass="divider-line" HBox.hgrow="ALWAYS" />
+         <padding>
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+         </padding>
         </HBox>
-
-        <!-- Google button -->
-        <Button fx:id="googleButton" maxWidth="Infinity" style="-fx-background-color: rgba(255,255,255,0.07);
-                       -fx-background-radius: 8;
-                       -fx-border-color: rgba(255,255,255,0.15);
-                       -fx-border-radius: 8;
-                       -fx-border-width: 1;
-                       -fx-text-fill: rgba(255,255,255,0.8);
-                       -fx-font-size: 14;
-                       -fx-padding: 11 0 11 0;
-                       -fx-cursor: hand;" text="Tiếp tục với Google">
-            <VBox.margin><Insets bottom="24" /></VBox.margin>
-        </Button>
-
-        <!-- Register row -->
-        <HBox alignment="CENTER" spacing="4">
-            <Label style="-fx-text-fill: rgba(255,255,255,0.35); -fx-font-size: 13;" text="Chưa có tài khoản?" />
-            <Label fx:id="registerLabel" style="-fx-text-fill: #c8872a; -fx-font-size: 13; -fx-cursor: hand;" text="Đăng ký ngay" />
-        </HBox>
-
-        <!-- Error label -->
-        <Label fx:id="errorLabel" maxWidth="Infinity" style="-fx-text-fill: #f09595; -fx-font-size: 12;" text="">
-            <VBox.margin><Insets top="10" /></VBox.margin>
-        </Label>
+      <VBox spacing="8.0">
+         <children>
+      
+              <!-- Google button -->
+              <Button fx:id="googleButton" maxWidth="1.7976931348623157E308" minHeight="-Infinity" styleClass="btn-primary" text="Tiếp tục với Google" />
+      
+              <!-- Register row -->
+              <HBox fx:id="registerLabel" alignment="CENTER" spacing="4" styleClass="register-prompt">
+                  <Label text="Chưa có tài khoản?" />
+                  <Label text="Đăng ký ngay" />
+              </HBox>
+         </children>
+      </VBox>
+      <StackPane.margin>
+         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      </StackPane.margin>
 
     </VBox>
 

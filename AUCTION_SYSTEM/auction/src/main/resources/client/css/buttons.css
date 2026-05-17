@@ -1,0 +1,89 @@
+/* ========================================================================
+   BUTTON STYLES
+======================================================================== */
+
+.btn-primary {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-color: -color-primary;
+    -fx-background-radius: 50;             /* Radius pill: 50 */
+    -fx-text-fill: -color-text-inverse;
+    -fx-padding: 12 24;                    /* Chuẩn hoá padding: y:12px, x-lg:24px */
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -color-primary-hover;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0); /* Bóng phát sáng */
+}
+
+.btn-outline {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-color: -color-btn-outline-bg;
+    -fx-border-color: -color-btn-outline-border;
+    -fx-border-radius: 50;                 /* Radius pill: 50 */
+    -fx-background-radius: 50;             /* Radius pill: 50 */
+    -fx-border-width: 1;
+    -fx-text-fill: -color-text-main;
+    -fx-padding: 12 24;                    /* Đồng bộ kích thước với btn-primary */
+    -fx-cursor: hand;
+}
+
+.btn-outline:hover {
+    -fx-background-color: -color-btn-outline-bg-hover;
+}
+
+/* --- MENU BUTTON --- */
+.btn-menu {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 8 16;                     /* Spacing y-sm: 8px, x-md: 16px */
+}
+.btn-menu .label {
+    -fx-text-fill: -color-orange-500;
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.btn-menu:hover {
+    -fx-background-color: -color-primary-bg;
+    -fx-background-radius: 8;              /* Radius sm: 8 */
+}
+
+/* --- CATEGORY BUTTON (SIDEBAR) --- */
+.btn-category {
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-text-main;
+    -fx-font-size: 15px;
+    -fx-alignment: BASELINE_LEFT;
+    -fx-padding: 12 16;                    /* Rút gọn cú pháp, x-md: 16px */
+    -fx-background-radius: 8;              /* Radius sm: 8 */
+    -fx-cursor: hand;
+}
+
+.btn-category:hover {
+    -fx-background-color: -color-primary-bg;
+    -fx-text-fill: -color-primary;
+}
+
+/* --- BID BUTTON (NÚT ĐẤU GIÁ NGAY) --- */
+.btn-bid {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-color: -color-primary-bg; /* Sử dụng biến semantic nền cam nhạt */
+    -fx-text-fill: -color-primary;           /* Chữ màu cam đậm */
+    -fx-padding: 12 24;                      /* Đồng bộ kích thước với btn-primary */
+    -fx-background-radius: 50;               /* Radius pill: 50 */
+    -fx-cursor: hand;
+}
+
+.btn-bid:hover {
+    -fx-background-color: -color-primary;    /* Khi rê chuột đổi thành màu cam đậm */
+    -fx-text-fill: -color-text-inverse;      /* Chữ chuyển thành trắng */
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}

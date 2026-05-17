@@ -29,36 +29,38 @@ public class JoinAuctionCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
-                return Protocol.RES_ERROR + Protocol.SEPARATOR + "Bạn cần đăng nhập trước";
+                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
+                        + "Bạn cần đăng nhập trước";
             }
             if (parts.length < 2) {
-                return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR + "Thiếu auctionId";
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
             String auctionId = parts[1];
             Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
 
             if (auction == null) {
-                return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR + "Không tìm thấy phiên đấu giá";
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
+                        + "Không tìm thấy phiên đấu giá";
             }
 
             // Không cho phép theo dõi nếu phiên đấu giá đã kết thúc hoặc bị huỷ
             if (auction.getStatus() == AuctionStatus.FINISHED
                     || auction.getStatus() == AuctionStatus.CANCELED) {
-                return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR 
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                         + "Phiên đấu giá đã kết thúc hoặc bị huỷ";
             }
 
             session.joinAuction(auctionId);
 
             LOGGER.info(session.getCurrentUser().getUsername() + " tham gia phiên: " + auctionId);
-            return Protocol.RES_JOIN_OK + Protocol.SEPARATOR + auctionId;
+            return Protocol.Response.JOIN_OK.name() + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " 
                     + username, e);
-            return Protocol.RES_JOIN_FAIL + Protocol.SEPARATOR 
+            return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }
