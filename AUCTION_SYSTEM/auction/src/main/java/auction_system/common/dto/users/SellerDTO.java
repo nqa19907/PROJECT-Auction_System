@@ -1,87 +1,104 @@
 package auction_system.common.dto.users;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
- * DTO chứa thông tin người bán để truyền qua mạng Socket.
- * Đã loại bỏ mật khẩu và danh sách quản lý sản phẩm để đảm bảo bảo mật.
- * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của người bán (Seller).
  */
-public final class SellerDto implements Serializable {
-
+public class SellerDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String username;
-    private final String email;
-    private final double balance;
-    private final float rating;
-    private final String roleName;
+    private String id;
+    private String username;
+    private String email;
+    private double balance;
+    private float rating;
+    private List<String> managedItemIds; // Chuyển đổi List<Item> thành List ID để tối ưu Dto
 
     /**
-     * Khởi tạo một gói dữ liệu SellerDTO bất biến.
-     *
-     * @param username Tên đăng nhập của người bán.
-     * @param email Địa chỉ email.
-     * @param balance Số dư tài khoản.
-     * @param rating Đánh giá uy tín của người bán.
-     * @param roleName Vai trò người dùng.
+     * Khởi tạo một đối tượng SellerDto trống.
      */
-    public SellerDto(
-            final String username,
-            final String email,
-            final double balance,
-            final float rating,
-            final String roleName) {
+    public SellerDto() {
+    }
 
+    /**
+     * Khởi tạo một đối tượng SellerDto với đầy đủ thông tin.
+     *
+     * @param id             ID của người bán.
+     * @param username       Tên đăng nhập.
+     * @param email          Địa chỉ email.
+     * @param balance        Số dư tài khoản.
+     * @param rating         Đánh giá uy tín.
+     * @param managedItemIds Danh sách ID sản phẩm quản lý.
+     */
+    public SellerDto(String id, String username, String email, double balance,
+            float rating, List<String> managedItemIds) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.balance = balance;
         this.rating = rating;
-        this.roleName = roleName;
+        this.managedItemIds = managedItemIds;
     }
 
-    /**
-     * Lấy tên đăng nhập.
-     *
-     * @return tên đăng nhập.
-     */
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
-    /**
-     * Lấy địa chỉ email.
-     *
-     * @return email.
-     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getEmail() {
-        return this.email;
+        return email;
     }
 
-    /**
-     * Lấy số dư tài khoản.
-     *
-     * @return số dư.
-     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public double getBalance() {
-        return this.balance;
+        return balance;
     }
 
-    /**
-     * Lấy đánh giá uy tín của người bán.
-     *
-     * @return rating.
-     */
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
     public float getRating() {
-        return this.rating;
+        return rating;
     }
 
-    /**
-     * Lấy vai trò người dùng.
-     *
-     * @return tên vai trò.
-     */
-    public String getRoleName() {
-        return this.roleName;
+    public void setRating(float rating) {
+        this.rating = rating;
+    }
+
+    public List<String> getManagedItemIds() {
+        return managedItemIds;
+    }
+
+    public void setManagedItemIds(List<String> managedItemIds) {
+        this.managedItemIds = managedItemIds;
+    }
+
+    @Override
+    public String toString() {
+        return "SellerDto{"
+                + "id='" + id + '\''
+                + ", username='" + username + '\''
+                + ", email='" + email + '\''
+                + ", balance=" + balance
+                + ", rating=" + rating
+                + ", managedItemIds=" + managedItemIds
+                + '}';
     }
 }

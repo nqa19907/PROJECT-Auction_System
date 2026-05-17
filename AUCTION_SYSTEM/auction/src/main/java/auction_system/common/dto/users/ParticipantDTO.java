@@ -3,39 +3,76 @@ package auction_system.common.dto.users;
 import java.io.Serializable;
 
 /**
- * DTO chứa thông tin người tham gia đấu giá để truyền qua mạng Socket.
- * Đã loại bỏ mật khẩu để bảo mật và không có hàm Setter để đảm bảo an toàn đa luồng.
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của người tham gia hệ thống (Participant).
  */
-public final class ParticipantDto implements Serializable {
-    
+public class ParticipantDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String username;
-    private final String email;
-    private final double balance;
+    private String id;
+    private String username;
+    private String email;
+    private double balance;
 
     /**
-     * Khởi tạo một gói dữ liệu ParticipantDTO bất biến.
-     * 
-     * @param username tên đăng nhập.
-     * @param balance số dư tài khoản.
-     * @param email email đăng nhập.
+     * Khởi tạo một đối tượng ParticipantDto trống.
      */
-    public ParticipantDto(final String username, final String email, final double balance) {
+    public ParticipantDto() {
+    }
+
+    /**
+     * Khởi tạo một đối tượng ParticipantDto với đầy đủ thông tin.
+     *
+     * @param id       ID của người tham gia.
+     * @param username Tên đăng nhập.
+     * @param email    Địa chỉ email.
+     * @param balance  Số dư tài khoản.
+     */
+    public ParticipantDto(String id, String username, String email, double balance) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.balance = balance;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getUsername() {
-        return this.username;
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
-        return this.email;
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public double getBalance() {
-        return this.balance;
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    @Override
+    public String toString() {
+        return "ParticipantDto{"
+                + "id='" + id + '\''
+                + ", username='" + username + '\''
+                + ", email='" + email + '\''
+                + ", balance=" + balance
+                + '}';
     }
 }

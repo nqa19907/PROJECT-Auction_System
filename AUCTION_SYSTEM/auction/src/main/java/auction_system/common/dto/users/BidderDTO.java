@@ -3,71 +3,76 @@ package auction_system.common.dto.users;
 import java.io.Serializable;
 
 /**
- * DTO chứa thông tin người đấu giá để truyền qua mạng Socket.
- * Đã loại bỏ mật khẩu để bảo mật và không có hàm Setter để đảm bảo an toàn đa luồng.
+ * Lớp DTO đại diện cho dữ liệu chuyển đổi của người đấu giá (Bidder).
  */
-public final class BidderDto implements Serializable {
-
+public class BidderDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String username;
-    private final String email;
-    private final double balance;
-    private final String roleName;
+    private String id;
+    private String username;
+    private String email;
+    private double balance;
 
     /**
-     * Khởi tạo một gói dữ liệu BidderDTO bất biến.
-     *
-     * @param username Tên đăng nhập của người đấu giá.
-     * @param email Địa chỉ email.
-     * @param balance Số dư tài khoản.
-     * @param roleName Vai trò của người dùng.
+     * Khởi tạo một đối tượng BidderDTO trống.
      */
-    public BidderDto(
-            final String username,
-            final String email,
-            final double balance,
-            final String roleName) {
+    public BidderDto() {
+    }
 
+    /**
+     * Khởi tạo một đối tượng BidderDTO với đầy đủ thông tin.
+     *
+     * @param id       ID của người đấu giá.
+     * @param username Tên đăng nhập.
+     * @param email    Địa chỉ email.
+     * @param balance  Số dư tài khoản.
+     */
+    public BidderDto(String id, String username, String email, double balance) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.balance = balance;
-        this.roleName = roleName;
     }
 
-    /**
-     * Lấy tên đăng nhập.
-     *
-     * @return tên đăng nhập.
-     */
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
-    /**
-     * Lấy địa chỉ email.
-     *
-     * @return email.
-     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getEmail() {
-        return this.email;
+        return email;
     }
 
-    /**
-     * Lấy số dư tài khoản.
-     *
-     * @return số dư.
-     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public double getBalance() {
-        return this.balance;
+        return balance;
     }
 
-    /**
-     * Lấy vai trò người dùng.
-     *
-     * @return tên vai trò.
-     */
-    public String getRoleName() {
-        return this.roleName;
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    @Override
+    public String toString() {
+        return "BidderDTO{"
+                + "id='" + id + '\''
+                + ", username='" + username + '\''
+                + ", email='" + email + '\''
+                + ", balance=" + balance
+                + '}';
     }
 }

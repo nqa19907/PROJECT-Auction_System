@@ -3,39 +3,36 @@ package auction_system.common.dto.users;
 import java.io.Serializable;
 
 /**
- * DTO chứa thông tin người dùng để truyền qua mạng Socket.
- * Đã loại bỏ mật khẩu để đảm bảo bảo mật.
- * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của người dùng cơ sở (User).
  */
-public final class UserDto implements Serializable {
-
+public class UserDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String id;
-    private final String username;
-    private final String email;
-    private final boolean isOnline;
-    private final boolean isBanned;
-    private final String roleName;
+    private String id;
+    private String username;
+    private String email;
+    private boolean isOnline;
+    private boolean isBanned;
+    private String roleName;
 
     /**
-     * Khởi tạo một gói dữ liệu UserDTO bất biến.
-     *
-     * @param id ID của người dùng.
-     * @param username Tên đăng nhập.
-     * @param email Địa chỉ email.
-     * @param isOnline Trạng thái trực tuyến.
-     * @param isBanned Trạng thái bị cấm.
-     * @param roleName Vai trò người dùng.
+     * Khởi tạo một đối tượng UserDto trống.
      */
-    public UserDto(
-            final String id,
-            final String username,
-            final String email,
-            final boolean isOnline,
-            final boolean isBanned,
-            final String roleName) {
+    public UserDto() {
+    }
 
+    /**
+     * Khởi tạo một đối tượng UserDto với đầy đủ thông tin (không bao gồm password).
+     *
+     * @param id       ID của người dùng.
+     * @param username Tên đăng nhập.
+     * @param email    Địa chỉ email.
+     * @param isOnline Trạng thái online.
+     * @param isBanned Trạng thái cấm.
+     * @param roleName Vai trò người dùng (VD: ADMIN, SELLER, BIDDER).
+     */
+    public UserDto(String id, String username, String email, boolean isOnline,
+            boolean isBanned, String roleName) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -44,57 +41,63 @@ public final class UserDto implements Serializable {
         this.roleName = roleName;
     }
 
-    /**
-     * Lấy ID người dùng.
-     *
-     * @return ID.
-     */
     public String getId() {
-        return this.id;
+        return id;
     }
 
-    /**
-     * Lấy tên đăng nhập.
-     *
-     * @return tên đăng nhập.
-     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
-    /**
-     * Lấy địa chỉ email.
-     *
-     * @return email.
-     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getEmail() {
-        return this.email;
+        return email;
     }
 
-    /**
-     * Kiểm tra trạng thái trực tuyến.
-     *
-     * @return true nếu online.
-     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public boolean isOnline() {
-        return this.isOnline;
+        return isOnline;
     }
 
-    /**
-     * Kiểm tra trạng thái bị cấm.
-     *
-     * @return true nếu bị cấm.
-     */
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
+
     public boolean isBanned() {
-        return this.isBanned;
+        return isBanned;
     }
 
-    /**
-     * Lấy vai trò người dùng.
-     *
-     * @return tên vai trò.
-     */
+    public void setBanned(boolean banned) {
+        isBanned = banned;
+    }
+
     public String getRoleName() {
-        return this.roleName;
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    @Override
+    public String toString() {
+        return "UserDto{"
+                + "id='" + id + '\''
+                + ", username='" + username + '\''
+                + ", email='" + email + '\''
+                + ", isOnline=" + isOnline
+                + ", isBanned=" + isBanned
+                + ", roleName='" + roleName + '\''
+                + '}';
     }
 }
