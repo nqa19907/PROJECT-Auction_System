@@ -11,19 +11,28 @@ import javafx.stage.Stage;
  */
 public class ServerApp extends Application {
 
-    private static final int WINDOW_WIDTH = 800;
+    private static final int WINDOW_WIDTH = 960;
     private static final int WINDOW_HEIGHT = 600;
     private static final int MIN_WINDOW_WIDTH = 960;
+    private static final int MIN_WINDOW_HEIGHT = 600;
 
     @Override
     public void start(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/dashboard.fxml"));
+        FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/client/fxml/Login.fxml")
+        );
+
         Parent root = loader.load();
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+
         stage.setScene(scene);
         stage.setMinWidth(MIN_WINDOW_WIDTH);
-        stage.setMinHeight(WINDOW_HEIGHT);
+        stage.setMinHeight(MIN_WINDOW_HEIGHT);
         stage.setTitle("App Thử");
+        stage.setResizable(true);
+
+        stage.setMaximized(true);
+
         stage.show();
     }
 
