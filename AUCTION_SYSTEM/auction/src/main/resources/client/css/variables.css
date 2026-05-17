@@ -128,6 +128,9 @@
     /* Màu Divider */
     -color-divider: -color-primary;
 
+    /* Kích cỡ Sidebar */
+    -sidebar-width: 275px;
+
     /* ========================================================================
     TẦNG 3: QUY CHUẨN KÍCH THƯỚC & KHOẢNG CÁCH (DESIGN TOKENS)
     Lưu ý: JavaFX CSS mặc định KHÔNG hỗ trợ truyền tham số biến cho kích thước 

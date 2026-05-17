@@ -37,6 +37,26 @@
     -fx-background-color: -color-btn-outline-bg-hover;
 }
 
+/* --- SECONDARY BUTTON (NÚT PHỤ TRONG SUỐT CÓ VIỀN) --- */
+.btn-secondary {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-color: transparent;
+    -fx-border-color: -color-primary;
+    -fx-border-radius: 50;                 /* Radius pill: 50 */
+    -fx-background-radius: 50;             /* Radius pill: 50 */
+    -fx-border-width: 1;
+    -fx-text-fill: -color-text-brand;
+    -fx-padding: 11 24;                    /* Đồng bộ với kích thước của register-prompt */
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: -color-primary-bg-hover;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}
+
 /* --- MENU BUTTON --- */
 .btn-menu {
     -fx-background-color: transparent;
