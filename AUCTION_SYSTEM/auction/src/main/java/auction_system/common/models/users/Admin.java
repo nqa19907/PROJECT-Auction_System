@@ -27,7 +27,7 @@ public class Admin extends User {
     }
 
     /**
-     * Trả về role người dùng
+     * Trả về role người dùng.
      */
     @Override
     public String getRoleName() {

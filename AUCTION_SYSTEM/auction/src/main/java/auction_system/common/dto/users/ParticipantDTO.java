@@ -17,9 +17,9 @@ public final class ParticipantDto implements Serializable {
     /**
      * Khởi tạo một gói dữ liệu ParticipantDTO bất biến.
      * 
-     * @param username tên đăng nhập
-     * @param balance số dư tài khoản
-     * @param email email đăng nhập
+     * @param username tên đăng nhập.
+     * @param balance số dư tài khoản.
+     * @param email email đăng nhập.
      */
     public ParticipantDto(final String username, final String email, final double balance) {
         this.username = username;
