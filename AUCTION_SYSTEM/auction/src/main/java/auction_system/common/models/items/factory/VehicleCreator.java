@@ -15,13 +15,6 @@ public class VehicleCreator implements ItemCreator {
             .description((String) properties.getOrDefault("description", "Description here"))
             .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())
             .sellerId((String) properties.getOrDefault("sellerId", "SYSTEM"))
-            .condition((String) properties.getOrDefault("condition", "Used"))
-            .imagePath((String) properties.getOrDefault("imagePath", "none"))
-            .make((String) properties.getOrDefault("make", "Generic Make"))
-            .model((String) properties.getOrDefault("model", "Generic Model"))
-            .manufacturingYear(((Number) properties
-                    .getOrDefault("manufacturingYear", 0)).intValue())
-            .mileage(((Number) properties.getOrDefault("mileage", 0.0)).doubleValue())
             .build();
     }
 }

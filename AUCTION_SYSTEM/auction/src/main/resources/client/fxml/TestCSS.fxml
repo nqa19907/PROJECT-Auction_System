@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+    <!-- Bọc trong một VBox sử dụng class hero-container (nền nâu tối) để test -->
+    <VBox alignment="CENTER" maxHeight="200.0" maxWidth="400.0" spacing="15.0" styleClass="hero-container">
+        <Label styleClass="hero-title" stylesheets="@../css/style.css" text="Xin chào bạn" />
+        <Label styleClass="hero-subtitle" text="CSS ĐÃ ĐƯỢC NHÚNG THÀNH CÔNG" />
+    </VBox>
+</StackPane>

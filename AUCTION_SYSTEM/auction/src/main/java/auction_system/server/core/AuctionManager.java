@@ -77,6 +77,16 @@ public class AuctionManager {
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         startAuctionScheduler();
+
+        try {
+            User testUser = new Bidder("Hoang", "1", "1", 10000.0);
+
+            userRegistry.put(testUser.getUsername(), testUser);
+
+            LOGGER.info(" [UserManager] Đã nạp tài khoản test: hoang@gmail.com / Mật khẩu: 123456");
+        } catch (Exception e) {
+            LOGGER.warning("Không thể khởi tạo user mẫu: " + e.getMessage());
+        }
     }
 
     // =========================================================================
@@ -256,16 +266,20 @@ public class AuctionManager {
      * <p><b>Lưu ý:</b> trong thực tế password phải được hash
      * (bcrypt/SHA-256) trước khi so sánh.
      *
-     * @param username Tên đăng nhập.
+     * @param email    Địa chỉ email đăng nhập.
      * @param password Mật khẩu plaintext.
      * @return User nếu khớp, null nếu sai thông tin.
      */
-    public User findUserByCredentials(String username, String password) {
-        User user = userRegistry.get(username);
-        if (user != null && user.getPassword().equals(password)) {
-            return user;
+    public User findUserByCredentials(String email, String password) {
+        if (email == null || password == null) {
+            return null;
         }
-        return null;
+
+        return userRegistry.values().stream()
+                .filter(u -> u.getEmail().equalsIgnoreCase(email) 
+                        && u.getPassword().equals(password))
+                .findFirst()
+                .orElse(null);
     }
 
     /**

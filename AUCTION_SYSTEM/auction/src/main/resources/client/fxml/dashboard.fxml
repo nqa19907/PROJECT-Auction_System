@@ -1,149 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.SVGPath?>
-
-<?import javafx.scene.shape.Circle?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
-<BorderPane minWidth="960" style="-fx-background-color: #F7F4EF;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.DashboardController">
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="mainLayout" minWidth="960" styleClass="dashboard-background"
+    xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="auction_system.client.controllers.DashboardController">
     <top>
-        <VBox style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 4, 0, 0, 2);">
+        <VBox id="headerWrapper">
 
             <!-- ===== NAVBAR ===== -->
-            <HBox alignment="CENTER_LEFT" minWidth="960" prefHeight="64" spacing="12" style="-fx-background-color: #1A2744; -fx-padding: 12 24 12 24;">
+            <HBox id="navBar" alignment="CENTER_LEFT" minWidth="960" prefHeight="64" spacing="12"
+                styleClass="nav-bar">
 
                 <!-- Logo -->
-                <HBox alignment="CENTER_LEFT" spacing="8">
-                    <ImageView fitHeight="47.0" fitWidth="63.0" pickOnBounds="true" preserveRatio="true">
-                        <image><Image url="@/client/images/logo.png" /></image>
-                    </ImageView>
-                    <Label style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #C9A84C;" text="AuctionHub" />
+                <HBox id="logoWrapper" alignment="CENTER_LEFT" spacing="8">
+                    <Region prefHeight="200.0" prefWidth="200.0" styleClass="icon-gavel" />
+                    <Label styleClass="text-header" text="AuctionHub" />
                 </HBox>
 
-                <!-- Categories button -->
-                <MenuButton style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-cursor: hand;" styleClass="styled-category-menu">
-                    <graphic>
-                        <Label style="-fx-font-size: 13; -fx-text-fill: #c0cce0; -fx-font-weight: bold;" text="Danh mục " />
-                    </graphic>
-                    <items>
-                        <MenuItem text="Nghệ thuật" />
-                        <MenuItem text="Trang sức" />
-                        <MenuItem text="Đồ điện" />
-                        <MenuItem text="Phương tiện" />
-                    </items>
-                </MenuButton>
-
                 <!-- Search bar -->
-                <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="8" style="-fx-background-color: #2D3A5E; -fx-background-radius: 25; -fx-padding: 8 18;" HBox.hgrow="ALWAYS">
-                    <Label style="-fx-font-size: 14; -fx-text-fill: #888;" text="🔍" />
-                    <TextField fx:id="searchField" maxWidth="1.7976931348623157E308" promptText="Search for brand, model, artist..." style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 13; -fx-text-fill: white; -fx-prompt-text-fill: #7a8aaa;" HBox.hgrow="ALWAYS" />
+                <HBox id="searchWrapper" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308"
+                    spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+                    <Region maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="20.0"
+                        prefWidth="20.0" styleClass="icon-search" />
+                    <TextField fx:id="searchField" maxWidth="1.7976931348623157E308"
+                        promptText="Search for brand, model, artist..." styleClass="search-input"
+                        HBox.hgrow="ALWAYS" />
                 </HBox>
 
                 <!-- Right side -->
-                <HBox alignment="CENTER" minWidth="300" spacing="16">
-                    <Label style="-fx-font-size: 13; -fx-text-fill: #c0cce0; -fx-cursor: hand;" text="How it works?" />
-                    <Label style="-fx-font-size: 13; -fx-text-fill: #c0cce0; -fx-cursor: hand;" text="Help" />
-                    <Label style="-fx-font-size: 18; -fx-text-fill: #C9A84C; -fx-cursor: hand;" text="♡" />
+                <HBox id="actionButtonsWrapper" alignment="CENTER" minWidth="300" spacing="16">
+
+                    <!-- Nút đăng bán  -->
+                    <Button onAction="#handleDangBan" styleClass="btn-primary" text="+ Đăng bán" />
+
                     <!-- button sign in -->
-                    <Button fx:id="btnSignIn" onAction="#handleSignIn" style="-fx-background-color: #C9A84C; -fx-text-fill: #1A2744; -fx-font-size: 13; -fx-font-weight: bold; -fx-background-radius: 6; -fx-padding: 8 22; -fx-cursor: hand;" text="Sign in" />
+                    <Button fx:id="btnSignIn" onAction="#handleSignIn" styleClass="btn-primary"
+                        text="Sign in" />
                 </HBox>
-            </HBox>
-
-            <!-- ===== TRUSTPILOT ===== -->
-            <HBox alignment="CENTER" spacing="6" style="-fx-background-color: #F2EDE4; -fx-padding: 7 0; -fx-border-color: #E0D6C8; -fx-border-width: 1 0 1 0;">
-                <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #222;" text="Excellent" />
-                <Label style="-fx-font-size: 16; -fx-text-fill: #00b67a;" text="★★★★" />
-                <Label style="-fx-font-size: 16; -fx-text-fill: #cccccc;" text="★" />
-                <Hyperlink style="-fx-font-size: 12; -fx-text-fill: #444; -fx-border-color: transparent;" text="131,568 reviews on" />
-                <Label style="-fx-font-size: 12; -fx-text-fill: #00b67a; -fx-font-weight: bold;" text="★ Trustpilot" />
-            </HBox>
-
-            <!-- ===== CATEGORY TABS ===== -->
-            <HBox spacing="0" style="-fx-background-color: white; -fx-border-color: #E0D6C8; -fx-border-width: 0 0 1 0;">
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #1A2744; -fx-font-weight: bold; -fx-border-width: 0 0 0 0; -fx-border-color: #C9A84C; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/tuanNay.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/trending.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/electrical.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/art.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/dimond-alt-light.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;"  HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/mdi_car.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
-
-                <Button contentDisplay="TOP" maxWidth="1.7976931348623157E308" prefHeight="72" style="-fx-background-color: transparent; -fx-border-color: transparent; -fx-font-size: 12; -fx-text-fill: #444; -fx-cursor: hand;" HBox.hgrow="ALWAYS">
-                    <graphic>
-
-                        <ImageView fitHeight="40.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true" smooth="true">
-                            <image><Image url="@/client/images/fa7-solid_tshirt.png" /></image>
-                        </ImageView>
-
-                    </graphic>
-                </Button>
 
             </HBox>
 
@@ -152,221 +55,137 @@
 
     <center>
 
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: #F7F4EF; -fx-background: #F7F4EF;" vbarPolicy="AS_NEEDED">
+        <ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER"
+            styleClass="main-content-area" vbarPolicy="AS_NEEDED">
 
-                <content>
-                    <VBox style="-fx-background-color: #F7F4EF;">
+            <content>
+                <VBox id="scrollContentWrapper" styleClass="content-wrapper">
                     <children>
-                        <StackPane fx:id="heroSliderContainer" prefHeight="350.0" prefWidth="1200.0">
+                        <HBox id="mainContentPadding" spacing="20.0">
                             <children>
-                                <StackPane fx:id="heroSlider">
-                                    <children>
-                                        <ImageView fx:id="sliderImage" fitHeight="350.0" fitWidth="1200.0" pickOnBounds="true" preserveRatio="false">
-                                            <image>
-                                                <Image url="@/client/images/banner.jpg" />
-                                            </image>
-                                        </ImageView>
-                                        <Pane style="-fx-background-color: linear-gradient(to right, rgba(0,0,0,0.6), transparent, rgba(0,0,0,0.6));" />
-                                    </children>
-                                </StackPane>
 
-                                <HBox mouseTransparent="true" prefHeight="350.0" prefWidth="1200.0">
-                                    <children>
-                                        <ImageView fitHeight="350.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="false">
-                                            <image>
-                                                <!-- ảnh cố định trái-->
-                                            </image>
+                                <VBox id="featuredSection" spacing="16">
 
-                                        </ImageView>
+                                    <Label text="Tài sản nổi bật" />
 
-                                        <Region HBox.hgrow="ALWAYS" />
+                                    <HBox id="productCardsRow" spacing="20">
 
-                                        <ImageView fitHeight="350.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="false">
-                                            <image>
-                                                <!-- ảnh cố định phải -->
+                                        <!-- Card 1 -->
+                                        <VBox id="productCard1" alignment="CENTER" prefHeight="220"
+                                            prefWidth="280" spacing="12" styleClass="product-card">
+                                            <Region prefHeight="200.0" prefWidth="200.0"
+                                                styleClass="img-product-rolex" />
+                                            <Label alignment="CENTER"
+                                                style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"
+                                                text="Đồng hồ Rolex Submariner Date 2004"
+                                                wrapText="true" />
+                                            <Label style="-fx-font-size: 13; -fx-text-fill: #888;"
+                                                text="Giá hiện tại: €15,500" />
+                                            <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                        </VBox>
 
-                                            </image>
-                                        </ImageView>
-                                    </children>
-                                </HBox>
+                                        <!-- Card 2 -->
+                                        <VBox id="productCard2" alignment="CENTER" prefHeight="220"
+                                            prefWidth="280" spacing="12" styleClass="product-card">
+                                            <Label alignment="CENTER"
+                                                style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"
+                                                text="Tượng đồng chiến binh Hy Lạp cổ đại"
+                                                wrapText="true" />
+                                            <Label style="-fx-font-size: 13; -fx-text-fill: #888;"
+                                                text="Giá hiện tại: €3,200" />
+                                            <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                        </VBox>
 
-                                <VBox alignment="CENTER_LEFT" spacing="20" mouseTransparent="false">
-                                    <padding>
-                                        <Insets left="350" /> </padding>
-                                    <children>
-                                        <Label style="-fx-text-fill: #C9A84C; -fx-font-weight: bold;" text="SỰ KIỆN ĐẶC BIỆT" />
-                                        <Label style="-fx-font-size: 36; -fx-text-fill: white; -fx-font-weight: bold;" text="Tuần Lễ Vàng&#10;Đấu Giá Sang" />
-                                        <Button style="-fx-background-color: #C9A84C; -fx-padding: 10 30; -fx-cursor: hand;" text="XEM NGAY" />
-                                    </children>
+                                        <!-- Card 3 -->
+                                        <VBox id="productCard3" alignment="CENTER" prefHeight="220"
+                                            prefWidth="280" spacing="12" styleClass="product-card">
+                                            <Label alignment="CENTER"
+                                                style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"
+                                                text="Bộ xu bạc La Mã thế kỷ 18 nguyên bản"
+                                                wrapText="true" />
+                                            <Label style="-fx-font-size: 13; -fx-text-fill: #888;"
+                                                text="Giá hiện tại: €850" />
+                                            <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                        </VBox>
+
+                                        <!-- Card 4 -->
+                                        <VBox id="productCard4" alignment="CENTER" prefHeight="220"
+                                            prefWidth="280" spacing="12" styleClass="product-card">
+                                            <Label alignment="CENTER"
+                                                style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"
+                                                text="Tranh sơn dầu trừu tượng hiện đại"
+                                                wrapText="true" />
+                                            <Label style="-fx-font-size: 13; -fx-text-fill: #888;"
+                                                text="Giá hiện tại: €1,400" />
+                                            <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                        </VBox>
+
+                                    </HBox>
                                 </VBox>
+
                             </children>
-                        </StackPane>
-
-            <!--- Phần trên là silde quảng cao -->
-
-
-
-                <VBox style="-fx-background-color: #F7F4EF;">
-                    <HBox spacing="20.0" style="-fx-padding: 20;">
-                        <children>
-
-                            <VBox spacing="16" style="-fx-background-color: #F7F4EF; -fx-padding: 30 40 20 40;">
-
-                                <Label text="Tài sản nổi bật"
-                                       style="-fx-font-size: 22; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-
-                                <HBox spacing="20">
-
-                                    <!-- Card 1 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Đồng hồ Rolex Submariner Date 2004"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €15,500"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
-                                    </VBox>
-
-                                    <!-- Card 2 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Tượng đồng chiến binh Hy Lạp cổ đại"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €3,200"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
-                                    </VBox>
-
-                                    <!-- Card 3 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Bộ xu bạc La Mã thế kỷ 18 nguyên bản"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €850"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
-                                    </VBox>
-
-                                    <!-- Card 4 -->
-                                    <VBox prefWidth="280" prefHeight="220" spacing="12" alignment="CENTER"
-                                          style="-fx-background-color: white; -fx-background-radius: 16;
-                     -fx-border-color: #e8e8e8; -fx-border-radius: 16;
-                     -fx-border-width: 1; -fx-padding: 30 24 24 24;">
-                                        <Label text="Tranh sơn dầu trừu tượng hiện đại"
-                                               wrapText="true" alignment="CENTER"
-                                               style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;"/>
-                                        <Label text="Giá hiện tại: €1,400"
-                                               style="-fx-font-size: 13; -fx-text-fill: #888;"/>
-                                        <Button text="Đấu giá ngay"
-                                                style="-fx-background-color: #8B5E52; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 30;
-                           -fx-padding: 10 28; -fx-cursor: hand; -fx-border-width: 0;"/>
-                                    </VBox>
-
-                                </HBox>
-                            </VBox>
-
-                        </children>
-
-                    </HBox>
-                    <VBox style="-fx-background-color: #0F1B35;">
-
-                        <!-- Phần review giữ nguyên -->
-                        <VBox alignment="CENTER" spacing="30.0" style="-fx-background-color: #F2EDE4; -fx-padding: 50 20 50 20;">
-                            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Khách hàng nói gì về chúng tôi?" />
-                            <HBox alignment="CENTER" spacing="10.0">
-                                <Button fx:id="btnScrollLeft" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&lt;" />
-                                <ScrollPane fx:id="reviewScrollPane" hbarPolicy="NEVER" prefHeight="160.0" prefWidth="850.0" style="-fx-background-color: transparent; -fx-background: transparent;" vbarPolicy="NEVER">
-                                    <content>
-                                        <HBox fx:id="reviewContainer" spacing="20.0" style="-fx-padding: 10;" />
-                                    </content>
-                                </ScrollPane>
-                                <Button fx:id="btnScrollRight" style="-fx-background-radius: 50; -fx-cursor: hand;" text="&gt;" />
-                            </HBox>
-                        </VBox>
-
-                        <!-- FOOTER CHÍNH -->
-                        <HBox spacing="40" style="-fx-background-color: #1A2744; -fx-padding: 40 60 40 60;">
-
-                            <!-- Cột 1: Thông tin nhóm -->
-                            <VBox maxWidth="260" spacing="10" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-text-fill: #C9A84C; -fx-font-size: 16px; -fx-font-weight: bold;" text="Web Đấu Giá của 4 ae" />
-                                <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Đồ án môn Lập trình Java" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 1: Phương" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 2: [Tên]" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 3: [Tên]" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Thành viên 4: [Tên]" />
-                            </VBox>
-
-                            <!-- Cột 2: Về chúng tôi -->
-                            <VBox spacing="14" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Về chúng tôi" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Giới thiệu" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Quy chế hoạt động" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Hướng dẫn sử dụng" />
-                            </VBox>
-
-                            <!-- Cột 3: Hỗ trợ -->
-                            <VBox spacing="14" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Hỗ trợ khách hàng" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Làm sao để đấu giá?" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Chính sách bảo mật" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px; -fx-cursor: hand;" text="Quy định người bán" />
-                            </VBox>
-
-                            <!-- Cột 4: Liên hệ + Email -->
-                            <VBox maxWidth="280" spacing="14" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" text="Liên hệ" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="Email: nhom4@university.edu.vn" />
-                                <Label style="-fx-text-fill: #cccccc; -fx-font-size: 13px;" text="GitHub: github.com/phuong/auction-web" />
-
-                                <!-- Ô đăng ký email -->
-                                <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Đăng ký nhận tin:" />
-                                <HBox spacing="0" style="-fx-background-color: #2D3A5E; -fx-background-radius: 25; -fx-border-color: #C9A84C; -fx-border-radius: 25;">
-                                    <TextField promptText="Nhập Email" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-prompt-text-fill: #888; -fx-font-size: 13px; -fx-padding: 10 15 10 15; -fx-background-radius: 25 0 0 25; -fx-border-color: transparent;" HBox.hgrow="ALWAYS" />
-                                    <Button style="-fx-background-color: #C9A84C; -fx-text-fill: #1A2744; -fx-font-weight: bold; -fx-font-size: 13px; -fx-background-radius: 0 25 25 0; -fx-padding: 10 20 10 20; -fx-cursor: hand; -fx-border-color: transparent;" text="Đăng ký" />
-                                </HBox>
-                            </VBox>
 
                         </HBox>
-
-                        <!-- Đường kẻ -->
-                        <HBox style="-fx-background-color: #2D3A5E; -fx-min-height: 1; -fx-pref-height: 1;" />
-
-                        <!-- Copyright -->
-                        <HBox alignment="CENTER_LEFT" style="-fx-background-color: #0F1B35; -fx-padding: 15 60 15 60;">
-                            <HBox spacing="4" HBox.hgrow="ALWAYS">
-                                <Label style="-fx-text-fill: #aaaaaa; -fx-font-size: 13px;" text="Copyright 2025 © " />
-                                <Label style="-fx-text-fill: #C9A84C; -fx-font-size: 13px;" text="Web Đấu Giá - Nhóm 4" />
-                            </HBox>
-                            <Label style="-fx-text-fill: #555555; -fx-font-size: 12px;" text="Đồ án Lập trình Java" />
-                        </HBox>
-
-                    </VBox>
-
-                </VBox>
                     </children>
-                    </VBox>
+                </VBox>
             </content>
         </ScrollPane>
     </center>
+    <left>
+        <VBox id="categorySidebar" styleClass="category-sidebar" BorderPane.alignment="CENTER">
+            <children>
+                <HBox id="categoryHome" alignment="CENTER_LEFT" spacing="15.0"
+                    styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-home" />
+                        <Label styleClass="text-body" text="Trang chủ" />
+                    </children>
+                </HBox>
+                <Label styleClass="text-header-secondary" text="DANH MỤC SẢN PHẨM">
+                    <VBox.margin>
+                        <Insets bottom="8.0" top="16.0" />
+                    </VBox.margin>
+                </Label>
+                <HBox id="categoryAll" alignment="CENTER_LEFT" spacing="15.0"
+                    styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-category" />
+                        <Label styleClass="text-body" text="Tất cả" />
+                    </children>
+                </HBox>
+                <HBox id="categoryArt" alignment="CENTER_LEFT" spacing="15.0"
+                    styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-art" />
+                        <Label styleClass="text-body" text="Nghệ thuật" />
+                    </children>
+                </HBox>
+                <HBox id="categoryElectronic" alignment="CENTER_LEFT" spacing="15.0"
+                    styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-electronic" />
+                        <Label styleClass="text-body" text="Đồ điện tử" />
+                    </children>
+                </HBox>
+                <HBox id="categoryVehicle" alignment="CENTER_LEFT" spacing="15.0"
+                    styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-vehicle" />
+                        <Label styleClass="text-body" text="Phương tiện giao thông" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </left>
+    <stylesheets>
+        <URL value="@../css/global.css" />
+        <URL value="@../css/inputs.css" />
+        <URL value="@../css/variables.css" />
+        <URL value="@../css/buttons.css" />
+        <URL value="@../css/images.css" />
+        <URL value="@../css/layout.css" />
+        <URL value="@../css/typography.css" />
+        <URL value="@../css/icons.css" />
+    </stylesheets>
 
 </BorderPane>

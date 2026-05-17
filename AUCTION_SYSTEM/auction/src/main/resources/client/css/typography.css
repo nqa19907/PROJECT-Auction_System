@@ -1,0 +1,67 @@
+/* ========================================================================
+   TYPOGRAPHY SYSTEM
+======================================================================== */
+
+/* Font mặc định cho toàn app */
+.root {
+    -fx-font-family: 'Google Sans'; 
+}
+
+.label {
+    -fx-font-smoothing-type: lcd;            /* Giúp chữ mảnh và sắc nét hơn */
+}
+
+/* --- TIÊU ĐỀ LỚN (Header 1) --- */
+.text-header {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;                     /* Kích thước h1: 28px */
+    -fx-text-fill: -color-primary;
+}
+
+/* --- TIÊU ĐỀ PHỤ (Header 2) --- */
+.text-header-secondary {
+    -fx-font-family: 'Google Sans Medium';
+    -fx-font-size: 16px;                     /* Kích thước h2: 16px */
+    -fx-text-fill: -color-text-brand;
+}
+
+/* --- NỘI DUNG CHÍNH (Body Text) --- */
+.text-body {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 14px;                     /* Kích thước body: 14px */
+    -fx-text-fill: -color-text-sub;
+}
+
+/* --- NHÃN DỮ LIỆU & MÃ CODE --- */
+.text-label-code {
+    -fx-font-family: 'Google Sans Code';
+    -fx-font-size: 12px;                     /* Kích thước xs: 12px */
+    -fx-text-fill: -color-text-sub;
+}
+
+/* --- CHỮ GỢI Ý & PHỤ CHÚ --- */
+.text-hint {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 13px;                     /* Kích thước sm: 13px */
+    -fx-text-fill: -color-text-hint;
+}
+
+/* --- THÔNG BÁO LỖI --- */
+.text-error {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 13px;                     /* Kích thước sm: 13px */
+    -fx-text-fill: -color-error-text;
+}
+
+/* --- LIÊN KẾT NHẤN MẠNH (Link/Action) --- */
+.text-primary {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 12px;                     /* Kích thước xs: 12px */
+    -fx-text-fill: -color-text-brand;
+    -fx-cursor: hand;
+}
+
+.text-primary:hover {
+    -fx-text-fill: -color-text-brand-hover;
+}
