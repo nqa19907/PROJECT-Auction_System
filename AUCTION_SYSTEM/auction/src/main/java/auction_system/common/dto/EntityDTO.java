@@ -4,51 +4,51 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * DTO chứa thông tin thực thể cơ bản để truyền qua mạng Socket.
- * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
+ * Lớp Dto cơ sở đại diện cho một thực thể trong hệ thống.
+ * Cung cấp các thuộc tính chung như id và thời gian tạo.
  */
-public final class EntityDto implements Serializable {
-
+public abstract class EntityDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final String id;
-    private final LocalDateTime createdAt;
+    protected String id;
+    protected LocalDateTime createdAt;
 
     /**
-     * Khởi tạo một gói dữ liệu EntityDTO bất biến.
-     *
-     * @param id ID của thực thể.
-     * @param createdAt Thời gian tạo thực thể.
+     * Khởi tạo một đối tượng EntityDto trống.
      */
-    public EntityDto(
-            final String id,
-            final LocalDateTime createdAt) {
+    public EntityDto() {
+    }
 
+    /**
+     * Khởi tạo một đối tượng EntityDto với thông tin có sẵn.
+     *
+     * @param id        ID của thực thể.
+     * @param createdAt Thời gian tạo.
+     */
+    public EntityDto(String id, LocalDateTime createdAt) {
         this.id = id;
         this.createdAt = createdAt;
     }
 
-    /**
-     * Lấy ID thực thể.
-     *
-     * @return ID thực thể.
-     */
     public String getId() {
-        return this.id;
+        return id;
     }
 
-    /**
-     * Lấy thời gian tạo thực thể.
-     *
-     * @return thời gian tạo.
-     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public LocalDateTime getCreatedAt() {
-        return this.createdAt;
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override
     public String toString() {
-        return "EntityDTO{"
+        return this.getClass().getSimpleName() + "{"
                 + "id='" + id + '\''
                 + ", createdAt=" + createdAt
                 + '}';

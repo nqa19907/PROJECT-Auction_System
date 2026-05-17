@@ -14,7 +14,7 @@ public class SellerDto implements Serializable {
     private String email;
     private double balance;
     private float rating;
-    private List<String> managedItemIds; // Chuyển đổi List<Item> thành List ID để tối ưu Dto
+    private List<String> managedItemIds;
 
     /**
      * Khởi tạo một đối tượng SellerDto trống.

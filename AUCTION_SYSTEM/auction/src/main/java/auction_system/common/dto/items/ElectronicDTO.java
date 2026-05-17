@@ -1,99 +1,34 @@
 package auction_system.common.dto.items;
 
-import java.io.Serializable;
-
 /**
- * DTO chứa thông tin thiết bị điện tử để truyền qua mạng Socket.
- * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của thiết bị điện tử (Electronic).
  */
-public final class ElectronicDto implements Serializable {
-
+public class ElectronicDto extends ItemDto {
     private static final long serialVersionUID = 1L;
 
-    private final String id;
-    private final String itemName;
-    private final String description;
-    private final double startPrice;
-    private final String sellerId;
-    private final String category;
+    /**
+     * Khởi tạo một đối tượng ElectronicDto trống.
+     */
+    public ElectronicDto() {
+        super();
+    }
 
     /**
-     * Khởi tạo một gói dữ liệu ElectronicDTO bất biến.
+     * Khởi tạo một đối tượng ElectronicDto với đầy đủ thông tin.
      *
-     * @param id ID sản phẩm.
-     * @param itemName Tên sản phẩm điện tử.
+     * @param id          ID của sản phẩm.
+     * @param itemName    Tên sản phẩm.
      * @param description Mô tả chi tiết.
-     * @param startPrice Giá khởi điểm.
-     * @param sellerId ID người bán.
-     * @param category Danh mục sản phẩm.
+     * @param startPrice  Giá khởi điểm.
+     * @param sellerId    ID của người bán.
      */
-    public ElectronicDto(
-            final String id,
-            final String itemName,
-            final String description,
-            final double startPrice,
-            final String sellerId,
-            final String category) {
-
-        this.id = id;
-        this.itemName = itemName;
-        this.description = description;
-        this.startPrice = startPrice;
-        this.sellerId = sellerId;
-        this.category = category;
+    public ElectronicDto(String id, String itemName, String description,
+            double startPrice, String sellerId) {
+        super(id, itemName, description, startPrice, sellerId);
     }
 
-    /**
-     * Lấy ID sản phẩm.
-     *
-     * @return ID sản phẩm.
-     */
-    public String getId() {
-        return this.id;
-    }
-
-    /**
-     * Lấy tên sản phẩm.
-     *
-     * @return tên sản phẩm.
-     */
-    public String getItemName() {
-        return this.itemName;
-    }
-
-    /**
-     * Lấy mô tả sản phẩm.
-     *
-     * @return mô tả.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * Lấy giá khởi điểm.
-     *
-     * @return giá khởi điểm.
-     */
-    public double getStartPrice() {
-        return this.startPrice;
-    }
-
-    /**
-     * Lấy ID người bán.
-     *
-     * @return ID người bán.
-     */
-    public String getSellerId() {
-        return this.sellerId;
-    }
-
-    /**
-     * Lấy danh mục sản phẩm.
-     *
-     * @return danh mục.
-     */
-    public String getCategory() {
-        return this.category;
+    @Override
+    public String toString() {
+        return "ElectronicDto{} " + super.toString();
     }
 }

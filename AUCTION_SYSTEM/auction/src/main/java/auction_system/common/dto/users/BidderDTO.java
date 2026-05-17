@@ -3,7 +3,7 @@ package auction_system.common.dto.users;
 import java.io.Serializable;
 
 /**
- * Lớp DTO đại diện cho dữ liệu chuyển đổi của người đấu giá (Bidder).
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của người đấu giá (Bidder).
  */
 public class BidderDto implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -14,13 +14,13 @@ public class BidderDto implements Serializable {
     private double balance;
 
     /**
-     * Khởi tạo một đối tượng BidderDTO trống.
+     * Khởi tạo một đối tượng BidderDto trống.
      */
     public BidderDto() {
     }
 
     /**
-     * Khởi tạo một đối tượng BidderDTO với đầy đủ thông tin.
+     * Khởi tạo một đối tượng BidderDto với đầy đủ thông tin.
      *
      * @param id       ID của người đấu giá.
      * @param username Tên đăng nhập.
@@ -68,7 +68,7 @@ public class BidderDto implements Serializable {
 
     @Override
     public String toString() {
-        return "BidderDTO{"
+        return "BidderDto{"
                 + "id='" + id + '\''
                 + ", username='" + username + '\''
                 + ", email='" + email + '\''

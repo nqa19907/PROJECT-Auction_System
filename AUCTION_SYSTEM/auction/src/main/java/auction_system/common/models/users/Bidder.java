@@ -1,8 +1,8 @@
 package auction_system.common.models.users;
 
+import auction_system.common.exceptions.InvalidBidException; 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
-import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.items.Item;
 
 
