@@ -72,6 +72,7 @@ public class ClientApp extends Application {
         String[] fontPaths = {
             "/fonts/GoogleSansCode/GoogleSansCode-Medium.ttf",
             "/fonts/GoogleSans/GoogleSans-Regular.ttf",
+            "/fonts/GoogleSans/GoogleSans-Medium.ttf",
             "/fonts/GoogleSans/GoogleSans-Bold.ttf",
             "/fonts/GoogleSans/GoogleSans-Italic.ttf"
         };

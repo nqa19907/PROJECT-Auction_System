@@ -29,8 +29,7 @@ public class LoginCommand implements Command {
         String failPrefix = Protocol.Response.LOGIN_FAIL.name() + Protocol.SEPARATOR;
 
         if (parts.length < 3) {
-            LOGGER.warning("Từ chối đăng nhập: " 
-                    + "Sai cú pháp lệnh");
+            LOGGER.warning("Từ chối đăng nhập: " + "Sai cú pháp lệnh");
             return failPrefix + "Thiếu thông tin đăng nhập";
         }
 
@@ -57,11 +56,11 @@ public class LoginCommand implements Command {
             AuctionManager.getInstance().userLoggedIn(user);
 
             String role = user.getRoleName();
-            LOGGER.info("Đăng nhập thành công: " + email 
+            LOGGER.info("Đăng nhập thành công: " + email
                     + " [" + role + "]");
 
             // Trả về gói tin thành công, tầng network phía dưới sẽ tự bắn chuỗi này về Client
-            return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR 
+            return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR
                     + user.getId() + Protocol.SEPARATOR
                     + user.getUsername() + Protocol.SEPARATOR
                     + role;

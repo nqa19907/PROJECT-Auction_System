@@ -30,13 +30,30 @@ public final class SceneManager {
      * @param fxmlName Tên file FXML cần đổi sang (Ví dụ: "Dashboard.fxml")
      */
     public static void switchScene(Node triggerNode, String fxmlName) {
+        switchScene(triggerNode, fxmlName, -1, -1);
+    }
+
+    /**
+     * Chuyển đổi màn hình hiển thị dựa trên tên file FXML, có tuỳ chỉnh kích thước.
+     *
+     * @param triggerNode Một component bất kỳ trên màn hình hiện tại để tìm ra Stage gốc
+     * @param fxmlName Tên file FXML cần đổi sang
+     * @param width Chiều rộng cửa sổ (-1 nếu muốn giữ nguyên mặc định)
+     * @param height Chiều cao cửa sổ (-1 nếu muốn giữ nguyên mặc định)
+     */
+    public static void switchScene(Node triggerNode, String fxmlName, double width, double height) {
         if (triggerNode == null) {
             LOGGER.warning("Không thể chuyển màn hình: Node kích hoạt bị null.");
             return;
         }
 
-        Stage currentStage = (Stage) triggerNode.getScene().getWindow();
-        switchScene(currentStage, fxmlName);
+        try {
+            Stage currentStage = (Stage) triggerNode.getScene().getWindow();
+            switchScene(currentStage, fxmlName, width, height);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,
+                        "Lỗi khi lấy cửa sổ từ Node kích hoạt chuyển cảnh: " + fxmlName, e);
+        }
     }
 
     /**
@@ -46,7 +63,20 @@ public final class SceneManager {
      * @param fxmlName Tên file FXML cần đổi sang
      */
     public static void switchScene(Stage stage, String fxmlName) {
-        if (stage == null) {
+        switchScene(stage, fxmlName, -1, -1);
+    }
+
+    /**
+     * Chuyển đổi màn hình hiển thị trên một Stage cụ thể, có tuỳ chỉnh kích thước.
+     *
+     * @param currentStage Stage cần thay đổi Scene
+     * @param fxmlName Tên file FXML cần đổi sang
+     * @param width Chiều rộng cửa sổ mới
+     * @param height Chiều cao cửa sổ mới
+     */
+    public static void switchScene(Stage currentStage, String fxmlName,
+                                    double width, double height) {
+        if (currentStage == null) {
             LOGGER.warning("Không thể chuyển màn hình: Stage bị null.");
             return;
         }
@@ -66,11 +96,40 @@ public final class SceneManager {
             }
 
             Parent root = FXMLLoader.load(fxmlLocation);
-            Scene newScene = new Scene(root);
+            Scene newScene;
             
-            stage.setScene(newScene);
-            stage.show();
-            
+            // Nếu có truyền kích thước cụ thể, set ngay lúc tạo Scene
+            if (width > 0 && height > 0) {
+                newScene = new Scene(root, width, height);
+            } else {
+                newScene = new Scene(root);
+            }
+
+            // Tự động nhúng global.css vào mọi Scene mới được tạo ra
+            URL cssLocation = SceneManager.class.getResource("/client/css/global.css");
+            if (cssLocation != null) {
+                newScene.getStylesheets().add(cssLocation.toExternalForm());
+                LOGGER.info("Đã nạp thành công global.css cho Scene: " + fxmlName);
+            }
+
+            // 1. Tạo một Stage hoàn toàn mới
+            Stage newStage = new Stage();
+            newStage.setScene(newScene);
+
+            // 2. Kế thừa tiêu đề (title) từ cửa sổ cũ
+            newStage.setTitle(currentStage.getTitle());
+
+            // 3. Xử lý kích thước cho cửa sổ mới
+            if (width > 0 && height > 0) {
+                newStage.setWidth(width);
+                newStage.setHeight(height);
+                newStage.centerOnScreen(); // Căn giữa màn hình
+            }
+
+            // 4. Hiển thị cửa sổ mới và đống cửa sổ cũ
+            newStage.show();
+            currentStage.close();
+
             LOGGER.info("Đã chuyển màn hình sang " + fxmlName + " thành công.");
             
         } catch (IOException e) {

@@ -69,7 +69,7 @@ public class LoginController {
         }
 
         if (password.isEmpty()) {
-            showError("Vuil lòng nhập Mật khẩu!");
+            showError("Vui lòng nhập Mật khẩu!");
             passwordField.requestFocus();
             return;
         }
@@ -84,7 +84,7 @@ public class LoginController {
                 
                 if (result.isSuccess()) {
                     LOGGER.info("Đăng nhập thành công, điều hướng bằng SceneManager.");
-                    SceneManager.switchScene(loginButton, "Dashboard.fxml");
+                    SceneManager.switchScene(loginButton, "Dashboard.fxml", 1200, 800);
                 } else {
                     showError(result.getErrorMessage());
                 }

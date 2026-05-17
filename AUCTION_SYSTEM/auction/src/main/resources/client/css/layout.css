@@ -1,0 +1,124 @@
+/* ========================================================================
+   LAYOUT & CONTAINERS STYLES
+======================================================================== */
+
+.login-background {
+    -fx-background-color: -color-bg-main;
+}
+
+.login-card {
+    -fx-background-color: -color-primary-bg;
+    -fx-background-radius: 24;                                                /* Radius lg: 24 */
+    -fx-effect: dropshadow(three-pass-box, -color-shadow-sm, 20, 0, 0, 10);   /* Thay màu bóng cứng bằng biến */
+    -fx-padding: 30;                                                          /* Spacing xl gần đúng: 30 */
+}
+
+.divider-line {
+    -fx-background-color: -color-divider;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+/* --- REGISTER PROMPT (Khối nhắc đăng ký) --- */
+.register-prompt {
+    -fx-background-color: transparent;
+    -fx-border-color: -color-primary;
+    -fx-border-radius: 50;                     /* Radius pill: 50 */
+    -fx-background-radius: 50;                 /* Radius pill: 50 */
+    -fx-border-width: 1;
+    -fx-padding: 11 24;                        /* Spacing y:11, x-lg:24 */
+    -fx-cursor: hand;
+}
+
+.register-prompt .label {
+    -fx-text-fill: -color-text-brand;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.register-prompt:hover {
+    -fx-background-color: -color-primary-bg-hover;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}
+
+.dashboard-background {
+    -fx-background-color: -color-primary-bg;
+}
+
+/* --- NAVBAR --- */
+.nav-bar {
+    -fx-background-color: -color-primary-bg;
+    -fx-padding: 12 24;                        /* Rút gọn cú pháp, spacing y:12, x-lg: 24 */
+}
+
+/* --- SIDEBAR DANH MỤC ---*/
+.category-sidebar {
+    -fx-background-color: -color-primary-bg;
+    -fx-padding: 24 16;                        /* Rút gọn cú pháp, spacing y-lg: 24, x-md: 16 */
+    -fx-spacing: 4;                            /* Spacing xs: 4 */
+    -fx-border-width: 0 1 0 0; /* Chỉ có viền mờ ở bên phải */
+    -fx-pref-width: 275px;
+}
+
+/* --- TÙY CHỌN DANH MỤC (CÓ ICON + LABEL) --- */
+.category-option {
+    -fx-background-color: transparent;
+    -fx-background-radius: 50;                 /* Radius pill: 50 */
+    -fx-padding: 10 16;                        /* Rút gọn cú pháp, spacing y: 10, x-md: 16 */
+    -fx-cursor: hand;
+}
+
+.category-option .label {
+    -fx-text-fill: -color-text-brand;
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 15px;
+    -fx-font-weight: 500;
+}
+
+.category-option:hover {
+    -fx-background-color: -color-primary-bg-hover;                         /* Chuyển mã màu tĩnh sang biến semantic */
+    -fx-effect: dropshadow(three-pass-box, -color-shadow-lg, 10, 0, 0, 2); /* Hiệu ứng đổ bóng đen nổi lên */
+}
+
+/* --- THẺ SẢN PHẨM (PRODUCT CARD) --- */
+.product-card {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 24;                 /* Radius lg: 24 */
+    -fx-padding: 16;                           /* Đẩy nội dung vào trong 16px (Spacing md: 16) */
+    -fx-cursor: hand;
+}
+
+.product-card:hover {
+    -fx-effect: dropshadow(three-pass-box, -color-shadow-md, 20, 0, 0, 0); /* Bóng đổ to và mềm hơn khi rê chuột */
+}
+
+/* Khung chứa hình ảnh preview sản phẩm */
+.product-image-preview {
+    -fx-background-color: -color-bg-main; /* Nền xám nhạt chờ ảnh tải */
+    -fx-background-radius: 16;                 /* Radius md: 16, bo góc cân xứng với card bên ngoài */
+    -fx-border-radius: 16;                     /* Radius md: 16 */
+}
+
+/* --- KHU VỰC NỘI DUNG CHÍNH (SCROLL PANE) --- */
+.main-content-area {
+    -fx-background-color: -color-bg-content;       /* Dùng đúng biến nền của Content */
+    -fx-background: -color-surface-alt;
+    -fx-background-radius: 32 0 0 0;               /* Radius xl: 32 (Chỉ bo góc trên - trái) */
+}
+
+.main-content-area .viewport {
+    -fx-background-color: transparent;
+    -fx-background-radius: 32 0 0 0;               /* Bo góc viewport khớp với main-content-area */
+}
+
+/* Chuyển padding vào lớp content bên trong để tạo vùng an toàn cho bóng đổ (tránh clipping) */
+.content-wrapper {
+    -fx-background-color: transparent;
+    -fx-padding: 25;                               /* Spacing xxl: 50 */
+}
+
+.main-content-area .label {
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+    -fx-text-fill: -color-text-title;              /* Dùng biến mô tả đúng tính chất của tiêu đề */
+}

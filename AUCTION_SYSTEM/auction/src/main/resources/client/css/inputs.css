@@ -1,0 +1,46 @@
+/* ========================================================================
+   INPUT STYLES
+======================================================================== */
+
+.input-field {
+    -fx-font-family: 'Google Sans Code';
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border-input;
+    -fx-border-radius: 8;                     /* Radius sm: 8 */
+    -fx-background-radius: 8;                 /* Radius sm: 8 */
+    -fx-border-width: 1;
+    -fx-padding: 12 16;                       /* Rút gọn cú pháp, spacing y:12, x-md:16 */
+    -fx-text-fill: -color-text-main;
+    -fx-prompt-text-fill: -color-text-hint;
+    -fx-font-size: 14px;                      /* Typography body: 14px */
+    -fx-effect: dropshadow(three-pass-box, transparent, 5, 0, 0, 0);
+}
+
+.input-field:focused {
+    -fx-border-color: -color-border-focus;
+    -fx-border-width: 2;
+    -fx-padding: 11 15;                       /* Rút gọn cú pháp padding */
+    -fx-background-color: -color-surface;
+    -fx-effect: dropshadow(three-pass-box, -color-border-focus-glow, 5, 0, 0, 0); 
+}
+
+/* --- SEARCH BOX --- */
+.search-box {
+    -fx-background-color: -color-bg-search;        /* Dùng đúng biến ngữ nghĩa của ô tìm kiếm */
+    -fx-background-radius: 25;
+    -fx-padding: 8 18;                             /* Padding custom cho search box */
+    -fx-border-color: transparent;
+}
+
+.search-box:focused-within {
+    -fx-border-color: -color-primary;
+    -fx-border-radius: 25;
+    -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
+}
+
+.search-input {
+    -fx-background-color: transparent;
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-brand;              /* Chuyển mã màu tĩnh sang biến chữ chính */
+    -fx-prompt-text-fill: -color-grey-300;         /* Giữ nguyên màu text hint cũ vì nó nhạt hơn biến chuẩn 1 chút */
+}

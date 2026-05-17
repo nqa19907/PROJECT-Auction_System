@@ -79,7 +79,7 @@ public class AuctionManager {
         startAuctionScheduler();
 
         try {
-            User testUser = new Bidder("Hoang", "hoang@gmail.com", "123456", 10000.0);
+            User testUser = new Bidder("Hoang", "1", "1", 10000.0);
 
             userRegistry.put(testUser.getUsername(), testUser);
 

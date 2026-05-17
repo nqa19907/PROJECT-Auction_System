@@ -6,8 +6,10 @@
     ======================================================================== */
 
     /* --- BRAND: ORANGE (H: 37) --- */
+    -color-orange-50: #F7F4EF;
     -color-orange-100: #FFF7EB;
     -color-orange-120: #FFEDD1;
+    -color-orange-150: #f8e1bc;
     -color-orange-200: #FCBF5D;
     -color-orange-300: #F7AB31;
     -color-orange-400: #F2A11F;
@@ -68,6 +70,8 @@
     /* Trạng thái Chính (Brand/Primary) */
     -color-primary: -color-orange-500;
     -color-primary-hover: -color-orange-400;
+    -color-inverse: -color-orange-600;
+
     /* Màu glow của orange-300 */
     -color-primary-hover-glow: rgba(247, 172, 49, 0.6);
     -color-primary-bg: -color-orange-100;
@@ -95,15 +99,51 @@
     -color-text-brand-hover: -color-orange-800;
     -color-error-text: -color-red-600;
 
+    /* Biến đặc thù (Specific Elements) */
+    -color-text-title: -color-orange-800;    /* Chữ tiêu đề nổi bật */
+    -color-icon-theme: -color-orange-600;    /* Màu chủ đạo cho các Icon */
+
+    /* Trạng thái Nút bấm (Buttons Overlays) */
+    -color-btn-outline-bg: rgba(255, 255, 255, 0.07);
+    -color-btn-outline-border: rgba(255, 255, 255, 0.15);
+    -color-btn-outline-bg-hover: rgba(255, 255, 255, 0.12);
+
     /* Bề mặt & Đường viền (Surfaces & Borders) */
     -color-bg-main: -color-grey-200;
     -color-surface: -color-grey-100;
+    -color-surface-alt: -color-orange-50;    /* Nền phụ (VD: Scrollpane background) */
+    -color-bg-content: -color-orange-120;    /* Nền khu vực nội dung chính */
+    -color-bg-search: -color-orange-120;     /* Nền ô tìm kiếm */
 
     -color-border-input: -color-grey-300;
     -color-border-focus: -color-orange-500;
     -color-border-focus-glow: rgba(235, 152, 19, 0.6);
+    -color-border-muted: rgba(0, 0, 0, 0.05);    /* Viền mờ cho các card */
+
+    /* Màu Đổ Bóng (Shadows) */
+    -color-shadow-sm: rgba(0, 0, 0, 0.08);
+    -color-shadow-md: rgba(0, 0, 0, 0.12);
+    -color-shadow-lg: rgba(0, 0, 0, 0.15);
 
     /* Màu Divider */
     -color-divider: -color-primary;
 
+    /* ========================================================================
+    TẦNG 3: QUY CHUẨN KÍCH THƯỚC & KHOẢNG CÁCH (DESIGN TOKENS)
+    Lưu ý: JavaFX CSS mặc định KHÔNG hỗ trợ truyền tham số biến cho kích thước 
+    như Web CSS. Các kích thước dưới đây được định nghĩa để làm tài liệu chuẩn 
+    (Documentation) nhằm giữ sự nhất quán. Vui lòng tham chiếu các giá trị này.
+    
+    -- SPACING (Padding/Margin) --
+    xs: 4px  | sm: 8px | md: 16px | lg: 24px | xl: 32px | xxl: 50px
+    
+    -- BORDER RADIUS (Bo góc) --
+    sm: 8    | md: 16  | lg: 24   | xl: 32   | pill: 50
+    
+    -- ICON SIZE --
+    sm: 16px | md: 20px | lg: 24px | xl: 50px
+    
+    -- TYPOGRAPHY (Kích thước font chữ) --
+    xs: 12px | sm: 13px | body: 14px | h2: 16px | h1: 28px
+    ======================================================================== */
 }
