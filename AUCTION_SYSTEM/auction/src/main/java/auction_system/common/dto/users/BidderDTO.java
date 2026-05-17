@@ -6,7 +6,7 @@ import java.io.Serializable;
  * DTO chứa thông tin người đấu giá để truyền qua mạng Socket.
  * Đã loại bỏ mật khẩu để bảo mật và không có hàm Setter để đảm bảo an toàn đa luồng.
  */
-public final class BidderDTO implements Serializable {
+public final class BidderDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,7 +23,7 @@ public final class BidderDTO implements Serializable {
      * @param balance Số dư tài khoản.
      * @param roleName Vai trò của người dùng.
      */
-    public BidderDTO(
+    public BidderDto(
             final String username,
             final String email,
             final double balance,

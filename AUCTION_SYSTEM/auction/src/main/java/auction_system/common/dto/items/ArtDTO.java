@@ -6,7 +6,7 @@ import java.io.Serializable;
  * DTO chứa thông tin tác phẩm nghệ thuật để truyền qua mạng Socket.
  * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
  */
-public final class ArtDTO implements Serializable {
+public final class ArtDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public final class ArtDTO implements Serializable {
      * @param sellerId ID người bán.
      * @param category Danh mục sản phẩm.
      */
-    public ArtDTO(
+    public ArtDto(
             final String id,
             final String itemName,
             final String description,

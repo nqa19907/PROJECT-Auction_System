@@ -7,7 +7,7 @@ import java.io.Serializable;
  * Đã loại bỏ mật khẩu và danh sách quản lý sản phẩm để đảm bảo bảo mật.
  * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
  */
-public final class SellerDTO implements Serializable {
+public final class SellerDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -26,7 +26,7 @@ public final class SellerDTO implements Serializable {
      * @param rating Đánh giá uy tín của người bán.
      * @param roleName Vai trò người dùng.
      */
-    public SellerDTO(
+    public SellerDto(
             final String username,
             final String email,
             final double balance,

@@ -6,7 +6,7 @@ import java.io.Serializable;
  * DTO chứa thông tin người tham gia đấu giá để truyền qua mạng Socket.
  * Đã loại bỏ mật khẩu để bảo mật và không có hàm Setter để đảm bảo an toàn đa luồng.
  */
-public final class ParticipantDTO implements Serializable {
+public final class ParticipantDto implements Serializable {
     
     private static final long serialVersionUID = 1L;
 
@@ -16,8 +16,12 @@ public final class ParticipantDTO implements Serializable {
 
     /**
      * Khởi tạo một gói dữ liệu ParticipantDTO bất biến.
+     * 
+     * @param username tên đăng nhập
+     * @param balance số dư tài khoản
+     * @param email email đăng nhập
      */
-    public ParticipantDTO(final String username, final String email, final double balance) {
+    public ParticipantDto(final String username, final String email, final double balance) {
         this.username = username;
         this.email = email;
         this.balance = balance;

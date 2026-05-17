@@ -6,7 +6,7 @@ import java.io.Serializable;
  * DTO chứa thông tin sản phẩm đấu giá để truyền qua mạng Socket.
  * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
  */
-public final class ItemDTO implements Serializable {
+public final class ItemDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public final class ItemDTO implements Serializable {
      * @param currentPrice Giá hiện tại.
      * @param sellerId ID người bán.
      */
-    public ItemDTO(
+    public ItemDto(
             final String id,
             final String itemName,
             final String description,

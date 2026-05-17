@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  * DTO chứa thông tin thực thể cơ bản để truyền qua mạng Socket.
  * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
  */
-public final class EntityDTO implements Serializable {
+public final class EntityDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -20,7 +20,7 @@ public final class EntityDTO implements Serializable {
      * @param id ID của thực thể.
      * @param createdAt Thời gian tạo thực thể.
      */
-    public EntityDTO(
+    public EntityDto(
             final String id,
             final LocalDateTime createdAt) {
 

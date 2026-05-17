@@ -7,7 +7,7 @@ import java.io.Serializable;
  * Đã loại bỏ mật khẩu để đảm bảo bảo mật.
  * Không có hàm Setter để đảm bảo tính bất biến và an toàn đa luồng.
  */
-public final class UserDTO implements Serializable {
+public final class UserDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -28,7 +28,7 @@ public final class UserDTO implements Serializable {
      * @param isBanned Trạng thái bị cấm.
      * @param roleName Vai trò người dùng.
      */
-    public UserDTO(
+    public UserDto(
             final String id,
             final String username,
             final String email,
