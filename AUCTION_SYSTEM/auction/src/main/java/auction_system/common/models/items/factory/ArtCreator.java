@@ -15,12 +15,6 @@ public class ArtCreator implements ItemCreator {
                 .description((String) properties.getOrDefault("description", "Description here"))
                 .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())
                 .sellerId((String) properties.getOrDefault("sellerId", "SYSTEM"))
-                .condition((String) properties.getOrDefault("condition", "Excellent"))
-                .imagePath((String) properties.getOrDefault("imagePath", "none"))
-                .artistName((String) properties.getOrDefault("artistName", "Unknown Artist"))
-                .creationYear((String) properties.getOrDefault("creationYear", "Unknown Year"))
-                .hasAuthenticityCertificate((Boolean) properties.getOrDefault(
-                        "hasAuthenticityCertificate", false))
                 .build();
     }
 }

@@ -15,10 +15,6 @@ public class ElectronicCreator implements ItemCreator {
                 .description((String) properties.getOrDefault("description", "Description here"))
                 .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())
                 .sellerId((String) properties.getOrDefault("sellerId", "SYSTEM"))
-                .condition((String) properties.getOrDefault("condition", "New"))
-                .imagePath((String) properties.getOrDefault("imagePath", "none"))
-                .brand((String) properties.getOrDefault("brand", "Generic Brand"))
-                .warrantyMonths(((Number) properties.getOrDefault("warrantyMonths", 0)).intValue())
                 .build();
     }
 }

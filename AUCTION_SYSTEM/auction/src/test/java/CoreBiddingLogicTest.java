@@ -32,10 +32,6 @@ public class CoreBiddingLogicTest {
                 .description("The best smartphone camera")
                 .startPrice(startPrice)
                 .sellerId("61h23s1")
-                .condition("Sealed")
-                .imagePath("")
-                .brand("OPPO")
-                .warrantyMonths(12)
                 .build();
         seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
                                     "69420", 69420, 4.69f);

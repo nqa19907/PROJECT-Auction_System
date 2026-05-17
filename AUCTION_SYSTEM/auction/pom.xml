@@ -11,6 +11,9 @@
   <name>auction</name>
 
   <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <javafx.version>21.0.6</javafx.version>
     <!-- Thiết lập bộ mã hóa ký tự và phiên bản Java cho dự án -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>

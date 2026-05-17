@@ -14,7 +14,7 @@ public class Seller extends Participant {
 
     @Override
     public void update(String message) {
-        // Không thực hiện thao tác nào
+        System.out.println("[NOTIFY]: " + message);
     }
 
     /**
@@ -27,7 +27,7 @@ public class Seller extends Participant {
      * @param rating   Đánh giá uy tín của người bán.
      */
     public Seller(String username, String email, String password, double balance,
-                  float rating) {
+            float rating) {
         super(username, email, password, balance);
         this.rating = rating;
         managedItems = new ArrayList<>();
@@ -59,7 +59,8 @@ public class Seller extends Participant {
      * @param item Sản phẩm cần gỡ bỏ.
      */
     public void delistItem(Item item) {
-        // Hàm remove tự động trả về true nếu xóa thành công, false nếu không có trong list
+        // Hàm remove tự động trả về true nếu xóa thành công, false nếu không có trong
+        // list
         boolean removed = this.managedItems.remove(item);
         if (!removed) {
             throw new InvalidItemException("Không tìm thấy sản phẩm này trong danh sách của bạn.");
@@ -73,6 +74,5 @@ public class Seller extends Participant {
     public void setRating(float rating) {
         this.rating = rating;
     }
-
 
 }

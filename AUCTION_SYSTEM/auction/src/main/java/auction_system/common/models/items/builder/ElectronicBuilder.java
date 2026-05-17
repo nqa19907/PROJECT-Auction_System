@@ -12,10 +12,6 @@ public class ElectronicBuilder implements Builder<Electronic> {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
-    private String condition;
-    private String imagePath;
-    private String brand;
-    private int warrantyMonths;
 
     public ElectronicBuilder itemName(String itemName) {
         this.itemName = itemName;
@@ -42,26 +38,6 @@ public class ElectronicBuilder implements Builder<Electronic> {
         return this;
     }
 
-    public ElectronicBuilder condition(String condition) {
-        this.condition = condition;
-        return this;
-    }
-
-    public ElectronicBuilder imagePath(String imagePath) {
-        this.imagePath = imagePath;
-        return this;
-    }
-
-    public ElectronicBuilder brand(String brand) {
-        this.brand = brand;
-        return this;
-    }
-
-    public ElectronicBuilder warrantyMonths(int warrantyMonths) {
-        this.warrantyMonths = warrantyMonths;
-        return this;
-    }
-
     /**
      * Xây dựng và trả về đối tượng Electronic.
      *
@@ -70,8 +46,7 @@ public class ElectronicBuilder implements Builder<Electronic> {
     @Override
     public Electronic build() {
         Electronic electronic = new Electronic(
-                itemName, description, startPrice, sellerId, condition, imagePath,
-                brand, warrantyMonths);
+                itemName, description, startPrice, sellerId);
         if (this.currentPrice > 0) {
             electronic.setCurrentPrice(this.currentPrice);
         }

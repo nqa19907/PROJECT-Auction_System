@@ -23,10 +23,6 @@ public class AuctionLifecycleTest {
                 .description("Apple smartphone")
                 .startPrice(2000.0)
                 .sellerId("SN001")
-                .condition("New")
-                .imagePath("")
-                .brand("Apple")
-                .warrantyMonths(12)
                 .build();
         Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
         auction = new Auction(item, seller,

@@ -1,11 +1,14 @@
-package auction_system.common.models.items;
+package auction_system.common.dto.items;
 
-import auction_system.common.models.auctions.Entity;
+import java.io.Serializable;
 
 /**
- * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
+ * Lớp Dto đại diện cho dữ liệu chuyển đổi của sản phẩm đấu giá (Item).
  */
-public abstract class Item extends Entity  {
+public abstract class ItemDto implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private String id;
     private String itemName;
     private String description;
     private double startPrice;
@@ -13,26 +16,36 @@ public abstract class Item extends Entity  {
     private String sellerId;
 
     /**
-     * Khởi tạo một sản phẩm đấu giá mới.
+     * Khởi tạo một đối tượng ItemDto trống.
+     */
+    public ItemDto() {
+    }
+
+    /**
+     * Khởi tạo một đối tượng ItemDto với thông tin cơ bản.
      *
+     * @param id          ID của sản phẩm.
      * @param itemName    Tên sản phẩm.
-     * @param description Mô tả sản phẩm.
+     * @param description Mô tả chi tiết.
      * @param startPrice  Giá khởi điểm.
      * @param sellerId    ID của người bán.
      */
-
-    public Item(String itemName, String description, double startPrice, String sellerId) {
-        super();
+    public ItemDto(String id, String itemName, String description, double startPrice,
+            String sellerId) {
+        this.id = id;
         this.itemName = itemName;
         this.description = description;
         this.startPrice = startPrice;
-        this.currentPrice = startPrice;
+        this.currentPrice = startPrice; // Khởi tạo giá hiện tại bằng giá khởi điểm
         this.sellerId = sellerId;
-
     }
 
-    public double getStartPrice() {
-        return startPrice;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getItemName() {
@@ -49,6 +62,10 @@ public abstract class Item extends Entity  {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public double getStartPrice() {
+        return startPrice;
     }
 
     public void setStartPrice(double startPrice) {
@@ -73,8 +90,9 @@ public abstract class Item extends Entity  {
 
     @Override
     public String toString() {
-        return super.toString() + " -> Item{"
-                + "itemName='" + itemName + '\''
+        return "ItemDto{"
+                + "id='" + id + '\''
+                + ", itemName='" + itemName + '\''
                 + ", description='" + description + '\''
                 + ", startPrice=" + startPrice
                 + ", currentPrice=" + currentPrice

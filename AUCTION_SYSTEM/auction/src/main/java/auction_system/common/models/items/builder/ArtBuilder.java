@@ -11,11 +11,6 @@ public class ArtBuilder implements Builder<Art> {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
-    private String condition;
-    private String imagePath;
-    private String artistName;
-    private String creationYear;
-    private boolean hasAuthenticityCertificate;
 
     public ArtBuilder itemName(String itemName) {
         this.itemName = itemName;
@@ -42,31 +37,6 @@ public class ArtBuilder implements Builder<Art> {
         return this;
     }
 
-    public ArtBuilder condition(String condition) {
-        this.condition = condition;
-        return this;
-    }
-
-    public ArtBuilder imagePath(String imagePath) {
-        this.imagePath = imagePath;
-        return this;
-    }
-
-    public ArtBuilder artistName(String artistName) {
-        this.artistName = artistName;
-        return this;
-    }
-
-    public ArtBuilder creationYear(String creationYear) {
-        this.creationYear = creationYear;
-        return this;
-    }
-
-    public ArtBuilder hasAuthenticityCertificate(boolean hasAuthenticityCertificate) {
-        this.hasAuthenticityCertificate = hasAuthenticityCertificate;
-        return this;
-    }
-
     /**
      * Xây dựng và trả về đối tượng Art.
      *
@@ -75,8 +45,7 @@ public class ArtBuilder implements Builder<Art> {
     @Override
     public Art build() {
         Art art = new Art(
-                itemName, description, startPrice, sellerId, condition, imagePath,
-                artistName, creationYear, hasAuthenticityCertificate);
+                itemName, description, startPrice, sellerId);
         if (this.currentPrice > 0) {
             art.setCurrentPrice(this.currentPrice);
         }
