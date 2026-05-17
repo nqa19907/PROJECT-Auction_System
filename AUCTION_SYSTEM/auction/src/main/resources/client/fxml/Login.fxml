@@ -54,7 +54,7 @@
       </VBox>
 
         <!-- Forgot password -->
-        <HBox alignment="CENTER_RIGHT">
+        <HBox alignment="CENTER_RIGHT" maxWidth="Infinity">
             <VBox.margin><Insets bottom="20" top="8" /></VBox.margin>
    
            <!-- Error label -->
