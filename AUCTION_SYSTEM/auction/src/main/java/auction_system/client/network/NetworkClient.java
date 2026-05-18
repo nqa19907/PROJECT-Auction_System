@@ -29,7 +29,6 @@ public class NetworkClient {
     private volatile boolean isRunning = false;
     
     // Callback để đẩy dữ liệu cho Controller (Giao diện)
-    private Consumer<String> messageHandler;
     private final Map<String, CopyOnWriteArrayList<Consumer<String>>>
         messageHandlers = new ConcurrentHashMap<>(); 
     

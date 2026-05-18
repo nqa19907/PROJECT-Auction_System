@@ -78,17 +78,12 @@ public class AuctionManager {
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         startAuctionScheduler();
+        
+        // Tạo dữ liệu mẫu để kiểm thử
+        TestDataGenerator.generate(this);
 
-        try {
-            // Lưu trữ mật khẩu dạng Hash thay vì text thô
-            User testUser = new Bidder("Hoang", "1", SecurityUtils.hashPassword("1"), 10000.0);
-
-            userRegistry.put(testUser.getUsername(), testUser);
-
-            LOGGER.info(" [UserManager] Đã nạp tài khoản test: hoang@gmail.com / Mật khẩu: 123456");
-        } catch (Exception e) {
-            LOGGER.warning("Không thể khởi tạo user mẫu: " + e.getMessage());
-        }
+        LOGGER.info("Số vật phẩm test: " + this.auctionList.size());
+        LOGGER.info("Số tài khoản test: " + this.userRegistry.size());
     }
 
     // =========================================================================
@@ -139,7 +134,7 @@ public class AuctionManager {
      * @return Phiên đấu giá vừa tạo.
      */
     public Auction createAuction(Item item, Seller seller,
-                                 LocalDateTime startTime, LocalDateTime endTime) {
+                                LocalDateTime startTime, LocalDateTime endTime) {
         Auction newAuction = new Auction(item, seller, startTime, endTime);
         auctionList.add(newAuction);
         LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()

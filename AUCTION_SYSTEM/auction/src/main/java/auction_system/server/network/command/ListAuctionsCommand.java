@@ -42,7 +42,8 @@ public class ListAuctionsCommand implements Command {
                         ? auction.getCurrentHighestBid().getAmount()
                         : item.getStartPrice();
 
-                response.append("\n") // Dùng ký tự xuống dòng để ngăn cách các dòng phản hồi
+                // Dùng ký tự phân tách để ngăn cách các dòng phản hồi
+                response.append(Protocol.RECORD_SEPARATOR)
                         .append(auction.getId())
                         .append(Protocol.SEPARATOR).append(item.getItemName())
                         .append(Protocol.SEPARATOR).append(currentPrice)

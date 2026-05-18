@@ -1,100 +1,111 @@
 package auction_system.client.controllers;
 
+import auction_system.client.services.AuctionService;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 /**
- * Controller cho ItemList.fxml.
+ * Controller điều khiển danh sách các phiên đấu giá.
  */
 public class ItemListController {
+    private static final Logger LOGGER = Logger.getLogger(ItemListController.class.getName());
+    
+    @FXML private FlowPane productsGrid;
 
-    private static final Logger LOGGER =
-            Logger.getLogger(ItemListController.class.getName());
-
+    /**
+     * Khởi tạo giao diện và lấy dữ liệu phiên đấu giá.
+     */
     @FXML
-    private Button bidBtnCard1;
+    public void initialize() {
+        LOGGER.info("Đang khởi tạo màn hình Danh sách đấu giá...");
 
-    @FXML
-    private Button bidBtnCard2;
+        // Gọi Service, cung cấp một hàm Callback để tự động xử lý khi có dữ liệu trả về
+        AuctionService.getInstance().fetchAuctionList(auctionList -> {
+            // Bọc trong Platform.runLater để đảm bảo việc vẽ giao diện chạy trên luồng của JavaFX
+            Platform.runLater(() -> {
+                if (productsGrid != null) {
+                    productsGrid.getChildren().clear();
+                }
 
-    @FXML
-    private Button bidBtnCard3;
-
-    @FXML
-    private Button bidBtnCard4;
-
-    @FXML
-    private void openBidHistoryCard1() {
-        openBidHistory(new AuctionDisplayContext(
-                "AUC-2024-0518",
-                "Đồng hồ Rolex Submariner Date 2004",
-                3_500_000L,
-                15_500_000L
-        ));
+                if (auctionList.isEmpty()) {
+                    Label emptyLabel = new Label("Hiện không có phiên đấu giá nào.");
+                    productsGrid.getChildren().add(emptyLabel);
+                    return;
+                }
+                
+                for (String[] parts : auctionList) {
+                    createProductCard(parts);
+                }
+            });
+        });
     }
 
-    @FXML
-    private void openBidHistoryCard2() {
-        openBidHistory(new AuctionDisplayContext(
-                "AUC-2024-0519",
-                "Tượng đồng chiến binh Hy Lạp cổ đại",
-                1_200_000L,
-                3_200_000L
-        ));
-    }
-
-    @FXML
-    private void openBidHistoryCard3() {
-        openBidHistory(new AuctionDisplayContext(
-                "AUC-2024-0520",
-                "Bộ xu bạc La Mã thế kỷ 18 nguyên bản",
-                300_000L,
-                850_000L
-        ));
-    }
-
-    @FXML
-    private void openBidHistoryCard4() {
-        openBidHistory(new AuctionDisplayContext(
-                "AUC-2024-0521",
-                "Tranh sơn dầu trừu tượng hiện đại",
-                500_000L,
-                1_400_000L
-        ));
-    }
-
-    private void openBidHistory(final AuctionDisplayContext context) {
+    private void createProductCard(String[] parts) {
         try {
+            // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/client/fxml/BidHistoryView.fxml")
+                    getClass().getResource("/client/fxml/ProductCard.fxml"));
+            VBox card = loader.load();
+
+            // 2. Lấy controller của thẻ vừa nạp
+            ProductCardController controller = loader.getController();
+
+            // 3. Bóc tách dữ liệu từ mảng ngay bên trong hàm
+            String auctionId = parts[0];
+            String itemName = parts[1];
+            String currentPriceStr = parts[2];
+            String status = parts[3];
+            String endTime = parts[4];
+
+            // 4. Chuyển đổi dữ liệu chuỗi giá tiền thành số thập phân
+            double currentPrice = Double.parseDouble(currentPriceStr);
+
+            // 5. "Bơm" dữ liệu vào thẻ và định nghĩa hành động khi nút được bấm
+            controller.setCardDetails(
+                auctionId,
+                itemName,
+                currentPrice,
+                (selectedItemId) -> {
+                    navigateToAuctionDetail(selectedItemId);
+                }
             );
-            Node view = loader.load();
-            BidHistoryController controller = loader.getController();
-            controller.initAuction(context);
 
-            Node anyBidButton = bidBtnCard1 != null ? bidBtnCard1 : bidBtnCard2;
-            if (anyBidButton == null) {
-                anyBidButton = bidBtnCard3 != null ? bidBtnCard3 : bidBtnCard4;
-            }
-            if (anyBidButton == null || anyBidButton.getScene() == null) {
-                LOGGER.warning("Không thể mở BidHistory: không tìm thấy Scene từ ItemList.");
-                return;
-            }
+            // 5. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
+            productsGrid.getChildren().add(card);
 
-            Node contentAreaNode = anyBidButton.getScene().lookup("#contentArea");
-            if (contentAreaNode instanceof StackPane contentArea) {
-                contentArea.getChildren().setAll(view);
-                LOGGER.info("Đã mở BidHistory với auctionId = " + context.auctionId());
-                return;
+        } catch (IOException | NumberFormatException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi tạo thẻ sản phẩm (ProductCard): ", e);
+        }
+    }
+
+    private void navigateToAuctionDetail(String selectedItemId) {
+        LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
+        try {
+            FXMLLoader detailLoader = new FXMLLoader(
+                getClass().getResource("/client/fxml/AuctionDetail.fxml"));
+            Node detailView = detailLoader.load();
+            
+            // TODO: Lấy controller và truyền ID sang màn hình chi tiết (đã bỏ giả lập)
+            // AuctionDetailController detailController = detailLoader.getController();
+            // detailController.setAuctionId(selectedItemId);
+
+            // Tìm khu vực hiển thị chính (StackPane) của Dashboard đè màn hình mới lên
+            StackPane contentArea = (StackPane) productsGrid.getScene().lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(detailView);
             }
-            LOGGER.warning("Không tìm thấy #contentArea để mở BidHistory.");
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,
+                "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
         }
     }
 }

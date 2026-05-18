@@ -13,6 +13,7 @@ public final class Protocol {
     // --- KÝ TỰ NGĂN CÁCH ---
     public static final String SEPARATOR = "|";
     public static final String SEPARATOR_REGEX = "\\|";
+    public static final String RECORD_SEPARATOR = "~";
 
     /**
      * Định nghĩa các mã lệnh gửi từ Client lên Server.
