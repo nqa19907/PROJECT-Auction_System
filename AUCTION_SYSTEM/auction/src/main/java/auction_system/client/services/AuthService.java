@@ -3,6 +3,7 @@ package auction_system.client.services;
 import auction_system.client.network.NetworkClient;
 import auction_system.client.network.dto.LoginResult;
 import auction_system.common.network.Protocol;
+import auction_system.common.utils.SecurityUtils;
 import java.util.logging.Logger;
 
 /**
@@ -13,8 +14,15 @@ import java.util.logging.Logger;
 public final class AuthService {
     private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
     private static final AuthService INSTANCE = new AuthService();
+    private AuthCallback currentCallback;
 
-    private AuthService() {}
+    private AuthService() {
+        // Đăng ký hóng tin nhắn LOGIN_OK và LOGIN_FAIL một lần duy nhất
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.LOGIN_OK.name(), this::handleLoginResponse);
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.LOGIN_FAIL.name(), this::handleLoginResponse);
+    }
 
     public static AuthService getInstance() {
         return INSTANCE;
@@ -36,29 +44,42 @@ public final class AuthService {
      * @param callback Hàm phản hồi sau khi nhận kết quả từ server.
      */
     public void login(String email, String password, AuthCallback callback) {
+        this.currentCallback = callback;
+        
+        // Băm mật khẩu ra chuỗi SHA-256 trước khi gửi
+        String hashedPassword = SecurityUtils.hashPassword(password);
         String request = Protocol.Command.LOGIN.name()
                         + Protocol.SEPARATOR
                         + email
                         + Protocol.SEPARATOR
-                        + password;
-
-        // Đăng ký nhận tin nhắn từ NetworkClient và ép kiểu dữ liệu
-        NetworkClient.getInstance().setMessageHandler(response -> {
-            LOGGER.info("AuthService nhận chuỗi thô: " + response);
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-            String cmd = parts[0];
-
-            if (Protocol.Response.LOGIN_OK.name().equals(cmd)) {
-                callback.onResult(new LoginResult(true, null));
-            } else if (Protocol.Response.LOGIN_FAIL.name().equals(cmd)) {
-                String reason = (parts.length > 1) ? parts[1] : "Sai tài khoảng hoặc mật khẩu!";
-                callback.onResult(new LoginResult(false, reason));
-            }
-        });
+                        + hashedPassword;
 
         boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
-            callback.onResult(new LoginResult(false, "Mất kết nối tới máy chủ!"));
+            if (this.currentCallback != null) {
+                this.currentCallback.onResult(new LoginResult(false, "Mất kết nối tới máy chủ!"));
+                this.currentCallback = null;
+            }
         }
+    }
+
+    private void handleLoginResponse(String response) {
+        if (currentCallback == null) {
+            return;
+        }
+
+        LOGGER.info("AuthService xử lý phản hồi: " + response);
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        String cmd = parts[0];
+
+        if (Protocol.Response.LOGIN_OK.name().equals(cmd)) {
+            currentCallback.onResult(new LoginResult(true, null));
+        } else if (Protocol.Response.LOGIN_FAIL.name().equals(cmd)) {
+            String reason = (parts.length > 1) ? parts[1] : "Sai tài khoản hoặc mật khẩu!";
+            currentCallback.onResult(new LoginResult(false, reason));
+        }
+
+        // Giải phóng callback sau khi dùng xong tránh kẹt bộ nhớ
+        currentCallback = null;
     }
 }
