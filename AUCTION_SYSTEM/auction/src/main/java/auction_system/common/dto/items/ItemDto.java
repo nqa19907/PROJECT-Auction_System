@@ -30,7 +30,9 @@ public abstract class ItemDto implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
-    /** Giá trị mặc định khi giá chưa được thiết lập. */
+    /**
+     * Giá trị mặc định khi giá chưa được thiết lập.
+     */
     private static final double DEFAULT_PRICE = 0.0;
 
     private final String id;
