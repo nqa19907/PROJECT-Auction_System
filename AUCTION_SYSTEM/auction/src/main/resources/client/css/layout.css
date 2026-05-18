@@ -42,7 +42,7 @@
 }
 
 .dashboard-background {
-    -fx-background-color: -color-primary-bg;
+    -fx-background-color: -color-bg-content;
 }
 
 /* --- NAVBAR --- */
@@ -57,15 +57,21 @@
     -fx-padding: 24 16;                        /* Rút gọn cú pháp, spacing y-lg: 24, x-md: 16 */
     -fx-spacing: 4;                            /* Spacing xs: 4 */
     -fx-border-width: 0 1 0 0; /* Chỉ có viền mờ ở bên phải */
-    -fx-pref-width: 275px;
+    -fx-pref-width: -sidebar-width;
+}
+
+.sidebar-divider {
+    -fx-background-color: -color-orange-600;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;                  /* Rút gọn cú pháp, spacing y-lg: 24, x-md: 16 */
 }
 
 /* --- TÙY CHỌN DANH MỤC (CÓ ICON + LABEL) --- */
 .category-option {
     -fx-background-color: transparent;
     -fx-background-radius: 50;                 /* Radius pill: 50 */
-    -fx-padding: 10 16;                        /* Rút gọn cú pháp, spacing y: 10, x-md: 16 */
     -fx-cursor: hand;
+    -fx-padding: 10px 10px;         /* Tương đương margin: 5px 0; */
 }
 
 .category-option .label {
@@ -104,6 +110,7 @@
     -fx-background-color: -color-bg-content;       /* Dùng đúng biến nền của Content */
     -fx-background: -color-surface-alt;
     -fx-background-radius: 32 0 0 0;               /* Radius xl: 32 (Chỉ bo góc trên - trái) */
+    -fx-padding: 32;               /* Radius xl: 32 (Chỉ bo góc trên - trái) */
 }
 
 .main-content-area .viewport {
@@ -111,14 +118,140 @@
     -fx-background-radius: 32 0 0 0;               /* Bo góc viewport khớp với main-content-area */
 }
 
+/* --- SCROLL PANE TRONG SUỐT CHO CÁC MÀN HÌNH CON --- */
+.transparent-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+.transparent-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
 /* Chuyển padding vào lớp content bên trong để tạo vùng an toàn cho bóng đổ (tránh clipping) */
 .content-wrapper {
     -fx-background-color: transparent;
-    -fx-padding: 25;                               /* Spacing xxl: 50 */
 }
 
 .main-content-area .label {
     -fx-font-weight: bold;
     -fx-font-size: 20px;
     -fx-text-fill: -color-text-title;              /* Dùng biến mô tả đúng tính chất của tiêu đề */
+}
+
+/* --- THẺ NỘI DUNG FORM (CONTENT CARD) --- */
+.content-card {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 24;
+    -fx-border-width: 1;
+    -fx-padding: 20 24 24 24;
+}
+
+/* --- CÁC LOẠI TIÊU ĐỀ & CHỮ TRONG CONTENT CARD --- */
+
+/* 1. Tiêu đề phân mục lớn (VD: "Thông tin tài sản") */
+.content-card .section-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text-title;
+}
+
+/* 2. Tiêu đề nhỏ của từng mục/ô nhập liệu (VD: "Tên tài sản", "Danh mục") */
+.content-card .field-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text-title;
+}
+
+/* 3. Chữ phụ chú/gợi ý nhỏ bên dưới (VD: "Mỗi lần trả giá phải tăng thêm ít nhất") */
+.content-card .helper-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-text-sub;
+}
+
+/* 4. Dấu sao đỏ bắt buộc */
+.content-card .asterisk {
+    -fx-text-fill: -color-error-text;
+    -fx-font-size: 12px;
+}
+
+/* --- CÁC THÀNH PHẦN INPUT BÊN TRONG CONTENT CARD --- */
+.content-card .text-field,
+.content-card .text-area,
+.content-card .combo-box {
+    -fx-font-size: 13px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -color-border-input;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.content-card .text-field {
+    -fx-padding: 8 12;
+}
+
+/* --- COMBO BOX (Đồng bộ với TextField) --- */
+.content-card .combo-box {
+    -fx-padding: 0;
+}
+
+.content-card .combo-box > .list-cell {
+    -fx-padding: 8 12;
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-text-main;
+}
+
+.content-card .combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 12;
+}
+
+.content-card .combo-box .arrow {
+    -fx-background-color: -color-text-sub;
+}
+
+/* Menu danh sách đổ xuống của ComboBox */
+.combo-box-popup .list-view {
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border-input;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 4 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4);
+}
+
+.combo-box-popup .list-cell {
+    -fx-padding: 8 12;
+    -fx-text-fill: -color-text-main;
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: -color-primary-bg;
+    -fx-text-fill: -color-primary;
+}
+
+.content-card .text-area {
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+}
+
+.content-card .text-area .scroll-pane,
+.content-card .text-area .viewport {
+    -fx-background-color: transparent;
+}
+
+.content-card .text-area .content {
+    -fx-padding: 8 12;
+    -fx-background-color: transparent;
+}
+
+.content-card .text-field:focused,
+.content-card .text-area:focused,
+.content-card .combo-box:focused {
+    -fx-border-color: -color-primary;
 }

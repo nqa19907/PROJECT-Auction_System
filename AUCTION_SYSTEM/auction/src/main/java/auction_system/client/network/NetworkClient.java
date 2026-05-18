@@ -1,11 +1,15 @@
 package auction_system.client.network;
 
+import auction_system.common.network.Protocol;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -26,6 +30,8 @@ public class NetworkClient {
     
     // Callback để đẩy dữ liệu cho Controller (Giao diện)
     private Consumer<String> messageHandler;
+    private final Map<String, CopyOnWriteArrayList<Consumer<String>>>
+        messageHandlers = new ConcurrentHashMap<>(); 
     
     private NetworkClient() {
 
@@ -48,6 +54,20 @@ public class NetworkClient {
             }
         }
         return instance;
+    }
+
+    /**
+     * Đăng ký một hàm xử lý cho một loại lệnh cụ thể từ Server.
+     *
+     * @param command Tên lệnh (VD: "LOGIN_OK", "UPDATE_PRICE").
+     * @param handler Hàm xử lý thông điệp.
+     */
+    public void registerHandler(String command, Consumer<String> handler) {
+        // Lệnh computeIfAbsent sẽ kiểm tra: Nếu command này chưa
+        // có danh sách thì tự tạo mới (CopyOnWriteArrayList), còn có
+        // rồi thì dùng cái cũ.
+        // Sau đó, nó thêm handler của bạn vào danh sách đó.
+        messageHandlers.computeIfAbsent(command, k -> new CopyOnWriteArrayList<>()).add(handler);
     }
 
     /**
@@ -79,15 +99,6 @@ public class NetworkClient {
     }
 
     /**
-     * Controller của JavaFX đăng ký hàm xử lý qua phương thức này.
-     *
-     * @param messageHandler Hàm xử lý thông điệp từ server.
-     */
-    public void setMessageHandler(Consumer<String> messageHandler) {
-        this.messageHandler = messageHandler;
-    }
-
-    /**
      * Gửi một lệnh (Command) lên Server.
      *
      * @param command Chuỗi lệnh cần gửi.
@@ -114,10 +125,23 @@ public class NetworkClient {
                 final String msg = response;
                 LOGGER.info("Nhận từ Server: " + msg);
 
-                if (messageHandler != null) {
-                    // Ép việc cập nhật giao diện chạy trên JavaFX Application Thread
-                    // tránh lỗi crash ứng dụng khi cập nhật UI từ một luồng mạng
-                    Platform.runLater(() -> messageHandler.accept(msg));
+                // --- BẮT ĐẦU BỘ ĐỊNH TUYẾN (ROUTER) ---
+
+                // Bước 1: Tách chuỗi lấy tên lệnh (Chìa khóa)
+                String[] parts = msg.split(Protocol.SEPARATOR_REGEX);
+                String command = parts[0];
+
+                // Bước 2: Tra cứu danh bạ
+                CopyOnWriteArrayList<Consumer<String>> handlers = messageHandlers.get(command);
+
+                // Bước 3: Phân tán tin nhắn
+                if (handlers != null && !handlers.isEmpty()) {
+                    // Nếu có người hóng lệnh này, duyệt qua từng người và gửi tin nhắn
+                    for (Consumer<String> handler : handlers) {
+                        Platform.runLater(() -> handler.accept(msg));
+                    }
+                } else {
+                    LOGGER.warning("Chưa có màn hình nào đăng ký xử lý lệnh: " + command);
                 }
             }
         } catch (IOException e) {

@@ -1,23 +1,18 @@
 package auction_system.client.controllers;
 
-import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.SceneManager;
-import auction_system.common.network.Protocol;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.stage.Stage;
 
 /**
  * Controller for the Login screen.
@@ -118,10 +113,5 @@ public class LoginController {
             errorLabel.setVisible(true);
             errorLabel.setManaged(true);
         }
-    }
-
-    @FXML
-    private void handleGoogleLogin() {
-        // TODO: Xử lý logic đăng nhập qua Google
     }
 }

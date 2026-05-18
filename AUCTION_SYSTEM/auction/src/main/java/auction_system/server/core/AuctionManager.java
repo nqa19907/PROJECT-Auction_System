@@ -6,6 +6,7 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
 import auction_system.common.models.users.User;
+import auction_system.common.utils.SecurityUtils;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +80,8 @@ public class AuctionManager {
         startAuctionScheduler();
 
         try {
-            User testUser = new Bidder("Hoang", "1", "1", 10000.0);
+            // Lưu trữ mật khẩu dạng Hash thay vì text thô
+            User testUser = new Bidder("Hoang", "1", SecurityUtils.hashPassword("1"), 10000.0);
 
             userRegistry.put(testUser.getUsername(), testUser);
 

@@ -1,5 +1,6 @@
 package auction_system.client.controllers;
 
+import auction_system.common.utils.SecurityUtils;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,8 +44,14 @@ public class RegisterController {
             return;
         }
 
-        LOGGER.info("Đăng ký: " + name + " | " + email);
-        navigateTo("/fxml/login.fxml", "Đăng nhập");
+        // 1. Mã hóa mật khẩu thành SHA-256 trước khi gửi
+        String hashedPassword = SecurityUtils.hashPassword(password);
+        LOGGER.info("Sẵn sàng gửi lệnh Đăng ký: " + name + " | "
+                    + email + " | Hash: " + hashedPassword);
+        
+        // TODO: Viết thêm hàm AuthService.getInstance().register(...) để gửi Socket lên Server.
+        // Tạm thời vẫn điều hướng để test giao diện
+        navigateTo("/client/fxml/Login.fxml", "Đăng nhập");
     }
 
     @FXML

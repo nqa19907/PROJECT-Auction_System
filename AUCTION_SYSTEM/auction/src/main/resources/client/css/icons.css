@@ -76,3 +76,13 @@
     -fx-max-width: 20px;                      /* Icon width md: 20px */
     -fx-max-height: 16px;                     /* Icon height sm: 16px */
 }
+
+.icon-add {
+    -fx-shape: "M440-120v-320H120v-80h320v-320h80v320h320v80H520v320h-80Z";
+    -fx-background-color: -color-icon-theme;  /* Dùng biến dành riêng cho Icon */
+    -fx-scale-shape: true;
+    -fx-min-width: 20px;                      /* Icon width md: 20px */
+    -fx-min-height: 20px;                     /* Icon height sm: 16px */
+    -fx-max-width: 20px;                      /* Icon width md: 20px */
+    -fx-max-height: 20px;                     /* Icon height sm: 16px */
+}
