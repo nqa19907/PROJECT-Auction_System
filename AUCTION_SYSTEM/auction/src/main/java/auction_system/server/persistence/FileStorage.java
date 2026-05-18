@@ -13,17 +13,18 @@ import java.util.Map;
  * @param <T> kiểu đối tượng cần lưu trữ
  */
 public interface FileStorage<T extends Serializable> {
-  /**
-   * Đọc toàn bộ dữ liệu từ bộ nhớ ngoài.
-   *
-   * @return bản đồ dữ liệu với khóa là mã định danh đối tượng
-   */
-  Map<String, T> readAll();
 
-  /**
-   * Ghi toàn bộ dữ liệu xuống bộ nhớ ngoài.
-   *
-   * @param records bản đồ dữ liệu cần lưu
-   */
-  void writeAll(Map<String, T> records);
+    /**
+     * Đọc toàn bộ dữ liệu từ bộ nhớ ngoài.
+     *
+     * @return bản đồ dữ liệu với khóa là mã định danh đối tượng
+     */
+    Map<String, T> readAll();
+
+    /**
+     * Ghi toàn bộ dữ liệu xuống bộ nhớ ngoài.
+     *
+     * @param records bản đồ dữ liệu cần lưu
+     */
+    void writeAll(Map<String, T> records);
 }

@@ -11,10 +11,11 @@ public class Electronic extends Item {
      * @param itemName       Tên sản phẩm.
      * @param description    Mô tả chi tiết.
      * @param startPrice     Giá khởi điểm.
-     * @param sellerId       ID của người bán.
+     * @param sellerId       ID của người bán. 
      */
     public Electronic(String itemName, String description, double startPrice, String sellerId) {
         super(itemName, description, startPrice, sellerId);
+        this.category = "ELECTRONIC";
 
     }
 

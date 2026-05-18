@@ -11,7 +11,7 @@ public abstract class Item extends Entity {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
-    private String category;
+    protected String category;
 
     /**
      * Khởi tạo một sản phẩm đấu giá mới.
@@ -20,7 +20,6 @@ public abstract class Item extends Entity {
      * @param description Mô tả sản phẩm.
      * @param startPrice  Giá khởi điểm.
      * @param sellerId    ID của người bán.
-     * @param category    Danh mục sản phẩm.
      */
 
     public Item(String itemName, String description, double startPrice, String sellerId) {
@@ -34,6 +33,10 @@ public abstract class Item extends Entity {
     }
 
     public abstract String getCategory();
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
 
     public double getStartPrice() {
         return startPrice;

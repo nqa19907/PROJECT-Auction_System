@@ -12,47 +12,64 @@ import java.util.List;
  * này. Client có thể dùng dữ liệu này để hiển thị lịch sử bid hoặc biểu đồ giá
  * realtime.
  */
-public class BidTransactionRepository extends SerializedRepository<BidTransaction> {
-  /**
-   * Khởi tạo repository giao dịch đặt giá.
-   *
-   * @param filePath đường dẫn file bid_transactions.ser
-   */
-  public BidTransactionRepository(final Path filePath) {
-    super(new SerializedFileStorage<>(filePath), BidTransaction::getId);
-  }
+public class BidTransactionRepository
+    extends SerializedRepository<BidTransaction> {
 
-  /**
-   * Tìm lịch sử đặt giá theo phiên đấu giá.
-   *
-   * @param auctionId mã định danh phiên đấu giá
-   * @return danh sách giao dịch đặt giá của phiên
-   */
-  public List<BidTransaction> findByAuctionId(final String auctionId) {
-    if (auctionId == null || auctionId.isBlank()) {
-      return List.of();
+    /**
+     * Khởi tạo repository giao dịch đặt giá.
+     *
+     * @param filePath đường dẫn file bid_transactions.ser
+     */
+    public BidTransactionRepository(final Path filePath) {
+        super(new SerializedFileStorage<>(filePath),
+            BidTransaction::getId);
     }
 
-    return findAll().stream()
-        .filter(transaction -> auctionId.equals(transaction.getId()))
-        .sorted(Comparator.comparing(BidTransaction::getTimestamp))
-        .toList();
-  }
+    /**
+     * Tìm lịch sử đặt giá theo phiên đấu giá.
+     *
+     * @param auctionId mã định danh phiên đấu giá
+     * @return danh sách giao dịch đặt giá của phiên
+     */
+    public List<BidTransaction> findByAuctionId(
+        final String auctionId
+    ) {
+        if (auctionId == null || auctionId.isBlank()) {
+            return List.of();
+        }
 
-  /**
-   * Tìm lịch sử đặt giá theo người đặt.
-   *
-   * @param bidderId mã định danh người đặt giá
-   * @return danh sách giao dịch đặt giá của người dùng
-   */
-  public List<BidTransaction> findByBidderId(final String bidderId) {
-    if (bidderId == null || bidderId.isBlank()) {
-      return List.of();
+        return findAll().stream()
+            .filter(transaction ->
+                auctionId.equals(transaction.getId()))
+            .sorted(
+                Comparator.comparing(
+                    BidTransaction::getTimestamp
+                )
+            )
+            .toList();
     }
 
-    return findAll().stream()
-        .filter(transaction -> bidderId.equals(transaction.getId()))
-        .sorted(Comparator.comparing(BidTransaction::getTimestamp))
-        .toList();
-  }
+    /**
+     * Tìm lịch sử đặt giá theo người đặt.
+     *
+     * @param bidderId mã định danh người đặt giá
+     * @return danh sách giao dịch đặt giá của người dùng
+     */
+    public List<BidTransaction> findByBidderId(
+        final String bidderId
+    ) {
+        if (bidderId == null || bidderId.isBlank()) {
+            return List.of();
+        }
+
+        return findAll().stream()
+            .filter(transaction ->
+                bidderId.equals(transaction.getId()))
+            .sorted(
+                Comparator.comparing(
+                    BidTransaction::getTimestamp
+                )
+            )
+            .toList();
+    }
 }

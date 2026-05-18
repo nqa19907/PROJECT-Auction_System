@@ -12,10 +12,10 @@ public class Art extends Item {
      * @param description Mô tả chi tiết.
      * @param startPrice  Giá khởi điểm.
      * @param sellerId    ID của người bán.
-     * 
      */
     public Art(String itemName, String description, Double startPrice, String sellerId) {
         super(itemName, description, startPrice, sellerId);
+        this.category = "ART";
 
     }
 

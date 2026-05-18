@@ -7,25 +7,29 @@ package auction_system.server.exceptions;
  * hoặc lỗi khi khởi tạo kho dữ liệu serialization.
  */
 public class DatabaseException extends RuntimeException {
-  /** Mã định danh phiên bản tuần tự hóa. */
-  private static final long serialVersionUID = 1L;
 
-  /**
-   * Khởi tạo ngoại lệ lưu trữ với thông điệp lỗi.
-   *
-   * @param message thông điệp mô tả lỗi
-   */
-  public DatabaseException(final String message) {
-    super(message);
-  }
+    /** Mã định danh phiên bản tuần tự hóa. */
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * Khởi tạo ngoại lệ lưu trữ với thông điệp lỗi và nguyên nhân gốc.
-   *
-   * @param message thông điệp mô tả lỗi
-   * @param cause nguyên nhân gốc gây ra lỗi
-   */
-  public DatabaseException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
+    /**
+     * Khởi tạo ngoại lệ lưu trữ với thông điệp lỗi.
+     *
+     * @param message thông điệp mô tả lỗi
+     */
+    public DatabaseException(final String message) {
+        super(message);
+    }
+
+    /**
+     * Khởi tạo ngoại lệ lưu trữ với thông điệp lỗi và nguyên nhân gốc.
+     *
+     * @param message thông điệp mô tả lỗi
+     * @param cause nguyên nhân gốc gây ra lỗi
+     */
+    public DatabaseException(
+        final String message,
+        final Throwable cause
+    ) {
+        super(message, cause);
+    }
 }
