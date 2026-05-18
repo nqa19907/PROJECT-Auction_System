@@ -3,19 +3,20 @@ package auction_system.client.controllers;
 import auction_system.client.utils.SceneManager;
 import auction_system.server.core.AuctionManager;
 import java.io.IOException;
-import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller điều khiển giao diện Dashboard chính của người dùng.
  */
 public class DashboardController {
-    private static final Logger LOGGER = Logger.getLogger(DashboardController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
 
     @FXML
     private Button btnSignOut;

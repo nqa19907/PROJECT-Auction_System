@@ -7,13 +7,14 @@ import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
 import auction_system.common.utils.SecurityUtils;
 import java.time.LocalDateTime;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp tiện ích để tạo dữ liệu mẫu cho việc kiểm thử.
  */
 public final class TestDataGenerator {
-    private static final Logger LOGGER = Logger.getLogger(TestDataGenerator.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestDataGenerator.class);
 
     private TestDataGenerator() {
         // Private constructor for utility class

@@ -4,14 +4,14 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh đăng nhập.
  */
 public class LoginCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(LoginCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
 
     /**
      * Xử lý đăng nhập bằng Email và Password.
@@ -29,7 +29,7 @@ public class LoginCommand implements Command {
         String failPrefix = Protocol.Response.LOGIN_FAIL.name() + Protocol.SEPARATOR;
 
         if (parts.length < 3) {
-            LOGGER.warning("Từ chối đăng nhập: " + "Sai cú pháp lệnh");
+            LOGGER.warn("Từ chối đăng nhập: " + "Sai cú pháp lệnh");
             return failPrefix + "Thiếu thông tin đăng nhập";
         }
 
@@ -66,7 +66,7 @@ public class LoginCommand implements Command {
                     + role;
         } catch (Exception e) {
             // Bắt mọi lỗi hệ thống để không làm chết thread của client
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng nhập cho email: " + email, e);
+            LOGGER.error("Lỗi hệ thống khi đăng nhập cho email: " + email, e);
             return failPrefix + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

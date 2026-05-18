@@ -5,14 +5,14 @@ import auction_system.common.models.items.Item;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh lấy thông tin chi tiết của một phiên đấu giá.
  */
 public class GetAuctionCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(GetAuctionCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetAuctionCommand.class);
 
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
@@ -58,7 +58,7 @@ public class GetAuctionCommand implements Command {
                     + Protocol.SEPARATOR + auction.getSeller().getUsername();
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
+            LOGGER.error("Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
                     + auctionId, e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

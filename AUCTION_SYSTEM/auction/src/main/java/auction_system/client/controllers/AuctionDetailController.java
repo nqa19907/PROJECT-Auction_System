@@ -1,19 +1,20 @@
 package auction_system.client.controllers;
 
 import auction_system.client.services.AuctionService;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.text.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller cho màn hình chi tiết phiên đấu giá.
  */
 public class AuctionDetailController {
-    private static final Logger LOGGER = Logger.getLogger(AuctionDetailController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionDetailController.class);
 
     // Các thành phần UI tương ứng với file FXML (bạn sẽ cần tạo file AuctionDetail.fxml sau)
     @FXML private Label itemNameLabel;

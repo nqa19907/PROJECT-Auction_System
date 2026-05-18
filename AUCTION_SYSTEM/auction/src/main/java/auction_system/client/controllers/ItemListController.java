@@ -2,8 +2,6 @@ package auction_system.client.controllers;
 
 import auction_system.client.services.AuctionService;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,12 +10,14 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller điều khiển danh sách các phiên đấu giá.
  */
 public class ItemListController {
-    private static final Logger LOGGER = Logger.getLogger(ItemListController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemListController.class);
     
     @FXML private FlowPane productsGrid;
 
@@ -83,7 +83,7 @@ public class ItemListController {
             productsGrid.getChildren().add(card);
 
         } catch (IOException | NumberFormatException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi khi tạo thẻ sản phẩm (ProductCard): ", e);
+            LOGGER.error("Lỗi khi tạo thẻ sản phẩm (ProductCard): ", e);
         }
     }
 
@@ -104,7 +104,7 @@ public class ItemListController {
                 contentArea.getChildren().setAll(detailView);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE,
+            LOGGER.error(
                 "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
         }
     }

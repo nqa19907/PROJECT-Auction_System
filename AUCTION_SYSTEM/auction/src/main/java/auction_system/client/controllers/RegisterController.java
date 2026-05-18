@@ -2,8 +2,6 @@ package auction_system.client.controllers;
 
 import auction_system.common.utils.SecurityUtils;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,13 +10,15 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller xử lý các sự kiện trên giao diện đăng ký.
  */
 public class RegisterController {
 
-    private static final Logger LOGGER = Logger.getLogger(RegisterController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegisterController.class);
 
     @FXML private TextField nameField;
     @FXML private TextField emailField;
@@ -67,7 +67,7 @@ public class RegisterController {
             stage.setScene(new Scene(root));
             stage.setTitle(title);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi điều hướng: " + e.getMessage(), e);
+            LOGGER.error("Lỗi điều hướng: " + e.getMessage(), e);
         }
     }
 

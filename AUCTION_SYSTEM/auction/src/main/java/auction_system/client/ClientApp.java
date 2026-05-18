@@ -4,19 +4,20 @@ import auction_system.client.network.NetworkClient;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.network.SocketServer;
 import java.io.IOException;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp chính để khởi chạy ứng dụng Client.
  */
 public class ClientApp extends Application {
-    private static final Logger LOGGER = Logger.getLogger(ClientApp.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientApp.class);
 
     private static final int WINDOW_WIDTH = 900;
     private static final int WINDOW_HEIGHT = 700;
@@ -29,7 +30,7 @@ public class ClientApp extends Application {
             NetworkClient.getInstance().connect(NetworkConfig.SERVER_HOST,
                                                 NetworkConfig.SERVER_PORT);
         } catch (IOException e) {
-            LOGGER.warning("Không thể kết nối tới Server. Đang tự động khởi chạy Server nội bộ...");
+            LOGGER.warn("Không thể kết nối tới Server. Đang tự động khởi chạy Server nội bộ...");
             startLocalServerAndConnect();
         }
 
@@ -64,7 +65,7 @@ public class ClientApp extends Application {
             NetworkClient.getInstance().connect(NetworkConfig.SERVER_HOST,
                                                 NetworkConfig.SERVER_PORT);
         } catch (InterruptedException | IOException ex) {
-            LOGGER.severe("Thử kết nối lại với Server nội bộ thất bại: " + ex.getMessage());
+            LOGGER.error("Thử kết nối lại với Server nội bộ thất bại: " + ex.getMessage());
         }
     }
 
@@ -81,7 +82,7 @@ public class ClientApp extends Application {
             if (getClass().getResource(fontPath) != null) {
                 Font.loadFont(getClass().getResourceAsStream(fontPath), 16);
             } else {
-                LOGGER.warning("Không tìm thấy font tại đường dẫn: " + fontPath);
+                LOGGER.warn("Không tìm thấy font tại đường dẫn: " + fontPath);
             }
         }
     }
