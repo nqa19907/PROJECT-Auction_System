@@ -8,45 +8,36 @@ import java.time.LocalDateTime;
  *
  * <p><b>Vị trí trong luồng dữ liệu real-time:</b></p>
  * <pre>
- *  [Server]  Art (model) ──fromItem()──▶ ArtDTO ──Socket──▶ [Client]
- *  [Client]  ArtDTO ──toItem()──▶ Art (model, nếu Server cần tái tạo)
+ *  [Server]  Art (model) ──fromItem()──▶ ArtDto ──Socket──▶ [Client]
+ *  [Client]  ArtDto ──toItem()──▶ Art (model, nếu Server cần tái tạo)
  * </pre>
  *
  * <p><b>Nguyên tắc thiết kế:</b></p>
  * <ul>
  *   <li><b>SRP</b> – Chỉ mang dữ liệu đặc thù của Art, không chứa logic nghiệp vụ.</li>
- *   <li><b>LSP</b> – Có thể thay thế {@link ItemDTO} ở mọi nơi nhận ItemDTO.</li>
+ *   <li><b>LSP</b> – Có thể thay thế {@link ItemDto} ở mọi nơi nhận ItemDto.</li>
  *   <li><b>Static factory</b> – {@code fromItem()} và {@code toItem()} tách biệt
  *       việc chuyển đổi khỏi constructor, tránh constructor phình to.</li>
  * </ul>
  */
-public final class ArtDTO extends ItemDTO {
+public final class ArtDto extends ItemDto {
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: serialVersionUID bắt buộc — phải khác với lớp cha
-    // -------------------------------------------------------------------------
+    /**
+     * serialVersionUID riêng của ArtDto — khác với lớp cha để tránh nhầm lẫn
+     * khi deserialize qua ObjectInputStream.
+     */
     private static final long serialVersionUID = 2L;
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: field private final — dữ liệu đặc thù của Art không thay đổi
-    //             sau khi DTO được tạo và gửi đi
-    // -------------------------------------------------------------------------
     private final String artistName;
     private final String creationYear;
     private final boolean hasAuthenticityCertificate;
 
-    // -------------------------------------------------------------------------
-    // Constructors
-    // -------------------------------------------------------------------------
-
     /**
      * Constructor mặc định — cần thiết cho Java deserialization qua ObjectInputStream.
      *
-     * <p>Không dùng trực tiếp; hãy dùng {@link #fromItem(Art)} hoặc
-     * {@link #of(String, String, String, String, double, double,
-     * String, String, LocalDateTime, String, String, boolean)}.</p>
+     * <p>Không dùng trực tiếp; hãy dùng {@link #fromItem(Art)}.</p>
      */
-    public ArtDTO() {
+    public ArtDto() {
         super();
         this.artistName = null;
         this.creationYear = null;
@@ -54,7 +45,7 @@ public final class ArtDTO extends ItemDTO {
     }
 
     /**
-     * Constructor đầy đủ — dùng nội bộ bởi static factory methods.
+     * Constructor đầy đủ — chỉ dùng nội bộ bởi static factory {@link #fromItem(Art)}.
      *
      * @param id                         ID duy nhất (UUID).
      * @param itemName                   Tên tác phẩm.
@@ -65,11 +56,13 @@ public final class ArtDTO extends ItemDTO {
      * @param condition                  Tình trạng tác phẩm.
      * @param imagePath                  Đường dẫn hình ảnh.
      * @param createdAt                  Thời điểm tạo.
-     * @param artistName                 Tên nghệ sĩ.
-     * @param creationYear               Năm sáng tác.
+     * @param artistName                 Tên nghệ sĩ, không được rỗng.
+     * @param creationYear               Năm sáng tác, không được rỗng.
      * @param hasAuthenticityCertificate Có chứng nhận xác thực hay không.
+     *
+     * @throws IllegalArgumentException nếu artistName hoặc creationYear rỗng.
      */
-    private ArtDTO(
+    private ArtDto(
             String id,
             String itemName,
             String description,
@@ -83,12 +76,10 @@ public final class ArtDTO extends ItemDTO {
             String creationYear,
             boolean hasAuthenticityCertificate) {
 
-        // Checkstyle: gọi super constructor đầu tiên, truyền đủ tham số
         super(id, "Art", itemName, description,
                 startPrice, currentPrice,
                 sellerId, condition, imagePath, createdAt);
 
-        // Checkstyle: validate trước khi gán — không để artistName rỗng
         if (artistName == null || artistName.trim().isEmpty()) {
             throw new IllegalArgumentException("Tên nghệ sĩ không được để trống.");
         }
@@ -102,31 +93,32 @@ public final class ArtDTO extends ItemDTO {
     }
 
     // -------------------------------------------------------------------------
-    // Static factory methods (thay thế constructor public phức tạp)
+    // Static factory methods
     // -------------------------------------------------------------------------
 
     /**
-     * Tạo {@code ArtDTO} từ domain model {@link Art}.
+     * Tạo {@code ArtDto} từ domain model {@link Art}.
      *
      * <p>Dùng phía <b>Server</b> trước khi gửi dữ liệu xuống Client qua Socket.</p>
      *
-     * <p>Ví dụ:</p>
+     * <p>Ví dụ sử dụng:</p>
      * <pre>{@code
      * Art art = artRepository.findById(id);
-     * ArtDTO dto = ArtDTO.fromItem(art);
+     * ArtDto dto = ArtDto.fromItem(art);
      * objectOutputStream.writeObject(dto);
      * }</pre>
      *
-     * @param art Domain model, không được null.
-     * @return {@code ArtDTO} chứa đầy đủ thông tin của {@code art}.
+     * @param art Domain model nguồn, không được null.
+     *
+     * @return {@code ArtDto} chứa đầy đủ thông tin của {@code art}.
+     *
      * @throws IllegalArgumentException nếu {@code art} là null.
      */
-    public static ArtDTO fromItem(Art art) {
-        // Checkstyle: guard clause — kiểm tra null ngay đầu method
+    public static ArtDto fromItem(Art art) {
         if (art == null) {
-            throw new IllegalArgumentException("Art model không được null khi tạo ArtDTO.");
+            throw new IllegalArgumentException("Art model không được null khi tạo ArtDto.");
         }
-        return new ArtDTO(
+        return new ArtDto(
                 art.getId(),
                 art.getItemName(),
                 art.getDescription(),
@@ -144,17 +136,12 @@ public final class ArtDTO extends ItemDTO {
     /**
      * Tái tạo domain model {@link Art} từ DTO này.
      *
-     * <p>Dùng phía <b>Server</b> nếu cần xử lý nghiệp vụ sau khi nhận DTO
-     * từ một service khác, hoặc phục vụ việc test / tái tạo trạng thái.</p>
+     * <p>Dùng phía Server khi cần xử lý nghiệp vụ sau khi nhận DTO từ service khác,
+     * hoặc phục vụ việc test và tái tạo trạng thái.</p>
      *
-     * <p><b>Lưu ý:</b> {@code Art} được tạo ra từ phương thức này sẽ có
-     * {@code createdAt} và {@code id} gốc từ DTO, không phải giá trị mới.</p>
-     *
-     * @return {@link Art} tương ứng với DTO này.
+     * @return {@link Art} tương ứng với dữ liệu của DTO này.
      */
     public Art toItem() {
-        // Checkstyle: không dùng constructor Art trực tiếp mà qua ArtBuilder
-        // để đảm bảo tính nhất quán với phần còn lại của codebase
         Art art = new Art(
                 getItemName(),
                 getDescription(),
@@ -165,7 +152,6 @@ public final class ArtDTO extends ItemDTO {
                 this.artistName,
                 this.creationYear,
                 this.hasAuthenticityCertificate);
-        // Cập nhật giá hiện tại nếu khác giá khởi điểm (đã có bid)
         if (getCurrentPrice() > getStartPrice()) {
             art.setCurrentPrice(getCurrentPrice());
         }
@@ -173,33 +159,44 @@ public final class ArtDTO extends ItemDTO {
     }
 
     // -------------------------------------------------------------------------
-    // Implement abstract method từ ItemDTO
+    // Implement abstract method từ ItemDto
     // -------------------------------------------------------------------------
 
     /**
      * {@inheritDoc}
      *
-     * <p>Định dạng: {@code "Nghệ thuật | <Tên> | Nghệ sĩ: <Nghệ sĩ> | Năm: <Năm> | <Chứng nhận>"}
+     * <p>Định dạng hiển thị:
+     * {@code "Nghệ thuật | <Tên> | Nghệ sĩ: <X> | Năm: <Y> | <Chứng nhận>"}</p>
      */
     @Override
     public String getDisplaySummary() {
-        // Checkstyle: dùng String.format thay vì concatenation nhiều dòng
-        String certificate = hasAuthenticityCertificate ? "✓ Đã xác thực" : "✗ Chưa xác thực";
+        String certificate = hasAuthenticityCertificate ? "Đã xác thực" : "Chưa xác thực";
         return String.format(
                 "Nghệ thuật | %s | Nghệ sĩ: %s | Năm: %s | %s",
                 getItemName(), artistName, creationYear, certificate);
     }
 
     // -------------------------------------------------------------------------
-    // Getters — không có setter (immutable sau khi tạo)
+    // Getters
     // -------------------------------------------------------------------------
 
-    /** @return Tên nghệ sĩ sáng tác tác phẩm. */
+    /**
+     * Trả về tên nghệ sĩ sáng tác tác phẩm.
+     *
+     * @return Tên nghệ sĩ, không null và không rỗng.
+     */
     public String getArtistName() {
         return artistName;
     }
 
-    /** @return Năm sáng tác tác phẩm (dạng chuỗi, ví dụ "1889", "khoảng 1920"). */
+    /**
+     * Trả về năm sáng tác tác phẩm.
+     *
+     * <p>Giá trị là chuỗi để hỗ trợ các trường hợp như {@code "khoảng 1920"}
+     * hoặc các giai đoạn nghệ thuật không rõ năm cụ thể.</p>
+     *
+     * @return Năm sáng tác dạng chuỗi, không null.
+     */
     public String getCreationYear() {
         return creationYear;
     }
@@ -214,13 +211,15 @@ public final class ArtDTO extends ItemDTO {
     }
 
     // -------------------------------------------------------------------------
-    // toString — logging/debug, không dùng cho UI
+    // toString
     // -------------------------------------------------------------------------
 
     /**
-     * {@inheritDoc}
+     * Trả về chuỗi mô tả ArtDto dùng cho logging và debug.
      *
-     * <p>Thêm thông tin đặc thù của Art vào chuỗi từ lớp cha.</p>
+     * <p>Để hiển thị trên UI, dùng {@link #getDisplaySummary()} thay thế.</p>
+     *
+     * @return Chuỗi thông tin rút gọn bao gồm thông tin lớp cha và thông tin Art.
      */
     @Override
     public String toString() {

@@ -10,49 +10,30 @@ import java.util.Objects;
  *
  * <p><b>Mục đích trong kiến trúc Client–Server:</b></p>
  * <ul>
- *   <li>Được serialize và truyền qua mạng (Socket / RMI) giữa Server và Client.</li>
+ *   <li>Được serialize và truyền qua mạng (Socket / ObjectStream) giữa Server và Client.</li>
  *   <li>Tách biệt hoàn toàn khỏi domain model {@link Item} — Client không cần
  *       biết gì về logic nghiệp vụ phía Server.</li>
- *   <li>Mỗi loại Item (Art, Electronic, Vehicle) sẽ có DTO con riêng
- *       kế thừa lớp này.</li>
+ *   <li>Mỗi loại Item (Art, Electronic, Vehicle) có DTO con riêng kế thừa lớp này.</li>
  * </ul>
  *
- * <p><b>Nguyên tắc thiết kế được áp dụng:</b></p>
+ * <p><b>Nguyên tắc SOLID được áp dụng:</b></p>
  * <ul>
  *   <li><b>SRP</b> – Lớp này chỉ chịu trách nhiệm mang dữ liệu, không chứa logic.</li>
- *   <li><b>OCP</b> – Có thể mở rộng bằng cách tạo lớp DTO con mà không sửa lớp này.</li>
- *   <li><b>LSP</b> – Mọi lớp con đều có thể thay thế {@code ItemDTO} mà không
- *       làm vỡ hệ thống.</li>
- *   <li><b>Serializable</b> – Bắt buộc để truyền qua ObjectOutputStream / Socket.</li>
+ *   <li><b>OCP</b> – Mở rộng bằng cách tạo lớp DTO con, không sửa lớp này.</li>
+ *   <li><b>LSP</b> – Mọi lớp con đều thay thế được {@code ItemDto} mà không vỡ hệ thống.</li>
  * </ul>
- *
- * <p><b>Cách sử dụng điển hình (real-time auction):</b></p>
- * <pre>{@code
- * // Server side:
- * ArtDTO dto = ArtDTO.fromItem((Art) item);
- * outputStream.writeObject(dto);        // gửi qua mạng
- *
- * // Client side:
- * ItemDTO received = (ItemDTO) inputStream.readObject();
- * System.out.println(received.getDisplaySummary());
- * }</pre>
  */
-public abstract class ItemDTO implements Serializable {
+public abstract class ItemDto implements Serializable {
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: serialVersionUID bắt buộc cho mọi lớp Serializable
-    // -------------------------------------------------------------------------
+    /**
+     * serialVersionUID bắt buộc cho mọi lớp Serializable.
+     * Phải khai báo tường minh để tránh InvalidClassException khi thêm field mới.
+     */
     private static final long serialVersionUID = 1L;
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: hằng số phải là UPPER_SNAKE_CASE, khai báo private static final
-    // -------------------------------------------------------------------------
     /** Giá trị mặc định khi giá chưa được thiết lập. */
     private static final double DEFAULT_PRICE = 0.0;
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: field phải là private, không được là public/protected trực tiếp
-    // -------------------------------------------------------------------------
     private final String id;
     private final String itemType;
     private final String itemName;
@@ -60,11 +41,11 @@ public abstract class ItemDTO implements Serializable {
     private final double startPrice;
 
     /**
-     * Giá hiện tại — volatile để hỗ trợ cập nhật real-time từ nhiều luồng
-     * (Server broadcast giá mới, Swing EDT cập nhật UI).
+     * Giá hiện tại — volatile để đảm bảo visibility khi cập nhật real-time từ nhiều luồng.
      *
-     * <p>Lưu ý: Dùng {@code volatile} đảm bảo visibility giữa các thread,
-     * nhưng nếu cần atomicity thì phải dùng synchronized block ở tầng gọi.</p>
+     * <p>Network thread cập nhật giá mới khi nhận broadcast từ Server;
+     * Swing EDT đọc giá để render UI. {@code volatile} đảm bảo hai luồng
+     * thấy cùng một giá trị.</p>
      */
     private volatile double currentPrice;
 
@@ -73,15 +54,12 @@ public abstract class ItemDTO implements Serializable {
     private final String imagePath;
     private final LocalDateTime createdAt;
 
-    // -------------------------------------------------------------------------
-    // Constructors
-    // -------------------------------------------------------------------------
-
     /**
-     * Constructor mặc định cho phép Jackson / Kryo deserialize
-     * (cần thiết khi nhận dữ liệu từ mạng hoặc database).
+     * Constructor mặc định cho phép Java Serialization deserialize đối tượng.
+     *
+     * <p>Không dùng trực tiếp — hãy dùng static factory {@code fromItem()} ở lớp con.</p>
      */
-    protected ItemDTO() {
+    protected ItemDto() {
         this.id = null;
         this.itemType = null;
         this.itemName = null;
@@ -95,26 +73,23 @@ public abstract class ItemDTO implements Serializable {
     }
 
     /**
-     * Constructor đầy đủ tham số — dùng khi tạo DTO từ model hoặc database.
-     *
-     * <p>Thiết kế: constructor là {@code protected} để chỉ lớp con và
-     * factory method được phép tạo instance, tránh tạo ItemDTO "rỗng"
-     * từ bên ngoài gói.</p>
+     * Constructor đầy đủ tham số — chỉ dùng bởi lớp con thông qua {@code super(...)}.
      *
      * @param id           ID duy nhất của sản phẩm (UUID), không được null.
-     * @param itemType     Loại sản phẩm (e.g. "Art", "Electronic", "Vehicle").
+     * @param itemType     Loại sản phẩm (ví dụ: "Art", "Electronic", "Vehicle").
      * @param itemName     Tên sản phẩm, không được rỗng.
      * @param description  Mô tả sản phẩm.
      * @param startPrice   Giá khởi điểm, phải >= 0.
      * @param currentPrice Giá hiện tại, phải >= startPrice.
      * @param sellerId     ID người bán, không được null.
      * @param condition    Tình trạng sản phẩm.
-     * @param imagePath    Đường dẫn ảnh (có thể null nếu chưa có ảnh).
+     * @param imagePath    Đường dẫn ảnh, có thể null nếu chưa có ảnh.
      * @param createdAt    Thời điểm tạo sản phẩm.
-     * @throws IllegalArgumentException nếu id, itemName hoặc sellerId không hợp lệ,
-     *                                  hoặc giá trị giá âm.
+     *
+     * @throws IllegalArgumentException nếu id, itemName, sellerId không hợp lệ
+     *                                  hoặc giá trị giá âm / không nhất quán.
      */
-    protected ItemDTO(
+    protected ItemDto(
             String id,
             String itemType,
             String itemName,
@@ -126,7 +101,6 @@ public abstract class ItemDTO implements Serializable {
             String imagePath,
             LocalDateTime createdAt) {
 
-        // Checkstyle: validate tham số ngay trong constructor thay vì để NPE âm thầm
         validateId(id);
         validateItemName(itemName);
         validateSellerId(sellerId);
@@ -145,35 +119,34 @@ public abstract class ItemDTO implements Serializable {
     }
 
     // -------------------------------------------------------------------------
-    // Abstract methods — lớp con bắt buộc implement (OCP + SRP)
+    // Abstract method — lớp con bắt buộc implement (OCP)
     // -------------------------------------------------------------------------
 
     /**
      * Trả về chuỗi tóm tắt thông tin để hiển thị trên danh sách đấu giá.
      *
-     * <p>Mỗi loại item (Art, Electronic, Vehicle) tự quyết định
-     * cách hiển thị thông tin đặc thù của mình.</p>
+     * <p>Mỗi loại item tự quyết định cách hiển thị thông tin đặc thù của mình,
+     * tránh client phải dùng {@code instanceof} để phân biệt loại.</p>
      *
      * @return Chuỗi mô tả ngắn gọn, không null.
      */
     public abstract String getDisplaySummary();
 
     // -------------------------------------------------------------------------
-    // Real-time update method
+    // Real-time update
     // -------------------------------------------------------------------------
 
     /**
-     * Cập nhật giá hiện tại khi nhận broadcast từ Server.
+     * Cập nhật giá hiện tại khi nhận broadcast giá mới từ Server.
      *
-     * <p>Phương thức này được gọi bởi luồng nhận dữ liệu mạng khi
-     * có bid mới thắng. {@code volatile} đảm bảo Swing EDT thấy
-     * giá trị mới ngay lập tức.</p>
+     * <p>Được gọi bởi luồng nhận dữ liệu mạng khi có bid mới thắng.
+     * Trong đấu giá, giá chỉ được phép tăng — không bao giờ giảm.</p>
      *
-     * @param newPrice Giá mới từ server, phải >= giá hiện tại.
-     * @throws IllegalArgumentException nếu newPrice < currentPrice.
+     * @param newPrice Giá mới từ server, phải {@code >= currentPrice}.
+     *
+     * @throws IllegalArgumentException nếu {@code newPrice < currentPrice}.
      */
     public void updateCurrentPrice(double newPrice) {
-        // Checkstyle: không cho phép giá mới thấp hơn giá hiện tại
         if (newPrice < this.currentPrice) {
             throw new IllegalArgumentException(
                     String.format(
@@ -184,31 +157,52 @@ public abstract class ItemDTO implements Serializable {
     }
 
     // -------------------------------------------------------------------------
-    // Getters — không có setter cho các field bất biến (immutable design)
+    // Getters
+    // Checkstyle: SingleLineJavadoc cấm dùng /** @return ... */ một dòng.
+    // Phải viết đúng dạng multi-line với summary sentence + dòng trống + @return.
     // -------------------------------------------------------------------------
-    // Checkstyle: mỗi getter phải có Javadoc ngắn mô tả ý nghĩa
 
-    /** @return ID duy nhất của sản phẩm (UUID). */
+    /**
+     * Trả về ID duy nhất của sản phẩm.
+     *
+     * @return ID dạng UUID string, không null sau khi khởi tạo đầy đủ.
+     */
     public String getId() {
         return id;
     }
 
-    /** @return Loại sản phẩm, ví dụ: "Art", "Electronic", "Vehicle". */
+    /**
+     * Trả về loại sản phẩm.
+     *
+     * @return Chuỗi phân loại, ví dụ: {@code "Art"}, {@code "Electronic"}, {@code "Vehicle"}.
+     */
     public String getItemType() {
         return itemType;
     }
 
-    /** @return Tên sản phẩm. */
+    /**
+     * Trả về tên sản phẩm.
+     *
+     * @return Tên sản phẩm, không null và không rỗng.
+     */
     public String getItemName() {
         return itemName;
     }
 
-    /** @return Mô tả chi tiết sản phẩm. */
+    /**
+     * Trả về mô tả chi tiết sản phẩm.
+     *
+     * @return Chuỗi mô tả, có thể null nếu chưa có mô tả.
+     */
     public String getDescription() {
         return description;
     }
 
-    /** @return Giá khởi điểm — bất biến sau khi tạo. */
+    /**
+     * Trả về giá khởi điểm — bất biến sau khi DTO được tạo.
+     *
+     * @return Giá khởi điểm, luôn {@code >= 0}.
+     */
     public double getStartPrice() {
         return startPrice;
     }
@@ -216,74 +210,94 @@ public abstract class ItemDTO implements Serializable {
     /**
      * Trả về giá hiện tại của sản phẩm trong phiên đấu giá.
      *
-     * <p>Giá trị này có thể thay đổi theo thời gian thực khi có bid mới.</p>
+     * <p>Giá trị này có thể thay đổi theo thời gian thực khi có bid mới.
+     * Dùng {@link #updateCurrentPrice(double)} để cập nhật.</p>
      *
-     * @return Giá hiện tại (>= startPrice).
+     * @return Giá hiện tại, luôn {@code >= startPrice}.
      */
     public double getCurrentPrice() {
         return currentPrice;
     }
 
-    /** @return ID của người bán sản phẩm. */
+    /**
+     * Trả về ID của người bán sản phẩm.
+     *
+     * @return ID người bán, không null.
+     */
     public String getSellerId() {
         return sellerId;
     }
 
-    /** @return Tình trạng sản phẩm (ví dụ: "Mới", "Đã qua sử dụng"). */
+    /**
+     * Trả về tình trạng sản phẩm.
+     *
+     * @return Chuỗi mô tả tình trạng, ví dụ: {@code "Mới"}, {@code "Đã qua sử dụng"}.
+     */
     public String getCondition() {
         return condition;
     }
 
-    /** @return Đường dẫn hình ảnh sản phẩm, có thể null nếu chưa có ảnh. */
+    /**
+     * Trả về đường dẫn hình ảnh sản phẩm.
+     *
+     * @return Đường dẫn ảnh, có thể null nếu chưa có ảnh.
+     */
     public String getImagePath() {
         return imagePath;
     }
 
-    /** @return Thời điểm sản phẩm được tạo trong hệ thống. */
+    /**
+     * Trả về thời điểm sản phẩm được tạo trong hệ thống.
+     *
+     * @return Thời điểm tạo dạng {@link LocalDateTime}, không null.
+     */
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     // -------------------------------------------------------------------------
-    // equals / hashCode — dựa trên id (identity by ID, không phải giá trị)
+    // equals / hashCode — theo id (identity by ID)
     // -------------------------------------------------------------------------
-    // Checkstyle: equals và hashCode phải được override cùng nhau
 
     /**
-     * So sánh hai DTO theo ID — phù hợp với việc dùng trong Set / Map
-     * khi quản lý danh sách item đấu giá.
+     * So sánh hai DTO theo ID — phù hợp dùng trong {@code Set} hoặc {@code Map}.
+     *
+     * @param obj Đối tượng cần so sánh.
+     *
+     * @return {@code true} nếu cùng ID, {@code false} nếu khác.
      */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (!(o instanceof ItemDTO)) {
+        if (!(obj instanceof ItemDto)) {
             return false;
         }
-        ItemDTO other = (ItemDTO) o;
+        ItemDto other = (ItemDto) obj;
         return Objects.equals(this.id, other.id);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Trả về hash code dựa trên ID của DTO.
+     *
+     * @return Hash code của {@code id}.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(id);
     }
 
     // -------------------------------------------------------------------------
-    // toString — dùng cho logging, không dùng để hiển thị UI
+    // toString — dùng cho logging/debug, không dùng để hiển thị UI
     // -------------------------------------------------------------------------
-    // Checkstyle: toString không được chứa thông tin nhạy cảm (sellerId giữ lại
-    // vì đây là internal DTO, không expose ra ngoài API public)
 
     /**
-     * Trả về chuỗi mô tả DTO dùng cho logging/debug.
+     * Trả về chuỗi mô tả DTO dùng cho logging và debug.
      *
-     * <p>Lưu ý: Không dùng phương thức này để hiển thị UI —
-     * hãy dùng {@link #getDisplaySummary()} thay thế.</p>
+     * <p>Để hiển thị trên UI, dùng {@link #getDisplaySummary()} thay thế.</p>
      *
-     * @return Chuỗi thông tin DTO.
+     * @return Chuỗi thông tin rút gọn của DTO.
      */
     @Override
     public String toString() {
@@ -298,27 +312,27 @@ public abstract class ItemDTO implements Serializable {
     }
 
     // -------------------------------------------------------------------------
-    // Private validation helpers — tách logic validate ra khỏi constructor
-    // (SRP: constructor không nên xử lý cả logic validate phức tạp)
+    // Private validation helpers
     // -------------------------------------------------------------------------
 
     /**
-     * Kiểm tra ID hợp lệ.
+     * Kiểm tra ID hợp lệ — không null và không rỗng.
      *
      * @param id ID cần kiểm tra.
+     *
      * @throws IllegalArgumentException nếu id null hoặc rỗng.
      */
     private static void validateId(String id) {
-        // Checkstyle: không dùng == null mà dùng Objects.isNull hoặc điều kiện rõ ràng
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID sản phẩm không được để trống.");
         }
     }
 
     /**
-     * Kiểm tra tên sản phẩm hợp lệ.
+     * Kiểm tra tên sản phẩm hợp lệ — không null và không rỗng.
      *
      * @param itemName Tên sản phẩm cần kiểm tra.
+     *
      * @throws IllegalArgumentException nếu tên null hoặc rỗng.
      */
     private static void validateItemName(String itemName) {
@@ -328,9 +342,10 @@ public abstract class ItemDTO implements Serializable {
     }
 
     /**
-     * Kiểm tra ID người bán hợp lệ.
+     * Kiểm tra ID người bán hợp lệ — không null và không rỗng.
      *
      * @param sellerId ID người bán cần kiểm tra.
+     *
      * @throws IllegalArgumentException nếu sellerId null hoặc rỗng.
      */
     private static void validateSellerId(String sellerId) {
@@ -340,14 +355,14 @@ public abstract class ItemDTO implements Serializable {
     }
 
     /**
-     * Kiểm tra giá hợp lệ.
+     * Kiểm tra tính nhất quán giữa startPrice và currentPrice.
      *
      * @param startPrice   Giá khởi điểm.
      * @param currentPrice Giá hiện tại.
-     * @throws IllegalArgumentException nếu giá âm hoặc currentPrice < startPrice.
+     *
+     * @throws IllegalArgumentException nếu giá âm hoặc currentPrice {@code < startPrice}.
      */
     private static void validatePrices(double startPrice, double currentPrice) {
-        // Checkstyle: mỗi điều kiện validate phải có thông báo lỗi rõ ràng
         if (startPrice < 0) {
             throw new IllegalArgumentException(
                     "Giá khởi điểm không được âm: " + startPrice);
@@ -360,3 +375,5 @@ public abstract class ItemDTO implements Serializable {
         }
     }
 }
+
+

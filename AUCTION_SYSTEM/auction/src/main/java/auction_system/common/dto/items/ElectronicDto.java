@@ -8,47 +8,42 @@ import java.time.LocalDateTime;
  *
  * <p><b>Vị trí trong luồng dữ liệu real-time:</b></p>
  * <pre>
- *  [Server]  Electronic (model) ──fromItem()──▶ ElectronicDTO ──Socket──▶ [Client]
- *  [Client]  ElectronicDTO ──toItem()──▶ Electronic (model, nếu Server cần tái tạo)
+ *  [Server]  Electronic (model) ──fromItem()──▶ ElectronicDto ──Socket──▶ [Client]
+ *  [Client]  ElectronicDto ──toItem()──▶ Electronic (model, nếu Server cần tái tạo)
  * </pre>
  *
  * <p><b>Nguyên tắc thiết kế:</b></p>
  * <ul>
  *   <li><b>SRP</b> – Chỉ mang dữ liệu đặc thù của Electronic, không chứa logic nghiệp vụ.</li>
- *   <li><b>LSP</b> – Có thể thay thế {@link ItemDTO} ở mọi nơi nhận ItemDTO.</li>
- *   <li><b>Static factory</b> – Tách biệt việc chuyển đổi khỏi constructor.</li>
+ *   <li><b>LSP</b> – Có thể thay thế {@link ItemDto} ở mọi nơi nhận ItemDto.</li>
+ *   <li><b>Static factory</b> – {@code fromItem()} và {@code toItem()} tách biệt
+ *       việc chuyển đổi khỏi constructor, tránh constructor phình to.</li>
  * </ul>
  */
-public final class ElectronicDTO extends ItemDTO {
+public final class ElectronicDto extends ItemDto {
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: serialVersionUID bắt buộc — phải khác với lớp cha và các sibling
-    // -------------------------------------------------------------------------
+    /**
+     * serialVersionUID riêng của ElectronicDto — khác với lớp cha và các sibling
+     * để tránh nhầm lẫn khi deserialize qua ObjectInputStream.
+     */
     private static final long serialVersionUID = 3L;
 
-    // -------------------------------------------------------------------------
-    // Checkstyle: field private final — bất biến sau khi DTO được tạo
-    // -------------------------------------------------------------------------
     private final String brand;
     private final int warrantyMonths;
-
-    // -------------------------------------------------------------------------
-    // Constructors
-    // -------------------------------------------------------------------------
 
     /**
      * Constructor mặc định — cần thiết cho Java deserialization qua ObjectInputStream.
      *
      * <p>Không dùng trực tiếp; hãy dùng {@link #fromItem(Electronic)}.</p>
      */
-    public ElectronicDTO() {
+    public ElectronicDto() {
         super();
         this.brand = null;
         this.warrantyMonths = 0;
     }
 
     /**
-     * Constructor đầy đủ — dùng nội bộ bởi static factory methods.
+     * Constructor đầy đủ — chỉ dùng nội bộ bởi static factory {@link #fromItem(Electronic)}.
      *
      * @param id             ID duy nhất (UUID).
      * @param itemName       Tên thiết bị.
@@ -59,10 +54,12 @@ public final class ElectronicDTO extends ItemDTO {
      * @param condition      Tình trạng thiết bị.
      * @param imagePath      Đường dẫn hình ảnh.
      * @param createdAt      Thời điểm tạo.
-     * @param brand          Thương hiệu.
-     * @param warrantyMonths Số tháng bảo hành (>= 0).
+     * @param brand          Thương hiệu, không được rỗng.
+     * @param warrantyMonths Số tháng bảo hành, phải {@code >= 0}.
+     *
+     * @throws IllegalArgumentException nếu brand rỗng hoặc warrantyMonths âm.
      */
-    private ElectronicDTO(
+    private ElectronicDto(
             String id,
             String itemName,
             String description,
@@ -79,11 +76,9 @@ public final class ElectronicDTO extends ItemDTO {
                 startPrice, currentPrice,
                 sellerId, condition, imagePath, createdAt);
 
-        // Checkstyle: validate trước khi gán — brand không được rỗng
         if (brand == null || brand.trim().isEmpty()) {
             throw new IllegalArgumentException("Thương hiệu thiết bị không được để trống.");
         }
-        // Checkstyle: số tháng bảo hành không âm (0 = không bảo hành, hợp lệ)
         if (warrantyMonths < 0) {
             throw new IllegalArgumentException(
                     "Số tháng bảo hành không được âm: " + warrantyMonths);
@@ -98,28 +93,29 @@ public final class ElectronicDTO extends ItemDTO {
     // -------------------------------------------------------------------------
 
     /**
-     * Tạo {@code ElectronicDTO} từ domain model {@link Electronic}.
+     * Tạo {@code ElectronicDto} từ domain model {@link Electronic}.
      *
      * <p>Dùng phía <b>Server</b> trước khi gửi dữ liệu xuống Client qua Socket.</p>
      *
-     * <p>Ví dụ:</p>
+     * <p>Ví dụ sử dụng:</p>
      * <pre>{@code
      * Electronic item = electronicRepository.findById(id);
-     * ElectronicDTO dto = ElectronicDTO.fromItem(item);
+     * ElectronicDto dto = ElectronicDto.fromItem(item);
      * objectOutputStream.writeObject(dto);
      * }</pre>
      *
-     * @param electronic Domain model, không được null.
-     * @return {@code ElectronicDTO} chứa đầy đủ thông tin của {@code electronic}.
+     * @param electronic Domain model nguồn, không được null.
+     *
+     * @return {@code ElectronicDto} chứa đầy đủ thông tin của {@code electronic}.
+     *
      * @throws IllegalArgumentException nếu {@code electronic} là null.
      */
-    public static ElectronicDTO fromItem(Electronic electronic) {
-        // Checkstyle: guard clause — kiểm tra null ngay đầu method
+    public static ElectronicDto fromItem(Electronic electronic) {
         if (electronic == null) {
             throw new IllegalArgumentException(
-                    "Electronic model không được null khi tạo ElectronicDTO.");
+                    "Electronic model không được null khi tạo ElectronicDto.");
         }
-        return new ElectronicDTO(
+        return new ElectronicDto(
                 electronic.getId(),
                 electronic.getItemName(),
                 electronic.getDescription(),
@@ -136,10 +132,10 @@ public final class ElectronicDTO extends ItemDTO {
     /**
      * Tái tạo domain model {@link Electronic} từ DTO này.
      *
-     * <p>Dùng phía <b>Server</b> nếu cần xử lý nghiệp vụ sau khi nhận DTO
-     * từ một service khác, hoặc phục vụ việc test / tái tạo trạng thái.</p>
+     * <p>Dùng phía Server khi cần xử lý nghiệp vụ sau khi nhận DTO từ service khác,
+     * hoặc phục vụ việc test và tái tạo trạng thái.</p>
      *
-     * @return {@link Electronic} tương ứng với DTO này.
+     * @return {@link Electronic} tương ứng với dữ liệu của DTO này.
      */
     public Electronic toItem() {
         Electronic electronic = new Electronic(
@@ -158,18 +154,17 @@ public final class ElectronicDTO extends ItemDTO {
     }
 
     // -------------------------------------------------------------------------
-    // Implement abstract method từ ItemDTO
+    // Implement abstract method từ ItemDto
     // -------------------------------------------------------------------------
 
     /**
      * {@inheritDoc}
      *
-     * <p>Định dạng:
-     * {@code "Điện tử | <Tên> | Hãng: <Brand> | Bảo hành: <N> tháng | <Tình trạng>"}
+     * <p>Định dạng hiển thị:
+     * {@code "Điện tử | <Tên> | Hãng: <Brand> | Bảo hành: <N> tháng | Tình trạng: <X>"}</p>
      */
     @Override
     public String getDisplaySummary() {
-        // Checkstyle: dùng String.format thay vì concatenation nhiều dòng
         String warranty = warrantyMonths > 0
                 ? warrantyMonths + " tháng"
                 : "Không bảo hành";
@@ -179,33 +174,40 @@ public final class ElectronicDTO extends ItemDTO {
     }
 
     // -------------------------------------------------------------------------
-    // Getters — không có setter (immutable sau khi tạo)
+    // Getters
     // -------------------------------------------------------------------------
 
-    /** @return Thương hiệu thiết bị (ví dụ: "Samsung", "Apple", "Sony"). */
+    /**
+     * Trả về thương hiệu của thiết bị.
+     *
+     * @return Tên thương hiệu, ví dụ: {@code "Samsung"}, {@code "Apple"}, {@code "Sony"}.
+     */
     public String getBrand() {
         return brand;
     }
 
     /**
-     * Trả về số tháng bảo hành còn lại tính từ thời điểm đấu giá.
+     * Trả về số tháng bảo hành của thiết bị.
      *
-     * <p>Giá trị {@code 0} nghĩa là thiết bị không có bảo hành.</p>
+     * <p>Giá trị {@code 0} nghĩa là thiết bị không có bảo hành.
+     * Kết hợp với {@link #getCondition()} để đánh giá tổng thể thiết bị.</p>
      *
-     * @return Số tháng bảo hành (>= 0).
+     * @return Số tháng bảo hành, luôn {@code >= 0}.
      */
     public int getWarrantyMonths() {
         return warrantyMonths;
     }
 
     // -------------------------------------------------------------------------
-    // toString — logging/debug, không dùng cho UI
+    // toString
     // -------------------------------------------------------------------------
 
     /**
-     * {@inheritDoc}
+     * Trả về chuỗi mô tả ElectronicDto dùng cho logging và debug.
      *
-     * <p>Thêm thông tin đặc thù của Electronic vào chuỗi từ lớp cha.</p>
+     * <p>Để hiển thị trên UI, dùng {@link #getDisplaySummary()} thay thế.</p>
+     *
+     * @return Chuỗi thông tin rút gọn bao gồm thông tin lớp cha và thông tin Electronic.
      */
     @Override
     public String toString() {
