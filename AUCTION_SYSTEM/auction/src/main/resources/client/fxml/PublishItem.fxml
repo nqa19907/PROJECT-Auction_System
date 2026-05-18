@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- ===== MAIN FORM ===== -->
+
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.PublishItemController">
+     <content>
+         <VBox spacing="16" styleClass="dashboard-background">
+
+             <!-- Page title -->
+             <Label styleClass="page-title" text="Tạo phiên đấu giá mới" />
+
+             <!-- Step indicator -->
+             <HBox alignment="CENTER_LEFT" spacing="0">
+                 <HBox alignment="CENTER" spacing="8" />
+                 <HBox alignment="CENTER" spacing="8" />
+                 <HBox alignment="CENTER" spacing="8" />
+             </HBox>
+
+             <!-- ===== CARD 1: Thông tin tài sản ===== -->
+             <VBox spacing="16" styleClass="content-card">
+
+                 <HBox alignment="CENTER_LEFT">
+                     <Label styleClass="section-title" text="Thông tin tài sản" />
+                 </HBox>
+
+                 <!-- Tên tài sản -->
+                 <VBox spacing="6">
+                     <HBox spacing="2">
+                         <Label styleClass="field-title" text="Tên tài sản" />
+                         <Label styleClass="asterisk" text="*" />
+                     </HBox>
+                     <TextField fx:id="fieldTenTaiSan" promptText="VD: Đồng hồ Rolex Submariner Date 2004" />
+                 </VBox>
+
+                 <!-- Danh mục + Tình trạng -->
+                 <GridPane hgap="16">
+                     <columnConstraints>
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                     </columnConstraints>
+                     <VBox spacing="6" GridPane.columnIndex="0">
+                         <HBox spacing="2">
+                             <Label styleClass="field-title" text="Danh mục" />
+                             <Label styleClass="asterisk" text="*" />
+                         </HBox>
+                         <ComboBox fx:id="comboDanhMuc" maxWidth="1.7976931348623157E308" promptText="Chọn danh mục..." />
+                     </VBox>
+                     <VBox spacing="6" GridPane.columnIndex="1">
+                         <Label styleClass="field-title" text="Tình trạng" />
+                         <ComboBox fx:id="comboTinhTrang" maxWidth="1.7976931348623157E308" promptText="Chọn tình trạng..." />
+                     </VBox>
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+                 </GridPane>
+
+                 <!-- Mô tả -->
+                 <VBox spacing="6">
+                     <HBox spacing="2">
+                         <Label styleClass="field-title" text="Mô tả sản phẩm" />
+                         <Label styleClass="asterisk" text="*" />
+                     </HBox>
+                     <TextArea fx:id="fieldMoTa" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
+                 </VBox>
+             </VBox>
+
+             <!-- ===== CARD 2: Thời gian & Giá ===== -->
+             <VBox spacing="16" styleClass="content-card">
+
+                 <HBox alignment="CENTER_LEFT">
+                     <Label styleClass="section-title" text="Thời gian &amp; Giá khởi điểm" />
+                 </HBox>
+
+                 <!-- Thời gian -->
+                 <GridPane hgap="16">
+                     <columnConstraints>
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                     </columnConstraints>
+                     <VBox spacing="6" GridPane.columnIndex="0">
+                         <HBox spacing="2">
+                             <Label styleClass="field-title" text="Thời gian bắt đầu" />
+                             <Label styleClass="asterisk" text="*" />
+                         </HBox>
+                         <TextField fx:id="fieldThoiGianBatDau" promptText="dd/MM/yyyy HH:mm" />
+                     </VBox>
+                     <VBox spacing="6" GridPane.columnIndex="1">
+                         <HBox spacing="2">
+                             <Label styleClass="field-title" text="Thời gian kết thúc" />
+                             <Label styleClass="asterisk" text="*" />
+                         </HBox>
+                         <TextField fx:id="fieldThoiGianKetThuc" promptText="dd/MM/yyyy HH:mm" />
+                     </VBox>
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+                 </GridPane>
+
+                 <!-- Giá -->
+                 <GridPane hgap="16">
+                     <columnConstraints>
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                         <ColumnConstraints hgrow="ALWAYS" percentWidth="50" />
+                     </columnConstraints>
+                     <VBox spacing="6" GridPane.columnIndex="0">
+                         <HBox spacing="2">
+                             <Label styleClass="field-title" text="Giá khởi điểm (VNĐ)" />
+                             <Label styleClass="asterisk" text="*" />
+                         </HBox>
+                         <HBox>
+                             <TextField fx:id="fieldGiaKhoiDiem" promptText="0" HBox.hgrow="ALWAYS" />
+                         </HBox>
+                         <Label styleClass="field-title" text="Giá tối thiểu để bắt đầu đấu giá" />
+                  <TextField fx:id="fieldGiaKhoiDiem1" promptText="0" />
+                     </VBox>
+                     <VBox spacing="6" GridPane.columnIndex="1">
+                         <Label styleClass="field-title" text="Bước giá tối thiểu (VNĐ)" />
+                         <HBox>
+                             <TextField fx:id="fieldBuocGia" promptText="50" HBox.hgrow="ALWAYS" />
+                         </HBox>
+                         <Label styleClass="field-title" text="Mỗi lần trả giá phải tăng thêm ít nhất" />
+                  <TextField fx:id="fieldBuocGia1" promptText="50" />
+                     </VBox>
+               <rowConstraints>
+                  <RowConstraints />
+               </rowConstraints>
+                 </GridPane>
+             </VBox>
+
+             <!-- Label lỗi -->
+             <Label fx:id="lblError" managed="false" style="-fx-text-fill: #E24B4A; -fx-font-size: 13;" text="" visible="false" />
+
+             <!-- Action buttons -->
+             <HBox alignment="CENTER_RIGHT" spacing="12">
+                 <Button fx:id="btnHuy" onAction="#handleHuy" styleClass="btn-secondary" text="Hủy" />
+                 <Button fx:id="btnTiepTheo" onAction="#handleTiepTheo" styleClass="btn-primary" text="Xác nhận" />
+             </HBox>
+
+         </VBox>
+     </content>
+   <stylesheets>
+      <URL value="@../css/buttons.css" />
+      <URL value="@../css/global.css" />
+      <URL value="@../css/icons.css" />
+      <URL value="@../css/images.css" />
+      <URL value="@../css/inputs.css" />
+      <URL value="@../css/layout.css" />
+      <URL value="@../css/typography.css" />
+      <URL value="@../css/variables.css" />
+   </stylesheets>
+ </ScrollPane>
