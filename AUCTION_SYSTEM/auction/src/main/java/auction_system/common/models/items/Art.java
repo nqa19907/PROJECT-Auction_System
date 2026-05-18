@@ -19,4 +19,9 @@ public class Art extends Item {
 
     }
 
+    @Override
+    public String getCategory() {
+        return "ART";
+    }
+
 }

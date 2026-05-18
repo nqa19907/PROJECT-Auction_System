@@ -24,6 +24,7 @@ public class Auction extends Entity {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private AuctionStatus status;
+    private String sellerId;
     // Dùng transient để bỏ qua thuộc tính, không
     // lưu xuống file và không gửi qua mạng.
     private transient List<AuctionObserver> observers;
@@ -238,6 +239,10 @@ public class Auction extends Entity {
 
     public void setStatus(AuctionStatus status) {
         this.status = status;
+    }
+
+    public String getSellerId() {
+        return sellerId;
     }
 
     @Override

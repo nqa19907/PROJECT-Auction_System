@@ -18,4 +18,9 @@ public class Vehicle extends Item {
         super(itemName, description, startPrice, sellerId);
     }
 
+    @Override
+    public String getCategory() {
+        return "VEHICLE";
+    }
+
 }

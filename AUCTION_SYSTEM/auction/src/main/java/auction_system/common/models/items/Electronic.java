@@ -18,4 +18,9 @@ public class Electronic extends Item {
 
     }
 
+    @Override
+    public String getCategory() {
+        return "ELECTRONIC";
+    }
+
 }
