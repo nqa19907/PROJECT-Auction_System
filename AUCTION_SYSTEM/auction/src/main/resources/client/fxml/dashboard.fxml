@@ -43,7 +43,7 @@
     </top>
 
     <center>
-      <StackPane fx:id="contentArea" styleClass="main-content-area" />
+        <StackPane fx:id="contentArea" styleClass="main-content-area" />
     </center>
     <left>
         <VBox id="categorySidebar" styleClass="category-sidebar" BorderPane.alignment="CENTER">
@@ -77,17 +77,29 @@
                         <Label styleClass="text-body" text="Phương tiện giao thông" />
                     </children>
                 </HBox>
-            <Region styleClass="sidebar-divider">
-               <VBox.margin>
-                  <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-               </VBox.margin>
-            </Region>
-            <HBox id="categoryAll" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
-               <children>
-                  <Region styleClass="icon-add" />
-                  <Label styleClass="text-body" text="Đăng bán" />
-               </children>
-            </HBox>
+                <Region styleClass="sidebar-divider">
+                    <VBox.margin>
+                        <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+                    </VBox.margin>
+                </Region>
+                <HBox id="categoryPublish" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-add" />
+                        <Label styleClass="text-body" text="Đăng bán" />
+                    </children>
+                </HBox>
+
+                <HBox id="categoryBidHistory"
+                      alignment="CENTER_LEFT"
+                      onMouseClicked="#handleShowBidHistory"
+                      spacing="15.0"
+                      styleClass="category-option">
+                    <children>
+                        <Region styleClass="icon-add" />
+                        <Label styleClass="text-body" text="Màn hình" />
+                    </children>
+                </HBox>
+
             </children>
         </VBox>
     </left>

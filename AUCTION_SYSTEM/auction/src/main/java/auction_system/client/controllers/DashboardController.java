@@ -60,4 +60,17 @@ public class DashboardController {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void handleShowBidHistory() {
+        LOGGER.info("Chuyển sang giao diện lịch sử đấu giá");
+        try {
+            Node view = FXMLLoader.load(
+                    getClass().getResource("/client/fxml/BidHistoryView.fxml")
+            );
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

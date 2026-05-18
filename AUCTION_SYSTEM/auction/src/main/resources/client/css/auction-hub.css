@@ -1,0 +1,346 @@
+/* ========================================================================
+   AUCTION HUB - BID HISTORY ONLY
+   File này chỉ override màn BidHistoryView.
+   Lý do: layout.css có rule `.main-content-area .label` làm mọi Label thành
+   bold 20px, nên phải scope lại chữ trong `.root-pane`.
+======================================================================== */
+
+/* ── Root ────────────────────────────────── */
+.root-pane {
+    -fx-background-color: #FDF3E3;
+    -fx-font-family: "Google Sans";
+}
+
+/* Reset Label bị layout.css đè trong main-content-area */
+.root-pane .label {
+    -fx-font-family: "Google Sans";
+    -fx-font-size: 14px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #3D2800;
+    -fx-font-smoothing-type: lcd;
+}
+
+/* ── Top Bar ─────────────────────────────── */
+.root-pane .top-bar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #F0D9B5;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 56px;
+}
+
+.root-pane .back-btn {
+    -fx-text-fill: #D4860B;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.root-pane .back-btn:hover {
+    -fx-text-fill: #A8640A;
+}
+
+.root-pane .page-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5C3D0A;
+}
+
+.root-pane .live-badge {
+    -fx-background-color: #FFF0E0;
+    -fx-background-radius: 20;
+    -fx-padding: 4 12 4 10;
+    -fx-border-color: #F0C070;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+}
+
+.root-pane .live-dot {
+    -fx-fill: #E24B4A;
+}
+
+.root-pane .live-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C05000;
+}
+
+/* ── Scroll ──────────────────────────────── */
+.root-pane .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.root-pane .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.root-pane .content-area {
+    -fx-background-color: transparent;
+}
+
+/* ── Cards ───────────────────────────────── */
+.root-pane .info-card,
+.root-pane .metric-card,
+.root-pane .chart-card,
+.root-pane .table-card,
+.root-pane .place-bid-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-border-color: #F0D9B5;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+.root-pane .metric-card {
+    -fx-background-color: #FFF8EE;
+}
+
+.root-pane .place-bid-card {
+    -fx-border-color: #D4860B;
+    -fx-border-width: 1.5;
+}
+
+/* ── Text riêng cho BidHistory ───────────── */
+.root-pane .auction-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3D2800;
+}
+
+.root-pane .auction-subtitle {
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #A07040;
+}
+
+.root-pane .timer-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4860B;
+}
+
+.root-pane .metric-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #A07040;
+}
+
+.root-pane .metric-value-main {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2E7D52;
+}
+
+.root-pane .metric-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3D2800;
+}
+
+.root-pane .change-up-icon,
+.root-pane .change-up {
+    -fx-font-size: 11px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #2E7D52;
+}
+
+.root-pane .section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3D2800;
+}
+
+.root-pane .hint-label,
+.root-pane .table-placeholder {
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #A07040;
+}
+
+/* ── Chart ───────────────────────────────── */
+.root-pane .bid-chart {
+    -fx-background-color: transparent;
+}
+
+.root-pane .bid-chart .chart-plot-background {
+    -fx-background-color: #FFFBF5;
+    -fx-background-radius: 6;
+}
+
+.root-pane .bid-chart .chart-vertical-grid-lines,
+.root-pane .bid-chart .chart-horizontal-grid-lines {
+    -fx-stroke: #F0D9B5;
+    -fx-stroke-dash-array: 4 4;
+}
+
+.root-pane .bid-chart .default-color0.chart-series-line {
+    -fx-stroke: #D4860B;
+    -fx-stroke-width: 2.5;
+}
+
+.root-pane .bid-chart .default-color0.chart-line-symbol {
+    -fx-background-color: #FFFFFF, #D4860B;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 8;
+    -fx-padding: 6;
+}
+
+.root-pane .chart-axis {
+    -fx-font-size: 11px;
+    -fx-tick-label-fill: #A07040;
+}
+
+.root-pane .chart-axis .axis-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #A07040;
+}
+
+/* ── Legend ──────────────────────────────── */
+.root-pane .legend-dot-blue {
+    -fx-fill: #378ADD;
+}
+
+.root-pane .legend-dot-amber {
+    -fx-fill: #D4860B;
+}
+
+.root-pane .legend-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #A07040;
+}
+
+/* ── Table ───────────────────────────────── */
+.root-pane .table-header {
+    -fx-background-color: #FFF3DE;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: #F0D9B5;
+    -fx-border-width: 0 0 1 0;
+}
+
+.root-pane .th,
+.root-pane .th-right {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #A07040;
+}
+
+.root-pane .th-right {
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.root-pane .bid-table {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.root-pane .bid-table .column-header-background {
+    -fx-background-color: #FFF3DE;
+}
+
+.root-pane .bid-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.root-pane .bid-table .column-header .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #A07040;
+}
+
+.root-pane .bid-table .table-row-cell {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #F5E8D0;
+    -fx-border-width: 0 0 0.5 0;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #3D2800;
+}
+
+.root-pane .bid-table .table-row-cell:odd {
+    -fx-background-color: #FFFBF5;
+}
+
+.root-pane .bid-table .table-row-cell:selected {
+    -fx-background-color: #FFE8B0;
+    -fx-text-fill: #3D2800;
+}
+
+.root-pane .bid-table .table-row-cell:hover {
+    -fx-background-color: #FFF3DE;
+}
+
+/* ── Input ───────────────────────────────── */
+.root-pane .currency-symbol {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4860B;
+}
+
+.root-pane .bid-input {
+    -fx-background-color: #FFF8EE;
+    -fx-background-radius: 8;
+    -fx-border-color: #F0D9B5;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 10 14 10 14;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3D2800;
+    -fx-prompt-text-fill: #C0A070;
+    -fx-min-height: 44px;
+}
+
+.root-pane .bid-input:focused {
+    -fx-border-color: #D4860B;
+}
+
+/* ── Buttons ─────────────────────────────── */
+.root-pane .quick-btn {
+    -fx-background-color: #FFF3DE;
+    -fx-background-radius: 8;
+    -fx-border-color: #F0D9B5;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-text-fill: #D4860B;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
+    -fx-min-height: 36px;
+}
+
+.root-pane .quick-btn:hover {
+    -fx-background-color: #FFE8B0;
+    -fx-border-color: #D4860B;
+}
+
+.root-pane .quick-btn:pressed {
+    -fx-background-color: #F5D080;
+    -fx-scale-x: 0.97;
+    -fx-scale-y: 0.97;
+}
+
+.root-pane .primary-btn {
+    -fx-background-color: #D4860B;
+    -fx-background-radius: 10;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 28 12 28;
+    -fx-cursor: hand;
+    -fx-min-height: 44px;
+    -fx-border-radius: 10;
+}
+
+.root-pane .primary-btn:hover {
+    -fx-background-color: #B8700A;
+}
+
+.root-pane .primary-btn:pressed {
+    -fx-background-color: #9A5C08;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
