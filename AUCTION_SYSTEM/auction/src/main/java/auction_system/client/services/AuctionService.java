@@ -4,14 +4,15 @@ import auction_system.client.network.NetworkClient;
 import auction_system.common.network.Protocol;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service xử lý các tác vụ liên quan đến quản lý phiên đấu giá ở phía Client.
  * Áp dụng mẫu thiết kế Singleton để duy trì một điểm truy cập duy nhất.
  */
 public class AuctionService {
-    private static final Logger LOGGER = Logger.getLogger(AuctionService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
     private static final AuctionService INSTANCE = new AuctionService();
     private FetchAuctionsCallback currentListCallback;
     private FetchAuctionDetailCallback currentDetailCallback;

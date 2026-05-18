@@ -4,14 +4,14 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh đăng xuất của người dùng.
  */
 public class LogoutCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(LogoutCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogoutCommand.class);
 
     /**
      * Thực thi lệnh đăng xuất.
@@ -40,7 +40,7 @@ public class LogoutCommand implements Command {
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ khi đăng xuất.";
         }

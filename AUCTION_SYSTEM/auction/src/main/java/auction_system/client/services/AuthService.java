@@ -4,7 +4,8 @@ import auction_system.client.network.NetworkClient;
 import auction_system.client.network.dto.LoginResult;
 import auction_system.common.network.Protocol;
 import auction_system.common.utils.SecurityUtils;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service xử lý các tác vụ liên quan đến xác thực người dùng.
@@ -12,7 +13,7 @@ import java.util.logging.Logger;
  * <p>Singleton: Eager Initialization
  */
 public final class AuthService {
-    private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
     private static final AuthService INSTANCE = new AuthService();
     private AuthCallback currentCallback;
 

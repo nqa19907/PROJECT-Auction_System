@@ -16,8 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Quản lý trung tâm cho các phiên đấu giá và người dùng — Singleton.
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
  */
 public class AuctionManager {
 
-    private static final Logger LOGGER = Logger.getLogger(AuctionManager.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionManager.class);
     private static final int SCHEDULER_INTERVAL_SECONDS = 10;
 
     // =========================================================================
@@ -106,7 +107,7 @@ public class AuctionManager {
                         auction.endAuction();
                     }
                 } catch (Exception ex) {
-                    LOGGER.warning("Lỗi scheduler phiên " + auction.getId()
+                    LOGGER.warn("Lỗi scheduler phiên " + auction.getId()
                             + ": " + ex.getMessage());
                 }
             }
@@ -192,7 +193,7 @@ public class AuctionManager {
      */
     public void userLoggedIn(User user) {
         activeUsers.put(user.getId(), user);
-        LOGGER.fine("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        LOGGER.debug("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
 
     /**
@@ -202,7 +203,7 @@ public class AuctionManager {
      */
     public void userLoggedOut(User user) {
         activeUsers.remove(user.getId());
-        LOGGER.fine("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        LOGGER.debug("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
 
     /**

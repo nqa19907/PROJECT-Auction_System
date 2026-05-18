@@ -21,7 +21,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý giao tiếp với một client duy nhất.
@@ -33,7 +34,7 @@ import java.util.logging.Logger;
  */
 public class ClientHandler implements Runnable, AuctionObserver {
 
-    private static final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandler.class);
 
     private final Socket socket;
     private BufferedReader inputReader;
@@ -191,7 +192,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 socket.close();
             }
         } catch (IOException e) {
-            LOGGER.warning("Lỗi khi đóng tài nguyên client: " + e.getMessage());
+            LOGGER.warn("Lỗi khi đóng tài nguyên client: " + e.getMessage());
         }
     }
 }

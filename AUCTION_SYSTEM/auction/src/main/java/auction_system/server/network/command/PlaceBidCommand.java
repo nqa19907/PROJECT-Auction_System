@@ -9,14 +9,14 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh đặt giá từ client.
  */
 public class PlaceBidCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(PlaceBidCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
 
     /**
      * Thực thi lệnh đặt giá.
@@ -85,7 +85,7 @@ public class PlaceBidCommand implements Command {
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đặt giá cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đặt giá cho " 
                     + username, e);
             return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

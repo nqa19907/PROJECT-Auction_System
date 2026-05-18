@@ -1,13 +1,14 @@
 package auction_system.server;
 
 import auction_system.server.network.SocketServer;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp chính để khởi chạy ứng dụng máy chủ (Server) cho hệ thống đấu giá.
  */
 public class ServerApp {
-    private static final Logger LOGGER = Logger.getLogger(ServerApp.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
 
     /**
      * Phương thức khởi chạy chính của ứng dụng máy chủ (Server).

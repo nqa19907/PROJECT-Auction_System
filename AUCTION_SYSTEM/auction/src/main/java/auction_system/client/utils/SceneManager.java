@@ -2,19 +2,19 @@ package auction_system.client.utils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp tiện ích quản lý việc chuyển đổi màn hình (Scene) trong hệ thống.
  */
 public final class SceneManager {
-    private static final Logger LOGGER = Logger.getLogger(SceneManager.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SceneManager.class);
 
     // Cố định đường dẫn mặc định tới thư mục FXML của Client
     private static final String FXML_BASE_PATH = "/client/fxml/";
@@ -43,7 +43,7 @@ public final class SceneManager {
      */
     public static void switchScene(Node triggerNode, String fxmlName, double width, double height) {
         if (triggerNode == null) {
-            LOGGER.warning("Không thể chuyển màn hình: Node kích hoạt bị null.");
+            LOGGER.warn("Không thể chuyển màn hình: Node kích hoạt bị null.");
             return;
         }
 
@@ -51,7 +51,7 @@ public final class SceneManager {
             Stage currentStage = (Stage) triggerNode.getScene().getWindow();
             switchScene(currentStage, fxmlName, width, height);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE,
+            LOGGER.error(
                         "Lỗi khi lấy cửa sổ từ Node kích hoạt chuyển cảnh: " + fxmlName, e);
         }
     }
@@ -77,7 +77,7 @@ public final class SceneManager {
     public static void switchScene(Stage currentStage, String fxmlName,
                                     double width, double height) {
         if (currentStage == null) {
-            LOGGER.warning("Không thể chuyển màn hình: Stage bị null.");
+            LOGGER.warn("Không thể chuyển màn hình: Stage bị null.");
             return;
         }
 
@@ -133,7 +133,7 @@ public final class SceneManager {
             LOGGER.info("Đã chuyển màn hình sang " + fxmlName + " thành công.");
             
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Lỗi nghiêm trọng: Không thể nạp file FXML: " + fxmlName, e);
+            LOGGER.error("Lỗi nghiêm trọng: Không thể nạp file FXML: " + fxmlName, e);
         }
     }
 }

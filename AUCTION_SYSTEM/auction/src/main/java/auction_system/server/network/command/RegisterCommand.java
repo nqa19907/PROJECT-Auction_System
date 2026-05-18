@@ -6,14 +6,14 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh đăng ký tài khoản mới.
  */
 public class RegisterCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(RegisterCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegisterCommand.class);
 
     /**
      * Thực thi lệnh đăng ký tài khoản mới.
@@ -64,7 +64,7 @@ public class RegisterCommand implements Command {
             return Protocol.Response.REGISTER_OK.name();
         } catch (Exception e) {
             String username = (parts.length > 1) ? parts[1] : "unknown";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh đăng ký cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng ký cho " 
                     + username, e);
             return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

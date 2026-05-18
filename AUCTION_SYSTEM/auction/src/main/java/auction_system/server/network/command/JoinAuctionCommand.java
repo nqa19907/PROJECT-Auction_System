@@ -5,14 +5,14 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh tham gia một phiên đấu giá.
  */
 public class JoinAuctionCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(JoinAuctionCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JoinAuctionCommand.class);
 
     /**
      * Thực thi lệnh tham gia phiên đấu giá.
@@ -58,7 +58,7 @@ public class JoinAuctionCommand implements Command {
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " 
                     + username, e);
             return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
