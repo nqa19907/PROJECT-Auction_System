@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.shape.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="auction_system.client.controllers.BidHistoryController"
+            styleClass="root-pane"
+
+            stylesheets="@../css/global.css,@../css/auction-hub.css">
+
+    <!-- ═══════════════════════════════════════════
+         TOP BAR
+    ═══════════════════════════════════════════ -->
+    <top>
+        <HBox styleClass="top-bar" alignment="CENTER_LEFT" spacing="16">
+            <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+
+            <Label text="⬅" styleClass="back-btn" onMouseClicked="#goBack"/>
+            <Label text="Lịch sử đấu giá" styleClass="page-title"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox styleClass="live-badge" alignment="CENTER" spacing="6">
+                <Circle fx:id="liveDot" radius="5" styleClass="live-dot"/>
+                <Label text="Đang diễn ra" styleClass="live-label"/>
+            </HBox>
+
+
+
+        </HBox>
+    </top>
+
+    <!-- ═══════════════════════════════════════════
+         CENTER CONTENT
+    ═══════════════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+            <VBox spacing="20" styleClass="content-area">
+                <padding><Insets top="24" right="32" bottom="32" left="32"/></padding>
+
+                <!-- Auction info card -->
+                <HBox styleClass="info-card" alignment="CENTER_LEFT" spacing="16">
+                    <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label fx:id="auctionTitle"
+                               text="Đồng hồ Rolex Submariner Date"
+                               styleClass="auction-title"/>
+                        <Label fx:id="auctionId"
+                               text="Phiên #AUC-2024-0518"
+                               styleClass="auction-subtitle"/>
+                    </VBox>
+                    <VBox alignment="CENTER_RIGHT" spacing="4">
+                        <Label text="Thời gian còn lại" styleClass="metric-label"/>
+                        <Label fx:id="timerLabel" text="14:32" styleClass="timer-value"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Metric cards row -->
+                <HBox spacing="16">
+                    <!-- Current price -->
+                    <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
+                        <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+                        <Label text="Giá hiện tại" styleClass="metric-label"/>
+                        <Label fx:id="currentPrice" text="€15.500" styleClass="metric-value-main"/>
+                        <HBox spacing="4" alignment="CENTER_LEFT">
+                            <Label text="▲" styleClass="change-up-icon"/>
+                            <Label fx:id="priceChange" text="+€500 so với trước" styleClass="change-up"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Starting price -->
+                    <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
+                        <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+                        <Label text="Giá khởi điểm" styleClass="metric-label"/>
+                        <Label fx:id="startPrice" text="€3.500" styleClass="metric-value"/>
+                    </VBox>
+
+                    <!-- Bid count -->
+                    <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
+                        <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+                        <Label text="Số lần trả giá" styleClass="metric-label"/>
+                        <Label fx:id="bidCount" text="6" styleClass="metric-value"/>
+                    </VBox>
+
+                    <!-- Participants -->
+                    <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
+                        <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
+                        <Label text="Người tham gia" styleClass="metric-label"/>
+                        <Label fx:id="participantCount" text="5" styleClass="metric-value"/>
+                    </VBox>
+                </HBox>
+
+                <!-- ── Bid History Line Chart ── -->
+                <VBox styleClass="chart-card" spacing="12">
+                    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+                    <HBox alignment="CENTER_LEFT" spacing="12">
+                        <Label text="Biểu đồ giá theo thời gian" styleClass="section-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <!-- Legend -->
+                        <HBox spacing="16" alignment="CENTER">
+                            <HBox spacing="6" alignment="CENTER">
+                                <Rectangle width="12" height="12" styleClass="legend-dot-blue" arcWidth="3" arcHeight="3"/>
+                                <Label text="Giá trả" styleClass="legend-label"/>
+                            </HBox>
+                            <HBox spacing="6" alignment="CENTER">
+                                <Rectangle width="12" height="12" styleClass="legend-dot-amber" arcWidth="3" arcHeight="3"/>
+                                <Label text="Bước giá" styleClass="legend-label"/>
+                            </HBox>
+                        </HBox>
+                    </HBox>
+
+                    <LineChart fx:id="bidLineChart"
+                               title=""
+                               animated="true"
+                               createSymbols="true"
+                               styleClass="bid-chart"
+                               prefHeight="280">
+                        <xAxis>
+                            <CategoryAxis fx:id="categoryXaxis"
+                                          label="Thời gian"
+                                          styleClass="chart-axis"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis fx:id="numberYaxis"
+                                        label="Giá (€)"
+                                        lowerBound="3000"
+                                        upperBound="17000"
+                                        tickUnit="2000"
+                                        autoRanging="false"
+                                        styleClass="chart-axis"/>
+                        </yAxis>
+                    </LineChart>
+                </VBox>
+
+                <!-- ── Bid History Table ── -->
+                <VBox styleClass="table-card" spacing="0">
+
+                    <!-- Table header -->
+                    <HBox styleClass="table-header" spacing="0">
+                        <padding><Insets top="10" right="16" bottom="10" left="16"/></padding>
+                        <Label text="Thời gian" styleClass="th" prefWidth="110"/>
+                        <Label text="Người đấu giá" styleClass="th" HBox.hgrow="ALWAYS"/>
+                        <Label text="Giá trả (€)" styleClass="th-right" prefWidth="120"/>
+                        <Label text="+/- so trước" styleClass="th-right" prefWidth="120"/>
+                        <Label text="Trạng thái" styleClass="th-right" prefWidth="100"/>
+                    </HBox>
+
+                    <!-- Table rows — populated by controller -->
+                    <TableView fx:id="bidTable"
+                               styleClass="bid-table"
+                               prefHeight="280"
+                               fixedCellSize="44">
+                        <columns>
+                            <TableColumn fx:id="colTime"    text="Thời gian"       prefWidth="110"/>
+                            <TableColumn fx:id="colBidder"  text="Người đấu giá"   prefWidth="200"/>
+                            <TableColumn fx:id="colPrice"   text="Giá trả (€)"     prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
+                            <TableColumn fx:id="colChange"  text="+/- so trước"    prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
+                            <TableColumn fx:id="colStatus"  text="Trạng thái"      prefWidth="100" style="-fx-alignment: CENTER;"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Chưa có lần trả giá nào." styleClass="table-placeholder"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+
+                <!-- ── Place Bid Section ── -->
+                <VBox styleClass="place-bid-card" spacing="14">
+                    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+                    <Label text="Đặt giá của bạn" styleClass="section-title"/>
+
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <Label text="€" styleClass="currency-symbol"/>
+                        <TextField fx:id="bidInput"
+                                   promptText="Nhập số tiền..."
+                                   styleClass="bid-input"
+                                   HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="quickBid100"
+                                text="+€100"
+                                styleClass="quick-btn"
+                                onAction="#quickAdd100"/>
+                        <Button fx:id="quickBid500"
+                                text="+€500"
+                                styleClass="quick-btn"
+                                onAction="#quickAdd500"/>
+                        <Button fx:id="quickBid1000"
+                                text="+€1.000"
+                                styleClass="quick-btn"
+                                onAction="#quickAdd1000"/>
+                    </HBox>
+
+                    <HBox spacing="12" alignment="CENTER_RIGHT">
+                        <Label fx:id="minBidHint"
+                               text="Giá tối thiểu: €16.000"
+                               styleClass="hint-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="placeBidBtn"
+                                text="Đặt giá ngay  →"
+                                styleClass="primary-btn"
+                                onAction="#placeBid"
+                                defaultButton="true"/>
+                    </HBox>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
