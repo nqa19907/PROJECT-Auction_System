@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,8 +35,8 @@ public class CoreBiddingLogicTest {
                 .sellerId("61h23s1")
                 .build();
         seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
-                                    "69420", 69420, 4.69f);
-        
+                "69420", 69420, 4.69f);
+
         auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.startAuction();
     }
@@ -44,23 +45,23 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_ValidAmountSlightlyAboveStartPrice_UpdatesHighestBid() {
         // Arrange: Giá đặt chỉ cao hơn giá khởi điểm một chút (kiểm tra biên)
         double validBidAmount = 2000.1;
-        BidTransaction validBid = new BidTransaction(null, validBidAmount,auction);
-        
+        BidTransaction validBid = new BidTransaction(null, validBidAmount, auction);
+
         // Act: Thực hiện đặt giá
         auction.placeBid(validBid);
 
         // Assert: Xác nhận giao dịch thành công và cập nhật đúng giá cao nhất
         assertEquals(validBidAmount, validBid.getAmount());
-        assertEquals(validBidAmount, auction.getCurrentHighestBid().getAmount(), 
+        assertEquals(validBidAmount, auction.getCurrentHighestBid().getAmount(),
                 "Giá cao nhất của phiên đấu giá phải được cập nhật");
     }
-    
+
     @Test
     void testPlaceBid_ValidAmountSignificantlyHigher_UpdatesHighestBid() {
         // Arrange: Giá đặt cao hơn hẳn giá khởi điểm
         double validBidAmount = 10000;
-        BidTransaction validBid = new BidTransaction(null, validBidAmount,auction);
-        
+        BidTransaction validBid = new BidTransaction(null, validBidAmount, auction);
+
         // Act: Thực hiện đặt giá
         auction.placeBid(validBid);
 
@@ -69,12 +70,37 @@ public class CoreBiddingLogicTest {
         assertEquals(validBidAmount, auction.getCurrentHighestBid().getAmount());
     }
 
-    
+    @Test
+    void testPlaceBid_SecondBidHigherThanFirst_UpdatesHighestBid() {
+        // Arrange
+        auction.placeBid(new BidTransaction(null, 3000, auction));
+
+        // Act
+        auction.placeBid(new BidTransaction(null, 5000, auction));
+
+        // Assert
+        assertEquals(5000, auction.getCurrentHighestBid().getAmount(),
+                "Bid mới cao hơn phải trở thành currentHighestBid");
+    }
+
+    @Test
+    void testPlaceBid_ItemCurrentPrice_UpdatedAfterBid() {
+        // Arrange
+        double bidAmount = 3500.0;
+
+        // Act
+        auction.placeBid(new BidTransaction(null, bidAmount, auction));
+
+        // Assert
+        assertEquals(bidAmount, item.getCurrentPrice(),
+                "Giá hiện tại của item phải bằng giá bid mới nhất");
+    }
+
     @Test
     void testPlaceBid_AmountEqualsStartPrice_ThrowsInvalidBidException() {
         // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (không hợp lệ)
         double invalidBidAmount = 2000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount,auction);
+        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount, auction);
 
         // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
         String actualMessage = assertThrows(InvalidBidException.class, () -> {
@@ -89,7 +115,7 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_AmountLowerThanStartPrice_ThrowsInvalidBidException() {
         // Arrange: Tạo giao dịch với giá tiền THẤP HƠN mức giá khởi điểm (không hợp lệ)
         double invalidBidAmount = 1000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount,auction);
+        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount, auction);
 
         // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
         String actualMessage = assertThrows(InvalidBidException.class, () -> {
@@ -101,13 +127,25 @@ public class CoreBiddingLogicTest {
     }
 
     @Test
+    void testPlaceBid_AuctionNotStarted_ThrowsAuctionClosedException() {
+        // Arrange: Auction mới tạo, chưa start (status = OPEN)
+        Auction openAuction = new Auction(item, seller,
+                LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+
+        // Act & Assert
+        assertThrows(AuctionClosedException.class, () ->
+                        openAuction.placeBid(new BidTransaction(null, 3000, openAuction)),
+                "Đặt giá khi auction chưa start phải ném AuctionClosedException");
+    }
+
+    @Test
     void testPlaceBid_AuctionIsClosed_ThrowsAuctionClosedException() {
         // Arrange: Đóng phiên đấu giá bằng cách ép thời gian kết thúc về quá khứ
         auction.setEndTime(LocalDateTime.MIN);
         auction.endAuction();
 
         // Tạo một giao dịch ảo để tránh lỗi NullPointerException
-        BidTransaction dummyBid = new BidTransaction(null, 3000,auction);
+        BidTransaction dummyBid = new BidTransaction(null, 3000, auction);
 
         // Act & Assert: Kiểm tra việc đặt giá khi phiên đã đóng
         String actualMessage = assertThrows(AuctionClosedException.class, () -> {
@@ -122,14 +160,14 @@ public class CoreBiddingLogicTest {
     void testCalculateWinner_AuctionEndedWithBids_ReturnsHighestBidder() {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
         Bidder expectedWinner = new Bidder("Phạm Việt Hoàng", "pvhgay@gmail.com",
-                                    "123456789", 4000);
-        BidTransaction bid = new BidTransaction(expectedWinner, 2500,auction);
+                "123456789", 4000);
+        BidTransaction bid = new BidTransaction(expectedWinner, 2500, auction);
         auction.placeBid(bid);
 
         // Act: Kết thúc phiên đấu giá
         auction.setEndTime(LocalDateTime.MIN);
         auction.endAuction();
-        
+
         // Assert: Xác định được người thắng phải trùng với người vừa đặt giá
         Bidder actualWinner = auction.calculateWinner();
         assertSame(expectedWinner, actualWinner);
@@ -140,7 +178,7 @@ public class CoreBiddingLogicTest {
         // Arrange & Act: Kết thúc phiên đấu giá mà không có bất kì lượt đặt giá nào
         auction.setEndTime(LocalDateTime.MIN);
         auction.endAuction();
-        
+
         // Assert: Do không có người mua nên người thắng phải là null
         Bidder actualWinner = auction.calculateWinner();
         assertNull(actualWinner, "Không có lượt đặt giá thì người chiến thắng phải là null");
@@ -149,7 +187,7 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_AuctionStillRunning_ThrowsIllegalStateException() {
         // Arrange: Đặt một giá bất kỳ trong khi phiên đấu giá ĐANG CHẠY (chưa kết thúc)
-        BidTransaction bid = new BidTransaction(null, 2500,auction);
+        BidTransaction bid = new BidTransaction(null, 2500, auction);
         auction.placeBid(bid);
 
         // Act & Assert: Cố gắng gọi hàm tính người thắng sớm sẽ ném ra ngoại lệ
@@ -160,4 +198,22 @@ public class CoreBiddingLogicTest {
         String expectedMessage = "Phiên đấu giá chưa kết thúc, chưa thể tìm được người thắng!";
         assertEquals(expectedMessage, actualMessage);
     }
+
+    @Test
+    void testCalculateWinner_MultipleBidders_ReturnsCorrectWinner() {
+        // Arrange
+        Bidder bidder1 = new Bidder("Alice", "alice@mail.com", "pw1", 20000);
+        Bidder bidder2 = new Bidder("Bob", "bob@mail.com", "pw2", 20000);
+        Bidder bidder3 = new Bidder("Charlie", "charlie@mail.com", "pw3", 20000);
+        auction.placeBid(new BidTransaction(bidder1, 2500, auction));
+        auction.placeBid(new BidTransaction(bidder2, 5000, auction));
+        auction.placeBid(new BidTransaction(bidder3, 8000, auction));
+        auction.setEndTime(LocalDateTime.MIN);
+        auction.endAuction();
+
+        // Assert
+        assertSame(bidder3, auction.calculateWinner(),
+                "bidder3 đặt 8000 (cao nhất) phải là người thắng");
+    }
+
 }
