@@ -1,6 +1,6 @@
-package auction_system.server.persistence;
+package auction_system.server.persistence.serialization;
 
-import auction_system.server.exceptions.DatabaseException;
+import auction_system.server.persistence.exceptions.DatabaseException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;

@@ -70,7 +70,7 @@ public class PlaceBidCommand implements Command {
             }
 
             Bidder bidder = (Bidder) currentUser;
-            BidTransaction bid = new BidTransaction(bidder, amount);
+            BidTransaction bid = new BidTransaction(bidder, amount,auction);
 
             // Lớp Auction sẽ tự kiểm tra tính hợp lệ của số tiền và thời gian,
             // nếu sai sẽ ném ra Exception

@@ -1,6 +1,7 @@
-package auction_system.server.persistence;
+package auction_system.server.persistence.serialization;
 
-import auction_system.server.exceptions.DatabaseException;
+import auction_system.server.persistence.exceptions.DatabaseException;
+import auction_system.server.persistence.repositories.Repository;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

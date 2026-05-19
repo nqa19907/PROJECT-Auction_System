@@ -1,5 +1,9 @@
-package auction_system.server.persistence;
+package auction_system.server.persistence.serialization;
 
+import auction_system.server.persistence.repositories.AuctionRepository;
+import auction_system.server.persistence.repositories.BidTransactionRepository;
+import auction_system.server.persistence.repositories.ItemRepository;
+import auction_system.server.persistence.repositories.UserRepository;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;

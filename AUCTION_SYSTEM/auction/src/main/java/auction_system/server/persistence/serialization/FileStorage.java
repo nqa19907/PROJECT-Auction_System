@@ -1,4 +1,4 @@
-package auction_system.server.persistence;
+package auction_system.server.persistence.serialization;
 
 import java.io.Serializable;
 import java.util.Map;
