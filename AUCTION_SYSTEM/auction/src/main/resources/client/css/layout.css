@@ -71,7 +71,7 @@
     -fx-background-color: transparent;
     -fx-background-radius: 50;                 /* Radius pill: 50 */
     -fx-cursor: hand;
-    -fx-padding: 10px 10px;         /* Tương đương margin: 5px 0; */
+    -fx-padding: 10 20;                        /* Tăng padding hai bên để bù đắp cho phần bo góc */
 }
 
 .category-option .label {
@@ -82,8 +82,23 @@
 }
 
 .category-option:hover {
-    -fx-background-color: -color-primary-bg-hover;                         /* Chuyển mã màu tĩnh sang biến semantic */
-    -fx-effect: dropshadow(three-pass-box, -color-shadow-lg, 10, 0, 0, 2); /* Hiệu ứng đổ bóng đen nổi lên */
+    -fx-background-color: rgba(0, 0, 0, 0.05); /* Lớp phủ đen trong suốt 5% để tệp với mọi loại màu nền */
+}
+
+/* Trạng thái active sẽ nổi bật hơn và giữ nguyên khi rê chuột */
+.category-option.active, .category-option.active:hover {
+    -fx-background-color: -color-orange-150; /* Nền cam đậm hơn cho trạng thái active */
+}
+
+/* Đổi màu chữ tối hơn và in đậm khi active */
+.category-option.active .label {
+    -fx-text-fill: -color-orange-800;
+    -fx-font-weight: bold;
+}
+
+/* Đổi màu icon tối hơn khi active */
+.category-option.active Region {
+    -fx-background-color: -color-orange-800;
 }
 
 /* --- THẺ SẢN PHẨM (PRODUCT CARD) --- */

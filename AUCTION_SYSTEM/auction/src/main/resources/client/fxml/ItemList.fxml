@@ -12,7 +12,7 @@
         <VBox id="scrollContentWrapper">
             <children>
                 <!-- Chữ Trang chủ -->
-                <Label styleClass="page-title" text="Tất cả">
+                <Label fx:id="categoryTitle" styleClass="page-title" text="Tất cả">
                     <VBox.margin>
                         <Insets bottom="10.0" />
                     </VBox.margin>

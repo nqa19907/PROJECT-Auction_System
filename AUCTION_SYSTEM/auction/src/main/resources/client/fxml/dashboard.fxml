@@ -43,51 +43,51 @@
     </top>
 
     <center>
-        <StackPane fx:id="contentArea" styleClass="main-content-area" />
+      <StackPane fx:id="contentArea" styleClass="main-content-area" />
     </center>
     <left>
-        <VBox id="categorySidebar" styleClass="category-sidebar" BorderPane.alignment="CENTER">
+        <VBox id="categorySidebar" fx:id="categorySidebar" styleClass="category-sidebar" BorderPane.alignment="CENTER">
             <children>
                 <Label styleClass="text-header-secondary" text="DANH MỤC SẢN PHẨM">
                     <VBox.margin>
                         <Insets bottom="8.0" top="16.0" />
                     </VBox.margin>
                 </Label>
-                <HBox id="categoryAll" alignment="CENTER_LEFT" onMouseClicked="#handleShowItems" spacing="15.0" styleClass="category-option">
+                <HBox id="categoryAll" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
                     <children>
                         <Region styleClass="icon-category" />
                         <Label styleClass="text-body" text="Tất cả" />
                     </children>
                 </HBox>
-                <HBox id="categoryArt" alignment="CENTER_LEFT" onMouseClicked="#handleShowItems" spacing="15.0" styleClass="category-option">
+                <HBox id="categoryArt" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
                     <children>
                         <Region styleClass="icon-art" />
                         <Label styleClass="text-body" text="Nghệ thuật" />
                     </children>
                 </HBox>
-                <HBox id="categoryElectronic" alignment="CENTER_LEFT" onMouseClicked="#handleShowItems" spacing="15.0" styleClass="category-option">
+                <HBox id="categoryElectronic" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
                     <children>
                         <Region styleClass="icon-electronic" />
                         <Label styleClass="text-body" text="Đồ điện tử" />
                     </children>
                 </HBox>
-                <HBox id="categoryVehicle" alignment="CENTER_LEFT" onMouseClicked="#handleShowItems" spacing="15.0" styleClass="category-option">
+                <HBox id="categoryVehicle" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
                     <children>
                         <Region styleClass="icon-vehicle" />
                         <Label styleClass="text-body" text="Phương tiện giao thông" />
                     </children>
                 </HBox>
-                <Region styleClass="sidebar-divider">
-                    <VBox.margin>
-                        <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
-                    </VBox.margin>
-                </Region>
-                <HBox id="categoryPublish" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
-                    <children>
-                        <Region styleClass="icon-add" />
-                        <Label styleClass="text-body" text="Đăng bán" />
-                    </children>
-                </HBox>
+            <Region styleClass="sidebar-divider">
+               <VBox.margin>
+                  <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+               </VBox.margin>
+            </Region>
+            <HBox id="publishItem" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
+               <children>
+                  <Region styleClass="icon-add" />
+                  <Label styleClass="text-body" text="Đăng bán" />
+               </children>
+            </HBox>
             </children>
         </VBox>
     </left>
