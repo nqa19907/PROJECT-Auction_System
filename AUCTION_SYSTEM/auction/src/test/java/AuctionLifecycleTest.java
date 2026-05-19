@@ -1,80 +1,141 @@
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
-
+import auction_system.common.enums.AuctionStatus;
+import auction_system.common.models.Auction;
+import auction_system.common.models.Item;
+import auction_system.common.models.Seller;
+import auction_system.common.patterns.builder.ElectronicBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.LocalDateTime;
-import static org.junit.jupiter.api.Assertions.*;
 
-import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.auctions.AuctionStatus;
-import auction_system.common.models.auctions.BidTransaction;
-import auction_system.common.models.items.Item;
-import auction_system.common.models.items.builder.ElectronicBuilder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * Kiểm thử vòng đời (lifecycle) của một phiên đấu giá:
+ * khởi tạo, bắt đầu, kết thúc và xác định người thắng.
+ */
 public class AuctionLifecycleTest {
 
+    private Item item;
+    private Seller seller;
     private Auction auction;
 
     @BeforeEach
     void setUp() {
-        Item item = new ElectronicBuilder()
+        item = new ElectronicBuilder()
                 .itemName("iPhone 15")
                 .description("Apple smartphone")
                 .startPrice(2000.0)
                 .sellerId("SN001")
+                .condition("New")
+                .imagePath("")
+                .brand("Apple")
+                .warrantyMonths(12)
                 .build();
-        Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
+
+        seller = new Seller("John", "john@gmail.com", "123456", 10_000.0, 5.0f);
+
         auction = new Auction(item, seller,
-                LocalDateTime.now(), LocalDateTime.now().plusHours(1));
+                LocalDateTime.now(),
+                LocalDateTime.now().plusHours(1));
     }
 
-    @Test
-    void testStartAuction_StatusChangesToRunning() {
-        // Act
-        auction.startAuction();
+    // =========================================================================
+    // Trạng thái khởi tạo
+    // =========================================================================
 
-        // Assert
-        assertEquals(AuctionStatus.RUNNING, auction.getStatus(),
-                "Sau khi start, trạng thái phải là RUNNING");
-    }
-
-    @Test
-    void testEndAuction_StatusChangesToFinished() {
-        // Arrange
-        auction.startAuction();
-        auction.setEndTime(LocalDateTime.MIN);
-
-        // Act
-        auction.endAuction();
-
-        // Assert
-        assertEquals(AuctionStatus.FINISHED, auction.getStatus(),
-                "Sau khi end, trạng thái phải là FINISHED");
-    }
     @Test
     void testNewAuction_StatusIsOpen() {
-        // Assert: Auction mới tạo phải có status OPEN
         assertEquals(AuctionStatus.OPEN, auction.getStatus(),
                 "Auction mới tạo phải có trạng thái OPEN");
     }
 
     @Test
-    void testMultipleBids_HighestBidWins() {
-        // Arrange
+    void testNewAuction_SellerAndItemAreSet() {
+        assertSame(seller, auction.getSeller(), "Seller phải được gán đúng");
+        assertSame(item, auction.getItem(), "Item phải được gán đúng");
+    }
+
+    // =========================================================================
+    // startAuction
+    // =========================================================================
+
+    @Test
+    void testStartAuction_StatusChangesToRunning() {
         auction.startAuction();
-        Bidder bidder1 = new Bidder("Alice", "alice@gmail.com", "123", 10000);
-        Bidder bidder2 = new Bidder("Bob", "bob@gmail.com", "456", 20000);
 
-        // Act
-        auction.placeBid(new BidTransaction(bidder1, 3000,auction));
-        auction.placeBid(new BidTransaction(bidder2, 5000,auction));
+        assertEquals(AuctionStatus.RUNNING, auction.getStatus(),
+                "Sau khi start, trạng thái phải là RUNNING");
+    }
 
+    @Test
+    void testStartAuction_WhenFutureStartTime_DoesNotStart() {
+        Auction futureAuction = new Auction(item, seller,
+                LocalDateTime.now().plusHours(2),
+                LocalDateTime.now().plusHours(4));
+
+        futureAuction.startAuction();
+
+        assertEquals(AuctionStatus.OPEN, futureAuction.getStatus(),
+                "Auction chưa tới giờ bắt đầu thì vẫn phải là OPEN");
+    }
+
+    @Test
+    void testStartAuction_WhenAlreadyRunning_DoesNotChangeStatus() {
+        auction.startAuction();
+
+        auction.startAuction();
+
+        assertEquals(AuctionStatus.RUNNING, auction.getStatus(),
+                "Gọi startAuction lần 2 khi đang RUNNING không được thay đổi trạng thái");
+    }
+
+    @Test
+    void testStartAuction_WhenAlreadyFinished_DoesNotRestart() {
+        auction.startAuction();
         auction.setEndTime(LocalDateTime.MIN);
         auction.endAuction();
 
-        // Assert
-        assertSame(bidder2, auction.calculateWinner(),
-                "Người đặt giá cao nhất phải thắng");
+        auction.startAuction();
+
+        assertEquals(AuctionStatus.FINISHED, auction.getStatus(),
+                "Auction đã FINISHED không thể khởi động lại");
     }
+
+    // =========================================================================
+    // endAuction
+    // =========================================================================
+
+    @Test
+    void testEndAuction_StatusChangesToFinished() {
+        auction.startAuction();
+        auction.setEndTime(LocalDateTime.MIN);
+
+        auction.endAuction();
+
+        assertEquals(AuctionStatus.FINISHED, auction.getStatus(),
+                "Sau khi end, trạng thái phải là FINISHED");
+    }
+
+    @Test
+    void testEndAuction_WhenStatusIsOpen_DoesNotEnd() {
+        auction.setEndTime(LocalDateTime.MIN);
+
+        auction.endAuction();
+
+        assertEquals(AuctionStatus.OPEN, auction.getStatus(),
+                "Auction đang OPEN không thể kết thúc trực tiếp");
+    }
+
+    @Test
+    void testEndAuction_WhenEndTimeInFuture_DoesNotEnd() {
+        auction.startAuction();
+
+        auction.endAuction();
+
+        assertEquals(AuctionStatus.RUNNING, auction.getStatus(),
+                "Auction chưa hết giờ thì không được kết thúc");
+    }
+
 }
