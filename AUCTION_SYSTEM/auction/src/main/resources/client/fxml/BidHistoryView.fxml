@@ -67,10 +67,10 @@
                     <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
                         <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
                         <Label text="Giá hiện tại" styleClass="metric-label"/>
-                        <Label fx:id="currentPrice" text="€15.500" styleClass="metric-value-main"/>
+                        <Label fx:id="currentPrice" text="15.500 VNĐ" styleClass="metric-value-main"/>
                         <HBox spacing="4" alignment="CENTER_LEFT">
                             <Label text="▲" styleClass="change-up-icon"/>
-                            <Label fx:id="priceChange" text="+€500 so với trước" styleClass="change-up"/>
+                            <Label fx:id="priceChange" text="500 VNĐ so với trước" styleClass="change-up"/>
                         </HBox>
                     </VBox>
 
@@ -78,7 +78,7 @@
                     <VBox styleClass="metric-card" HBox.hgrow="ALWAYS" spacing="4">
                         <padding><Insets top="14" right="16" bottom="14" left="16"/></padding>
                         <Label text="Giá khởi điểm" styleClass="metric-label"/>
-                        <Label fx:id="startPrice" text="€3.500" styleClass="metric-value"/>
+                        <Label fx:id="startPrice" text="3.500 VNĐ" styleClass="metric-value"/>
                     </VBox>
 
                     <!-- Bid count -->
@@ -129,10 +129,10 @@
                         </xAxis>
                         <yAxis>
                             <NumberAxis fx:id="numberYaxis"
-                                        label="Giá (€)"
-                                        lowerBound="3000"
-                                        upperBound="17000"
-                                        tickUnit="2000"
+                                        label="Giá (VNĐ)"
+                                        lowerBound="3000000"
+                                        upperBound="17000000"
+                                        tickUnit="2000000"
                                         autoRanging="false"
                                         styleClass="chart-axis"/>
                         </yAxis>
@@ -147,7 +147,7 @@
                         <padding><Insets top="10" right="16" bottom="10" left="16"/></padding>
                         <Label text="Thời gian" styleClass="th" prefWidth="110"/>
                         <Label text="Người đấu giá" styleClass="th" HBox.hgrow="ALWAYS"/>
-                        <Label text="Giá trả (€)" styleClass="th-right" prefWidth="120"/>
+                        <Label text="Giá trả (VNĐ)" styleClass="th-right" prefWidth="120"/>
                         <Label text="+/- so trước" styleClass="th-right" prefWidth="120"/>
                         <Label text="Trạng thái" styleClass="th-right" prefWidth="100"/>
                     </HBox>
@@ -160,7 +160,7 @@
                         <columns>
                             <TableColumn fx:id="colTime"    text="Thời gian"       prefWidth="110"/>
                             <TableColumn fx:id="colBidder"  text="Người đấu giá"   prefWidth="200"/>
-                            <TableColumn fx:id="colPrice"   text="Giá trả (€)"     prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
+                            <TableColumn fx:id="colPrice"   text="Giá trả (VNĐ)"     prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
                             <TableColumn fx:id="colChange"  text="+/- so trước"    prefWidth="120" style="-fx-alignment: CENTER_RIGHT;"/>
                             <TableColumn fx:id="colStatus"  text="Trạng thái"      prefWidth="100" style="-fx-alignment: CENTER;"/>
                         </columns>
@@ -176,28 +176,28 @@
                     <Label text="Đặt giá của bạn" styleClass="section-title"/>
 
                     <HBox spacing="12" alignment="CENTER_LEFT">
-                        <Label text="€" styleClass="currency-symbol"/>
+                        <Label text="VNĐ" styleClass="currency-symbol"/>
                         <TextField fx:id="bidInput"
                                    promptText="Nhập số tiền..."
                                    styleClass="bid-input"
                                    HBox.hgrow="ALWAYS"/>
                         <Button fx:id="quickBid100"
-                                text="+€100"
+                                text="+100.000 VNĐ"
                                 styleClass="quick-btn"
                                 onAction="#quickAdd100"/>
                         <Button fx:id="quickBid500"
-                                text="+€500"
+                                text="+500.000 VNĐ"
                                 styleClass="quick-btn"
                                 onAction="#quickAdd500"/>
                         <Button fx:id="quickBid1000"
-                                text="+€1.000"
+                                text="+1.000 VNĐ"
                                 styleClass="quick-btn"
                                 onAction="#quickAdd1000"/>
                     </HBox>
 
                     <HBox spacing="12" alignment="CENTER_RIGHT">
                         <Label fx:id="minBidHint"
-                               text="Giá tối thiểu: €16.000"
+                               text="Giá tối thiểu: 160.000 VNĐ"
                                styleClass="hint-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Button fx:id="placeBidBtn"

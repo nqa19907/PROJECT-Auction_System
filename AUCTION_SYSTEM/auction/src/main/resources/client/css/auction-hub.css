@@ -424,3 +424,10 @@
     -fx-pref-height: 0;
     -fx-max-height: 0;
 }
+
+/* Thu nhỏ kích cỡ đơn vị VNĐ */
+.root-pane .currency-symbol {
+    -fx-font-size: 16px;   /* giảm từ 22px */
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4860B;
+}
