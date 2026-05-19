@@ -2,6 +2,7 @@ package auction_system.client.controllers;
 
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.SceneManager;
+import auction_system.common.constants.AppConstants;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -9,7 +10,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +28,9 @@ public class DashboardController {
 
     @FXML
     private StackPane contentArea;
+
+    @FXML
+    private VBox categorySidebar;
 
     /**
      * Khởi tạo màn hình Dashboard.
@@ -66,6 +72,9 @@ public class DashboardController {
 
     @FXML
     private void handlePublishItem() {
+        // Đánh dấu mục "Đăng bán" trên sidebar là đang active
+        setActiveSidebarItem("publishItem");
+
         LOGGER.info("Chuyển sang giao diện đăng bán");
         try {
             Node view = FXMLLoader.load(
@@ -78,15 +87,73 @@ public class DashboardController {
     }
 
     @FXML
+    private void handleCategoryFilter(MouseEvent event) {
+        Node source = (Node) event.getSource();
+        String id = source.getId();
+        
+        String category = AppConstants.CATEGORY_ALL;
+        if (id != null) {
+            switch (id) {
+                case AppConstants.UI_ID_CATEGORY_ART:
+                    category = AppConstants.CATEGORY_ART;
+                    break;
+                case AppConstants.UI_ID_CATEGORY_ELECTRONIC:
+                    category = AppConstants.CATEGORY_ELECTRONIC;
+                    break;
+                case AppConstants.UI_ID_CATEGORY_VEHICLE:
+                    category = AppConstants.CATEGORY_VEHICLE;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        setActiveSidebarItem(id);
+        loadItemList(category);
+    }
+
+    @FXML
     private void handleShowItems() {
-        LOGGER.info("Chuyển sang giao diện danh sách vật phẩm");
+        setActiveSidebarItem(AppConstants.UI_ID_CATEGORY_ALL);
+        loadItemList(AppConstants.CATEGORY_ALL);
+    }
+
+    private void loadItemList(String category) {
+        LOGGER.info("Chuyển sang giao diện danh sách, lọc theo danh mục: " + category);
         try {
-            Node view = FXMLLoader.load(
-                    getClass().getResource("/client/fxml/ItemList.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/client/fxml/ItemList.fxml"));
+            Node view = loader.load();
+
+            ItemListController controller = loader.getController();
+            controller.setFilterCategory(category);
+
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Lỗi khi tải giao diện ItemList.fxml", e);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái "active" cho các nút trên Sidebar.
+     * Dùng để highlight mục hiện tại đang được chọn.
+     *
+     * @param activeId ID của component cần được highlight.
+     */
+    private void setActiveSidebarItem(String activeId) {
+        if (categorySidebar == null || activeId == null) {
+            return;
+        }
+        
+        // Duyệt qua tất cả thẻ, xóa tất cả trạng thái active của các thẻ
+        // và chỉ đặt active ở thẻ vừa chọn.
+        for (Node node : categorySidebar.getChildren()) {
+            if (node.getStyleClass().contains("category-option")) {
+                node.getStyleClass().remove("active");
+                if (activeId.equals(node.getId())) {
+                    node.getStyleClass().add("active");
+                }
+            }
         }
     }
 }

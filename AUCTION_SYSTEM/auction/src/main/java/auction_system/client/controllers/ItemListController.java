@@ -1,7 +1,10 @@
 package auction_system.client.controllers;
 
 import auction_system.client.services.AuctionService;
+import auction_system.common.constants.AppConstants;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +23,10 @@ public class ItemListController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemListController.class);
     
     @FXML private FlowPane productsGrid;
+    @FXML private Label categoryTitle;
+
+    private List<String[]> allAuctions = new ArrayList<>();
+    private String filterCategory = AppConstants.CATEGORY_ALL;
 
     /**
      * Khởi tạo giao diện và lấy dữ liệu phiên đấu giá.
@@ -38,24 +45,18 @@ public class ItemListController {
         AuctionService.getInstance().fetchAuctionList(auctionList -> {
             // Bọc trong Platform.runLater để đảm bảo việc vẽ giao diện chạy trên luồng của JavaFX
             Platform.runLater(() -> {
-                if (productsGrid != null) {
-                    productsGrid.getChildren().clear();
-                }
-
-                if (auctionList.isEmpty()) {
-                    Label emptyLabel = new Label("Hiện không có phiên đấu giá nào.");
-                    productsGrid.getChildren().add(emptyLabel);
-                    return;
-                }
-                
-                for (String[] parts : auctionList) {
-                    createProductCard(parts);
-                }
+                this.allAuctions = auctionList;
+                renderGrid();
             });
         });
     }
 
     private void createProductCard(String[] parts) {
+        // Kiểm tra an toàn: Đảm bảo mảng có đủ ít nhất 5 trường dữ liệu cơ bản
+        if (parts == null || parts.length < 5) {
+            LOGGER.warn("Dữ liệu sản phẩm không hợp lệ: thiếu trường thông tin.");
+            return;
+        }
         try {
             // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
@@ -80,9 +81,7 @@ public class ItemListController {
                 auctionId,
                 itemName,
                 currentPrice,
-                (selectedItemId) -> {
-                    navigateToAuctionDetail(selectedItemId);
-                }
+                this::navigateToAuctionDetail
             );
 
             // 5. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
@@ -112,6 +111,64 @@ public class ItemListController {
         } catch (Exception e) {
             LOGGER.error(
                 "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
+        }
+    }
+
+    /**
+     * Thiết lập danh mục lọc và hiển thị lại lưới sản phẩm.
+     *
+     * @param category Tên danh mục cần lọc (VD: Art, Electronic...).
+     */
+    public void setFilterCategory(String category) {
+        this.filterCategory = category;
+
+        // Cập nhật dòng text tiêu đề phía trên danh sách sản phẩm
+        if (categoryTitle != null) {
+            switch (category) {
+                case AppConstants.CATEGORY_ART:
+                    categoryTitle.setText(AppConstants.TITLE_ART);
+                    break;
+                case AppConstants.CATEGORY_ELECTRONIC:
+                    categoryTitle.setText(AppConstants.TITLE_ELECTRONIC);
+                    break;
+                case AppConstants.CATEGORY_VEHICLE:
+                    categoryTitle.setText(AppConstants.TITLE_VEHICLE);
+                    break;
+                default:
+                    categoryTitle.setText(AppConstants.TITLE_ALL);
+                    break;
+            }
+        }
+
+        // Nếu dữ liệu đã tải về xong mới vẽ lại
+        if (!allAuctions.isEmpty()) {
+            renderGrid();
+        }
+    }
+
+    private void renderGrid() {
+        if (productsGrid == null) {
+            return;
+        }
+        productsGrid.getChildren().clear(); // Dọn dẹp lưới hiển thị cũ
+
+        boolean hasItems = false;
+        for (String[] parts : allAuctions) {
+            // Tên danh mục nãy ta nối trên Server giờ nó nằm ở vị trí số 5 (index = 5)
+            String itemCategory = (parts.length > 5) ? parts[5] : AppConstants.CATEGORY_ALL;
+
+            // So sánh, nếu chữ khớp (hoặc đang chọn tất cả) thì mới vẽ
+            if (AppConstants.CATEGORY_ALL.equals(filterCategory)
+                || filterCategory.equalsIgnoreCase(itemCategory)) {
+
+                createProductCard(parts);
+                hasItems = true;
+            }
+        }
+
+        if (!hasItems) {
+            productsGrid.getChildren().add(
+                new Label("Không có phiên đấu giá nào thuộc danh mục này."));
         }
     }
 }
