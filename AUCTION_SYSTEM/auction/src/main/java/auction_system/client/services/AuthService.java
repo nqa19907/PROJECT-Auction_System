@@ -23,6 +23,8 @@ public final class AuthService {
             Protocol.Response.LOGIN_OK.name(), this::handleLoginResponse);
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.LOGIN_FAIL.name(), this::handleLoginResponse);
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.LOGOUT_OK.name(), this::handleLogoutResponse);
     }
 
     public static AuthService getInstance() {
@@ -81,6 +83,41 @@ public final class AuthService {
         }
 
         // Giải phóng callback sau khi dùng xong tránh kẹt bộ nhớ
+        currentCallback = null;
+    }
+
+    /**
+     * Xử lý gửi gói tin đăng xuất từ mạng.
+     *
+     * @param callback Hàm phản hồi sau khi nhận kết quả từ server.
+     */
+    public void logout(AuthCallback callback) {
+        this.currentCallback = callback;
+        String request = Protocol.Command.LOGOUT.name();
+
+        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (!sent) {
+            if (this.currentCallback != null) {
+                this.currentCallback.onResult(new LoginResult(false, "Mất kết nối tới máy chủ!"));
+                this.currentCallback = null;
+            }
+        }
+    }
+
+    private void handleLogoutResponse(String response) {
+        if (currentCallback == null) {
+            return;
+        }
+
+        LOGGER.info("AuthService xử lý phản hồi đăng xuất: " + response);
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        String cmd = parts[0];
+
+        if (Protocol.Response.LOGOUT_OK.name().equals(cmd)) {
+            currentCallback.onResult(new LoginResult(true, null));
+        }
+
+        // Giải phóng callback
         currentCallback = null;
     }
 }

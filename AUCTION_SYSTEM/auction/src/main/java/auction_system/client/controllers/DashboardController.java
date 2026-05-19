@@ -1,7 +1,7 @@
 package auction_system.client.controllers;
 
+import auction_system.client.services.AuthService;
 import auction_system.client.utils.SceneManager;
-import auction_system.server.core.AuctionManager;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -46,10 +46,22 @@ public class DashboardController {
 
     @FXML
     private void handleSignOut(ActionEvent event) {
-        LOGGER.info("Thực hiện đăng xuất: Đóng Dashboard và quay về màn hình Đăng nhập.");
-        // Đóng màn hình hiện tại và quay về màn hình Login với kích thước mặc định (900x700)
-        SceneManager.switchScene(btnSignOut, "Login.fxml", 900, 700);
-        AuctionManager.getInstance().userLoggedOut(null);
+        LOGGER.info("Thực hiện đăng xuất: Gọi service để logout khỏi Server...");
+
+        // Gọi AuthService để gửi lệnh LOGOUT lên server
+        AuthService.getInstance().logout(result -> {
+            Platform.runLater(() -> {
+                if (result.isSuccess()) {
+                    LOGGER.info(
+                        "Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
+                } else {
+                    LOGGER.warn(
+                        "Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
+                }
+                // Luôn chuyển người dùng về màn hình đăng nhập dù kết quả trả về ra sao
+                SceneManager.switchScene(btnSignOut, "Login.fxml", 900, 700);
+            });
+        });
     }
 
     @FXML
@@ -72,26 +84,6 @@ public class DashboardController {
             Node view = FXMLLoader.load(
                     getClass().getResource("/client/fxml/ItemList.fxml")
             );
-            contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Mở BidHistory theo auctionId cụ thể.
-     *
-     * @param auctionId mã phiên đấu giá
-     */
-    public void openBidHistory(final String auctionId) {
-        LOGGER.info("Chuyển sang BidHistory theo auctionId: " + auctionId);
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/client/fxml/BidHistoryView.fxml")
-            );
-            Node view = loader.load();
-            BidHistoryController controller = loader.getController();
-            controller.initAuction(auctionId);
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             e.printStackTrace();

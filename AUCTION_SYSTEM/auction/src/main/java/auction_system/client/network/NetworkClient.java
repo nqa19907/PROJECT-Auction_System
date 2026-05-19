@@ -31,7 +31,7 @@ public class NetworkClient {
     
     // Callback để đẩy dữ liệu cho Controller (Giao diện)
     private final Map<String, CopyOnWriteArrayList<Consumer<String>>>
-        messageHandlers = new ConcurrentHashMap<>(); 
+        messageHandlers = new ConcurrentHashMap<>();
     
     private NetworkClient() {
 
