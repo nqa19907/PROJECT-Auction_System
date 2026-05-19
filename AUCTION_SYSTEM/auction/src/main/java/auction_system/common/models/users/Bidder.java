@@ -46,7 +46,7 @@ public class Bidder extends Participant {
         if (auction == null) {
             throw new InvalidBidException("Phiên đấu giá không tồn tại");
         }
-        BidTransaction bid = new BidTransaction(this, amount);
+        BidTransaction bid = new BidTransaction(this, amount, auction);
         auction.placeBid(bid);
     }
 

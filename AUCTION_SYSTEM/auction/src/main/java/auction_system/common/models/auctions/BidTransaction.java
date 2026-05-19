@@ -10,18 +10,21 @@ public class BidTransaction extends Entity {
     private final Bidder bidder;
     private final double amount;
     private final LocalDateTime timestamp;
+    private final String auctionId;
 
     /**
      * Khởi tạo một giao dịch đặt giá mới.
      *
      * @param bidder Người đặt giá.
      * @param amount Số tiền đặt giá.
+     * @param auction Phiên mà nó thuộc về.
      */
-    public BidTransaction(Bidder bidder, double amount) {
+    public BidTransaction(Bidder bidder, double amount, Auction auction) {
         super(); // Tự động tạo ID
         this.bidder = bidder;
         this.amount = amount;
         this.timestamp = LocalDateTime.now();
+        this.auctionId = auction.getId();
     }
 
     public Bidder getBidder() {
@@ -34,5 +37,9 @@ public class BidTransaction extends Entity {
 
     public LocalDateTime getTimestamp() {
         return timestamp;
+    }
+    
+    public String getAuctionId() {
+        return auctionId;
     }
 }

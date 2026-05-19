@@ -16,6 +16,12 @@ public class Vehicle extends Item {
 
     public Vehicle(String itemName, String description, Double startPrice, String sellerId) {
         super(itemName, description, startPrice, sellerId);
+        this.category = "VEHICLE";
+    }
+
+    @Override
+    public String getCategory() {
+        return "VEHICLE";
     }
 
 }

@@ -1,6 +1,7 @@
 package auction_system.client.controllers;
 
 import auction_system.client.utils.SceneManager;
+import auction_system.server.core.AuctionManager;
 import java.io.IOException;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -33,6 +34,7 @@ public class DashboardController {
         LOGGER.info("Thực hiện đăng xuất: Đóng Dashboard và quay về màn hình Đăng nhập.");
         // Đóng màn hình hiện tại và quay về màn hình Login với kích thước mặc định (900x700)
         SceneManager.switchScene(btnSignOut, "Login.fxml", 900, 700);
+        AuctionManager.getInstance().userLoggedOut(null);
     }
 
     @FXML
