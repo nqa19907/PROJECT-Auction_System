@@ -47,6 +47,14 @@ public class LoginController {
     }
 
     /**
+     * Focus vào ô mật khẩu khi nhấn Enter nếu đang ở hộp Email.
+     */
+    @FXML
+    private void handleEmailEnter() {
+        passwordField.requestFocus();
+    }
+
+    /**
      * Hàm xử lý đăng nhập.
      *
      * @param event Sự kiện ActionEvent khi nhấn nút.
@@ -80,7 +88,7 @@ public class LoginController {
                 
                 if (result.isSuccess()) {
                     LOGGER.info("Đăng nhập thành công, điều hướng bằng SceneManager.");
-                    SceneManager.switchScene(loginButton, "Dashboard.fxml", 1200, 800);
+                    SceneManager.switchScene(loginButton, "Dashboard.fxml");
                 } else {
                     showError(result.getErrorMessage());
                 }

@@ -28,6 +28,12 @@ public class ItemListController {
     public void initialize() {
         LOGGER.info("Đang khởi tạo màn hình Danh sách đấu giá...");
 
+        // Cài đặt khoảng cách (spacing) giữa các thẻ sản phẩm trong FlowPane
+        if (productsGrid != null) {
+            productsGrid.setHgap(12); // Khoảng cách ngang (24px)
+            productsGrid.setVgap(12); // Khoảng cách dọc (24px)
+        }
+
         // Gọi Service, cung cấp một hàm Callback để tự động xử lý khi có dữ liệu trả về
         AuctionService.getInstance().fetchAuctionList(auctionList -> {
             // Bọc trong Platform.runLater để đảm bảo việc vẽ giao diện chạy trên luồng của JavaFX
@@ -53,7 +59,7 @@ public class ItemListController {
         try {
             // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/client/fxml/ProductCard.fxml"));
+                    getClass().getResource("/client/fxml/components/ProductCard.fxml"));
             VBox card = loader.load();
 
             // 2. Lấy controller của thẻ vừa nạp

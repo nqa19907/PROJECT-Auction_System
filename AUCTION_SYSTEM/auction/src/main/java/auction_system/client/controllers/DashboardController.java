@@ -3,12 +3,14 @@ package auction_system.client.controllers;
 import auction_system.client.utils.SceneManager;
 import auction_system.server.core.AuctionManager;
 import java.io.IOException;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +26,20 @@ public class DashboardController {
     @FXML
     private StackPane contentArea;
 
+    /**
+     * Khởi tạo màn hình Dashboard.
+     * Mặt định phóng to tối đa cửa sổ.
+     */
     @FXML
     public void initialize() {
+        // Đợi giao diện được gắn vào Scene xong thì lấy Stage hiện tại và phóng to (maximize)
+        Platform.runLater(() -> {
+            Stage stage = (Stage) contentArea.getScene().getWindow();
+            if (stage != null) {
+                stage.setMaximized(true);
+            }
+        });
+
         // Tự động load giao diện trang chủ (dashboardContent) ngay khi mở ứng dụng
         handleShowItems();
     }
