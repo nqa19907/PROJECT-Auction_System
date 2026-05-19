@@ -143,6 +143,10 @@ public class BidHistoryController implements Initializable {
     public void initialize(final URL url, final ResourceBundle rb) {
         setupTable();
         setupChart();
+
+        setupNetworkHandlers();
+        joinAuctionRoom();
+
         loadSampleData();
         startLiveDotAnimation();
         startCountdown();
@@ -300,7 +304,6 @@ public class BidHistoryController implements Initializable {
         double change = amount - lastPrice;
         lastPrice = amount;
         totalBids++;
-
         String timeStr = LocalTime.now().format(timeFmt);
         tableData.add(0, new BidRow(timeStr, "Bạn", amount, change, "Dẫn đầu"));
         priceSeries.getData().add(new XYChart.Data<>(timeStr, amount));
@@ -447,4 +450,29 @@ public class BidHistoryController implements Initializable {
             return status.get();
         }
     }
+
+    /**
+     * Đăng ký các handler mạng để nhận dữ liệu realtime
+     * từ server thông qua socket.
+     *
+     * <p>Các handler này dùng để xử lý những message như:
+     * UPDATE_PRICE, BID_OK, BID_FAIL...
+     * Khi server gửi dữ liệu, controller sẽ tự động cập nhật
+     * giao diện như bảng lịch sử và biểu đồ giá.</p>
+     */
+    private void setupNetworkHandlers() {
+
+    }
+
+    /**
+     * Gửi yêu cầu tham gia phòng đấu giá hiện tại tới server.
+     *
+     * <p>Sau khi tham gia phòng đấu giá, client sẽ nhận được
+     * các cập nhật realtime liên quan đến phiên đấu giá này,
+     * ví dụ như thay đổi giá hoặc trạng thái phiên.</p>
+     */
+    private void joinAuctionRoom() {
+
+    }
+
 }
