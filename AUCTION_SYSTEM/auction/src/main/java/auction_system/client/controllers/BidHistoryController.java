@@ -276,6 +276,19 @@ public class BidHistoryController implements Initializable {
         minBidHint.setText("Giá tối thiểu: " + formatVnd((long) lastPrice + 100000));
     }
 
+    /**
+     * Cập nhật giới hạn trục Y của biểu đồ nếu giá vượt mức hiện tại.
+     *
+     * @param price giá mới cần kiểm tra
+     */
+    private void updateChartAxis(final double price) {
+        double padding = price * 0.1;
+
+        if (price > numberYaxis.getUpperBound()) {
+            numberYaxis.setUpperBound(price + padding);
+        }
+    }
+
     /** Khởi động animation nhấp nháy cho live dot. */
     private void startLiveDotAnimation() {
         FadeTransition fadeTransition =
@@ -330,6 +343,7 @@ public class BidHistoryController implements Initializable {
         String timeStr = LocalTime.now().format(timeFmt);
         tableData.add(0, new BidRow(timeStr, "Bạn", amount, change, "Dẫn đầu"));
         priceSeries.getData().add(new XYChart.Data<>(timeStr, amount));
+        updateChartAxis(amount);
         updateMetrics();
         priceChange.setText("+" + formatVnd((long) change) + " so với trước");
         bidInput.clear();
