@@ -161,28 +161,28 @@ public class AuctionRepository extends SerializedRepository<Auction> {
         validateText(auction.getId(), "Mã phiên đấu giá không được rỗng.");
 
         if (auction.getItem() == null) {
-        throw new DatabaseException("Sản phẩm đấu giá không được null.");
+            throw new DatabaseException("Sản phẩm đấu giá không được null.");
         }
 
         if (auction.getSeller() == null && isBlank(auction.getSellerId())) {
-        throw new DatabaseException("Người bán của phiên đấu giá không hợp lệ.");
+            throw new DatabaseException("Người bán của phiên đấu giá không hợp lệ.");
         }
 
         if (auction.getStartTime() == null) {
-        throw new DatabaseException("Thời gian bắt đầu không được null.");
+            throw new DatabaseException("Thời gian bắt đầu không được null.");
         }
 
         if (auction.getEndTime() == null) {
-        throw new DatabaseException("Thời gian kết thúc không được null.");
+            throw new DatabaseException("Thời gian kết thúc không được null.");
         }
 
         if (!auction.getEndTime().isAfter(auction.getStartTime())) {
-        throw new DatabaseException(
+            throw new DatabaseException(
             "Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
 
         if (auction.getStatus() == null) {
-        throw new DatabaseException("Trạng thái phiên đấu giá không được null.");
+            throw new DatabaseException("Trạng thái phiên đấu giá không được null.");
         }
     }
 
@@ -194,11 +194,11 @@ public class AuctionRepository extends SerializedRepository<Auction> {
      */
     private String resolveSellerId(final Auction auction) {
         if (!isBlank(auction.getSellerId())) {
-        return auction.getSellerId();
+            return auction.getSellerId();
         }
 
         if (auction.getSeller() == null) {
-        return null;
+            return null;
         }
 
         return auction.getSeller().getId();
@@ -212,7 +212,7 @@ public class AuctionRepository extends SerializedRepository<Auction> {
      */
     private void validateText(final String value, final String message) {
         if (isBlank(value)) {
-        throw new DatabaseException(message);
+            throw new DatabaseException(message);
         }
     }
 

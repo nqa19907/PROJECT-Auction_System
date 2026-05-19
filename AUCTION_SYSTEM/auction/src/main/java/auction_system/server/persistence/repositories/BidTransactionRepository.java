@@ -76,7 +76,7 @@ public class BidTransactionRepository
         Objects.requireNonNull(to, "to");
 
         if (to.isBefore(from)) {
-        throw new DatabaseException(
+            throw new DatabaseException(
             "Thời điểm kết thúc không được trước thời điểm bắt đầu.");
         }
 
@@ -130,36 +130,31 @@ public class BidTransactionRepository
      *
      * @param bidTransaction giao dịch đặt giá cần kiểm tra
      */
-/**
- * Kiểm tra dữ liệu giao dịch đặt giá trước khi lưu.
- *
- * @param bidTransaction giao dịch đặt giá cần kiểm tra
- */
     private void validateBidTransaction(
         final BidTransaction bidTransaction) {
-    validateText(
-        bidTransaction.getId(),
-        "Mã giao dịch đặt giá không được rỗng.");
+        validateText(
+            bidTransaction.getId(),
+            "Mã giao dịch đặt giá không được rỗng.");
 
-    validateText(
-        bidTransaction.getAuctionId(),
-        "Mã phiên đấu giá của giao dịch đặt giá không được rỗng.");
+        validateText(
+            bidTransaction.getAuctionId(),
+            "Mã phiên đấu giá của giao dịch đặt giá không được rỗng.");
 
-    if (bidTransaction.getBidder() == null) {
-        throw new DatabaseException("Người đặt giá không được null.");
-    }
+        if (bidTransaction.getBidder() == null) {
+            throw new DatabaseException("Người đặt giá không được null.");
+        }
 
-    validateText(
-        bidTransaction.getBidder().getId(),
-        "Mã người đặt giá không được rỗng.");
+        validateText(
+            bidTransaction.getBidder().getId(),
+            "Mã người đặt giá không được rỗng.");
 
-    if (bidTransaction.getTimestamp() == null) {
-        throw new DatabaseException("Thời gian đặt giá không được null.");
-    }
+        if (bidTransaction.getTimestamp() == null) {
+            throw new DatabaseException("Thời gian đặt giá không được null.");
+        }
 
-    if (bidTransaction.getAmount() <= 0) {
-        throw new DatabaseException("Số tiền đặt giá phải lớn hơn 0.");
-    }
+        if (bidTransaction.getAmount() <= 0) {
+            throw new DatabaseException("Số tiền đặt giá phải lớn hơn 0.");
+        }
     }
 
     /**
@@ -169,7 +164,7 @@ public class BidTransactionRepository
      */
     private void validateNonNegativeAmount(final double amount) {
         if (amount < 0) {
-        throw new DatabaseException("Số tiền không được âm.");
+            throw new DatabaseException("Số tiền không được âm.");
         }
     }
 
@@ -181,7 +176,7 @@ public class BidTransactionRepository
      */
     private void validateText(final String value, final String message) {
         if (value == null || value.isBlank()) {
-        throw new DatabaseException(message);
+            throw new DatabaseException(message);
         }
     }
  
@@ -192,9 +187,9 @@ public class BidTransactionRepository
      * @return danh sách giao dịch đặt giá thuộc phiên đấu giá đó
      */
     public List<BidTransaction> findByAuctionId(final String auctionId) {
-    validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
+        validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
 
-    return findAll().stream()
+        return findAll().stream()
         .filter(bid -> auctionId.equals(bid.getAuctionId()))
         .toList();
     }
@@ -207,10 +202,10 @@ public class BidTransactionRepository
      */
     public Optional<BidTransaction> findHighestBidByAuctionId(
         final String auctionId) {
-    validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
+        validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
 
-    return findByAuctionId(auctionId).stream()
-        .max(Comparator.comparingDouble(BidTransaction::getAmount));
+        return findByAuctionId(auctionId).stream()
+            .max(Comparator.comparingDouble(BidTransaction::getAmount));
     }
 
     /**
@@ -221,10 +216,10 @@ public class BidTransactionRepository
      */
     public Optional<BidTransaction> findLatestBidByAuctionId(
         final String auctionId) {
-    validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
+        validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
 
-    return findByAuctionId(auctionId).stream()
-        .max(Comparator.comparing(BidTransaction::getTimestamp));
+        return findByAuctionId(auctionId).stream()
+            .max(Comparator.comparing(BidTransaction::getTimestamp));
     }
 
     /**
@@ -234,9 +229,9 @@ public class BidTransactionRepository
      * @return số lượt đặt giá thuộc phiên đấu giá đó
      */
     public long countByAuctionId(final String auctionId) {
-    validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
+        validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
 
-    return findByAuctionId(auctionId).size();
+        return findByAuctionId(auctionId).size();
     }
 
     /**
@@ -249,15 +244,15 @@ public class BidTransactionRepository
      * @return số giao dịch đã xóa
      */
     public int deleteByAuctionId(final String auctionId) {
-    validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
+        validateText(auctionId, "Mã phiên đấu giá không được rỗng.");
 
-    List<BidTransaction> bids = findByAuctionId(auctionId);
+        List<BidTransaction> bids = findByAuctionId(auctionId);
 
-    for (BidTransaction bid : bids) {
-        deleteById(bid.getId());
-    }
+        for (BidTransaction bid : bids) {
+            deleteById(bid.getId());
+        }
 
-    return bids.size();
+        return bids.size();
     }
      
 }

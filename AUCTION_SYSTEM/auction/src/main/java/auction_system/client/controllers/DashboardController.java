@@ -2,7 +2,6 @@ package auction_system.client.controllers;
 
 import auction_system.client.utils.SceneManager;
 import auction_system.server.core.AuctionManager;
-
 import java.io.IOException;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;

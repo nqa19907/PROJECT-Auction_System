@@ -17,7 +17,7 @@ public class BidTransaction extends Entity {
      *
      * @param bidder Người đặt giá.
      * @param amount Số tiền đặt giá.
-     * @param auctionId Id của phiên nó đang ở.
+     * @param auction Phiên mà nó thuộc về.
      */
     public BidTransaction(Bidder bidder, double amount, Auction auction) {
         super(); // Tự động tạo ID
@@ -38,6 +38,7 @@ public class BidTransaction extends Entity {
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
+    
     public String getAuctionId() {
         return auctionId;
     }

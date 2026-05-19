@@ -138,7 +138,7 @@ public class UserRepository extends SerializedRepository<User> {
 
         if (existingUser.isPresent()
             && !existingUser.get().getId().equals(user.getId())) {
-        throw new DatabaseException(
+            throw new DatabaseException(
             "Tên đăng nhập đã tồn tại: " + user.getUsername());
         }
     }
@@ -153,7 +153,7 @@ public class UserRepository extends SerializedRepository<User> {
 
         if (existingUser.isPresent()
             && !existingUser.get().getId().equals(user.getId())) {
-        throw new DatabaseException("Email đã tồn tại: " + user.getEmail());
+            throw new DatabaseException("Email đã tồn tại: " + user.getEmail());
         }
     }
 
@@ -165,7 +165,7 @@ public class UserRepository extends SerializedRepository<User> {
      */
     private void validateText(final String value, final String message) {
         if (value == null || value.isBlank()) {
-        throw new DatabaseException(message);
+            throw new DatabaseException(message);
         }
     }
 }

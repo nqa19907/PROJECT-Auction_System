@@ -134,7 +134,7 @@ public class ItemRepository extends SerializedRepository<Item> {
      */
     private void validateCurrentPrice(final Item item) {
         if (item.getCurrentPrice() < item.getStartPrice()) {
-        throw new DatabaseException(
+            throw new DatabaseException(
             "Giá hiện tại không được nhỏ hơn giá khởi điểm.");
         }
     }
@@ -149,11 +149,11 @@ public class ItemRepository extends SerializedRepository<Item> {
         final double minPrice,
         final double maxPrice) {
         if (minPrice < 0 || maxPrice < 0) {
-        throw new DatabaseException("Khoảng giá không được âm.");
+            throw new DatabaseException("Khoảng giá không được âm.");
         }
 
         if (minPrice > maxPrice) {
-        throw new DatabaseException(
+            throw new DatabaseException(
             "Giá thấp nhất không được lớn hơn giá cao nhất.");
         }
     }
@@ -166,7 +166,7 @@ public class ItemRepository extends SerializedRepository<Item> {
      */
     private void validatePositivePrice(final double price, final String message) {
         if (price <= 0) {
-        throw new DatabaseException(message);
+            throw new DatabaseException(message);
         }
     }
 
@@ -178,7 +178,7 @@ public class ItemRepository extends SerializedRepository<Item> {
      */
     private void validateText(final String value, final String message) {
         if (value == null || value.isBlank()) {
-        throw new DatabaseException(message);
+            throw new DatabaseException(message);
         }
     }
 }
