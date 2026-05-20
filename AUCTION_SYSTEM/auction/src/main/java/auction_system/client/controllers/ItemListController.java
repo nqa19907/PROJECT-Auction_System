@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ItemListController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemListController.class);
-    
+
     @FXML private FlowPane productsGrid;
     @FXML private Label categoryTitle;
 
@@ -57,6 +57,7 @@ public class ItemListController {
             LOGGER.warn("Dữ liệu sản phẩm không hợp lệ: thiếu trường thông tin.");
             return;
         }
+
         try {
             // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
@@ -78,13 +79,13 @@ public class ItemListController {
 
             // 5. "Bơm" dữ liệu vào thẻ và định nghĩa hành động khi nút được bấm
             controller.setCardDetails(
-                auctionId,
-                itemName,
-                currentPrice,
-                this::navigateToAuctionDetail
+                    auctionId,
+                    itemName,
+                    currentPrice,
+                    selectedItemId -> navigateToAuctionDetail(parts)
             );
 
-            // 5. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
+            // 6. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
             productsGrid.getChildren().add(card);
 
         } catch (IOException | NumberFormatException e) {
@@ -92,24 +93,57 @@ public class ItemListController {
         }
     }
 
-    private void navigateToAuctionDetail(String selectedItemId) {
+    private void navigateToAuctionDetail(String[] selectedParts) {
+        if (selectedParts == null || selectedParts.length < 5) {
+            LOGGER.warn("Không thể mở AuctionDetail vì dữ liệu item không hợp lệ.");
+            return;
+        }
+
+        String selectedItemId = selectedParts[0];
+        String itemName = selectedParts[1];
+
+        long currentPrice;
+        try {
+            currentPrice = Long.parseLong(selectedParts[2].replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
+            return;
+        }
+
+        long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
+
+        if (selectedParts.length > 6) {
+            try {
+                openingPrice = Long.parseLong(selectedParts[6].replaceAll("[^0-9]", ""));
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Giá khởi điểm không hợp lệ, tạm dùng giá hiện tại trừ 1.000.000.");
+            }
+        }
+
         LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
+
         try {
             FXMLLoader detailLoader = new FXMLLoader(
-                getClass().getResource("/client/fxml/AuctionDetail.fxml"));
+                    getClass().getResource("/client/fxml/AuctionDetail.fxml"));
             Node detailView = detailLoader.load();
-            
-            AuctionDetailController bidHistoryController = detailLoader.getController();
-            bidHistoryController.setAuctionId(selectedItemId);
 
-            // Tìm khu vực hiển thị chính (StackPane) của Dashboard đè màn hình mới lên
+            AuctionDetailController auctionDetailController = detailLoader.getController();
+            auctionDetailController.initAuction(
+                    new AuctionDisplayContext(
+                            selectedItemId,
+                            itemName,
+                            openingPrice,
+                            currentPrice
+                    )
+            );
+
             StackPane contentArea = (StackPane) productsGrid.getScene().lookup("#contentArea");
             if (contentArea != null) {
                 contentArea.getChildren().setAll(detailView);
             }
         } catch (Exception e) {
             LOGGER.error(
-                "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
+                    "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
         }
     }
 
@@ -149,6 +183,7 @@ public class ItemListController {
         if (productsGrid == null) {
             return;
         }
+
         productsGrid.getChildren().clear(); // Dọn dẹp lưới hiển thị cũ
 
         boolean hasItems = false;
@@ -158,7 +193,7 @@ public class ItemListController {
 
             // So sánh, nếu chữ khớp (hoặc đang chọn tất cả) thì mới vẽ
             if (AppConstants.CATEGORY_ALL.equals(filterCategory)
-                || filterCategory.equalsIgnoreCase(itemCategory)) {
+                    || filterCategory.equalsIgnoreCase(itemCategory)) {
 
                 createProductCard(parts);
                 hasItems = true;
@@ -167,7 +202,7 @@ public class ItemListController {
 
         if (!hasItems) {
             productsGrid.getChildren().add(
-                new Label("Không có phiên đấu giá nào thuộc danh mục này."));
+                    new Label("Không có phiên đấu giá nào thuộc danh mục này."));
         }
     }
 }
