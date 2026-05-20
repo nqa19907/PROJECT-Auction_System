@@ -88,18 +88,6 @@
                         <Label styleClass="text-body" text="Đăng bán" />
                     </children>
                 </HBox>
-
-                <HBox id="categoryBidHistory"
-                      alignment="CENTER_LEFT"
-                      onMouseClicked="#handleShowBidHistory"
-                      spacing="15.0"
-                      styleClass="category-option">
-                    <children>
-                        <Region styleClass="icon-add" />
-                        <Label styleClass="text-body" text="Màn hình" />
-                    </children>
-                </HBox>
-
             </children>
         </VBox>
     </left>

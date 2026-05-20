@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1">
+<ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.ItemListController">
     <content>
         <VBox id="scrollContentWrapper">
             <children>
@@ -34,26 +34,26 @@
                                 <VBox id="productCard1" alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" styleClass="product-card">
                                     <Region prefHeight="200.0" prefWidth="200.0" styleClass="img-product-rolex" />
                                     <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Đồng hồ Rolex Submariner Date 2004" wrapText="true" />
-                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €15,500" />
-                                    <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: 15.500.000 VNĐ" />
+                                    <Button fx:id="bidBtnCard1" onAction="#openBidHistoryCard1" styleClass="btn-bid" text="Đấu giá ngay" />
                                 </VBox>
                                 <!-- Card 2 -->
                                 <VBox id="productCard2" alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" styleClass="product-card">
                                     <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Tượng đồng chiến binh Hy Lạp cổ đại" wrapText="true" />
-                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €3,200" />
-                                    <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: 3.200.000 VNĐ" />
+                                    <Button fx:id="bidBtnCard2" onAction="#openBidHistoryCard2" styleClass="btn-bid" text="Đấu giá ngay" />
                                 </VBox>
                                 <!-- Card 3 -->
                                 <VBox id="productCard3" alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" styleClass="product-card">
                                     <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Bộ xu bạc La Mã thế kỷ 18 nguyên bản" wrapText="true" />
-                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €850" />
-                                    <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: 850.000 VNĐ" />
+                                    <Button fx:id="bidBtnCard3" onAction="#openBidHistoryCard3" styleClass="btn-bid" text="Đấu giá ngay" />
                                 </VBox>
                                 <!-- Card 4 -->
                                 <VBox id="productCard4" alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" styleClass="product-card">
                                     <Label alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Tranh sơn dầu trừu tượng hiện đại" wrapText="true" />
-                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: €1,400" />
-                                    <Button styleClass="btn-bid" text="Đấu giá ngay" />
+                                    <Label style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: 1.400.000 VNĐ" />
+                                    <Button fx:id="bidBtnCard4" onAction="#openBidHistoryCard4" styleClass="btn-bid" text="Đấu giá ngay" />
                                 </VBox>
                             </HBox>
                         </VBox>

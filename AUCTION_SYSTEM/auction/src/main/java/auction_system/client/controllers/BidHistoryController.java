@@ -6,8 +6,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+import java.util.HashSet;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.logging.Logger;
 import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
@@ -36,125 +37,109 @@ import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 
 /**
- * Controller cho BidHistoryView.fxml.
- * Quản lý biểu đồ và bảng lịch sử đấu giá realtime.
+ * Controller for BidHistoryView.
  */
 public class BidHistoryController implements Initializable {
+    private static final Logger LOGGER = Logger.getLogger(BidHistoryController.class.getName());
 
-    /** Logger của controller. */
-    private static final Logger LOGGER =
-            Logger.getLogger(BidHistoryController.class.getName());
-
-
-    // ── fx:id fields ─────────────────────────────────────────────────────────
-
-    /** Nhãn giá hiện tại. */
     @FXML
     private Label currentPrice;
-
-    /** Nhãn mức thay đổi giá. */
     @FXML
     private Label priceChange;
-
-    /** Nhãn giá khởi điểm. */
     @FXML
     private Label startPrice;
-
-    /** Nhãn số lần trả giá. */
     @FXML
     private Label bidCount;
-
-    /** Nhãn số người tham gia. */
     @FXML
     private Label participantCount;
-
-    /** Nhãn đồng hồ đếm ngược. */
     @FXML
     private Label timerLabel;
-
-    /** Nhãn gợi ý giá tối thiểu. */
     @FXML
     private Label minBidHint;
-
-    /** Chấm tròn nhấp nháy trạng thái live. */
+    @FXML
+    private Label auctionTitle;
+    @FXML
+    private Label auctionId;
     @FXML
     private Circle liveDot;
-
-    /** Biểu đồ đường lịch sử giá. */
     @FXML
     private LineChart<String, Number> bidLineChart;
-
-    /** Trục X của biểu đồ. */
     @FXML
     private CategoryAxis categoryXaxis;
-
-    /** Trục Y của biểu đồ. */
     @FXML
     private NumberAxis numberYaxis;
-
-    /** Bảng lịch sử đấu giá. */
     @FXML
     private TableView<BidRow> bidTable;
-
-    /** Cột thời gian. */
     @FXML
     private TableColumn<BidRow, String> colTime;
-
-    /** Cột người đấu giá. */
     @FXML
     private TableColumn<BidRow, String> colBidder;
-
-    /** Cột giá trả. */
     @FXML
     private TableColumn<BidRow, Double> colPrice;
-
-    /** Cột mức thay đổi. */
     @FXML
     private TableColumn<BidRow, Double> colChange;
-
-    /** Cột trạng thái. */
     @FXML
     private TableColumn<BidRow, String> colStatus;
-
-    /** Ô nhập giá. */
     @FXML
     private TextField bidInput;
 
-    /** Dữ liệu bảng lịch sử. */
-    private final ObservableList<BidRow> tableData =
-            FXCollections.observableArrayList();
+    private final ObservableList<BidRow> tableData = FXCollections.observableArrayList();
+    private final XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
+    private final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private final Set<String> bidders = new HashSet<>();
 
-    /** Series dữ liệu biểu đồ. */
-    private final XYChart.Series<String, Number> priceSeries =
-            new XYChart.Series<>();
-
-    /** Định dạng thời gian. */
-    private final DateTimeFormatter timeFmt =
-            DateTimeFormatter.ofPattern("HH:mm:ss");
-
-    /** Giá trả cao nhất hiện tại. */
-    private double lastPrice = 15500000;
-
-    /** Số giây còn lại của phiên. */
+    private long lastPrice = 15_500_000L;
+    private long openingPrice = 3_500_000L;
     private int secondsLeft = 14 * 60 + 32;
+    private int totalBids = 0;
+    private int totalParticipants = 0;
+    private String currentAuctionId = "AUC-2024-0518";
+    private String currentAuctionTitle = "Đồng hồ Rolex Submariner Date";
 
-    /** Tổng số lần trả giá. */
-    private int totalBids = 6;
+    private Timeline countdownTimeline;
+    private FadeTransition liveDotTransition;
+
+    /**
+     * Khởi tạo màn hình theo auctionId được truyền từ ItemList.
+     *
+     * @param auctionId mã phiên đấu giá
+     */
+    public void initAuction(final String auctionId) {
+        this.currentAuctionId = auctionId;
+        loadSampleData();
+        joinAuctionRoom(auctionId);
+    }
+
+    /**
+     * Khởi tạo màn hình theo đầy đủ dữ liệu item được chọn ở ItemList.
+     *
+     * @param context dữ liệu hiển thị của item/phiên đấu giá
+     */
+    public void initAuction(final AuctionDisplayContext context) {
+        if (context == null) {
+            return;
+        }
+        this.currentAuctionId = context.auctionId();
+        this.currentAuctionTitle = context.itemTitle();
+        this.openingPrice = context.openingPrice();
+        this.lastPrice = context.currentPrice();
+        applyAuctionHeader();
+        loadSampleData();
+        joinAuctionRoom(context.auctionId());
+    }
 
     @Override
     public void initialize(final URL url, final ResourceBundle rb) {
         setupTable();
         setupChart();
-
         setupNetworkHandlers();
         joinAuctionRoom();
-
         loadSampleData();
         startLiveDotAnimation();
         startCountdown();
+        registerLifecycleCleanup();
     }
 
-    /** Cấu hình các cột của TableView. */
     private void setupTable() {
         colTime.setCellValueFactory(new PropertyValueFactory<>("time"));
         colBidder.setCellValueFactory(new PropertyValueFactory<>("bidder"));
@@ -162,7 +147,7 @@ public class BidHistoryController implements Initializable {
         colChange.setCellValueFactory(new PropertyValueFactory<>("change"));
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        colPrice.setCellFactory(col -> new TableCell<BidRow, Double>() {
+        colPrice.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(final Double value, final boolean empty) {
                 super.updateItem(value, empty);
@@ -174,7 +159,7 @@ public class BidHistoryController implements Initializable {
             }
         });
 
-        colChange.setCellFactory(col -> new TableCell<BidRow, Double>() {
+        colChange.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(final Double value, final boolean empty) {
                 super.updateItem(value, empty);
@@ -187,7 +172,7 @@ public class BidHistoryController implements Initializable {
                     setText("+" + CurrencyFormatter.formatVnd(value.longValue()));
                     setStyle("-fx-text-fill: #2E7D52; -fx-font-weight: bold;");
                 } else {
-                    setText("—");
+                    setText("-");
                     setStyle("-fx-text-fill: #A07040;");
                 }
             }
@@ -196,7 +181,6 @@ public class BidHistoryController implements Initializable {
         bidTable.setItems(tableData);
     }
 
-    /** Cấu hình LineChart. */
     private void setupChart() {
         priceSeries.setName("Giá trả");
         bidLineChart.getData().add(priceSeries);
@@ -205,113 +189,117 @@ public class BidHistoryController implements Initializable {
         bidLineChart.setAnimated(true);
     }
 
-    /** Nạp dữ liệu mẫu vào biểu đồ và bảng. */
     private void loadSampleData() {
+        tableData.clear();
+        priceSeries.getData().clear();
+        bidders.clear();
+        totalBids = 0;
+        totalParticipants = 0;
         LocalTime time = LocalTime.of(9, 0, 0);
+        final long priceRange = Math.max(100_000L, lastPrice - openingPrice);
+        final long step1 = Math.max(10_000L, priceRange / 10);
+        final long step2 = Math.max(10_000L, priceRange / 8);
+        final long step3 = Math.max(10_000L, priceRange / 6);
+        final long p2 = openingPrice + step1;
+        final long p3 = p2 + step1;
+        final long p4 = p3 + step2;
+        final long p5 = p4 + step2;
+        final long p6 = p5 + step3;
+        final long p7 = p6 + step3;
+        final long p8 = Math.max(p7 + step2, lastPrice);
 
-        time = addSampleBid(time, 3500000, 0, "Nguyễn Văn A", "Hợp lệ");
-        time = addSampleBid(time, 3600000, 100000, "Trần Thị B", "Hợp lệ");
-        time = addSampleBid(time, 3750000, 150000, "Công ty XYZ", "Hợp lệ");
-        time = addSampleBid(time, 3900000, 150000, "Lê Minh C", "Hợp lệ");
-        time = addSampleBid(time, 4050000, 150000, "Phạm Đức D", "Hợp lệ");
-        time = addSampleBid(time, 4200000, 150000, "Nguyễn Văn A", "Hợp lệ");
-        time = addSampleBid(time, 4500000, 300000, "Trần Thị B", "Hợp lệ");
-        time = addSampleBid(time, 5000000, 500000, "Công ty XYZ", "Hợp lệ");
-        time = addSampleBid(time, 6200000, 1200000, "Lê Minh C", "Hợp lệ");
-        time = addSampleBid(time, 8000000, 1800000, "Nguyễn Văn A", "Hợp lệ");
-        time = addSampleBid(time, 11000000, 3000000, "Trần Thị B", "Hợp lệ");
-        addSampleBid(time, 15500000, 4500000, "Công ty XYZ", "Dẫn đầu");
+        time = addSampleBid(time, openingPrice, 0L, "Nguyen Van A", "Hợp lệ");
+        time = addSampleBid(time, p2, p2 - openingPrice, "Tran Thi B", "Hợp lệ");
+        time = addSampleBid(time, p3, p3 - p2, "Cong ty XYZ", "Hợp lệ");
+        time = addSampleBid(time, p4, p4 - p3, "Le Minh C", "Hợp lệ");
+        time = addSampleBid(time, p5, p5 - p4, "Pham Duc D", "Hợp lệ");
+        time = addSampleBid(time, p6, p6 - p5, "Nguyen Van A", "Hợp lệ");
+        time = addSampleBid(time, p7, p7 - p6, "Tran Thi B", "Hợp lệ");
+        addSampleBid(time, p8, p8 - p7, "Cong ty XYZ", "Dẫn đầu");
 
+        lastPrice = p8;
+        applyAuctionHeader();
         updateMetrics();
+        updateChartAxis(lastPrice);
     }
 
-    /**
-     * Thêm một dòng dữ liệu mẫu.
-     *
-     * @param time thời gian hiện tại
-     * @param price giá trả
-     * @param change mức tăng
-     * @param bidder người đấu giá
-     * @param status trạng thái
-     * @return thời gian kế tiếp
-     */
     private LocalTime addSampleBid(
             final LocalTime time,
-            final double price,
-            final double change,
+            final long price,
+            final long change,
             final String bidder,
             final String status
     ) {
-        String timeStr = time.format(timeFmt);
+        final String timeStr = time.format(timeFmt);
         tableData.add(0, new BidRow(timeStr, bidder, price, change, status));
         priceSeries.getData().add(new XYChart.Data<>(timeStr, price));
+        totalBids++;
+        bidders.add(bidder);
+        totalParticipants = bidders.size();
+        if (totalBids == 1) {
+            openingPrice = price;
+        }
+        lastPrice = price;
         return time.plusMinutes(1).plusSeconds(30);
     }
 
-    /** Cập nhật các nhãn metric. */
     private void updateMetrics() {
-        currentPrice.setText(CurrencyFormatter.formatVnd((long) lastPrice));
+        currentPrice.setText(CurrencyFormatter.formatVnd(lastPrice));
+        startPrice.setText(CurrencyFormatter.formatVnd(openingPrice));
         bidCount.setText(String.valueOf(totalBids));
-        minBidHint.setText(
-                "Giá tối thiểu: "
-                        + CurrencyFormatter.formatVnd((long) lastPrice + 100000)
-        );
+        participantCount.setText(String.valueOf(totalParticipants));
+        minBidHint.setText("Giá tối thiểu: " + CurrencyFormatter.formatVnd(lastPrice + 100_000L));
     }
 
-    /**
-     * Cập nhật giới hạn trục Y của biểu đồ nếu giá vượt mức hiện tại.
-     *
-     * @param price giá mới cần kiểm tra
-     */
-    private void updateChartAxis(final double price) {
-        double padding = price * 0.1;
-
-        if (price > numberYaxis.getUpperBound()) {
-            numberYaxis.setUpperBound(price + padding);
+    private void updateChartAxis(final long price) {
+        final double padding = Math.max(50_000D, price * 0.1);
+        final double suggestedLower = Math.max(0D, openingPrice - padding);
+        final double suggestedUpper = price + padding;
+        if (suggestedLower < numberYaxis.getLowerBound()) {
+            numberYaxis.setLowerBound(suggestedLower);
+        }
+        if (suggestedUpper > numberYaxis.getUpperBound()) {
+            numberYaxis.setUpperBound(suggestedUpper);
         }
     }
 
-    /** Khởi động animation nhấp nháy cho live dot. */
     private void startLiveDotAnimation() {
-        FadeTransition fadeTransition =
-                new FadeTransition(Duration.millis(900), liveDot);
-        fadeTransition.setFromValue(1.0);
-        fadeTransition.setToValue(0.2);
-        fadeTransition.setCycleCount(Animation.INDEFINITE);
-        fadeTransition.setAutoReverse(true);
-        fadeTransition.play();
+        liveDotTransition = new FadeTransition(Duration.millis(900), liveDot);
+        liveDotTransition.setFromValue(1.0);
+        liveDotTransition.setToValue(0.2);
+        liveDotTransition.setCycleCount(Animation.INDEFINITE);
+        liveDotTransition.setAutoReverse(true);
+        liveDotTransition.play();
     }
 
-    /** Khởi động đồng hồ đếm ngược. */
     private void startCountdown() {
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+        countdownTimeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             if (secondsLeft > 0) {
                 secondsLeft--;
             }
-            int minutes = secondsLeft / 60;
-            int seconds = secondsLeft % 60;
+            final int minutes = secondsLeft / 60;
+            final int seconds = secondsLeft % 60;
             timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
             if (secondsLeft == 0) {
                 timerLabel.setText("Kết thúc");
             }
         }));
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
+        countdownTimeline.setCycleCount(Animation.INDEFINITE);
+        countdownTimeline.play();
     }
 
-    /** Xử lý sự kiện đặt giá. */
     @FXML
     private void placeBid() {
-        String raw = bidInput.getText().replaceAll("[^0-9]", "");
+        final String raw = bidInput.getText().replaceAll("[^0-9]", "");
         if (raw.isEmpty()) {
             return;
         }
 
-        double amount = Double.parseDouble(raw);
+        final long amount = Long.parseLong(raw);
         if (amount <= lastPrice) {
-            Alert alert = new Alert(
+            final Alert alert = new Alert(
                     Alert.AlertType.WARNING,
-                    "Giá phải lớn hơn " + CurrencyFormatter.formatVnd((long) lastPrice),
+                    "Giá phải lớn hơn " + CurrencyFormatter.formatVnd(lastPrice),
                     ButtonType.OK
             );
             alert.setHeaderText(null);
@@ -319,91 +307,108 @@ public class BidHistoryController implements Initializable {
             return;
         }
 
-        double change = amount - lastPrice;
+        final long change = amount - lastPrice;
         lastPrice = amount;
         totalBids++;
-        String timeStr = LocalTime.now().format(timeFmt);
+        bidders.add("Bạn");
+        totalParticipants = bidders.size();
+        final String timeStr = LocalTime.now().format(timeFmt);
         tableData.add(0, new BidRow(timeStr, "Bạn", amount, change, "Dẫn đầu"));
         priceSeries.getData().add(new XYChart.Data<>(timeStr, amount));
         updateChartAxis(amount);
         updateMetrics();
-        priceChange.setText("+" + CurrencyFormatter.formatVnd((long) change) + " so với trước");
+        priceChange.setText("+" + CurrencyFormatter.formatVnd(change) + " so với trước");
         bidInput.clear();
     }
 
-    /** Thêm nhanh 100.000 VNĐ vào ô giá. */
     @FXML
     private void quickAdd100() {
-        adjustInput(100000);
+        adjustInput(100_000L);
     }
 
-    /** Thêm nhanh 500.000 VNĐ vào ô giá. */
     @FXML
     private void quickAdd500() {
-        adjustInput(500000);
+        adjustInput(500_000L);
     }
 
-    /** Thêm nhanh 1.000.000 VNĐ vào ô giá. */
     @FXML
     private void quickAdd1000() {
-        adjustInput(1000000);
+        adjustInput(1_000_000L);
     }
 
-    /** Quay lại màn hình chính. */
     @FXML
     private void goBack() {
         handleCancel();
     }
 
-    /** Huỷ và load lại ItemList vào contentArea của Dashboard. */
     @FXML
     private void handleCancel() {
-        LOGGER.info("Huỷ, quay về Dashboard");
+        LOGGER.info("Huỷ bid history và quay lại ItemList");
         try {
-            Node view = FXMLLoader.load(
-                    getClass().getResource("/client/fxml/ItemList.fxml")
-            );
-            ((StackPane) bidInput.getScene().lookup("#contentArea"))
-                    .getChildren().setAll(view);
+            stopUiAnimations();
+            final Node view = FXMLLoader.load(getClass().getResource("/client/fxml/ItemList.fxml"));
+            final Node contentAreaNode = bidInput.getScene().lookup("#contentArea");
+            if (contentAreaNode instanceof StackPane contentArea) {
+                contentArea.getChildren().setAll(view);
+                return;
+            }
+            LOGGER.warning("Không tìm thấy #contentArea để chuyển về ItemList.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Cộng thêm delta vào giá trị đang nhập.
-     *
-     * @param delta số tiền cần cộng thêm
-     */
-    private void adjustInput(final double delta) {
-        String raw = bidInput.getText().replaceAll("[^0-9]", "");
-        double base = raw.isEmpty() ? lastPrice : Double.parseDouble(raw);
-        bidInput.setText(String.format("%.0f", base + delta));
+    private void adjustInput(final long delta) {
+        final String raw = bidInput.getText().replaceAll("[^0-9]", "");
+        final long base = raw.isEmpty() ? lastPrice : Long.parseLong(raw);
+        bidInput.setText(String.valueOf(base + delta));
     }
 
+    private void stopUiAnimations() {
+        if (countdownTimeline != null) {
+            countdownTimeline.stop();
+        }
+        if (liveDotTransition != null) {
+            liveDotTransition.stop();
+        }
+    }
 
-    /**
-     * Đăng ký các handler mạng để nhận dữ liệu realtime
-     * từ server thông qua socket.
-     *
-     * <p>Các handler này dùng để xử lý những message như:
-     * UPDATE_PRICE, BID_OK, BID_FAIL...
-     * Khi server gửi dữ liệu, controller sẽ tự động cập nhật
-     * giao diện như bảng lịch sử và biểu đồ giá.</p>
-     */
+    private void registerLifecycleCleanup() {
+        bidInput.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                stopUiAnimations();
+            }
+        });
+    }
+
     private void setupNetworkHandlers() {
+        // TODO: wire socket events to update table/chart/metrics on JavaFX thread.
+    }
 
+    private void joinAuctionRoom() {
+        // TODO: send join-room message with current auction id.
     }
 
     /**
-     * Gửi yêu cầu tham gia phòng đấu giá hiện tại tới server.
+     * Tham gia room realtime theo auctionId cụ thể.
      *
-     * <p>Sau khi tham gia phòng đấu giá, client sẽ nhận được
-     * các cập nhật realtime liên quan đến phiên đấu giá này,
-     * ví dụ như thay đổi giá hoặc trạng thái phiên.</p>
+     * @param targetAuctionId mã phiên đấu giá
      */
-    private void joinAuctionRoom() {
-
+    private void joinAuctionRoom(final String targetAuctionId) {
+        this.currentAuctionId = targetAuctionId;
+        // TODO: send join-room message by targetAuctionId.
+        LOGGER.info("Tham gia phòng đấu giá: " + targetAuctionId);
     }
 
+    /**
+     * Cập nhật thông tin tiêu đề phiên đấu giá.
+     */
+    private void applyAuctionHeader() {
+        if (auctionTitle != null) {
+            auctionTitle.setText(currentAuctionTitle);
+        }
+        if (auctionId != null) {
+            auctionId.setText("Phiên #" + currentAuctionId);
+        }
+    }
 }

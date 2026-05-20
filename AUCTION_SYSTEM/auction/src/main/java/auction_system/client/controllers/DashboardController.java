@@ -63,13 +63,20 @@ public class DashboardController {
         }
     }
 
-    @FXML
-    private void handleShowBidHistory() {
-        LOGGER.info("Chuyển sang giao diện lịch sử đấu giá");
+    /**
+     * Mở BidHistory theo auctionId cụ thể.
+     *
+     * @param auctionId mã phiên đấu giá
+     */
+    public void openBidHistory(final String auctionId) {
+        LOGGER.info("Chuyển sang BidHistory theo auctionId: " + auctionId);
         try {
-            Node view = FXMLLoader.load(
+            FXMLLoader loader = new FXMLLoader(
                     getClass().getResource("/client/fxml/BidHistoryView.fxml")
             );
+            Node view = loader.load();
+            BidHistoryController controller = loader.getController();
+            controller.initAuction(auctionId);
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             e.printStackTrace();

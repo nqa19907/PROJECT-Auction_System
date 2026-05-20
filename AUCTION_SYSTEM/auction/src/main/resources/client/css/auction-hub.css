@@ -347,19 +347,25 @@
 
 /* ── Ẩn column-header gốc của TableView (đã có custom HBox header) ── */
 .root-pane .bid-table .column-header-background {
-    -fx-max-height: 0;
-    -fx-min-height: 0;
-    -fx-pref-height: 0;
-    -fx-padding: 0;
-    -fx-background-color: transparent;
+    -fx-background-color: #FFF3DE;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: #F0D9B5;
+    -fx-border-width: 0 0 1 0;
 }
 
-.root-pane .bid-table .column-header,
-.root-pane .bid-table .column-header .label,
+.root-pane .bid-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: #F0D9B5;
+    -fx-border-width: 0 1 0 0;
+}
+
+.root-pane .bid-table .column-header .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #A07040;
+}
+
 .root-pane .bid-table .filler {
-    -fx-max-height: 0;
-    -fx-min-height: 0;
-    -fx-padding: 0;
     -fx-background-color: transparent;
 }
 
