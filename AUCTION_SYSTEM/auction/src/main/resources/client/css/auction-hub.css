@@ -100,7 +100,7 @@
     -fx-border-width: 1.5;
 }
 
-/* ── Text riêng cho BidHistory ───────────── */
+/* ── Text riêng cho ItemDetail ───────────── */
 .root-pane .auction-title {
     -fx-font-size: 15px;
     -fx-font-weight: bold;

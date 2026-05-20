@@ -99,9 +99,8 @@ public class ItemListController {
                 getClass().getResource("/client/fxml/AuctionDetail.fxml"));
             Node detailView = detailLoader.load();
             
-            // TODO: Lấy controller và truyền ID sang màn hình chi tiết (đã bỏ giả lập)
-            // AuctionDetailController detailController = detailLoader.getController();
-            // detailController.setAuctionId(selectedItemId);
+            AuctionDetailController bidHistoryController = detailLoader.getController();
+            bidHistoryController.setAuctionId(selectedItemId);
 
             // Tìm khu vực hiển thị chính (StackPane) của Dashboard đè màn hình mới lên
             StackPane contentArea = (StackPane) productsGrid.getScene().lookup("#contentArea");
