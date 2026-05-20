@@ -70,7 +70,7 @@
                         <Label fx:id="currentPrice" text="15.500 VNĐ" styleClass="metric-value-main"/>
                         <HBox spacing="4" alignment="CENTER_LEFT">
                             <Label text="▲" styleClass="change-up-icon"/>
-                            <Label fx:id="priceChange" text="+0 VNĐ so với trước" styleClass="change-up"/>
+                            <Label fx:id="priceChange" text="+0m VNĐ so với trước" styleClass="change-up"/>
                         </HBox>
                     </VBox>
 
@@ -106,12 +106,8 @@
                         <!-- Legend -->
                         <HBox spacing="16" alignment="CENTER">
                             <HBox spacing="6" alignment="CENTER">
-                                <Rectangle width="12" height="12" styleClass="legend-dot-blue" arcWidth="3" arcHeight="3"/>
-                                <Label text="Giá trả" styleClass="legend-label"/>
-                            </HBox>
-                            <HBox spacing="6" alignment="CENTER">
                                 <Rectangle width="12" height="12" styleClass="legend-dot-amber" arcWidth="3" arcHeight="3"/>
-                                <Label text="Bước giá" styleClass="legend-label"/>
+                                <Label text="Giá trả" styleClass="legend-label"/>
                             </HBox>
                         </HBox>
                     </HBox>

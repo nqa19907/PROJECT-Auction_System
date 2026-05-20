@@ -208,11 +208,11 @@ public class BidHistoryController implements Initializable {
         final long p7 = p6 + step3;
         final long p8 = Math.max(p7 + step2, lastPrice);
 
-        time = addSampleBid(time, openingPrice, 0L, "Nguyen Van A", "Hợp lệ");
-        time = addSampleBid(time, p2, p2 - openingPrice, "Tran Thi B", "Hợp lệ");
+        time = addSampleBid(time, openingPrice, 0L, "Nguyễn Đức Mạnh", "Hợp lệ");
+        time = addSampleBid(time, p2, p2 - openingPrice, "Bùi Nguyễn Phương", "Hợp lệ");
         time = addSampleBid(time, p3, p3 - p2, "Cong ty XYZ", "Hợp lệ");
-        time = addSampleBid(time, p4, p4 - p3, "Le Minh C", "Hợp lệ");
-        time = addSampleBid(time, p5, p5 - p4, "Pham Duc D", "Hợp lệ");
+        time = addSampleBid(time, p4, p4 - p3, "Nguyễn Quốc Anh", "Hợp lệ");
+        time = addSampleBid(time, p5, p5 - p4, "Hoàng Nguyễn", "Hợp lệ");
         time = addSampleBid(time, p6, p6 - p5, "Nguyen Van A", "Hợp lệ");
         time = addSampleBid(time, p7, p7 - p6, "Tran Thi B", "Hợp lệ");
         addSampleBid(time, p8, p8 - p7, "Cong ty XYZ", "Dẫn đầu");
