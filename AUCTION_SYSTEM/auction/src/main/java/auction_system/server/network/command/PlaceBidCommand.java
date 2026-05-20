@@ -9,6 +9,8 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +19,12 @@ import java.util.logging.Logger;
  */
 public class PlaceBidCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(PlaceBidCommand.class.getName());
+    private final AuctionManager auctionManager;
+
+    public PlaceBidCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
+
 
     /**
      * Thực thi lệnh đặt giá.
@@ -63,7 +71,7 @@ public class PlaceBidCommand implements Command {
                         + "Số tiền phải lớn hơn 0";
             }
 
-            Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
+            Auction auction = auctionManager.getAuctionById(auctionId);
             if (auction == null) {
                 return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
                         + "Không tìm thấy phiên đấu giá";

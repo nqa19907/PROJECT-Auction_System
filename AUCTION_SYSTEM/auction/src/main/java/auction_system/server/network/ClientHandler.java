@@ -1,5 +1,7 @@
 package auction_system.server.network;
 
+import auction_system.client.services.AuthService;
+import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
@@ -21,6 +23,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -36,8 +39,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private static final Logger LOGGER = Logger.getLogger(ClientHandler.class.getName());
 
     private final Socket socket;
+    private final AuctionManager auctionManager;
+    private final AuthService authService;
     private BufferedReader inputReader;
     private PrintWriter outputWriter;
+    private final Map<String, Command> commandMap;
 
     /**
      * Phiên làm việc lưu trữ trạng thái của client hiện tại
@@ -45,28 +51,30 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     private final ClientSession session;
 
-    /**
-     * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
-     */
-    private static final Map<String, Command> commandMap = Map.ofEntries(
-        Map.entry(Protocol.Command.LOGIN.name(), new LoginCommand()),
-        Map.entry(Protocol.Command.REGISTER.name(), new RegisterCommand()),
-        Map.entry(Protocol.Command.LIST_AUCTIONS.name(), new ListAuctionsCommand()),
-        Map.entry(Protocol.Command.GET_AUCTION.name(), new GetAuctionCommand()),
-        Map.entry(Protocol.Command.JOIN_AUCTION.name(), new JoinAuctionCommand()),
-        Map.entry(Protocol.Command.LEAVE_AUCTION.name(), new LeaveAuctionCommand()),
-        Map.entry(Protocol.Command.PLACE_BID.name(), new PlaceBidCommand()),
-        Map.entry(Protocol.Command.LOGOUT.name(), new LogoutCommand())
-    );
-
+    
     /**
      * Khởi tạo handler cho một kết nối client.
-     *
-     * @param socket Socket kết nối từ client.
-     */
-    public ClientHandler(Socket socket) {
-        this.socket = socket;
-        this.session = new ClientSession(this);
+    *
+    * @param socket Socket kết nối từ client.
+    */
+    public ClientHandler(Socket socket,AuctionManager auctionManager, AuthService authService) {
+        this.socket = Objects.requireNonNull(socket,"socket");
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+        this.authService = Objects.requireNonNull(authService,"authService");
+        this.session = new ClientSession(this, auctionManager);
+        /**
+         * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
+         */
+        this.commandMap= Map.ofEntries(
+            Map.entry(Protocol.Command.LOGIN.name(), new LoginCommand(auctionManager)),
+            Map.entry(Protocol.Command.REGISTER.name(), new RegisterCommand(auctionManager)),
+            Map.entry(Protocol.Command.LIST_AUCTIONS.name(), new ListAuctionsCommand(auctionManager)),
+            Map.entry(Protocol.Command.GET_AUCTION.name(), new GetAuctionCommand(auctionManager)),
+            Map.entry(Protocol.Command.JOIN_AUCTION.name(), new JoinAuctionCommand(auctionManager)),
+            Map.entry(Protocol.Command.LEAVE_AUCTION.name(), new LeaveAuctionCommand(auctionManager)),
+            Map.entry(Protocol.Command.PLACE_BID.name(), new PlaceBidCommand(auctionManager)),
+            Map.entry(Protocol.Command.LOGOUT.name(), new LogoutCommand(auctionManager))
+        );
     }
 
     // =========================================================================
@@ -174,7 +182,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
         User currentUser = session.getCurrentUser();
         if (currentUser != null) {
-            AuctionManager.getInstance().userLoggedOut(currentUser);
+            auctionManager.userLoggedOut(currentUser);
             currentUser.setOnline(false);
             LOGGER.info("Cleanup session: " + currentUser.getUsername());
             session.setCurrentUser(null);

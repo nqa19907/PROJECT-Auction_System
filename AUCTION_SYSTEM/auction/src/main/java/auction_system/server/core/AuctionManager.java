@@ -7,10 +7,12 @@ import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
+import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -34,6 +36,8 @@ public class AuctionManager {
 
     private static final Logger LOGGER = Logger.getLogger(AuctionManager.class.getName());
     private static final int SCHEDULER_INTERVAL_SECONDS = 10;
+    /** Database serialization của server. */
+    private final SerializedDatabase database;
 
     // =========================================================================
     // Singleton
@@ -45,10 +49,12 @@ public class AuctionManager {
      * Lấy instance duy nhất của AuctionManager.
      *
      * @return Instance duy nhất.
+     * @param database database dùng để đọc ghi dữ liệu
+     * 
      */
-    public static synchronized AuctionManager getInstance() {
+    public static synchronized AuctionManager getInstance(final SerializedDatabase database) {
         if (instance == null) {
-            instance = new AuctionManager();
+            instance = new AuctionManager(database);
         }
         return instance;
     }
@@ -71,12 +77,18 @@ public class AuctionManager {
 
     /** Scheduler kiểm tra thời gian phiên đấu giá định kỳ. */
     private final ScheduledExecutorService scheduler;
-
-    private AuctionManager() {
+    
+    /**
+     * Khởi tạo manager với database.
+     *
+     * @param database database dùng để đọc ghi dữ liệu
+     */
+    private AuctionManager(final SerializedDatabase database) {
         this.auctionList = new CopyOnWriteArrayList<>();
         this.activeUsers = new ConcurrentHashMap<>();
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.database =  Objects.requireNonNull(database,"database");
         startAuctionScheduler();
 
         try {

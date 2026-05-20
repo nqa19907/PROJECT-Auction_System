@@ -5,6 +5,8 @@ import auction_system.common.models.items.Item;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +15,11 @@ import java.util.logging.Logger;
  */
 public class GetAuctionCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(GetAuctionCommand.class.getName());
+    private final AuctionManager auctionManager;
+
+    public GetAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
 
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
@@ -33,7 +40,7 @@ public class GetAuctionCommand implements Command {
                 return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
-            Auction auction = AuctionManager.getInstance().getAuctionById(parts[1]);
+            Auction auction = auctionManager.getAuctionById(parts[1]);
             if (auction == null) {
                 return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                         + "Không tìm thấy phiên đấu giá";

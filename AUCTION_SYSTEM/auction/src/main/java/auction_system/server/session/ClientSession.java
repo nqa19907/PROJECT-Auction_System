@@ -25,9 +25,11 @@ public class ClientSession {
      * Observer (chính là ClientHandler) để đăng ký/hủy đăng ký nhận thông báo.
      */
     private final AuctionObserver observer;
+    private final AuctionManager auctionManager;
 
-    public ClientSession(AuctionObserver observer) {
+    public ClientSession(AuctionObserver observer,AuctionManager auctionManager) {
         this.observer = observer;
+        this.auctionManager = auctionManager;
     }
 
     public User getCurrentUser() {
@@ -48,7 +50,7 @@ public class ClientSession {
      * @param auctionId ID của phiên đấu giá cần theo dõi.
      */
     public void joinAuction(String auctionId) {
-        Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
+        Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.attach(observer);
             joinedAuctionIds.add(auctionId);
@@ -61,7 +63,7 @@ public class ClientSession {
      * @param auctionId ID của phiên đấu giá cần gỡ bỏ.
      */
     public void leaveAuction(String auctionId) {
-        Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
+        Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.detach(observer);
         }

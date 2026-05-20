@@ -6,6 +6,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,6 +15,11 @@ import java.util.logging.Logger;
  */
 public class RegisterCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(RegisterCommand.class.getName());
+    private final AuctionManager auctionManager;
+
+    public RegisterCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
 
     /**
      * Thực thi lệnh đăng ký tài khoản mới.
@@ -38,7 +44,7 @@ public class RegisterCommand implements Command {
             String email = parts[2];
             String password = parts[3];
 
-            if (AuctionManager.getInstance().isUsernameTaken(username)) {
+            if (auctionManager.isUsernameTaken(username)) {
                 return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                         + "Tên đăng nhập đã tồn tại";
             }
@@ -59,7 +65,7 @@ public class RegisterCommand implements Command {
                     ? new Seller(username, email, password, 0.0, 5.0f)
                     : new Bidder(username, email, password, 0.0);
 
-            AuctionManager.getInstance().registerUser(newUser);
+            auctionManager.registerUser(newUser);
             LOGGER.info("Đăng ký mới: " + username + " [" + role + "]");
             return Protocol.Response.REGISTER_OK.name();
         } catch (Exception e) {

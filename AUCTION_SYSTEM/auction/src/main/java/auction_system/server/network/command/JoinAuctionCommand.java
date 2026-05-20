@@ -5,6 +5,8 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +15,11 @@ import java.util.logging.Logger;
  */
 public class JoinAuctionCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(JoinAuctionCommand.class.getName());
+    private final AuctionManager auctionManager;
+
+    public JoinAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
 
     /**
      * Thực thi lệnh tham gia phiên đấu giá.
@@ -37,7 +44,7 @@ public class JoinAuctionCommand implements Command {
             }
 
             String auctionId = parts[1];
-            Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
+            Auction auction = auctionManager.getAuctionById(auctionId);
 
             if (auction == null) {
                 return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 

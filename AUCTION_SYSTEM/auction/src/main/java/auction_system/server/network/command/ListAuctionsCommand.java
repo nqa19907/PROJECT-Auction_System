@@ -6,6 +6,7 @@ import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,7 +15,11 @@ import java.util.logging.Logger;
  */
 public class ListAuctionsCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(ListAuctionsCommand.class.getName());
+    private final AuctionManager auctionManager;
 
+    public ListAuctionsCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
     /**
      * Thực thi lệnh lấy danh sách phiên đấu giá.
      *
@@ -30,7 +35,7 @@ public class ListAuctionsCommand implements Command {
     @Override
     public String execute(String[] parts, ClientSession session) {
         try {
-            List<Auction> auctions = AuctionManager.getInstance().getAllAuctions();
+            List<Auction> auctions = auctionManager.getAllAuctions();
             StringBuilder response = new StringBuilder();
             response.append(Protocol.Response.AUCTION_LIST.name())
                     .append(Protocol.SEPARATOR).append(auctions.size());

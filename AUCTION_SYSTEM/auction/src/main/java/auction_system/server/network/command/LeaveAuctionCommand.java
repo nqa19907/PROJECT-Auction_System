@@ -1,7 +1,10 @@
 package auction_system.server.network.command;
 
 import auction_system.common.network.Protocol;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,6 +13,11 @@ import java.util.logging.Logger;
  */
 public class LeaveAuctionCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(LeaveAuctionCommand.class.getName());
+    private final AuctionManager auctionManager;
+
+    public LeaveAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+    }
 
     /**
      * Thực thi lệnh rời phiên đấu giá.

@@ -1,9 +1,14 @@
 package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.services.AuthService;
 import auction_system.common.network.NetworkConfig;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
+import auction_system.server.persistence.serialization.SerializedDatabase;
+
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +29,8 @@ public class ClientApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+
+
         // Mở kết nối mạng tới Server
         try {
             NetworkClient.getInstance().connect(NetworkConfig.SERVER_HOST,
@@ -53,8 +60,12 @@ public class ClientApp extends Application {
      * và kết nối lại sau khi khởi động xong.
      */
     private void startLocalServerAndConnect() {
+        SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        int port = NetworkConfig.SERVER_PORT;
+        AuctionManager auctionManager = AuctionManager.getInstance(database);
+        AuthService authService = AuthService.getInstance(database);
         Thread serverThread = new Thread(() -> {
-            SocketServer.getInstance().start();
+            SocketServer.getInstance(port, authService, auctionManager).start();
         });
         serverThread.setDaemon(true); // Đảm bảo server tự tắt khi client đóng
         serverThread.start();
@@ -88,12 +99,16 @@ public class ClientApp extends Application {
 
     @Override
     public void stop() throws Exception {
+            SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        int port = NetworkConfig.SERVER_PORT;
+        AuctionManager auctionManager = AuctionManager.getInstance(database);
+        AuthService authService = AuthService.getInstance(database);
         // Ngắt kết nối khi đóng ứng dụng
         NetworkClient.getInstance().disconnect();
 
         // Tắt server nội bộ nếu nó đang chạy ngầm
-        if (SocketServer.getInstance().isRunning()) {
-            SocketServer.getInstance().stop();
+        if (SocketServer.getInstance(port, authService, auctionManager).isRunning()) {
+            SocketServer.getInstance(port, authService, auctionManager).stop();
         }
 
         super.stop();

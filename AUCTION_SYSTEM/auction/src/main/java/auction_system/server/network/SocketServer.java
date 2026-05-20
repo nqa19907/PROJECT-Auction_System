@@ -1,9 +1,14 @@
 package auction_system.server.network;
 
+import auction_system.client.services.AuthService;
 import auction_system.common.network.NetworkConfig;
+import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.serialization.SerializedDatabase;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +71,8 @@ public class SocketServer {
 
     private static final int THREAD_POOL_SIZE = 20;
     private static final int SHUTDOWN_TIMEOUT = 5; // giây
+    private final AuctionManager auctionManager;
+    private final AuthService authService;
 
     // Singleton
 
@@ -74,14 +81,21 @@ public class SocketServer {
     /**
      * Lấy instance duy nhất của server.
      *
-     * @return Instance duy nhất của {@link SocketServer}.
+     * @param authService service xác thực dùng chung của server
+     * @param auctionManager manager đấu giá dùng chung của server
+     * @return instance duy nhất của {@link SocketServer}
      */
-    public static SocketServer getInstance() {
+    public static SocketServer getInstance(
+            int port,
+            final AuthService authService,
+            final AuctionManager auctionManager) {
         if (instance == null) {
-            instance = new SocketServer(NetworkConfig.SERVER_PORT);
             synchronized (SocketServer.class) {
                 if (instance == null) {
-                    instance = new SocketServer(NetworkConfig.SERVER_PORT);
+                    instance = new SocketServer(
+                            NetworkConfig.SERVER_PORT,
+                            auctionManager,
+                            authService);
                 }
             }
         }
@@ -95,8 +109,10 @@ public class SocketServer {
     private ServerSocket serverSocket;
     private final ExecutorService threadPool;
 
-    private SocketServer(int port) {
+    private SocketServer(int port, AuctionManager auctionManager, AuthService authService) {
         this.port = port;
+        this.auctionManager = auctionManager;
+        this.authService = authService;
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 
@@ -132,7 +148,7 @@ public class SocketServer {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info("Client kết nối: " + clientSocket.getInetAddress());
 
-                threadPool.execute(new ClientHandler(clientSocket));
+                threadPool.execute(new ClientHandler(clientSocket,auctionManager,authService));
 
             } catch (IOException e) {
                 if (running) {
@@ -205,8 +221,17 @@ public class SocketServer {
                                     + NetworkConfig.SERVER_PORT);
             }
         }
+        SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+
+        AuctionManager auctionManager = AuctionManager.getInstance(database);
+        AuthService authService = AuthService.getInstance(database);
+
+        SocketServer socketServer = SocketServer.getInstance(
+                port,
+                authService,
+                auctionManager);
 
         // Dùng instance mới với port tuỳ chỉnh thay vì singleton mặc định
-        new SocketServer(port).start();
+        new SocketServer(port,auctionManager,authService).start();
     }
 }
