@@ -5,7 +5,6 @@ import auction_system.common.models.items.Item;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
-
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +17,7 @@ public class GetAuctionCommand implements Command {
     private final AuctionManager auctionManager;
 
     public GetAuctionCommand(AuctionManager auctionManager) {
-        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**

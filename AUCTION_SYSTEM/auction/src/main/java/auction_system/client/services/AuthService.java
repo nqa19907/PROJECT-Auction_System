@@ -2,14 +2,8 @@ package auction_system.client.services;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.network.dto.LoginResult;
-import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.common.utils.SecurityUtils;
-import auction_system.server.exceptions.DatabaseException;
-import auction_system.server.persistence.serialization.SerializedDatabase;
-
-import java.nio.file.Path;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -20,34 +14,28 @@ import java.util.logging.Logger;
 public final class AuthService {
     private static final Logger LOGGER = Logger.getLogger(AuthService.class.getName());
 
-    private static AuthService instance ;
     private AuthCallback currentCallback;
     /** Database dùng để truy xuất dữ liệu người dùng. */
-    private final SerializedDatabase database ;
 
+    private static final AuthService INSTANCE = new AuthService();
 
-    private AuthService(final SerializedDatabase database) {
-        // Đăng ký hóng tin nhắn LOGIN_OK và LOGIN_FAIL một lần duy nhất
+    private AuthService() {
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.LOGIN_OK.name(), this::handleLoginResponse);
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.LOGIN_FAIL.name(), this::handleLoginResponse);
-        this.database = Objects.requireNonNull(database);
     }
+
 
     /**
      * Lấy instance duy nhất của AuthService.
      *
      * <p>Lần gọi đầu tiên bắt buộc phải truyền database để khởi tạo service.
      *
-     * @param database database dùng chung của server
      * @return instance duy nhất của AuthService
      */
-    public static synchronized AuthService getInstance(final SerializedDatabase database) {
-        if (instance == null) {
-            instance = new AuthService(database);
-        }
-        return instance;
+    public static AuthService getInstance() {
+        return INSTANCE;
     }
 
     /**
@@ -105,11 +93,13 @@ public final class AuthService {
         currentCallback = null;
     }
 
-    public User register(final User user) {
-    if (database.users().existsByUsername(user.getUsername())) {
-        throw new DatabaseException("Tên đăng nhập đã tồn tại.");
+    /**
+     * Gửi yêu cầu đăng xuất tới server.
+     *
+     * <p>Server sẽ xử lý việc xóa người dùng khỏi danh sách online thông qua
+     * LogoutCommand. Client không được gọi trực tiếp AuctionManager.
+     */
+    public void logout() {
+        NetworkClient.getInstance().sendCommand(Protocol.Command.LOGOUT.name());
     }
-
-    return database.users().save(user);
-}
 }

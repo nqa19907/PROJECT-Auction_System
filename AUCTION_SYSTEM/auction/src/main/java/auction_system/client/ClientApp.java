@@ -6,7 +6,7 @@ import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-
+import auction_system.server.services.AuctionBidService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -62,10 +62,15 @@ public class ClientApp extends Application {
     private void startLocalServerAndConnect() {
         SerializedDatabase database = new SerializedDatabase(Path.of("data"));
         int port = NetworkConfig.SERVER_PORT;
+        AuctionBidService auctionBidService = new AuctionBidService(database);
         AuctionManager auctionManager = AuctionManager.getInstance(database);
-        AuthService authService = AuthService.getInstance(database);
+        AuthService authService = AuthService.getInstance();
         Thread serverThread = new Thread(() -> {
-            SocketServer.getInstance(port, authService, auctionManager).start();
+            SocketServer.getInstance(
+                port,
+                authService,
+                auctionManager,
+                auctionBidService).start();;;
         });
         serverThread.setDaemon(true); // Đảm bảo server tự tắt khi client đóng
         serverThread.start();
@@ -99,18 +104,24 @@ public class ClientApp extends Application {
 
     @Override
     public void stop() throws Exception {
-            SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        SerializedDatabase database = new SerializedDatabase(Path.of("data"));
         int port = NetworkConfig.SERVER_PORT;
+        AuctionBidService auctionBidService = new AuctionBidService(database);
         AuctionManager auctionManager = AuctionManager.getInstance(database);
-        AuthService authService = AuthService.getInstance(database);
+        AuthService authService = AuthService.getInstance();
         // Ngắt kết nối khi đóng ứng dụng
         NetworkClient.getInstance().disconnect();
 
         // Tắt server nội bộ nếu nó đang chạy ngầm
-        if (SocketServer.getInstance(port, authService, auctionManager).isRunning()) {
-            SocketServer.getInstance(port, authService, auctionManager).stop();
-        }
+        SocketServer socketServer = SocketServer.getInstance(
+            port,
+            authService,
+            auctionManager,
+            auctionBidService);
 
+        if (socketServer.isRunning()) {
+            socketServer.stop();
+        }
         super.stop();
         // Ép JVM tắt hoàn toàn, dọn sạch mọi Thread còn sót lại trên RAM
         System.exit(0);

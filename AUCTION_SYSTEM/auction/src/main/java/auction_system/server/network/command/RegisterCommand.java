@@ -18,7 +18,7 @@ public class RegisterCommand implements Command {
     private final AuctionManager auctionManager;
 
     public RegisterCommand(AuctionManager auctionManager) {
-        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**

@@ -15,6 +15,7 @@ import auction_system.server.network.command.LoginCommand;
 import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
 import auction_system.server.network.command.RegisterCommand;
+import auction_system.server.services.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,39 +42,51 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final Socket socket;
     private final AuctionManager auctionManager;
     private final AuthService authService;
+    private final AuctionBidService auctionBidService;
+    private final Map<String, Command> commandMap;
+    private final ClientSession session;
     private BufferedReader inputReader;
     private PrintWriter outputWriter;
-    private final Map<String, Command> commandMap;
 
-    /**
-     * Phiên làm việc lưu trữ trạng thái của client hiện tại
-     * (người dùng, phiên đấu giá đang xem).
-     */
-    private final ClientSession session;
-
-    
     /**
      * Khởi tạo handler cho một kết nối client.
-    *
-    * @param socket Socket kết nối từ client.
-    */
-    public ClientHandler(Socket socket,AuctionManager auctionManager, AuthService authService) {
-        this.socket = Objects.requireNonNull(socket,"socket");
-        this.auctionManager = Objects.requireNonNull(auctionManager,"auctionManager");
-        this.authService = Objects.requireNonNull(authService,"authService");
+     *
+     * @param socket            Socket kết nối từ client.
+     * @param auctionManager    Quản lý thông tin các phiên đấu giá.
+     * @param authService       Dịch vụ xác thực tài khoản.
+     * @param auctionBidService Dịch vụ đặt giá.
+     */
+    public ClientHandler(
+            final Socket socket, 
+            final AuctionManager auctionManager,
+            final AuthService authService,
+            final AuctionBidService auctionBidService) { 
+        this.socket = Objects.requireNonNull(socket, "socket");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+        this.authService = Objects.requireNonNull(authService, "authService");
         this.session = new ClientSession(this, auctionManager);
-        /**
+        this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
+        
+        /*
          * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
          */
-        this.commandMap= Map.ofEntries(
-            Map.entry(Protocol.Command.LOGIN.name(), new LoginCommand(auctionManager)),
-            Map.entry(Protocol.Command.REGISTER.name(), new RegisterCommand(auctionManager)),
-            Map.entry(Protocol.Command.LIST_AUCTIONS.name(), new ListAuctionsCommand(auctionManager)),
-            Map.entry(Protocol.Command.GET_AUCTION.name(), new GetAuctionCommand(auctionManager)),
-            Map.entry(Protocol.Command.JOIN_AUCTION.name(), new JoinAuctionCommand(auctionManager)),
-            Map.entry(Protocol.Command.LEAVE_AUCTION.name(), new LeaveAuctionCommand(auctionManager)),
-            Map.entry(Protocol.Command.PLACE_BID.name(), new PlaceBidCommand(auctionManager)),
-            Map.entry(Protocol.Command.LOGOUT.name(), new LogoutCommand(auctionManager))
+        this.commandMap = Map.ofEntries(
+                Map.entry(Protocol.Command.LOGIN.name(),
+                        new LoginCommand(auctionManager)),
+                Map.entry(Protocol.Command.REGISTER.name(),
+                        new RegisterCommand(auctionManager)),
+                Map.entry(Protocol.Command.LIST_AUCTIONS.name(),
+                        new ListAuctionsCommand(auctionManager)),
+                Map.entry(Protocol.Command.GET_AUCTION.name(),
+                        new GetAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.JOIN_AUCTION.name(),
+                        new JoinAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.LEAVE_AUCTION.name(),
+                        new LeaveAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.PLACE_BID.name(),
+                        new PlaceBidCommand(auctionBidService)),
+                Map.entry(Protocol.Command.LOGOUT.name(),
+                        new LogoutCommand(auctionManager))
         );
     }
 
@@ -89,12 +102,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
     public void run() {
         try {
             inputReader = new BufferedReader(
-                            new InputStreamReader(socket.getInputStream(), 
-                            StandardCharsets.UTF_8)
+                    new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8)
             );
             outputWriter = new PrintWriter(
-                            socket.getOutputStream(), true,
-                            StandardCharsets.UTF_8
+                    socket.getOutputStream(), true, StandardCharsets.UTF_8
             );
 
             String line;
@@ -105,7 +116,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 }
             }
 
-        } catch (IOException e) {
+        } catch (IOException exception) {
             LOGGER.info("Client ngắt kết nối đột ngột: " + socket.getInetAddress());
         } finally {
             cleanup();
@@ -122,17 +133,17 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @param rawCommand Dòng lệnh thô nhận từ client.
      */
-    private void handleCommand(String rawCommand) {
-        String[] parts = rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
-        String commandName = parts[0].toUpperCase();
+    private void handleCommand(final String rawCommand) {
+        final String[] parts = rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
+        final String commandName = parts[0].toUpperCase();
 
-        Command command = commandMap.get(commandName);
+        final Command command = commandMap.get(commandName);
         if (command != null) {
-            String response = command.execute(parts, session);
+            final String response = command.execute(parts, session);
             if (response != null) {
                 // Xử lý các phản hồi nhiều dòng (ví dụ: từ LIST_AUCTIONS)
                 // Command sẽ trả về một chuỗi duy nhất với các dòng được phân tách bằng '\n'
-                for (String line : response.split("\n")) {
+                for (final String line : response.split("\n")) {
                     send(line);
                 }
             }
@@ -152,7 +163,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param message Thông điệp theo định dạng giao thức.
      */
     @Override
-    public void update(String message) {
+    public void update(final String message) {
         send(message);
     }
 
@@ -166,7 +177,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @param message Nội dung cần gửi.
      */
-    private synchronized void send(String message) {
+    private synchronized void send(final String message) {
         if (outputWriter != null && !socket.isClosed()) {
             outputWriter.println(message);
         }
@@ -180,7 +191,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         // Đảm bảo người dùng được đăng xuất và hủy theo dõi tất cả các phiên đấu giá
         session.leaveAllAuctions();
 
-        User currentUser = session.getCurrentUser();
+        final User currentUser = session.getCurrentUser();
         if (currentUser != null) {
             auctionManager.userLoggedOut(currentUser);
             currentUser.setOnline(false);
@@ -198,8 +209,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
             if (socket != null && !socket.isClosed()) {
                 socket.close();
             }
-        } catch (IOException e) {
-            LOGGER.warning("Lỗi khi đóng tài nguyên client: " + e.getMessage());
+        } catch (IOException exception) {
+            LOGGER.warning("Lỗi khi đóng tài nguyên client: " + exception.getMessage());
         }
     }
 }

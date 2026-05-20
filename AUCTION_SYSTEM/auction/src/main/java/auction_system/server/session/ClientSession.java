@@ -27,7 +27,7 @@ public class ClientSession {
     private final AuctionObserver observer;
     private final AuctionManager auctionManager;
 
-    public ClientSession(AuctionObserver observer,AuctionManager auctionManager) {
+    public ClientSession(AuctionObserver observer, AuctionManager auctionManager) {
         this.observer = observer;
         this.auctionManager = auctionManager;
     }

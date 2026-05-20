@@ -19,34 +19,6 @@ public abstract class Participant extends User {
         this.balance = balance;
     }
 
-    /**
-     * Nạp thêm tiền vào tài khoản.
-     *
-     * @param amount Số tiền cần nạp (phải lớn hơn 0).
-     */
-    public void addFunds(double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0");
-        }
-        this.balance += amount;
-    }
-
-    /**
-     * Rút tiền khỏi tài khoản.
-     *
-     * @param amount Số tiền cần rút.
-     * @return true nếu rút thành công, false nếu số dư không đủ hoặc số tiền không
-     *         hợp lệ.
-     */
-    public boolean withdrawFunds(double amount) {
-        if (amount <= 0 || this.balance < amount) {
-            return false;
-        }
-
-        this.balance -= amount;
-        return true;
-    }
-
     public double getBalance() {
         return balance;
     }
