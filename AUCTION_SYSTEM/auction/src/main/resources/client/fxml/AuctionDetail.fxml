@@ -57,7 +57,7 @@
                         <Label fx:id="currentPrice" text="15.500 VNĐ" styleClass="metric-value-main"/>
                         <HBox spacing="4" alignment="CENTER_LEFT">
                             <Label text="▲" styleClass="change-up-icon"/>
-                            <Label fx:id="priceChange" text="+0m VNĐ so với trước" styleClass="change-up"/>
+                            <Label fx:id="priceChange" text="+0 VNĐ so với trước" styleClass="change-up"/>
                         </HBox>
                     </VBox>
 
