@@ -16,8 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Quản lý trung tâm cho các phiên đấu giá và người dùng — Singleton.
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
  */
 public class AuctionManager {
 
-    private static final Logger LOGGER = Logger.getLogger(AuctionManager.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionManager.class);
     private static final int SCHEDULER_INTERVAL_SECONDS = 10;
 
     // =========================================================================
@@ -78,17 +79,12 @@ public class AuctionManager {
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         startAuctionScheduler();
+        
+        // Tạo dữ liệu mẫu để kiểm thử
+        TestDataGenerator.generate(this);
 
-        try {
-            // Lưu trữ mật khẩu dạng Hash thay vì text thô
-            User testUser = new Bidder("Hoang", "1", SecurityUtils.hashPassword("1"), 10000.0);
-
-            userRegistry.put(testUser.getUsername(), testUser);
-
-            LOGGER.info(" [UserManager] Đã nạp tài khoản test: hoang@gmail.com / Mật khẩu: 123456");
-        } catch (Exception e) {
-            LOGGER.warning("Không thể khởi tạo user mẫu: " + e.getMessage());
-        }
+        LOGGER.info("Số vật phẩm test: " + this.auctionList.size());
+        LOGGER.info("Số tài khoản test: " + this.userRegistry.size());
     }
 
     // =========================================================================
@@ -111,7 +107,7 @@ public class AuctionManager {
                         auction.endAuction();
                     }
                 } catch (Exception ex) {
-                    LOGGER.warning("Lỗi scheduler phiên " + auction.getId()
+                    LOGGER.warn("Lỗi scheduler phiên " + auction.getId()
                             + ": " + ex.getMessage());
                 }
             }
@@ -139,7 +135,7 @@ public class AuctionManager {
      * @return Phiên đấu giá vừa tạo.
      */
     public Auction createAuction(Item item, Seller seller,
-                                 LocalDateTime startTime, LocalDateTime endTime) {
+                                LocalDateTime startTime, LocalDateTime endTime) {
         Auction newAuction = new Auction(item, seller, startTime, endTime);
         auctionList.add(newAuction);
         LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()
@@ -197,7 +193,7 @@ public class AuctionManager {
      */
     public void userLoggedIn(User user) {
         activeUsers.put(user.getId(), user);
-        LOGGER.fine("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        LOGGER.debug("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
 
     /**
@@ -207,7 +203,7 @@ public class AuctionManager {
      */
     public void userLoggedOut(User user) {
         activeUsers.remove(user.getId());
-        LOGGER.fine("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        LOGGER.debug("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
 
     /**

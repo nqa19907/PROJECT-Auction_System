@@ -11,15 +11,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 import javafx.application.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Quản lý kết nối mạng từ phía Client gửi tới Server.
  * Áp dụng Singleton để toàn bộ giao diện dùng chung một đường ống.
  */
 public class NetworkClient {
-    private static final Logger LOGGER = Logger.getLogger(NetworkClient.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkClient.class);
     private static volatile NetworkClient instance;
 
     private Socket socket;
@@ -29,9 +30,8 @@ public class NetworkClient {
     private volatile boolean isRunning = false;
     
     // Callback để đẩy dữ liệu cho Controller (Giao diện)
-    private Consumer<String> messageHandler;
     private final Map<String, CopyOnWriteArrayList<Consumer<String>>>
-        messageHandlers = new ConcurrentHashMap<>(); 
+        messageHandlers = new ConcurrentHashMap<>();
     
     private NetworkClient() {
 
@@ -110,7 +110,7 @@ public class NetworkClient {
             LOGGER.info("Gửi tới Server: " + command);
             return true;
         } else {
-            LOGGER.warning("Không thể gửi lệnh, chưa kết nối: " + command);
+            LOGGER.warn("Không thể gửi lệnh, chưa kết nối: " + command);
             return false;
         }
     }
@@ -141,12 +141,12 @@ public class NetworkClient {
                         Platform.runLater(() -> handler.accept(msg));
                     }
                 } else {
-                    LOGGER.warning("Chưa có màn hình nào đăng ký xử lý lệnh: " + command);
+                    LOGGER.warn("Chưa có màn hình nào đăng ký xử lý lệnh: " + command);
                 }
             }
         } catch (IOException e) {
             if (isRunning) {
-                LOGGER.warning("Mất kết nối tới server: " + e.getMessage());
+                LOGGER.warn("Mất kết nối tới server: " + e.getMessage());
             }
         } finally {
             cleanupConnection();
@@ -188,7 +188,7 @@ public class NetworkClient {
             }
             LOGGER.info("Đã ngắt kết nối và dọn dẹp tài nguyên.");
         } catch (IOException e) {
-            LOGGER.severe("Lỗi khi đóng kết nối: " + e.getMessage());
+            LOGGER.error("Lỗi khi đóng kết nối: " + e.getMessage());
         } finally {
             socket = null;
             in = null;

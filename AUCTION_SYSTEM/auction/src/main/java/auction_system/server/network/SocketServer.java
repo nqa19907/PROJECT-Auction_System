@@ -7,7 +7,8 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Server Socket chính của hệ thống đấu giá — Singleton.
@@ -41,7 +42,7 @@ import java.util.logging.Logger;
  *   LOGIN_FAIL|message
  *   REGISTER_OK
  *   REGISTER_FAIL|message
- *   AUCTION_LIST|n   (sau đó n dòng: auctionId|itemName|currentPrice|status|endTime)
+ *   AUCTION_LIST|n   (sau đó n dòng: auctionId|itemName|currentPrice|status|endTime|itemType)
  *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
  *   JOIN_OK|auctionId
  *   JOIN_FAIL|message
@@ -62,7 +63,7 @@ import java.util.logging.Logger;
  */
 public class SocketServer {
 
-    private static final Logger LOGGER = Logger.getLogger(SocketServer.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SocketServer.class);
 
     private static final int THREAD_POOL_SIZE = 20;
     private static final int SHUTDOWN_TIMEOUT = 5; // giây
@@ -116,7 +117,7 @@ public class SocketServer {
             acceptLoop();
 
         } catch (IOException e) {
-            LOGGER.severe("Không thể khởi động server tại cổng " + port + ": " + e.getMessage());
+            LOGGER.error("Không thể khởi động server tại cổng " + port + ": " + e.getMessage());
         } finally {
             stop();
         }
@@ -136,7 +137,7 @@ public class SocketServer {
 
             } catch (IOException e) {
                 if (running) {
-                    LOGGER.warning("Lỗi khi chấp nhận kết nối: " + e.getMessage());
+                    LOGGER.warn("Lỗi khi chấp nhận kết nối: " + e.getMessage());
                 }
                 // Nếu !running thì server đang dừng — bỏ qua lỗi
             }
@@ -159,7 +160,7 @@ public class SocketServer {
             try {
                 serverSocket.close();
             } catch (IOException e) {
-                LOGGER.warning("Lỗi khi đóng ServerSocket: " + e.getMessage());
+                LOGGER.warn("Lỗi khi đóng ServerSocket: " + e.getMessage());
             }
         }
 
@@ -168,7 +169,7 @@ public class SocketServer {
         try {
             if (!threadPool.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
                 threadPool.shutdownNow();
-                LOGGER.warning("Thread pool bị buộc dừng sau " + SHUTDOWN_TIMEOUT + " giây.");
+                LOGGER.warn("Thread pool bị buộc dừng sau " + SHUTDOWN_TIMEOUT + " giây.");
             }
         } catch (InterruptedException e) {
             threadPool.shutdownNow();

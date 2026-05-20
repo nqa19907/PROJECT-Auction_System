@@ -2,7 +2,6 @@ package auction_system.client.controllers;
 
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.SceneManager;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,12 +12,14 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller for the Login screen.
  */
 public class LoginController {
-    private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
     // --- CÁC THÀNH PHẦN GIAO DIỆN ---
 
@@ -43,6 +44,14 @@ public class LoginController {
     private void handleBackToDashboard(MouseEvent event) {
         LOGGER.info("Quay về trang chủ Dashboard.");
         SceneManager.switchScene((Node) event.getSource(), "dashboard.fxml");
+    }
+
+    /**
+     * Focus vào ô mật khẩu khi nhấn Enter nếu đang ở hộp Email.
+     */
+    @FXML
+    private void handleEmailEnter() {
+        passwordField.requestFocus();
     }
 
     /**
@@ -79,7 +88,7 @@ public class LoginController {
                 
                 if (result.isSuccess()) {
                     LOGGER.info("Đăng nhập thành công, điều hướng bằng SceneManager.");
-                    SceneManager.switchScene(loginButton, "Dashboard.fxml", 1200, 800);
+                    SceneManager.switchScene(loginButton, "Dashboard.fxml");
                 } else {
                     showError(result.getErrorMessage());
                 }
@@ -107,7 +116,7 @@ public class LoginController {
      * @param message Nội dung thông báo lỗi.
      */
     private void showError(String message) {
-        LOGGER.warning("Đăng nhập thất bại: " + message);
+        LOGGER.warn("Đăng nhập thất bại: " + message);
         if (errorLabel != null) {
             errorLabel.setText(message);
             errorLabel.setVisible(true);

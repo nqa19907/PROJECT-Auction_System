@@ -6,14 +6,14 @@ import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh lấy danh sách tất cả các phiên đấu giá.
  */
 public class ListAuctionsCommand implements Command {
-    private static final Logger LOGGER = Logger.getLogger(ListAuctionsCommand.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(ListAuctionsCommand.class);
 
     /**
      * Thực thi lệnh lấy danh sách phiên đấu giá.
@@ -42,16 +42,18 @@ public class ListAuctionsCommand implements Command {
                         ? auction.getCurrentHighestBid().getAmount()
                         : item.getStartPrice();
 
-                response.append("\n") // Dùng ký tự xuống dòng để ngăn cách các dòng phản hồi
+                // Dùng ký tự phân tách để ngăn cách các dòng phản hồi
+                response.append(Protocol.RECORD_SEPARATOR)
                         .append(auction.getId())
                         .append(Protocol.SEPARATOR).append(item.getItemName())
                         .append(Protocol.SEPARATOR).append(currentPrice)
                         .append(Protocol.SEPARATOR).append(auction.getStatus().name())
-                        .append(Protocol.SEPARATOR).append(auction.getEndTime());
+                        .append(Protocol.SEPARATOR).append(auction.getEndTime())
+                        .append(Protocol.SEPARATOR).append(item.getClass().getSimpleName());
             }
             return response.toString();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy danh sách phiên đấu giá", e);
+            LOGGER.error("Lỗi hệ thống khi lấy danh sách phiên đấu giá", e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }

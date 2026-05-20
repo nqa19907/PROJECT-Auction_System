@@ -100,7 +100,7 @@
     -fx-border-width: 1.5;
 }
 
-/* ── Text riêng cho BidHistory ───────────── */
+/* ── Text riêng cho ItemDetail ───────────── */
 .root-pane .auction-title {
     -fx-font-size: 15px;
     -fx-font-weight: bold;
@@ -343,4 +343,91 @@
     -fx-background-color: #9A5C08;
     -fx-scale-x: 0.98;
     -fx-scale-y: 0.98;
+}
+
+/* ── Ẩn column-header gốc của TableView (đã có custom HBox header) ── */
+.root-pane .bid-table .column-header-background {
+    -fx-max-height: 0;
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.root-pane .bid-table .column-header,
+.root-pane .bid-table .column-header .label,
+.root-pane .bid-table .filler {
+    -fx-max-height: 0;
+    -fx-min-height: 0;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+/* ── Custom scrollbar cho ScrollPane ngoài ── */
+.root-pane .scroll-pane > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.root-pane .scroll-pane > .scroll-bar:vertical .track {
+    -fx-background-color: #F0D9B5;
+    -fx-background-radius: 4;
+}
+
+.root-pane .scroll-pane > .scroll-bar:vertical .thumb {
+    -fx-background-color: #D4860B;
+    -fx-background-radius: 4;
+    -fx-opacity: 0.6;
+}
+
+.root-pane .scroll-pane > .scroll-bar:vertical .thumb:hover {
+    -fx-opacity: 1.0;
+}
+
+.root-pane .scroll-pane > .scroll-bar:vertical .increment-button,
+.root-pane .scroll-pane > .scroll-bar:vertical .decrement-button {
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-padding: 0;
+}
+
+/* ── Custom scrollbar cho TableView ── */
+.root-pane .bid-table .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.root-pane .bid-table .scroll-bar:vertical .track {
+    -fx-background-color: #F5E8D0;
+    -fx-background-radius: 4;
+}
+
+.root-pane .bid-table .scroll-bar:vertical .thumb {
+    -fx-background-color: #D4860B;
+    -fx-background-radius: 4;
+    -fx-opacity: 0.5;
+}
+
+.root-pane .bid-table .scroll-bar:vertical .thumb:hover {
+    -fx-opacity: 0.9;
+}
+
+.root-pane .bid-table .scroll-bar:vertical .increment-button,
+.root-pane .bid-table .scroll-bar:vertical .decrement-button {
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-padding: 0;
+}
+
+/* Ẩn scrollbar ngang khi không cần */
+.root-pane .bid-table .scroll-bar:horizontal {
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+}
+
+/* Thu nhỏ kích cỡ đơn vị VNĐ */
+.root-pane .currency-symbol {
+    -fx-font-size: 16px;   /* giảm từ 22px */
+    -fx-font-weight: bold;
+    -fx-text-fill: #D4860B;
 }

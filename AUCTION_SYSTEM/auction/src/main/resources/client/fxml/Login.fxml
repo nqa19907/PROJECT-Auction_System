@@ -37,7 +37,7 @@
                     <Label maxWidth="Infinity" styleClass="text-label-code" text="EMAIL" />
             
                     <!-- Email field -->
-                    <TextField fx:id="emailField" promptText="ten@example.com" styleClass="input-field" />
+                    <TextField fx:id="emailField" onAction="#handleEmailEnter" promptText="ten@example.com" styleClass="input-field" />
                </children>
             </VBox>
             <VBox spacing="3.0">
@@ -47,7 +47,7 @@
                     <Label maxWidth="Infinity" styleClass="text-label-code" text="MẬT KHẨU" />
             
                     <!-- Password field -->
-                    <PasswordField fx:id="passwordField" promptText="••••••••" styleClass="input-field" />
+                    <PasswordField fx:id="passwordField" onAction="#handleLogin" promptText="••••••••" styleClass="input-field" />
                </children>
             </VBox>
          </children>
