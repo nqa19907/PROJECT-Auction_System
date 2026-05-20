@@ -5,12 +5,13 @@ import auction_system.common.models.auctions.Entity;
 /**
  * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
  */
-public abstract class Item extends Entity  {
+public abstract class Item extends Entity {
     private String itemName;
     private String description;
     private double startPrice;
     private double currentPrice;
     private String sellerId;
+    protected String category;
 
     /**
      * Khởi tạo một sản phẩm đấu giá mới.
@@ -29,6 +30,12 @@ public abstract class Item extends Entity  {
         this.currentPrice = startPrice;
         this.sellerId = sellerId;
 
+    }
+
+    public abstract String getCategory();
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public double getStartPrice() {

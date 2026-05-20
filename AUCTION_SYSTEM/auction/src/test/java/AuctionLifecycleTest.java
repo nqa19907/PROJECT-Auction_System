@@ -67,8 +67,8 @@ public class AuctionLifecycleTest {
         Bidder bidder2 = new Bidder("Bob", "bob@gmail.com", "456", 20000);
 
         // Act
-        auction.placeBid(new BidTransaction(bidder1, 3000));
-        auction.placeBid(new BidTransaction(bidder2, 5000));
+        auction.placeBid(new BidTransaction(bidder1, 3000,auction));
+        auction.placeBid(new BidTransaction(bidder2, 5000,auction));
 
         auction.setEndTime(LocalDateTime.MIN);
         auction.endAuction();

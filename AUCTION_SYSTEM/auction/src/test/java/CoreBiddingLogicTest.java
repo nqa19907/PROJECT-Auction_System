@@ -44,7 +44,7 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_ValidAmountSlightlyAboveStartPrice_UpdatesHighestBid() {
         // Arrange: Giá đặt chỉ cao hơn giá khởi điểm một chút (kiểm tra biên)
         double validBidAmount = 2000.1;
-        BidTransaction validBid = new BidTransaction(null, validBidAmount);
+        BidTransaction validBid = new BidTransaction(null, validBidAmount,auction);
         
         // Act: Thực hiện đặt giá
         auction.placeBid(validBid);
@@ -59,7 +59,7 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_ValidAmountSignificantlyHigher_UpdatesHighestBid() {
         // Arrange: Giá đặt cao hơn hẳn giá khởi điểm
         double validBidAmount = 10000;
-        BidTransaction validBid = new BidTransaction(null, validBidAmount);
+        BidTransaction validBid = new BidTransaction(null, validBidAmount,auction);
         
         // Act: Thực hiện đặt giá
         auction.placeBid(validBid);
@@ -74,7 +74,7 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_AmountEqualsStartPrice_ThrowsInvalidBidException() {
         // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (không hợp lệ)
         double invalidBidAmount = 2000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount);
+        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount,auction);
 
         // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
         String actualMessage = assertThrows(InvalidBidException.class, () -> {
@@ -89,7 +89,7 @@ public class CoreBiddingLogicTest {
     void testPlaceBid_AmountLowerThanStartPrice_ThrowsInvalidBidException() {
         // Arrange: Tạo giao dịch với giá tiền THẤP HƠN mức giá khởi điểm (không hợp lệ)
         double invalidBidAmount = 1000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount);
+        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount,auction);
 
         // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
         String actualMessage = assertThrows(InvalidBidException.class, () -> {
@@ -107,7 +107,7 @@ public class CoreBiddingLogicTest {
         auction.endAuction();
 
         // Tạo một giao dịch ảo để tránh lỗi NullPointerException
-        BidTransaction dummyBid = new BidTransaction(null, 3000);
+        BidTransaction dummyBid = new BidTransaction(null, 3000,auction);
 
         // Act & Assert: Kiểm tra việc đặt giá khi phiên đã đóng
         String actualMessage = assertThrows(AuctionClosedException.class, () -> {
@@ -123,7 +123,7 @@ public class CoreBiddingLogicTest {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
         Bidder expectedWinner = new Bidder("Phạm Việt Hoàng", "pvhgay@gmail.com",
                                     "123456789", 4000);
-        BidTransaction bid = new BidTransaction(expectedWinner, 2500);
+        BidTransaction bid = new BidTransaction(expectedWinner, 2500,auction);
         auction.placeBid(bid);
 
         // Act: Kết thúc phiên đấu giá
@@ -149,7 +149,7 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_AuctionStillRunning_ThrowsIllegalStateException() {
         // Arrange: Đặt một giá bất kỳ trong khi phiên đấu giá ĐANG CHẠY (chưa kết thúc)
-        BidTransaction bid = new BidTransaction(null, 2500);
+        BidTransaction bid = new BidTransaction(null, 2500,auction);
         auction.placeBid(bid);
 
         // Act & Assert: Cố gắng gọi hàm tính người thắng sớm sẽ ném ra ngoại lệ
