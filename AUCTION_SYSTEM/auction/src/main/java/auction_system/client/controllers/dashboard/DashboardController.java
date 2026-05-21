@@ -15,6 +15,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -53,7 +55,7 @@ public class DashboardController {
             if (stage != null) {
                 stage.setMaximized(true);
             }
-            
+
             // Tự động load giao diện trang chủ (Tất cả sản phẩm) sau khi Scene đã sẵn sàng
             handleShowItems();
         });
@@ -84,10 +86,10 @@ public class DashboardController {
             Platform.runLater(() -> {
                 if (result.isSuccess()) {
                     LOGGER.info(
-                        "Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
+                            "Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
                 } else {
                     LOGGER.warn(
-                        "Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
+                            "Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
                 }
                 // Luôn chuyển người dùng về màn hình đăng nhập dù kết quả trả về ra sao
                 SceneManager.switchScene(btnSignOut, ViewConstants.LOGIN_VIEW, 900, 700);
@@ -118,13 +120,36 @@ public class DashboardController {
     }
 
     private void loadAdminView() {
-        LOGGER.info("Chuyển sang toàn màn hình admin");
-        SceneManager.switchScene(
-                contentArea,
-                ViewConstants.ADMIN_DEMO_VIEW,
-                1280,
-                720
-        );
+        LOGGER.info("Mở cửa sổ Admin Dashboard riêng biệt");
+
+        try {
+            // Load FXML của Admin Dashboard
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource(ViewConstants.ADMIN_DEMO_VIEW)
+            );
+            Parent adminRoot = loader.load();
+
+            // Tạo Scene mới và thêm CSS
+            Scene adminScene = new Scene(adminRoot, 1280, 720);
+            String adminCss = getClass().getResource("/client/css/admin-dashboard.css")
+                    .toExternalForm();
+            adminScene.getStylesheets().add(adminCss);
+
+            // Tạo cửa sổ mới
+            Stage adminStage = new Stage();
+            adminStage.setTitle("AuctionHub - Admin Dashboard");
+            adminStage.setScene(adminScene);
+            adminStage.setMinWidth(1024);
+            adminStage.setMinHeight(640);
+
+            // Hiển thị
+            adminStage.show();
+
+        } catch (IOException e) {
+            LOGGER.error("Không thể mở Admin Dashboard", e);
+        }
     }
+
+
 
 }
