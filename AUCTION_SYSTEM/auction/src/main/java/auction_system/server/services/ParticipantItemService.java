@@ -18,8 +18,8 @@ import java.util.logging.Logger;
  * hệ thống gộp Seller và Bidder thành Participant, quyền bán phải được kiểm tra
  * bằng vai trò hoặc quyền của Participant, không dùng instanceof Seller nữa.
  */
-public class SellerItemService {
-    private static final Logger logger = Logger.getLogger(SellerItemService.class.getName());
+public class ParticipantItemService {
+    private static final Logger logger = Logger.getLogger(ParticipantItemService.class.getName());
     private static final String sellerRoleName = "SELLER";
     private static final String participantRoleName = "PARTICIPANT";
 
@@ -30,7 +30,7 @@ public class SellerItemService {
      *
      * @param database database serialization dùng chung của server
      */
-    public SellerItemService(final SerializedDatabase database) {
+    public ParticipantItemService(final SerializedDatabase database) {
         this.database = Objects.requireNonNull(database, "database");
     }
 
