@@ -177,6 +177,7 @@
     -fx-font-size: 13px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-text-title;
+    -fx-padding: 0 0 4px 0; /* Thêm khoảng cách nhỏ 4px bên dưới tiêu đề */
 }
 
 /* 3. Chữ phụ chú/gợi ý nhỏ bên dưới (VD: "Mỗi lần trả giá phải tăng thêm ít nhất") */
@@ -192,6 +193,7 @@
 }
 
 /* --- CÁC THÀNH PHẦN INPUT BÊN TRONG CONTENT CARD --- */
+/* Áp dụng style mặc định, nhưng bỏ qua các input đã có class tuỳ chỉnh như .input-field */
 .content-card .text-field,
 .content-card .text-area,
 .content-card .combo-box {
@@ -269,4 +271,58 @@
 .content-card .text-area:focused,
 .content-card .combo-box:focused {
     -fx-border-color: -color-primary;
+}
+
+/* --- AVATAR (Ảnh đại diện người dùng) --- */
+.avatar-circle {
+    -fx-fill: -color-orange-150;    /* Nền tối ưu độ tương phản */
+    -fx-stroke: -color-primary;   /* Viền cam chủ đạo */
+    -fx-stroke-width: 4;
+}
+
+.avatar-text {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-primary;
+}
+
+.avatar-status-dot {
+    -fx-fill: -color-success;     /* Nền xanh lá (Online) */
+    -fx-stroke: -color-surface;   /* Viền trắng tách biệt với nền */
+    -fx-stroke-width: 2;
+}
+
+.avatar-icon {
+    -fx-min-width: 30px;                      /* Icon width md: 20px */
+    -fx-min-height: 30px;                     /* Icon height sm: 16px */
+    -fx-max-width: 30px;                      /* Icon width md: 20px */
+    -fx-max-height: 30px;                     /* Icon height sm: 16px */
+}
+
+/* ========================================================================
+   PROFILE COMPONENT TEMPLATE
+======================================================================== */
+
+.profile-container {
+    -fx-background-color: -color-primary-bg;
+    -fx-padding: 24;
+}
+
+.profile-avatar-circle {
+    -fx-fill: -color-orange-150;    
+    -fx-stroke: -color-primary;   
+    -fx-stroke-width: 4;
+}
+
+.profile-avatar-status-dot {
+    -fx-fill: -color-success;     
+    -fx-stroke: -color-surface;   
+    -fx-stroke-width: 2;
+}
+
+.profile-divider-line {
+    -fx-background-color: -color-grey-200;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
 }

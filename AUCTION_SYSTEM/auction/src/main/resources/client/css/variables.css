@@ -99,6 +99,8 @@
     -color-text-brand: -color-orange-700;
     -color-text-brand-hover: -color-orange-800;
     -color-error-text: -color-red-600;
+    -color-text-success: -color-green-800;   /* Chữ màu xanh lá (thành công) */
+    -color-text-metric: -color-green-800;   /* Chữ màu xanh lá (thành công) */
 
     /* Biến đặc thù (Specific Elements) */
     -color-text-title: -color-orange-800;    /* Chữ tiêu đề nổi bật */
@@ -108,6 +110,7 @@
     -color-btn-outline-bg: rgba(255, 255, 255, 0.07);
     -color-btn-outline-border: rgba(255, 255, 255, 0.15);
     -color-btn-outline-bg-hover: rgba(255, 255, 255, 0.12);
+    -color-btn-metric: -color-green-800;   /* Chữ màu xanh lá (thành công) */
 
     /* Bề mặt & Đường viền (Surfaces & Borders) */
     -color-bg-main: -color-grey-200;

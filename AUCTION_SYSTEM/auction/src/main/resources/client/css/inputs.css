@@ -6,22 +6,36 @@
     -fx-font-family: 'Google Sans Code';
     -fx-background-color: -color-surface;
     -fx-border-color: -color-border-input;
-    -fx-border-radius: 8;                     /* Radius sm: 8 */
-    -fx-background-radius: 8;                 /* Radius sm: 8 */
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;                 /* Đồng bộ bo góc để tròn tuyệt đối */
     -fx-border-width: 1;
     -fx-padding: 12 16;                       /* Rút gọn cú pháp, spacing y:12, x-md:16 */
     -fx-text-fill: -color-text-main;
     -fx-prompt-text-fill: -color-text-hint;
     -fx-font-size: 14px;                      /* Typography body: 14px */
-    -fx-effect: dropshadow(three-pass-box, transparent, 5, 0, 0, 0);
 }
 
 .input-field:focused {
     -fx-border-color: -color-border-focus;
     -fx-border-width: 2;
     -fx-padding: 11 15;                       /* Rút gọn cú pháp padding */
-    -fx-background-color: -color-surface;
     -fx-effect: dropshadow(three-pass-box, -color-border-focus-glow, 5, 0, 0, 0); 
+}
+
+/* --- CẤU HÌNH DÀNH RIÊNG CHO Ô NẠP TIỀN (Profile.fxml) --- */
+#fieldDeposit {
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-metric;
+}
+
+#fieldDeposit:focused {
+    -fx-border-color: -color-green-800;
+    -fx-border-width: 2;
+    -fx-padding: 11 15;
+    -fx-effect: null; /* Loại bỏ hiệu ứng glow kế thừa từ .input-field */
 }
 
 /* --- SEARCH BOX --- */
@@ -43,4 +57,27 @@
     -fx-font-size: 14px;
     -fx-text-fill: -color-text-brand;              /* Chuyển mã màu tĩnh sang biến chữ chính */
     -fx-prompt-text-fill: -color-grey-300;         /* Giữ nguyên màu text hint cũ vì nó nhạt hơn biến chuẩn 1 chút */
+}
+
+/* ========================================================================
+   PROFILE INPUT TEMPLATE
+======================================================================== */
+
+.profile-input-deposit {
+    -fx-font-family: 'Google Sans Code';
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border-input;
+    -fx-border-radius: 50;
+    -fx-background-radius: 50;
+    -fx-border-width: 1;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-metric;
+    -fx-prompt-text-fill: -color-text-hint;
+}
+
+.profile-input-deposit:focused {
+    -fx-border-color: -color-green-800;
+    -fx-border-width: 2;
+    -fx-padding: 11 15;
 }

@@ -48,6 +48,12 @@
     -fx-text-fill: -color-text-sub;
 }
 
+.text-email {
+    -fx-font-family: 'Google Sans Code';
+    -fx-font-size: 13px;                     /* Kích thước xs: 12px */
+    -fx-text-fill: -color-grey-400;
+}
+
 /* --- CHỮ GỢI Ý & PHỤ CHÚ --- */
 .text-hint {
     -fx-font-family: 'Google Sans';
@@ -72,4 +78,112 @@
 
 .text-primary:hover {
     -fx-text-fill: -color-text-brand-hover;
+}
+
+/* --- TÊN NGƯỜI DÙNG --- */
+.text-username {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;                     /* Kích thước h1: 28px */
+    -fx-text-fill: -color-orange-700;
+}
+
+/* --- BADGE / TAG (Dùng để hiển thị vai trò, trạng thái...) --- */
+.badge {
+    -fx-background-color: -color-primary-bg; /* Nền cam nhạt */
+    -fx-background-radius: 50px; /* Bo góc nhẹ */
+    -fx-padding: 4px 10px; /* Padding nhỏ xung quanh chữ */
+    -fx-border-color: -color-orange-150; /* Viền cam nhạt hơn một chút */
+    -fx-border-radius: 50px;
+    -fx-border-width: 1px;
+    -fx-alignment: CENTER;
+}
+
+.badge .label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-text-brand; /* Chữ màu cam đậm */
+}
+
+/* --- SỐ LIỆU QUAN TRỌNG (METRIC - Dùng cho số dư, giá...) --- */
+.metric-value {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 32px; /* Font to, nổi bật */
+    -fx-text-fill: -color-text-metric; /* Màu đen xám dễ đọc */
+}
+
+.metric-unit {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 20px;
+    -fx-font-weight: 500; /* Mảnh hơn số chính một chút */
+    -fx-text-fill: -color-text-metric; /* Màu xám mờ */
+    -fx-padding: 0 0 0 8px; /* Tạo khoảng cách với con số */
+}
+
+/* --- NHÓM THÔNG TIN HỒ SƠ (GRAYSCALE GROUP) --- */
+.field-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-sub;       /* Màu xám Grey-500 (nhẹ nhàng, làm nền) */
+    -fx-font-weight: 500;
+    -fx-padding: 0 0 2px 0;
+}
+
+.field-value {
+    -fx-font-size: 18px;
+    -fx-text-fill: -color-text-main;      /* Màu đen Grey-800 (nổi bật nội dung) */
+    -fx-font-weight: bold;
+}
+
+/* ========================================================================
+   PROFILE TYPOGRAPHY TEMPLATE
+======================================================================== */
+
+.profile-section-title {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-orange-800;
+}
+
+.profile-avatar-text {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-orange-800;
+}
+
+.profile-username {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 17px;                     
+    -fx-text-fill: -color-orange-700;
+}
+
+.profile-email {
+    -fx-font-family: 'Google Sans Code';
+    -fx-font-size: 13px;                     
+    -fx-text-fill: -color-grey-400;
+}
+
+.profile-balance-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-text-sub;       
+    -fx-font-weight: 500;
+    -fx-padding: 0 0 2px 0;
+}
+
+.profile-balance-value {
+    -fx-font-family: 'Google Sans';
+    -fx-font-weight: bold;
+    -fx-font-size: 32px; 
+    -fx-text-fill: -color-text-metric; 
+}
+
+.profile-balance-unit {
+    -fx-font-family: 'Google Sans';
+    -fx-font-size: 20px;
+    -fx-font-weight: 500; 
+    -fx-text-fill: -color-text-metric; 
+    -fx-padding: 0 0 0 8px; 
 }
