@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ItemListController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemListController.class);
-    
+
     // Định nghĩa hằng số cho các index của mảng dữ liệu (Tránh Magic Numbers)
     private static final int IDX_ID = 0;
     private static final int IDX_NAME = 1;
@@ -70,6 +70,7 @@ public class ItemListController {
             LOGGER.warn("Dữ liệu sản phẩm không hợp lệ: thiếu trường thông tin.");
             return;
         }
+
         try {
             // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
@@ -83,7 +84,7 @@ public class ItemListController {
             String auctionId = parts[IDX_ID];
             String itemName = parts[IDX_NAME];
             String currentPriceStr = parts[IDX_PRICE];
-            // Các trường status và endTime tạm thời bị loại bỏ 
+            // Các trường status và endTime tạm thời bị loại bỏ
             // do không được dùng đến trong setCardDetails
 
             // 4. Chuyển đổi dữ liệu chuỗi giá tiền thành số thập phân
@@ -91,13 +92,13 @@ public class ItemListController {
 
             // 5. "Bơm" dữ liệu vào thẻ và định nghĩa hành động khi nút được bấm
             controller.setCardDetails(
-                auctionId,
-                itemName,
-                currentPrice,
-                this::navigateToAuctionDetail
+                    auctionId,
+                    itemName,
+                    currentPrice,
+                    selectedItemId -> navigateToAuctionDetail(parts)
             );
 
-            // 5. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
+            // 6. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
             productsGrid.getChildren().add(card);
 
         } catch (IOException | NumberFormatException e) {
@@ -105,13 +106,57 @@ public class ItemListController {
         }
     }
 
-    private void navigateToAuctionDetail(String selectedItemId) {
+    private void navigateToAuctionDetail(String[] selectedParts) {
+        if (selectedParts == null || selectedParts.length < 5) {
+            LOGGER.warn("Không thể mở AuctionDetail vì dữ liệu item không hợp lệ.");
+            return;
+        }
+
+        String selectedItemId = selectedParts[0];
+        String itemName = selectedParts[1];
+
+        long currentPrice;
+        try {
+            currentPrice = Long.parseLong(selectedParts[2].replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
+            return;
+        }
+
+        long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
+
+        if (selectedParts.length > 6) {
+            try {
+                openingPrice = Long.parseLong(selectedParts[6].replaceAll("[^0-9]", ""));
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Giá khởi điểm không hợp lệ, tạm dùng giá hiện tại trừ 1.000.000.");
+            }
+        }
+
         LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
-        // Tận dụng Router để chuyển trang và lấy controller
-        AuctionDetailController detailController = Router.navigateContentAndGetController(
-                productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
-        if (detailController != null) {
-            detailController.setAuctionId(selectedItemId);
+
+        try {
+            FXMLLoader detailLoader = new FXMLLoader(
+                    getClass().getResource("/client/fxml/AuctionDetail.fxml"));
+            Node detailView = detailLoader.load();
+
+            AuctionDetailController auctionDetailController = detailLoader.getController();
+            auctionDetailController.initAuction(
+                    new AuctionDisplayContext(
+                            selectedItemId,
+                            itemName,
+                            openingPrice,
+                            currentPrice
+                    )
+            );
+
+            StackPane contentArea = (StackPane) productsGrid.getScene().lookup("#contentArea");
+            if (contentArea != null) {
+                contentArea.getChildren().setAll(detailView);
+            }
+        } catch (Exception e) {
+            LOGGER.error(
+                    "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
         }
     }
 
@@ -138,18 +183,19 @@ public class ItemListController {
         if (productsGrid == null) {
             return;
         }
+
         productsGrid.getChildren().clear(); // Dọn dẹp lưới hiển thị cũ
 
         boolean hasItems = false;
         for (String[] parts : allAuctions) {
             // Tên danh mục nãy ta nối trên Server giờ nó nằm ở vị trí số 5 (index = 5)
             // TODO: Kiểm tra có nên sử dụng DTO ko
-            String itemCategory = (parts.length > IDX_CATEGORY) 
+            String itemCategory = (parts.length > IDX_CATEGORY)
                     ? parts[IDX_CATEGORY] : AppConstants.CATEGORY_ALL;
 
             // So sánh, nếu chữ khớp (hoặc đang chọn tất cả) thì mới vẽ
             if (AppConstants.CATEGORY_ALL.equals(filterCategory)
-                || filterCategory.equalsIgnoreCase(itemCategory)) {
+                    || filterCategory.equalsIgnoreCase(itemCategory)) {
 
                 createProductCard(parts);
                 hasItems = true;
@@ -158,7 +204,7 @@ public class ItemListController {
 
         if (!hasItems) {
             productsGrid.getChildren().add(
-                new Label("Không có phiên đấu giá nào thuộc danh mục này."));
+                    new Label("Không có phiên đấu giá nào thuộc danh mục này."));
         }
     }
 }
