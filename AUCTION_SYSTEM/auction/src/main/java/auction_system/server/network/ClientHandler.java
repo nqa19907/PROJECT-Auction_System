@@ -59,11 +59,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
     public ClientHandler(
             final Socket socket, 
             final AuctionManager auctionManager,
-            final auction_system.server.services.AuthService authService2,
+            final AuthService authService,
             final AuctionBidService auctionBidService) { 
         this.socket = Objects.requireNonNull(socket, "socket");
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
-        this.authService = Objects.requireNonNull(authService2, "authService");
+        this.authService = Objects.requireNonNull(authService, "authService");
         this.session = new ClientSession(this, auctionManager);
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         
@@ -74,7 +74,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 Map.entry(Protocol.Command.LOGIN.name(),
                         new LoginCommand(auctionManager)),
                 Map.entry(Protocol.Command.REGISTER.name(),
-                        new RegisterCommand(auctionManager)),
+                        new RegisterCommand(authService)),
                 Map.entry(Protocol.Command.LIST_AUCTIONS.name(),
                         new ListAuctionsCommand(auctionManager)),
                 Map.entry(Protocol.Command.GET_AUCTION.name(),

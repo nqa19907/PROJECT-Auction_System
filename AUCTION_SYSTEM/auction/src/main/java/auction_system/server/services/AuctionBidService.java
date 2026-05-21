@@ -3,7 +3,7 @@ package auction_system.server.services;
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
-import auction_system.common.models.users.Bidder;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
@@ -56,7 +56,7 @@ public class AuctionBidService {
 
         BidTransaction savedBid = database.executeInTransaction(() -> {
             Auction auction = findAuctionOrThrow(auctionId);
-            Bidder bidder = (Bidder) currentUser;
+            Participant bidder = (Participant) currentUser;
 
             BidTransaction bidTransaction = new BidTransaction(bidder, amount, auction);
             auction.placeBid(bidTransaction);
@@ -99,7 +99,7 @@ public class AuctionBidService {
             throw new InvalidBidException("Bạn cần đăng nhập trước khi đặt giá.");
         }
 
-        if (!(currentUser instanceof Bidder)) {
+        if (!(currentUser instanceof Participant)) {
             throw new InvalidBidException("Chỉ người mua mới có thể đặt giá.");
         }
 
@@ -107,7 +107,7 @@ public class AuctionBidService {
             throw new InvalidBidException("Số tiền đặt giá phải lớn hơn 0.");
         }
         
-        Bidder bidder = (Bidder) currentUser;
+        Participant bidder = (Participant) currentUser;
         if (amount > bidder.getBalance()) {
             throw new InvalidBidException("Không đủ số dư để đặt giá.");
         }

@@ -3,8 +3,7 @@ package auction_system.server.core;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
@@ -93,7 +92,7 @@ public class AuctionManager {
 
         try {
             // Lưu trữ mật khẩu dạng Hash thay vì text thô
-            final User testUser = new Bidder("Hoang",
+            final User testUser = new Participant("Hoang",
                                 "1",
                                 SecurityUtils.hashPassword("1"),
                                 10000.0);
@@ -155,7 +154,7 @@ public class AuctionManager {
      */
     public Auction createAuction(
             final Item item,
-            final Seller seller,
+            final Participant seller,
             final LocalDateTime startTime,
             final LocalDateTime endTime) {
         final Auction newAuction = new Auction(item, seller, startTime, endTime);
@@ -325,7 +324,7 @@ public class AuctionManager {
      */
     public List<User> getAllBidders() {
         return userRegistry.values().stream()
-                .filter(u -> u instanceof Bidder)
+                .filter(u -> u instanceof Participant)
                 .collect(Collectors.toList());
     }
 
@@ -336,7 +335,7 @@ public class AuctionManager {
      */
     public List<User> getAllSellers() {
         return userRegistry.values().stream()
-                .filter(u -> u instanceof Seller)
+                .filter(u -> u instanceof Participant)
                 .collect(Collectors.toList());
     }
 }

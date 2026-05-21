@@ -4,9 +4,8 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
-import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Participant;
-import auction_system.common.models.users.Seller;
+
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ public class CoreBiddingLogicTest {
 
     private double startPrice;
     private Item item;
-    private Seller seller;
+    private Participant seller;
     private Auction auction;
 
     @BeforeEach
@@ -34,7 +33,7 @@ public class CoreBiddingLogicTest {
                 .startPrice(startPrice)
                 .sellerId("61h23s1")
                 .build();
-        seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
+        seller = new Participant("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
                                     "69420", 69420);
         
         auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
@@ -122,7 +121,7 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_AuctionEndedWithBids_ReturnsHighestBidder() {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
-        Bidder expectedWinner = new Bidder("Phạm Việt Hoàng", "pvhgay@gmail.com",
+        Participant expectedWinner = new Participant("Phạm Việt Hoàng", "pvhgay@gmail.com",
                                     "123456789", 4000);
         BidTransaction bid = new BidTransaction(expectedWinner, 2500,auction);
         auction.placeBid(bid);

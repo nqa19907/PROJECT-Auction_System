@@ -1,5 +1,5 @@
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
+
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ public class AuctionLifecycleTest {
                 .startPrice(2000.0)
                 .sellerId("SN001")
                 .build();
-        Seller seller = new Seller("John", "john@gmail.com", "123456", 10000);
+        Participant seller = new Participant("John", "john@gmail.com", "123456", 10000);
         auction = new Auction(item, seller,
                 LocalDateTime.now(), LocalDateTime.now().plusHours(1));
     }
@@ -63,8 +63,8 @@ public class AuctionLifecycleTest {
     void testMultipleBids_HighestBidWins() {
         // Arrange
         auction.startAuction();
-        Bidder bidder1 = new Bidder("Alice", "alice@gmail.com", "123", 10000);
-        Bidder bidder2 = new Bidder("Bob", "bob@gmail.com", "456", 20000);
+        Participant bidder1 = new Participant("Alice", "alice@gmail.com", "123", 10000);
+        Participant bidder2 = new Participant("Bob", "bob@gmail.com", "456", 20000);
 
         // Act
         auction.placeBid(new BidTransaction(bidder1, 3000,auction));
