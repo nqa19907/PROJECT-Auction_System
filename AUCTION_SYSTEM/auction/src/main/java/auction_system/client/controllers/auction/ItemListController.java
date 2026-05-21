@@ -1,6 +1,7 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.controllers.components.ProductCardController;
+import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.services.AuctionService;
 import auction_system.client.utils.CategoryUtil;
 import auction_system.client.utils.Router;
@@ -135,12 +136,11 @@ public class ItemListController {
 
         LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
 
-        try {
-            FXMLLoader detailLoader = new FXMLLoader(
-                    getClass().getResource("/client/fxml/AuctionDetail.fxml"));
-            Node detailView = detailLoader.load();
+        // Tận dụng Router để chuyển trang, sử dụng đường dẫn chuẩn từ ViewConstants
+        AuctionDetailController auctionDetailController = Router.navigateContentAndGetController(
+                productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
 
-            AuctionDetailController auctionDetailController = detailLoader.getController();
+        if (auctionDetailController != null) {
             auctionDetailController.initAuction(
                     new AuctionDisplayContext(
                             selectedItemId,
@@ -149,14 +149,6 @@ public class ItemListController {
                             currentPrice
                     )
             );
-
-            StackPane contentArea = (StackPane) productsGrid.getScene().lookup("#contentArea");
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(detailView);
-            }
-        } catch (Exception e) {
-            LOGGER.error(
-                    "Lỗi khi chuyển sang giao diện AuctionDetail cho ID: " + selectedItemId, e);
         }
     }
 

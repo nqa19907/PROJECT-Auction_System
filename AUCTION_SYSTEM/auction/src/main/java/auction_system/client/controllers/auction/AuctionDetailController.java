@@ -1,6 +1,9 @@
-package auction_system.client.controllers;
+package auction_system.client.controllers.auction;
 
+import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.utils.CurrencyFormatter;
+import auction_system.client.utils.Router;
+import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
 import java.io.IOException;
 import java.net.URL;
@@ -521,25 +524,8 @@ public class AuctionDetailController implements Initializable {
     private void handleCancel() {
         LOGGER.info("Hủy bid history và quay lại ItemList");
 
-        try {
-            stopUiAnimations();
-
-            final Node view =
-                    FXMLLoader.load(getClass().getResource("/client/fxml/ItemList.fxml"));
-
-            final Node contentAreaNode =
-                    bidInput.getScene().lookup("#contentArea");
-
-            if (contentAreaNode instanceof StackPane contentArea) {
-                contentArea.getChildren().setAll(view);
-                return;
-            }
-
-            LOGGER.warn("Không tìm thấy #contentArea để chuyển về ItemList.");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        stopUiAnimations();
+        Router.navigateContent(bidInput, ViewConstants.ITEM_LIST_VIEW);
     }
 
     /**

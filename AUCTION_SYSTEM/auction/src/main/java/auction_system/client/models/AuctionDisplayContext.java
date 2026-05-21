@@ -1,4 +1,4 @@
-package auction_system.client.controllers;
+package auction_system.client.models;
 
 /**
  * Dữ liệu hiển thị cần truyền từ ItemList sang BidHistory.
