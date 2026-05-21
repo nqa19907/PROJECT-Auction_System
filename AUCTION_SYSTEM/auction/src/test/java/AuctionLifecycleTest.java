@@ -30,7 +30,7 @@ public class AuctionLifecycleTest {
                 .sellerId("SN001")
                 .build();
 
-        seller = new Seller("John", "john@gmail.com", "123456", 10_000.0, 5.0f);
+        seller = new Seller("John", "john@gmail.com", "123456", 10_000.0);
 
         auction = new Auction(item, seller,
                 LocalDateTime.now(),
@@ -49,7 +49,7 @@ public class AuctionLifecycleTest {
 
     @Test
     void testNewAuction_SellerAndItemAreSet() {
-        assertSame(seller, auction.getSeller(), "Seller phải được gán đúng");
+        assertSame(seller, auction.getParticipant(), "Seller phải được gán đúng");
         assertSame(item, auction.getItem(), "Item phải được gán đúng");
     }
 
