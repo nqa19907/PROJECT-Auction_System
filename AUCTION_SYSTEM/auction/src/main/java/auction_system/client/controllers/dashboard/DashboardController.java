@@ -62,6 +62,7 @@ public class DashboardController {
         if (sidebarController != null) {
             sidebarController.setOnCategorySelected(this::loadItemList);
             sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
+            sidebarController.setOnAdminSelected(this::loadAdminView);
         }
 
         setupUserProfile();
@@ -115,4 +116,15 @@ public class DashboardController {
             controller.setFilterCategory(category);
         }
     }
+
+    private void loadAdminView() {
+        LOGGER.info("Chuyển sang toàn màn hình admin");
+        SceneManager.switchScene(
+                contentArea,
+                ViewConstants.ADMIN_DEMO_VIEW,
+                1280,
+                720
+        );
+    }
+
 }

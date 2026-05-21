@@ -31,4 +31,8 @@ public final class ViewConstants {
     public static final String PROFILE_VIEW = BASE_PATH + "components/Profile.fxml";
     public static final String SIDEBAR_VIEW = BASE_PATH + "components/Sidebar.fxml";
     public static final String PRODUCT_CARD_VIEW = BASE_PATH + "components/ProductCard.fxml";
+
+    // Test thử màn hình admin
+    public static final String ADMIN_DEMO_VIEW = BASE_PATH + "/admin/AdminDashboardView.fxml";
+
 }

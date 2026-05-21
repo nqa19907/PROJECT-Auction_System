@@ -17,13 +17,18 @@ public class SidebarController {
     private static final String STYLE_CLASS_CATEGORY_OPTION = "category-option";
     private static final String STYLE_CLASS_ACTIVE = "active";
     private static final String UI_ID_PUBLISH_ITEM = "publishItem";
-
+    // Thử màn hình admin
+    public static final String ADMIN_DEMO_VIEW = "testAdminView";
     @FXML
     private VBox categorySidebar;
 
     // Áp dụng Null Object Pattern (empty lambda) để tránh phải check null mỗi khi gọi
     private Consumer<String> onCategorySelected = (c) -> {};
     private Runnable onPublishItemSelected = () -> {};
+    // Thử màn hình admin
+    private Runnable onAdminSelected = () -> {
+
+    };
 
     public void setOnCategorySelected(Consumer<String> callback) {
         this.onCategorySelected = callback;
@@ -31,6 +36,16 @@ public class SidebarController {
 
     public void setOnPublishItemSelected(Runnable callback) {
         this.onPublishItemSelected = callback;
+    }
+
+    // Thử màn hình admin
+    /**
+     * Đăng ký callback khi người dùng chọn màn hình admin.
+     *
+     * @param callback hành động cần chạy khi chọn màn hình admin
+     */
+    public void setOnAdminSelected(final Runnable callback) {
+        this.onAdminSelected = callback;
     }
 
     @FXML
@@ -54,6 +69,14 @@ public class SidebarController {
         // Báo cho DashboardController hiển thị màn hình Đăng Bán
         onPublishItemSelected.run();
     }
+
+    @FXML
+    private void loadAdminView() {
+        setActiveSidebarItem(ADMIN_DEMO_VIEW);
+        // Báo cho DashboardController hiển thị màn hình Admin
+        onAdminSelected.run();
+    }
+
 
     /**
      * Cập nhật trạng thái "active" (đang được chọn) cho một mục trên sidebar.
