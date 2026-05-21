@@ -22,7 +22,7 @@ public final class SeedUser {
      * @param args tham số dòng lệnh, hiện chưa sử dụng
      */
     public static void main(final String[] args) {
-        final SerializedDatabase database = new SerializedDatabase(Path.of("AUCTION_SYSTEM/xauction/data"));
+        final SerializedDatabase database = new SerializedDatabase(Path.of("AUCTION_SYSTEM/auction/data"));
         final AuthService authService = new AuthService(database);
 
         final User user = authService.register(
