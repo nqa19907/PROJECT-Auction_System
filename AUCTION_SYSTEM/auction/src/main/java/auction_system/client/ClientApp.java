@@ -23,7 +23,7 @@ import javafx.stage.Stage;
  * <p>Lớp này ưu tiên kết nối tới server có sẵn. Nếu không kết nối được, ứng dụng
  * sẽ tự khởi chạy một server nội bộ phục vụ môi trường chạy thử local.
  */
-public class ClientApp extends Application {
+public class    ClientApp extends Application {
     private static final Logger logger = Logger.getLogger(ClientApp.class.getName());
     private static final int windowWidth = 900;
     private static final int windowHeight = 700;

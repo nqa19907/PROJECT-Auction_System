@@ -1,7 +1,6 @@
 package auction_system.common.models.auctions;
 
 import auction_system.common.models.users.Participant;
-
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +15,7 @@ public class BidTransaction extends Entity {
     /**
      * Khởi tạo một giao dịch đặt giá mới.
      *
-     * @param bidder Người đặt giá.
+     * @param participant Người đặt giá.
      * @param amount Số tiền đặt giá.
      * @param auction Phiên mà nó thuộc về.
      */

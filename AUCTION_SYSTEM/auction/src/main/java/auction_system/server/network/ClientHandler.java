@@ -53,7 +53,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @param socket            Socket kết nối từ client.
      * @param auctionManager    Quản lý thông tin các phiên đấu giá.
-     * @param authService2       Dịch vụ xác thực tài khoản.
+     * @param authService     Dịch vụ xác thực tài khoản.
      * @param auctionBidService Dịch vụ đặt giá.
      */
     public ClientHandler(
@@ -72,7 +72,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
          */
         this.commandMap = Map.ofEntries(
                 Map.entry(Protocol.Command.LOGIN.name(),
-                        new LoginCommand(auctionManager)),
+                        new LoginCommand(authService, auctionManager)),
                 Map.entry(Protocol.Command.REGISTER.name(),
                         new RegisterCommand(authService)),
                 Map.entry(Protocol.Command.LIST_AUCTIONS.name(),

@@ -32,11 +32,14 @@ public class Auction extends Entity {
      * Khởi tạo một phiên đấu giá mới.
      *
      * @param item      Sản phẩm đấu giá.
-     * @param seller    Người bán tổ chức phiên đấu giá.
+     * @param participant    Người bán tổ chức phiên đấu giá.
      * @param startTime Thời gian bắt đầu.
      * @param endTime   Thời gian kết thúc.
      */
-    public Auction(Item item, Participant participant, LocalDateTime startTime, LocalDateTime endTime) {
+    public Auction(Item item, 
+        Participant participant, 
+        LocalDateTime startTime, 
+        LocalDateTime endTime) {
         super();
         this.item = item;
         this.participant = participant;
