@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CoreBiddingLogicTest {
-    private static final Logger logger = LoggerFactory.getLogger(CoreBiddingLogicTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoreBiddingLogicTest.class);
 
     private double startPrice;
     private Item item;

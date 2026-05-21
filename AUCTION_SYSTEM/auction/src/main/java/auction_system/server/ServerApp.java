@@ -39,7 +39,7 @@ public class ServerApp {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException exception) {
-                LOGGER.warning("Cổng không hợp lệ, dùng cổng mặc định "
+                LOGGER.warn("Cổng không hợp lệ, dùng cổng mặc định "
                         + NetworkConfig.SERVER_PORT);
             }
         }

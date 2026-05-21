@@ -1,7 +1,6 @@
 package auction_system.common.models.auctions;
 
 import auction_system.common.models.users.Participant;
-
 import java.time.LocalDateTime;
 
 /**
@@ -20,9 +19,9 @@ public class BidTransaction extends Entity {
      * @param amount Số tiền đặt giá.
      * @param auction Phiên mà nó thuộc về.
      */
-    public BidTransaction(Participant participant, double amount, Auction auction) {
+    public BidTransaction(Participant bidder, double amount, Auction auction) {
         super(); // Tự động tạo ID
-        this.participant = participant;
+        this.participant = bidder;
         this.amount = amount;
         this.timestamp = LocalDateTime.now();
         this.auctionId = auction.getId();

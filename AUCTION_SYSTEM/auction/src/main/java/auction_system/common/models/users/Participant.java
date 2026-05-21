@@ -109,6 +109,11 @@ public class Participant extends User {
         this.roleName = roleName.trim().toUpperCase();
     }
 
+    @Override
+    public String getRoleDisplayName() {
+        return "Người tham gia";
+    }
+
     /**
      * Chuyển participant thành chuỗi mô tả ngắn.
      *

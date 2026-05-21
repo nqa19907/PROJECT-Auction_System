@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Phản hồi server gửi xuống:
  * <pre>
- *   LOGIN_OK|userId|username|role
+ *   LOGIN_OK|userId|username|email|role|balance
  *   LOGIN_FAIL|message
  *   REGISTER_OK
  *   REGISTER_FAIL|message

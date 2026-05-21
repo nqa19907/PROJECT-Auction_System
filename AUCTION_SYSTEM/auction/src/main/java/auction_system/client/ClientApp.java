@@ -1,6 +1,7 @@
 package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.utils.ViewConstants;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
@@ -9,7 +10,6 @@ import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -96,9 +96,9 @@ public class ClientApp extends Application {
             );
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            logger.severe("Luồng chờ kết nối lại server nội bộ bị gián đoạn.");
+            LOGGER.warn("Luồng chờ kết nối lại server nội bộ bị gián đoạn.");
         } catch (IOException exception) {
-            logger.severe("Kết nối lại server nội bộ thất bại: " + exception.getMessage());
+            LOGGER.error("Kết nối lại server nội bộ thất bại: {}", exception.getMessage());
         }
     }
 
@@ -110,7 +110,7 @@ public class ClientApp extends Application {
      */
     private void loadLoginScene(final Stage stage) throws IOException {
         final FXMLLoader loader = new FXMLLoader(
-            getClass().getResource("/client/fxml/Login.fxml")
+            getClass().getResource(ViewConstants.LOGIN_VIEW)
         );
         final Parent root = loader.load();
         final Scene scene = new Scene(root, windowWidth, windowHeight);
@@ -138,7 +138,7 @@ public class ClientApp extends Application {
             if (getClass().getResource(fontPath) != null) {
                 Font.loadFont(getClass().getResourceAsStream(fontPath), 16);
             } else {
-                LOGGER.warn("Không tìm thấy font tại đường dẫn: " + fontPath);
+                LOGGER.warn("Không tìm thấy font tại đường dẫn: {}", fontPath);
             }
         }
     }

@@ -1,9 +1,10 @@
 package auction_system.server.network.command;
 
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.session.Cl
+import auction_system.server.session.ClientSession;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class LoginCommand implements Command {
      * Xử lý đăng nhập bằng Email và Password.
      *
      * <p>Lệnh:       {@code LOGIN|email|password}
-     * Thành công: {@code LOGIN_OK|userId|username|role}
+     * Thành công: {@code LOGIN_OK|userId|username|email|role|balance}
      * Thất bại:   {@code LOGIN_FAIL|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
@@ -62,6 +63,8 @@ public class LoginCommand implements Command {
             auctionManager.userLoggedIn(user);
 
             String role = user.getRoleName();
+            double balance = (user instanceof Participant p) ? p.getBalance() : 0.0;
+
             LOGGER.info("Đăng nhập thành công: " + email
                     + " [" + role + "]");
 
@@ -69,7 +72,9 @@ public class LoginCommand implements Command {
             return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR
                     + user.getId() + Protocol.SEPARATOR
                     + user.getUsername() + Protocol.SEPARATOR
-                    + role;
+                    + user.getEmail() + Protocol.SEPARATOR
+                    + role + Protocol.SEPARATOR
+                    + balance;
         } catch (Exception e) {
             // Bắt mọi lỗi hệ thống để không làm chết thread của client
             LOGGER.error("Lỗi hệ thống khi đăng nhập cho email: " + email, e);

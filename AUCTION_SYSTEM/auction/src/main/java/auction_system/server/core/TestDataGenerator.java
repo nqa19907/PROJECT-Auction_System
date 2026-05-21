@@ -3,10 +3,14 @@ package auction_system.server.core;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ArtBuilder;
 import auction_system.common.models.items.builder.ElectronicBuilder;
+import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,66 +32,105 @@ public final class TestDataGenerator {
     public static void generate(AuctionManager manager) {
         LOGGER.info("Bắt đầu tạo dữ liệu mẫu...");
 
-        // 1. Tạo người dùng "fake"
-        Seller seller1 = new Seller("SieuThiDienMay", "1", 
-                SecurityUtils.hashPassword("1"), 0.0, 5.0f);
-        Seller seller2 = new Seller("PhongTranhArt", "2", 
-                SecurityUtils.hashPassword("2"), 0.0, 5.0f);
-        Bidder bidder1 = new Bidder("NguoiDauGia1", "3", 
-                SecurityUtils.hashPassword("3"), 100_000_000.0);
-        Bidder bidder2 = new Bidder("NguoiDauGia2", "4", 
-                SecurityUtils.hashPassword("4"), 50_000_000.0);
+        // Cache để lưu trữ User nhằm liên kết với Item/Auction phía sau
+        Map<String, User> userCache = new HashMap<>();
 
-        // 2. Đăng ký người dùng vào hệ thống
-        manager.registerUser(seller1);
-        manager.registerUser(seller2);
-        manager.registerUser(bidder1);
-        manager.registerUser(bidder2);
+        // 1. Định nghĩa mảng người dùng: {Username, Email, RawPassword, Balance, Role}
+        Object[][] userData = {
+            {"SieuThiDienMay", "meomaybe@gmail.com", "1", 10_000_000.0, "SELLER"},
+            {"Thế giới chân dài", "thegioichandai@gmail.com", "2", 100_000_000.0, "SELLER"},
+            {"Nguyễn Văn User", "1", "1", 100_000_000.0, "BIDDER"},
+            {"Nguyễn Văn Admin", "2", "2", 100_000_000.0, "ADMIN"},
+            {"NguoiDauGia1", "3", "3", 100_000_000.0, "BIDDER"},
+            {"NguoiDauGia2", "4", "4", 50_000_000.0, "BIDDER"},
+            {"AdminHub", "admin@auctionhub.vn", "admin", 0.0, "ADMIN"}
+        };
 
-        Item item1 = new ElectronicBuilder()
-                .itemName("iPhone 15 Pro Max")
-                .description("Hàng mới, nguyên seal, bản 256GB màu Titan tự nhiên.")
-                .startPrice(28_000_000.0)
-                .sellerId(seller1.getId())
-                .build();
+        for (Object[] data : userData) {
+            String name = (String) data[0];
+            String email = (String) data[1];
+            String pass = SecurityUtils.hashPassword((String) data[2]);
+            double balance = (double) data[3];
+            String role = (String) data[4];
 
-        Item item2 = new ArtBuilder()
-                .itemName("Tranh Sơn Dầu 'Hoàng Hôn'")
-                .description("Tranh sơn dầu vẽ cảnh hoàng hôn trên biển, kích thước 80x120cm.")
-                .startPrice(5_000_000.0)
-                .sellerId(seller2.getId())
-                .build();
+            User user;
+            if ("ADMIN".equals(role)) {
+                user = new Admin(name, email, pass);
+            } else if ("SELLER".equals(role)) {
+                user = new Seller(name, email, pass, balance);
+            } else {
+                user = new Bidder(name, email, pass, balance);
+            }
 
-        Item item3 = new ElectronicBuilder()
-                .itemName("Laptop Dell XPS 15")
-                .description("Cấu hình Core i9, 32GB RAM, 1TB SSD, card RTX 4070.")
-                .startPrice(45_000_000.0)
-                .sellerId(seller1.getId())
-                .build();
+            manager.registerUser(user);
+            userCache.put(name, user);
+        }
 
-        Item item4 = new ArtBuilder()
-                .itemName("Bức Tượng Đồng 'Suy Tư'")
-                .description("Tượng điêu khắc bằng đồng nguyên khối, cao 50cm.")
-                .startPrice(12_000_000.0)
-                .sellerId(seller2.getId())
-                .build();
+        // 2. Định nghĩa mảng phiên đấu giá: 
+        // {Type, Name, Description, StartPrice, SellerName, StartOffsetHours, EndOffsetHours}
+        Object[][] auctionData = {
+            {"E", "iPhone 15 Pro Max", "Bản 256GB màu Titan.", 28_000_000.0,
+                "SieuThiDienMay", -1, 48},
+            {"A", "Tranh 'Hoàng Hôn'", "Sơn dầu 80x120cm.", 5_000_000.0,
+                "Thế giới chân dài", 2, 120},
+            {"E", "Laptop Dell XPS 15", "i9, 32GB RAM, RTX 4070.", 45_000_000.0,
+                "SieuThiDienMay", -24, 12},
+            {"A", "Bức Tượng 'Suy Tư'", "Đồng nguyên khối, cao 50cm.", 12_000_000.0,
+                "Thế giới chân dài", -120, -24},
+            {"E", "Sony WH-1000XM5", "Chống ồn, fullbox.", 4_500_000.0, "SieuThiDienMay", 24, 72}
+        };
 
-        Item item5 = new ElectronicBuilder()
-                .itemName("Tai nghe Sony WH-1000XM5")
-                .description("Tai nghe chống ồn chủ động, hàng đã qua sử dụng, còn bảo hành.")
-                .startPrice(4_500_000.0)
-                .sellerId(seller1.getId())
-                .build();
-
-        // 4. Tạo 5 phiên đấu giá "fake"
         LocalDateTime now = LocalDateTime.now();
-        manager.createAuction(item1, seller1, now.minusHours(1), now.plusDays(2));
-        manager.createAuction(item2, seller2, now.plusHours(2), now.plusDays(5));
-        manager.createAuction(item3, seller1, now.minusDays(1), now.plusHours(12));
-        // Phiên này đã kết thúc
-        manager.createAuction(item4, seller2, now.minusDays(5), now.minusDays(1));
-        manager.createAuction(item5, seller1, now.plusDays(1), now.plusDays(3));
+
+        for (Object[] data : auctionData) {
+            String type = (String) data[0];
+            String itemName = (String) data[1];
+            String desc = (String) data[2];
+            double price = (double) data[3];
+            String sellerName = (String) data[4];
+            int startOffset = (int) data[5];
+            int endOffset = (int) data[6];
+
+            User user = userCache.get(sellerName);
+            if (user instanceof Seller seller) {
+                Item item = createItem(type, itemName, desc, price, seller.getId());
+                manager.createAuction(
+                    item, 
+                    seller, 
+                    now.plusHours(startOffset), 
+                    now.plusHours(endOffset)
+                );
+            }
+        }
 
         LOGGER.info("Tạo dữ liệu mẫu thành công.");
+    }
+
+    /**
+     * Helper để tạo Item dựa trên loại (Electronic hoặc Art).
+     *
+     * @param type  Loại sản phẩm (E cho Electronic, A cho Art).
+     * @param name  Tên sản phẩm.
+     * @param desc  Mô tả sản phẩm.
+     * @param price Giá khởi điểm.
+     * @param sid   ID của người bán.
+     * @return Đối tượng Item tương ứng.
+     */
+    private static Item createItem(
+            String type, String name, String desc, double price, String sid) {
+        if ("E".equals(type)) {
+            return new ElectronicBuilder()
+                    .itemName(name)
+                    .description(desc)
+                    .startPrice(price)
+                    .sellerId(sid)
+                    .build();
+        }
+        return new ArtBuilder()
+                .itemName(name)
+                .description(desc)
+                .startPrice(price)
+                .sellerId(sid)
+                .build();
     }
 }

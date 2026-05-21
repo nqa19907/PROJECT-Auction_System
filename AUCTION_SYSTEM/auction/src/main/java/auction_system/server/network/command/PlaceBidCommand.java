@@ -68,17 +68,14 @@ public class PlaceBidCommand implements Command {
                     + auctionId
                     + Protocol.SEPARATOR
                     + bidTransaction.getAmount();
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException e) {
             return buildBidFailResponse("Số tiền không hợp lệ.");
         } catch (AuctionClosedException
                 | InvalidBidException
-                | DatabaseException exception) {
-            return buildBidFailResponse(exception.getMessage());
-        } catch (RuntimeException exception) {
-            LOGGER.log(
-                    Level.SEVERE,
-                    "Lỗi hệ thống khi xử lý lệnh đặt giá.",
-                    exception);
+                | DatabaseException e) {
+            return buildBidFailResponse(e.getMessage());
+        } catch (RuntimeException e) {
+            LOGGER.info("Lỗi hệ thống khi xử lý lệnh đặt giá.", e);
 
             return buildBidFailResponse(
                     "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");

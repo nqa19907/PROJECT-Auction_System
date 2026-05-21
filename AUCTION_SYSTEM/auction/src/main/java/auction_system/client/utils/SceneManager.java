@@ -88,11 +88,7 @@ public final class SceneManager {
 
             URL fxmlLocation = SceneManager.class.getResource(fxmlPath);
             if (fxmlLocation == null) {
-                // Fallback trường hợp dev gõ sai folder root hoặc muốn nạp từ /fxml/
-                fxmlLocation = SceneManager.class.getResource("/fxml/" + fxmlName);
-                if (fxmlLocation == null) {
-                    throw new IOException("Đường dẫn file FXML không tồn tại: " + fxmlPath);
-                }
+                throw new IOException("Đường dẫn file FXML không tồn tại: " + fxmlPath);
             }
 
             Parent root = FXMLLoader.load(fxmlLocation);

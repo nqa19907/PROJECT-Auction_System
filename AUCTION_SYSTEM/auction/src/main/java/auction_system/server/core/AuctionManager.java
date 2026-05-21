@@ -93,17 +93,9 @@ public class AuctionManager {
         startAuctionScheduler();
 
         try {
-            // Lưu trữ mật khẩu dạng Hash thay vì text thô
-            final User testUser = new Bidder("Hoang",
-                                "1",
-                                SecurityUtils.hashPassword("1"),
-                                10000.0);
-
-            userRegistry.put(testUser.getUsername(), testUser);
-
-            LOGGER.info(" [UserManager] Đã nạp tài khoản test: hoang@gmail.com / Mật khẩu: 123456");
+            TestDataGenerator.generate(this);
         } catch (Exception exception) {
-            LOGGER.warning("Không thể khởi tạo user mẫu: " + exception.getMessage());
+            LOGGER.warn("Không thể khởi tạo user mẫu: " + exception.getMessage());
         }
     }
 

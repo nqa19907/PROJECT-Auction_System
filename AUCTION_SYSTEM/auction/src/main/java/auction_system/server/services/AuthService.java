@@ -8,7 +8,8 @@ import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service xử lý xác thực tài khoản ở phía server.
@@ -18,9 +19,8 @@ import java.util.logging.Logger;
  * hoặc bất kỳ class nào thuộc tầng client.
  */
 public final class AuthService {
-    private static final Logger logger = Logger.getLogger(AuthService.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
     private static final double defaultBalance = 0.0;
-    private static final float defaultSellerRating = 0f;
     private static final int minimumPasswordLength = 6;
 
     private final SerializedDatabase database;
@@ -148,7 +148,7 @@ public final class AuthService {
         }
 
         upgradeLegacyPasswordIfNeeded(user, password);
-        logger.info("Xác thực đăng nhập thành công cho email: " + email);
+        LOGGER.info("Xác thực đăng nhập thành công cho email: {}", email);
 
         return Optional.of(user);
     }
@@ -183,13 +183,7 @@ public final class AuthService {
         database.users().save(newUser);
         database.flushAll();
 
-        logger.info(
-            "Đăng ký tài khoản mới: "
-                + newUser.getUsername()
-                + " ["
-                + newUser.getRoleName()
-                + "]"
-        );
+        LOGGER.info("Đăng ký tài khoản mới: {} [{}]", newUser.getUsername(), newUser.getRoleName());
 
         return newUser;
     }
@@ -295,7 +289,7 @@ public final class AuthService {
             database.users().save(user);
             database.flushAll();
 
-            logger.info("Đã nâng cấp mật khẩu sang dạng hash cho: " + user.getUsername());
+            LOGGER.info("Đã nâng cấp mật khẩu sang dạng hash cho: {}", user.getUsername());
         }
     }
 
