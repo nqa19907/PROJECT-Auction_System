@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.ItemListController">
+<ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.ItemListController">
     <content>
         <VBox id="scrollContentWrapper">
             <children>
@@ -25,13 +25,13 @@
         </VBox>
     </content>
    <stylesheets>
-      <URL value="@../css/buttons.css" />
-      <URL value="@../css/global.css" />
-      <URL value="@../css/icons.css" />
-      <URL value="@../css/images.css" />
-      <URL value="@../css/inputs.css" />
-      <URL value="@../css/layout.css" />
-      <URL value="@../css/typography.css" />
-      <URL value="@../css/variables.css" />
+      <URL value="@../../css/buttons.css" />
+      <URL value="@../../css/global.css" />
+      <URL value="@../../css/icons.css" />
+      <URL value="@../../css/images.css" />
+      <URL value="@../../css/inputs.css" />
+      <URL value="@../../css/layout.css" />
+      <URL value="@../../css/typography.css" />
+      <URL value="@../../css/variables.css" />
    </stylesheets>
 </ScrollPane>

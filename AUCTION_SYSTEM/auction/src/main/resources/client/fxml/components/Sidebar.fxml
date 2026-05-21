@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox id="categorySidebar" fx:id="categorySidebar" styleClass="category-sidebar" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.SidebarController">
+    <children>
+        <Label styleClass="text-header-secondary" text="DANH MỤC SẢN PHẨM">
+            <VBox.margin>
+                <Insets bottom="8.0" top="16.0" />
+            </VBox.margin>
+        </Label>
+        <HBox id="categoryAll" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-category" />
+                <Label styleClass="text-body" text="Tất cả" />
+            </children>
+        </HBox>
+        <HBox id="categoryArt" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-art" />
+                <Label styleClass="text-body" text="Nghệ thuật" />
+            </children>
+        </HBox>
+        <HBox id="categoryElectronic" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-electronic" />
+                <Label styleClass="text-body" text="Đồ điện tử" />
+            </children>
+        </HBox>
+        <HBox id="categoryVehicle" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-vehicle" />
+                <Label styleClass="text-body" text="Phương tiện giao thông" />
+            </children>
+        </HBox>
+        <Region styleClass="sidebar-divider">
+            <VBox.margin>
+                <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
+            </VBox.margin>
+        </Region>
+        <HBox id="publishItem" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-add" />
+                <Label styleClass="text-body" text="Đăng bán" />
+            </children>
+        </HBox>
+    </children>
+   <stylesheets>
+      <URL value="@../../css/buttons.css" />
+      <URL value="@../../css/global.css" />
+      <URL value="@../../css/icons.css" />
+      <URL value="@../../css/images.css" />
+      <URL value="@../../css/inputs.css" />
+      <URL value="@../../css/layout.css" />
+      <URL value="@../../css/typography.css" />
+      <URL value="@../../css/variables.css" />
+   </stylesheets>
+</VBox>

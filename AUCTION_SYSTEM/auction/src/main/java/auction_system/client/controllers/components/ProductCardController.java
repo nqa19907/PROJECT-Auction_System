@@ -1,4 +1,4 @@
-package auction_system.client.controllers;
+package auction_system.client.controllers.components;
 
 import java.util.function.Consumer;
 import javafx.fxml.FXML;

@@ -1,7 +1,8 @@
-package auction_system.client.controllers;
+package auction_system.client.controllers.auth;
 
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.SceneManager;
+import auction_system.client.utils.ViewConstants;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -21,14 +22,18 @@ import org.slf4j.LoggerFactory;
 public class LoginController {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginController.class);
 
+    // --- CÁC HẰNG SỐ THÔNG BÁO ---
+    private static final String MSG_ERR_EMPTY_EMAIL = "Vui lòng nhập Email!";
+    private static final String MSG_ERR_EMPTY_PASSWORD = "Vui lòng nhập Mật khẩu!";
+    private static final String BTN_TEXT_LOADING = "Đang xử lý...";
+    private static final String BTN_TEXT_DEFAULT = "Đăng nhập";
+
     // --- CÁC THÀNH PHẦN GIAO DIỆN ---
 
     @FXML private TextField emailField;
     @FXML private PasswordField passwordField;
     @FXML private Label errorLabel;
-    @FXML private Label forgetLabel;
     @FXML private Button loginButton;
-    @FXML private Button googleButton;
     @FXML private HBox registerLabel;
 
     // --- PHƯƠNG THỨC KHỞI TẠO ---
@@ -43,7 +48,7 @@ public class LoginController {
     @FXML
     private void handleBackToDashboard(MouseEvent event) {
         LOGGER.info("Quay về trang chủ Dashboard.");
-        SceneManager.switchScene((Node) event.getSource(), "dashboard.fxml");
+        SceneManager.switchScene((Node) event.getSource(), ViewConstants.DASHBOARD_VIEW);
     }
 
     /**
@@ -61,19 +66,20 @@ public class LoginController {
      */
     @FXML
     private void handleLogin(ActionEvent event) {
-        String email = emailField.getText();
+        // Dùng trim() để xoá khoảng trắng thừa ở đầu/cuối chuỗi tránh lỗi đăng nhập
+        String email = emailField.getText().trim();
         String password = passwordField.getText();
 
         LOGGER.info("Bắt đầu xử lý đăng nhập cho user: " + email);
 
         if (email.isEmpty()) {
-            showError("Vui lòng nhập Email!");
+            showError(MSG_ERR_EMPTY_EMAIL);
             emailField.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            showError("Vui lòng nhập Mật khẩu!");
+            showError(MSG_ERR_EMPTY_PASSWORD);
             passwordField.requestFocus();
             return;
         }
@@ -88,7 +94,7 @@ public class LoginController {
                 
                 if (result.isSuccess()) {
                     LOGGER.info("Đăng nhập thành công, điều hướng bằng SceneManager.");
-                    SceneManager.switchScene(loginButton, "Dashboard.fxml");
+                    SceneManager.switchScene(loginButton, ViewConstants.DASHBOARD_VIEW);
                 } else {
                     showError(result.getErrorMessage());
                 }
@@ -98,7 +104,7 @@ public class LoginController {
 
     private void setLoadingState(boolean isLoading) {
         loginButton.setDisable(isLoading);
-        loginButton.setText(isLoading ? "Đang xử lý..." : "Đăng nhập");
+        loginButton.setText(isLoading ? BTN_TEXT_LOADING : BTN_TEXT_DEFAULT);
         emailField.setDisable(isLoading);
         passwordField.setDisable(isLoading);
     }

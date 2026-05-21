@@ -107,3 +107,25 @@
     -fx-text-fill: -color-text-inverse;      /* Chữ chuyển thành trắng */
     -fx-effect: dropshadow(three-pass-box, -color-primary-hover-glow, 5, 0, 0, 0);
 }
+
+.btn-deposit {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-color: transparent;
+    -fx-background-radius: 50;             /* Radius pill: 50 */
+    -fx-border-radius: 50;             /* Radius pill: 50 */
+    -fx-text-fill: -color-text-metric;
+    -fx-cursor: hand;
+    -fx-border-color: -color-btn-metric;
+    -fx-border-width: 1;
+}
+
+.btn-deposit:hover {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 50;             /* Radius pill: 50 */
+    -fx-border-radius: 50;             /* Radius pill: 50 */
+    -fx-text-fill: -color-grey-100;
+    -fx-cursor: hand;
+    -fx-background-color: -color-btn-metric;
+}

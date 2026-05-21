@@ -15,7 +15,7 @@
 
 <!-- ===== MAIN FORM ===== -->
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.PublishItemController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.PublishItemController">
      <content>
          <VBox spacing="16" styleClass="dashboard-background">
 
@@ -56,11 +56,11 @@
                              <Label styleClass="field-title" text="Danh mục" />
                              <Label styleClass="asterisk" text="*" />
                          </HBox>
-                         <ComboBox fx:id="comboDanhMuc" maxWidth="1.7976931348623157E308" promptText="Chọn danh mục..." />
+                         <ComboBox fx:id="comboCategory" maxWidth="1.7976931348623157E308" promptText="Chọn danh mục..." />
                      </VBox>
                      <VBox spacing="6" GridPane.columnIndex="1">
                          <Label styleClass="field-title" text="Tình trạng" />
-                         <ComboBox fx:id="comboTinhTrang" maxWidth="1.7976931348623157E308" promptText="Chọn tình trạng..." />
+                         <ComboBox fx:id="comboCondition" maxWidth="1.7976931348623157E308" promptText="Chọn tình trạng..." />
                      </VBox>
                <rowConstraints>
                   <RowConstraints />
@@ -73,7 +73,7 @@
                          <Label styleClass="field-title" text="Mô tả sản phẩm" />
                          <Label styleClass="asterisk" text="*" />
                      </HBox>
-                     <TextArea fx:id="fieldMoTa" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
+                     <TextArea fx:id="handleDescription" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
                  </VBox>
              </VBox>
 
@@ -95,14 +95,14 @@
                              <Label styleClass="field-title" text="Thời gian bắt đầu" />
                              <Label styleClass="asterisk" text="*" />
                          </HBox>
-                         <TextField fx:id="fieldThoiGianBatDau" promptText="dd/MM/yyyy HH:mm" />
+                         <TextField fx:id="fieldStartingTime" promptText="dd/MM/yyyy HH:mm" />
                      </VBox>
                      <VBox spacing="6" GridPane.columnIndex="1">
                          <HBox spacing="2">
                              <Label styleClass="field-title" text="Thời gian kết thúc" />
                              <Label styleClass="asterisk" text="*" />
                          </HBox>
-                         <TextField fx:id="fieldThoiGianKetThuc" promptText="dd/MM/yyyy HH:mm" />
+                         <TextField fx:id="fieldEndingTime" promptText="dd/MM/yyyy HH:mm" />
                      </VBox>
                <rowConstraints>
                   <RowConstraints />
@@ -121,18 +121,18 @@
                              <Label styleClass="asterisk" text="*" />
                          </HBox>
                          <HBox>
-                             <TextField fx:id="fieldGiaKhoiDiem" promptText="0" HBox.hgrow="ALWAYS" />
+                             <TextField fx:id="fieldStartingPrice" promptText="0" HBox.hgrow="ALWAYS" />
                          </HBox>
                          <Label styleClass="field-title" text="Giá tối thiểu để bắt đầu đấu giá" />
-                  <TextField fx:id="fieldGiaKhoiDiem1" promptText="0" />
+                  <TextField fx:id="fieldStartingPrice1" promptText="0" />
                      </VBox>
                      <VBox spacing="6" GridPane.columnIndex="1">
                          <Label styleClass="field-title" text="Bước giá tối thiểu (VNĐ)" />
                          <HBox>
-                             <TextField fx:id="fieldBuocGia" promptText="50" HBox.hgrow="ALWAYS" />
+                             <TextField fx:id="fieldBidStep" promptText="50" HBox.hgrow="ALWAYS" />
                          </HBox>
                          <Label styleClass="field-title" text="Mỗi lần trả giá phải tăng thêm ít nhất" />
-                  <TextField fx:id="fieldBuocGia1" promptText="50" />
+                  <TextField fx:id="fieldBidStep1" promptText="50" />
                      </VBox>
                <rowConstraints>
                   <RowConstraints />
@@ -145,20 +145,20 @@
 
              <!-- Action buttons -->
              <HBox alignment="CENTER_RIGHT" spacing="12">
-                 <Button fx:id="btnHuy" onAction="#handleHuy" styleClass="btn-secondary" text="Hủy" />
-                 <Button fx:id="btnTiepTheo" onAction="#handleTiepTheo" styleClass="btn-primary" text="Xác nhận" />
+                 <Button fx:id="btnCancel" onAction="#handleCancel" styleClass="btn-secondary" text="Hủy" />
+                 <Button fx:id="btnConfirm" onAction="#handleConfirm" styleClass="btn-primary" text="Xác nhận" />
              </HBox>
 
          </VBox>
      </content>
    <stylesheets>
-      <URL value="@../css/buttons.css" />
-      <URL value="@../css/global.css" />
-      <URL value="@../css/icons.css" />
-      <URL value="@../css/images.css" />
-      <URL value="@../css/inputs.css" />
-      <URL value="@../css/layout.css" />
-      <URL value="@../css/typography.css" />
-      <URL value="@../css/variables.css" />
+      <URL value="@../../css/buttons.css" />
+      <URL value="@../../css/global.css" />
+      <URL value="@../../css/icons.css" />
+      <URL value="@../../css/images.css" />
+      <URL value="@../../css/inputs.css" />
+      <URL value="@../../css/layout.css" />
+      <URL value="@../../css/typography.css" />
+      <URL value="@../../css/variables.css" />
    </stylesheets>
  </ScrollPane>
