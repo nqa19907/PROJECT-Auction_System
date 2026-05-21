@@ -1,11 +1,11 @@
 package auction_system.server;
 
-import auction_system.client.services.AuthService;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.AuthService;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -44,7 +44,7 @@ public class ServerApp {
         }
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
-        final AuthService authService = AuthService.getInstance();
+        final AuthService authService = new AuthService(database);
         final AuctionBidService auctionBidService = new AuctionBidService(database);
         
         final SocketServer socketServer = SocketServer.getInstance(

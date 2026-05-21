@@ -1,10 +1,10 @@
 package auction_system.server.network;
 
-import auction_system.client.services.AuthService;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.AuthService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -237,7 +237,7 @@ public class SocketServer {
         final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
         final AuctionBidService auctionBidService = new AuctionBidService(database);
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
-        final AuthService authService = AuthService.getInstance();
+        final AuthService authService = new AuthService(database);
 
         final SocketServer socketServer = SocketServer.getInstance(
                 port, 

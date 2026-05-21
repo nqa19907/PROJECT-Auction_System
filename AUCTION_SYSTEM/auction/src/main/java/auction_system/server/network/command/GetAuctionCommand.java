@@ -61,7 +61,7 @@ public class GetAuctionCommand implements Command {
                     + Protocol.SEPARATOR + currentPrice
                     + Protocol.SEPARATOR + auction.getStatus().name()
                     + Protocol.SEPARATOR + auction.getEndTime()
-                    + Protocol.SEPARATOR + auction.getSeller().getUsername();
+                    + Protocol.SEPARATOR + auction.getParticipant().getUsername();
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi lấy chi tiết phiên đấu giá "

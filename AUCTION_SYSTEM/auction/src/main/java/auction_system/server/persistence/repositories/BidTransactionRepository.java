@@ -57,8 +57,8 @@ public class BidTransactionRepository
         validateText(bidderId, "Mã người đặt giá không được rỗng.");
 
         return findAll().stream()
-            .filter(bid -> bid.getBidder() != null)
-            .filter(bid -> bidderId.equals(bid.getBidder().getId()))
+            .filter(bid -> bid.getParticipant() != null)
+            .filter(bid -> bidderId.equals(bid.getParticipant().getId()))
             .toList();
     }
 
@@ -140,12 +140,12 @@ public class BidTransactionRepository
             bidTransaction.getAuctionId(),
             "Mã phiên đấu giá của giao dịch đặt giá không được rỗng.");
 
-        if (bidTransaction.getBidder() == null) {
+        if (bidTransaction.getParticipant() == null) {
             throw new DatabaseException("Người đặt giá không được null.");
         }
 
         validateText(
-            bidTransaction.getBidder().getId(),
+            bidTransaction.getParticipant().getId(),
             "Mã người đặt giá không được rỗng.");
 
         if (bidTransaction.getTimestamp() == null) {

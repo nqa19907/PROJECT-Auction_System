@@ -1,6 +1,5 @@
 package auction_system.server.network;
 
-import auction_system.client.services.AuthService;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
@@ -16,6 +15,7 @@ import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
 import auction_system.server.network.command.RegisterCommand;
 import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -53,17 +53,17 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @param socket            Socket kết nối từ client.
      * @param auctionManager    Quản lý thông tin các phiên đấu giá.
-     * @param authService       Dịch vụ xác thực tài khoản.
+     * @param authService2       Dịch vụ xác thực tài khoản.
      * @param auctionBidService Dịch vụ đặt giá.
      */
     public ClientHandler(
             final Socket socket, 
             final AuctionManager auctionManager,
-            final AuthService authService,
+            final auction_system.server.services.AuthService authService2,
             final AuctionBidService auctionBidService) { 
         this.socket = Objects.requireNonNull(socket, "socket");
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
-        this.authService = Objects.requireNonNull(authService, "authService");
+        this.authService = Objects.requireNonNull(authService2, "authService");
         this.session = new ClientSession(this, auctionManager);
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         

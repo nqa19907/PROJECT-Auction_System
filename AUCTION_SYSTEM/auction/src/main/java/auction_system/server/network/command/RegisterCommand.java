@@ -62,7 +62,7 @@ public class RegisterCommand implements Command {
             String role = parts[4].toUpperCase();
             // Khởi tạo đối tượng User tương ứng với vai trò được yêu cầu
             User newUser = "SELLER".equals(role)
-                    ? new Seller(username, email, password, 0.0, 5.0f)
+                    ? new Seller(username, email, password, 0.0)
                     : new Bidder(username, email, password, 0.0);
 
             auctionManager.registerUser(newUser);

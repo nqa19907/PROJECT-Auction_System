@@ -1,12 +1,12 @@
 package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
-import auction_system.client.services.AuthService;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.AuthService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -19,73 +19,112 @@ import javafx.stage.Stage;
 
 /**
  * Lớp chính để khởi chạy ứng dụng Client.
+ *
+ * <p>Lớp này ưu tiên kết nối tới server có sẵn. Nếu không kết nối được, ứng dụng
+ * sẽ tự khởi chạy một server nội bộ phục vụ môi trường chạy thử local.
  */
 public class ClientApp extends Application {
-    private static final Logger LOGGER = Logger.getLogger(ClientApp.class.getName());
+    private static final Logger logger = Logger.getLogger(ClientApp.class.getName());
+    private static final int windowWidth = 900;
+    private static final int windowHeight = 700;
+    private static final int minimumWindowWidth = 900;
+    private static final int serverStartupDelayMillis = 1000;
 
-    private static final int WINDOW_WIDTH = 900;
-    private static final int WINDOW_HEIGHT = 700;
-    private static final int MIN_WINDOW_WIDTH = 900;
+    private SocketServer localServer;
 
+    /**
+     * Khởi chạy giao diện client.
+     *
+     * @param stage cửa sổ chính của ứng dụng JavaFX
+     * @throws Exception nếu không thể nạp giao diện
+     */
     @Override
-    public void start(Stage stage) throws Exception {
-
-
-        // Mở kết nối mạng tới Server
+    public void start(final Stage stage) throws Exception {
         try {
-            NetworkClient.getInstance().connect(NetworkConfig.SERVER_HOST,
-                                                NetworkConfig.SERVER_PORT);
-        } catch (IOException e) {
-            LOGGER.warning("Không thể kết nối tới Server. Đang tự động khởi chạy Server nội bộ...");
+            NetworkClient.getInstance().connect(
+                NetworkConfig.SERVER_HOST,
+                NetworkConfig.SERVER_PORT
+            );
+        } catch (IOException exception) {
+            logger.warning("Không thể kết nối tới server. Đang khởi chạy server nội bộ.");
             startLocalServerAndConnect();
         }
 
-        // Nạp font
         loadFonts();
+        loadLoginScene(stage);
+    }
 
-        // Load giao diện đăng nhập
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Login.fxml"));
-        Parent root = loader.load();
-        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
-        
+    /**
+     * Tự động khởi chạy server nội bộ trên một luồng daemon và kết nối lại.
+     *
+     * <p>Phần này được phép dùng class server vì nó đang đóng vai trò boot local
+     * server cho môi trường chạy thử. Controller phía client vẫn không được gọi
+     * trực tiếp service server khi đăng nhập.
+     */
+    private void startLocalServerAndConnect() {
+        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final int port = NetworkConfig.SERVER_PORT;
+        final AuctionManager auctionManager = AuctionManager.getInstance(database);
+        final AuthService authService = new AuthService(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database);
+
+        localServer = SocketServer.getInstance(
+            port,
+            authService,
+            auctionManager,
+            auctionBidService
+        );
+
+        final Thread serverThread = new Thread(localServer::start);
+        serverThread.setDaemon(true);
+        serverThread.start();
+
+        reconnectToLocalServer();
+    }
+
+    /**
+     * Kết nối lại tới server nội bộ sau khi server được khởi chạy.
+     */
+    private void reconnectToLocalServer() {
+        try {
+            Thread.sleep(serverStartupDelayMillis);
+            NetworkClient.getInstance().connect(
+                NetworkConfig.SERVER_HOST,
+                NetworkConfig.SERVER_PORT
+            );
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            logger.severe("Luồng chờ kết nối lại server nội bộ bị gián đoạn.");
+        } catch (IOException exception) {
+            logger.severe("Kết nối lại server nội bộ thất bại: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * Nạp màn hình đăng nhập.
+     *
+     * @param stage cửa sổ chính của ứng dụng JavaFX
+     * @throws IOException nếu không thể đọc file FXML
+     */
+    private void loadLoginScene(final Stage stage) throws IOException {
+        final FXMLLoader loader = new FXMLLoader(
+            getClass().getResource("/client/fxml/Login.fxml")
+        );
+        final Parent root = loader.load();
+        final Scene scene = new Scene(root, windowWidth, windowHeight);
+
         stage.setScene(scene);
-        stage.setMinWidth(MIN_WINDOW_WIDTH);
-        stage.setMinHeight(WINDOW_HEIGHT);
+        stage.setMinWidth(minimumWindowWidth);
+        stage.setMinHeight(windowHeight);
         stage.setTitle("Đăng nhập - AuctionHub");
         stage.show();
     }
 
     /**
-     * Tự động khởi chạy Server trên một luồng chạy ngầm (Daemon Thread) 
-     * và kết nối lại sau khi khởi động xong.
+     * Nạp các font chữ dùng trong giao diện.
      */
-    private void startLocalServerAndConnect() {
-        SerializedDatabase database = new SerializedDatabase(Path.of("data"));
-        int port = NetworkConfig.SERVER_PORT;
-        AuctionBidService auctionBidService = new AuctionBidService(database);
-        AuctionManager auctionManager = AuctionManager.getInstance(database);
-        AuthService authService = AuthService.getInstance();
-        Thread serverThread = new Thread(() -> {
-            SocketServer.getInstance(
-                port,
-                authService,
-                auctionManager,
-                auctionBidService).start();;;
-        });
-        serverThread.setDaemon(true); // Đảm bảo server tự tắt khi client đóng
-        serverThread.start();
-
-        try {
-            Thread.sleep(1000); // Chờ 1 giây để Server khởi động xong và mở cổng
-            NetworkClient.getInstance().connect(NetworkConfig.SERVER_HOST,
-                                                NetworkConfig.SERVER_PORT);
-        } catch (InterruptedException | IOException ex) {
-            LOGGER.severe("Thử kết nối lại với Server nội bộ thất bại: " + ex.getMessage());
-        }
-    }
-
     private void loadFonts() {
-        String[] fontPaths = {
+        final String[] fontPaths = {
             "/fonts/GoogleSansCode/GoogleSansCode-Medium.ttf",
             "/fonts/GoogleSans/GoogleSans-Regular.ttf",
             "/fonts/GoogleSans/GoogleSans-Medium.ttf",
@@ -93,41 +132,38 @@ public class ClientApp extends Application {
             "/fonts/GoogleSans/GoogleSans-Italic.ttf"
         };
 
-        for (String fontPath : fontPaths) {
+        for (final String fontPath : fontPaths) {
             if (getClass().getResource(fontPath) != null) {
                 Font.loadFont(getClass().getResourceAsStream(fontPath), 16);
             } else {
-                LOGGER.warning("Không tìm thấy font tại đường dẫn: " + fontPath);
+                logger.warning("Không tìm thấy font tại đường dẫn: " + fontPath);
             }
         }
     }
 
+    /**
+     * Dọn tài nguyên khi đóng ứng dụng.
+     *
+     * @throws Exception nếu JavaFX gặp lỗi khi dừng ứng dụng
+     */
     @Override
     public void stop() throws Exception {
-        SerializedDatabase database = new SerializedDatabase(Path.of("data"));
-        int port = NetworkConfig.SERVER_PORT;
-        AuctionBidService auctionBidService = new AuctionBidService(database);
-        AuctionManager auctionManager = AuctionManager.getInstance(database);
-        AuthService authService = AuthService.getInstance();
-        // Ngắt kết nối khi đóng ứng dụng
         NetworkClient.getInstance().disconnect();
 
-        // Tắt server nội bộ nếu nó đang chạy ngầm
-        SocketServer socketServer = SocketServer.getInstance(
-            port,
-            authService,
-            auctionManager,
-            auctionBidService);
-
-        if (socketServer.isRunning()) {
-            socketServer.stop();
+        if (localServer != null && localServer.isRunning()) {
+            localServer.stop();
         }
+
         super.stop();
-        // Ép JVM tắt hoàn toàn, dọn sạch mọi Thread còn sót lại trên RAM
         System.exit(0);
     }
 
-    public static void main(String[] args) {
+    /**
+     * Điểm bắt đầu của ứng dụng client.
+     *
+     * @param args tham số dòng lệnh
+     */
+    public static void main(final String[] args) {
         launch(args);
     }
 }

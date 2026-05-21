@@ -24,7 +24,7 @@ public class AuctionLifecycleTest {
                 .startPrice(2000.0)
                 .sellerId("SN001")
                 .build();
-        Seller seller = new Seller("John", "john@gmail.com", "123456", 10000, 5.0f);
+        Seller seller = new Seller("John", "john@gmail.com", "123456", 10000);
         auction = new Auction(item, seller,
                 LocalDateTime.now(), LocalDateTime.now().plusHours(1));
     }
