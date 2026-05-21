@@ -6,6 +6,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,11 @@ import org.slf4j.LoggerFactory;
  */
 public class RegisterCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterCommand.class);
+    private final AuctionManager auctionManager;
+
+    public RegisterCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Thực thi lệnh đăng ký tài khoản mới.
@@ -38,7 +44,7 @@ public class RegisterCommand implements Command {
             String email = parts[2];
             String password = parts[3];
 
-            if (AuctionManager.getInstance().isUsernameTaken(username)) {
+            if (auctionManager.isUsernameTaken(username)) {
                 return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                         + "Tên đăng nhập đã tồn tại";
             }
@@ -56,15 +62,15 @@ public class RegisterCommand implements Command {
             String role = parts[4].toUpperCase();
             // Khởi tạo đối tượng User tương ứng với vai trò được yêu cầu
             User newUser = "SELLER".equals(role)
-                    ? new Seller(username, email, password, 0.0, 5.0f)
+                    ? new Seller(username, email, password, 0.0)
                     : new Bidder(username, email, password, 0.0);
 
-            AuctionManager.getInstance().registerUser(newUser);
+            auctionManager.registerUser(newUser);
             LOGGER.info("Đăng ký mới: " + username + " [" + role + "]");
             return Protocol.Response.REGISTER_OK.name();
         } catch (Exception e) {
             String username = (parts.length > 1) ? parts[1] : "unknown";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng ký cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng ký cho "
                     + username, e);
             return Protocol.Response.REGISTER_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

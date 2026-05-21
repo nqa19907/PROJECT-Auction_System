@@ -7,10 +7,12 @@ import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Seller;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
+import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
@@ -25,16 +27,19 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Trách nhiệm:
  * <ul>
- *   <li>Tạo và tra cứu phiên đấu giá ({@link Auction}).</li>
- *   <li>Theo dõi trạng thái online của người dùng.</li>
- *   <li>Lưu trữ registry người dùng đã đăng ký (in-memory).</li>
- *   <li>Scheduler tự động chuyển trạng thái phiên theo thời gian.</li>
+ * <li>Tạo và tra cứu phiên đấu giá ({@link Auction}).</li>
+ * <li>Theo dõi trạng thái online của người dùng.</li>
+ * <li>Lưu trữ registry người dùng đã đăng ký (in-memory).</li>
+ * <li>Scheduler tự động chuyển trạng thái phiên theo thời gian.</li>
  * </ul>
  */
 public class AuctionManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionManager.class);
     private static final int SCHEDULER_INTERVAL_SECONDS = 10;
+
+    /** Database serialization của server. */
+    private final SerializedDatabase database;
 
     // =========================================================================
     // Singleton
@@ -45,11 +50,12 @@ public class AuctionManager {
     /**
      * Lấy instance duy nhất của AuctionManager.
      *
+     * @param database database dùng để đọc ghi dữ liệu
      * @return Instance duy nhất.
      */
-    public static synchronized AuctionManager getInstance() {
+    public static synchronized AuctionManager getInstance(final SerializedDatabase database) {
         if (instance == null) {
-            instance = new AuctionManager();
+            instance = new AuctionManager(database);
         }
         return instance;
     }
@@ -73,18 +79,32 @@ public class AuctionManager {
     /** Scheduler kiểm tra thời gian phiên đấu giá định kỳ. */
     private final ScheduledExecutorService scheduler;
 
-    private AuctionManager() {
+    /**
+     * Khởi tạo manager với database.
+     *
+     * @param database database dùng để đọc ghi dữ liệu
+     */
+    private AuctionManager(final SerializedDatabase database) {
         this.auctionList = new CopyOnWriteArrayList<>();
         this.activeUsers = new ConcurrentHashMap<>();
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
+        this.database = Objects.requireNonNull(database, "database");
         startAuctionScheduler();
-        
-        // Tạo dữ liệu mẫu để kiểm thử
-        TestDataGenerator.generate(this);
 
-        LOGGER.info("Số vật phẩm test: " + this.auctionList.size());
-        LOGGER.info("Số tài khoản test: " + this.userRegistry.size());
+        try {
+            // Lưu trữ mật khẩu dạng Hash thay vì text thô
+            final User testUser = new Bidder("Hoang",
+                                "1",
+                                SecurityUtils.hashPassword("1"),
+                                10000.0);
+
+            userRegistry.put(testUser.getUsername(), testUser);
+
+            LOGGER.info(" [UserManager] Đã nạp tài khoản test: hoang@gmail.com / Mật khẩu: 123456");
+        } catch (Exception exception) {
+            LOGGER.warning("Không thể khởi tạo user mẫu: " + exception.getMessage());
+        }
     }
 
     // =========================================================================
@@ -98,17 +118,17 @@ public class AuctionManager {
      */
     private void startAuctionScheduler() {
         scheduler.scheduleAtFixedRate(() -> {
-            for (Auction auction : auctionList) {
+            for (final Auction auction : auctionList) {
                 try {
-                    AuctionStatus status = auction.getStatus();
+                    final AuctionStatus status = auction.getStatus();
                     if (status == AuctionStatus.OPEN) {
                         auction.startAuction();
                     } else if (status == AuctionStatus.RUNNING) {
                         auction.endAuction();
                     }
-                } catch (Exception ex) {
+                } catch (Exception e) {
                     LOGGER.warn("Lỗi scheduler phiên " + auction.getId()
-                            + ": " + ex.getMessage());
+                            + ": " + e.getMessage());
                 }
             }
         }, 0, SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
@@ -134,12 +154,18 @@ public class AuctionManager {
      * @param endTime   Thời gian kết thúc.
      * @return Phiên đấu giá vừa tạo.
      */
-    public Auction createAuction(Item item, Seller seller,
-                                LocalDateTime startTime, LocalDateTime endTime) {
-        Auction newAuction = new Auction(item, seller, startTime, endTime);
+    public Auction createAuction(
+            final Item item,
+            final Seller seller,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime) {
+        final Auction newAuction = new Auction(item, seller, startTime, endTime);
         auctionList.add(newAuction);
+        database.auctions().save(newAuction);
+
         LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()
                 + " | Item: " + item.getItemName());
+
         return newAuction;
     }
 
@@ -149,7 +175,7 @@ public class AuctionManager {
      * @param auctionId ID cần tìm.
      * @return Phiên đấu giá, hoặc null nếu không tìm thấy.
      */
-    public Auction getAuctionById(String auctionId) {
+    public Auction getAuctionById(final String auctionId) {
         return auctionList.stream()
                 .filter(a -> a.getId().equals(auctionId))
                 .findFirst()
@@ -171,8 +197,8 @@ public class AuctionManager {
      * @param auctionId ID phiên cần huỷ.
      * @return true nếu huỷ thành công, false nếu không tìm thấy.
      */
-    public boolean cancelAuction(String auctionId) {
-        Auction auction = getAuctionById(auctionId);
+    public boolean cancelAuction(final String auctionId) {
+        final Auction auction = getAuctionById(auctionId);
         if (auction == null) {
             return false;
         }
@@ -191,7 +217,7 @@ public class AuctionManager {
      *
      * @param user Người dùng vừa đăng nhập.
      */
-    public void userLoggedIn(User user) {
+    public void userLoggedIn(final User user) {
         activeUsers.put(user.getId(), user);
         LOGGER.debug("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
@@ -201,7 +227,7 @@ public class AuctionManager {
      *
      * @param user Người dùng vừa đăng xuất hoặc mất kết nối.
      */
-    public void userLoggedOut(User user) {
+    public void userLoggedOut(final User user) {
         activeUsers.remove(user.getId());
         LOGGER.debug("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
     }
@@ -212,7 +238,7 @@ public class AuctionManager {
      * @param userId ID cần kiểm tra.
      * @return true nếu đang online.
      */
-    public boolean isAlreadyOnline(String userId) {
+    public boolean isAlreadyOnline(final String userId) {
         return activeUsers.containsKey(userId);
     }
 
@@ -243,7 +269,7 @@ public class AuctionManager {
      *
      * @param user Người dùng mới (username phải chưa tồn tại).
      */
-    public void registerUser(User user) {
+    public void registerUser(final User user) {
         userRegistry.put(user.getUsername(), user);
         LOGGER.info("Đăng ký mới: " + user.getUsername());
     }
@@ -254,7 +280,7 @@ public class AuctionManager {
      * @param username Tên cần kiểm tra.
      * @return true nếu đã tồn tại.
      */
-    public boolean isUsernameTaken(String username) {
+    public boolean isUsernameTaken(final String username) {
         return userRegistry.containsKey(username);
     }
 
@@ -268,7 +294,7 @@ public class AuctionManager {
      * @param password Mật khẩu plaintext.
      * @return User nếu khớp, null nếu sai thông tin.
      */
-    public User findUserByCredentials(String email, String password) {
+    public User findUserByCredentials(final String email, final String password) {
         if (email == null || password == null) {
             return null;
         }
@@ -286,7 +312,7 @@ public class AuctionManager {
      * @param userId ID cần tìm.
      * @return User tương ứng, hoặc null.
      */
-    public User findUserById(String userId) {
+    public User findUserById(final String userId) {
         return userRegistry.values().stream()
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()

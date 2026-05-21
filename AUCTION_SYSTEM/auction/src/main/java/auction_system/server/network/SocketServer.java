@@ -1,9 +1,15 @@
 package auction_system.server.network;
 
 import auction_system.common.network.NetworkConfig;
+import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.serialization.SerializedDatabase;
+import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.AuthService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -16,27 +22,24 @@ import org.slf4j.LoggerFactory;
  * trên thread riêng cho mỗi kết nối mới.
  *
  * <p>Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
- * 
- * <pre>
- *   Client → Server : COMMAND|param1|param2|...
- *   Server → Client : RESPONSE_CODE|data...
+ * * <pre>
+ * Client → Server : COMMAND|param1|param2|...
+ * Server → Client : RESPONSE_CODE|data...
  * </pre>
  *
  * <p>Lệnh client gửi lên:
- * 
- * <pre>
- *   LOGIN|username|password
- *   REGISTER|username|email|password|role   (role: BIDDER / SELLER)
- *   LIST_AUCTIONS
- *   GET_AUCTION|auctionId
- *   JOIN_AUCTION|auctionId
- *   LEAVE_AUCTION|auctionId
- *   PLACE_BID|auctionId|amount
- *   LOGOUT
+ * * <pre>
+ * LOGIN|username|password
+ * REGISTER|username|email|password|role   (role: BIDDER / SELLER)
+ * LIST_AUCTIONS
+ * GET_AUCTION|auctionId
+ * JOIN_AUCTION|auctionId
+ * LEAVE_AUCTION|auctionId
+ * PLACE_BID|auctionId|amount
+ * LOGOUT
  * </pre>
  *
  * <p>Phản hồi server gửi xuống:
- * 
  * <pre>
  *   LOGIN_OK|userId|username|role
  *   LOGIN_FAIL|message
@@ -54,11 +57,10 @@ import org.slf4j.LoggerFactory;
  * </pre>
  *
  * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
- * 
- * <pre>
- *   UPDATE_PRICE|auctionId|newPrice
- *   AUCTION_STARTED|auctionId
- *   AUCTION_ENDED|auctionId|winnerUsername
+ * * <pre>
+ * UPDATE_PRICE|auctionId|newPrice
+ * AUCTION_STARTED|auctionId
+ * AUCTION_ENDED|auctionId|winnerUsername
  * </pre>
  */
 public class SocketServer {
@@ -67,6 +69,8 @@ public class SocketServer {
 
     private static final int THREAD_POOL_SIZE = 20;
     private static final int SHUTDOWN_TIMEOUT = 5; // giây
+    private final AuctionManager auctionManager;
+    private final AuthService authService;
 
     // Singleton
 
@@ -75,14 +79,25 @@ public class SocketServer {
     /**
      * Lấy instance duy nhất của server.
      *
-     * @return Instance duy nhất của {@link SocketServer}.
+     * @param port              cổng lắng nghe kết nối
+     * @param authService       service xác thực dùng chung của server
+     * @param auctionManager    manager đấu giá dùng chung của server
+     * @param auctionBidService service đặt giá dùng chung của server
+     * @return instance duy nhất của {@link SocketServer}
      */
-    public static SocketServer getInstance() {
+    public static SocketServer getInstance(
+            final int port,
+            final AuthService authService,
+            final AuctionManager auctionManager,
+            final AuctionBidService auctionBidService) {
         if (instance == null) {
-            instance = new SocketServer(NetworkConfig.SERVER_PORT);
             synchronized (SocketServer.class) {
                 if (instance == null) {
-                    instance = new SocketServer(NetworkConfig.SERVER_PORT);
+                    instance = new SocketServer(
+                            port,
+                            auctionManager,
+                            authService,
+                            auctionBidService);
                 }
             }
         }
@@ -95,9 +110,17 @@ public class SocketServer {
     private volatile boolean running = false;
     private ServerSocket serverSocket;
     private final ExecutorService threadPool;
+    private final AuctionBidService auctionBidService;
 
-    private SocketServer(int port) {
+    private SocketServer(
+            final int port,
+            final AuctionManager auctionManager,
+            final AuthService authService,
+            final AuctionBidService auctionBidService) {
         this.port = port;
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+        this.authService = Objects.requireNonNull(authService, "authService");
+        this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     }
 
@@ -133,7 +156,11 @@ public class SocketServer {
                 Socket clientSocket = serverSocket.accept();
                 LOGGER.info("Client kết nối: " + clientSocket.getInetAddress());
 
-                threadPool.execute(new ClientHandler(clientSocket));
+                threadPool.execute(new ClientHandler(
+                        clientSocket,
+                        auctionManager,
+                        authService,
+                        auctionBidService));
 
             } catch (IOException e) {
                 if (running) {
@@ -171,7 +198,7 @@ public class SocketServer {
                 threadPool.shutdownNow();
                 LOGGER.warn("Thread pool bị buộc dừng sau " + SHUTDOWN_TIMEOUT + " giây.");
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException exception) {
             threadPool.shutdownNow();
             Thread.currentThread().interrupt();
         }
@@ -196,18 +223,27 @@ public class SocketServer {
      *
      * @param args Tham số dòng lệnh (phần tử đầu tiên có thể là số cổng cần lắng nghe).
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         int port = NetworkConfig.SERVER_PORT;
         if (args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException exception) {
                 System.err.println("Cổng không hợp lệ, dùng cổng mặc định "
-                                    + NetworkConfig.SERVER_PORT);
+                        + NetworkConfig.SERVER_PORT);
             }
         }
+        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionManager auctionManager = AuctionManager.getInstance(database);
+        final AuthService authService = new AuthService(database);
 
-        // Dùng instance mới với port tuỳ chỉnh thay vì singleton mặc định
-        new SocketServer(port).start();
+        final SocketServer socketServer = SocketServer.getInstance(
+                port,
+                authService,
+                auctionManager,
+                auctionBidService);
+
+        socketServer.start();
     }
 }

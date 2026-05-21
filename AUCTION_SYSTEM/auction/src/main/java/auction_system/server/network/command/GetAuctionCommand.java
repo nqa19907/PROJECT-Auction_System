@@ -5,6 +5,7 @@ import auction_system.common.models.items.Item;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,11 @@ import org.slf4j.LoggerFactory;
  */
 public class GetAuctionCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetAuctionCommand.class);
+    private final AuctionManager auctionManager;
+
+    public GetAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
@@ -33,7 +39,7 @@ public class GetAuctionCommand implements Command {
                 return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
-            Auction auction = AuctionManager.getInstance().getAuctionById(parts[1]);
+            Auction auction = auctionManager.getAuctionById(parts[1]);
             if (auction == null) {
                 return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                         + "Không tìm thấy phiên đấu giá";
@@ -55,7 +61,7 @@ public class GetAuctionCommand implements Command {
                     + Protocol.SEPARATOR + currentPrice
                     + Protocol.SEPARATOR + auction.getStatus().name()
                     + Protocol.SEPARATOR + auction.getEndTime()
-                    + Protocol.SEPARATOR + auction.getSeller().getUsername();
+                    + Protocol.SEPARATOR + auction.getParticipant().getUsername();
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.error("Lỗi hệ thống khi lấy chi tiết phiên đấu giá "

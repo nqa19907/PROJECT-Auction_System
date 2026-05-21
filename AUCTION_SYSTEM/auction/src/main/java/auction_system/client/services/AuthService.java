@@ -14,11 +14,12 @@ import org.slf4j.LoggerFactory;
  */
 public final class AuthService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
-    private static final AuthService INSTANCE = new AuthService();
     private AuthCallback currentCallback;
+    /** Database dùng để truy xuất dữ liệu người dùng. */
+
+    private static final AuthService INSTANCE = new AuthService();
 
     private AuthService() {
-        // Đăng ký hóng tin nhắn LOGIN_OK và LOGIN_FAIL một lần duy nhất
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.LOGIN_OK.name(), this::handleLoginResponse);
         NetworkClient.getInstance().registerHandler(
@@ -27,6 +28,14 @@ public final class AuthService {
             Protocol.Response.LOGOUT_OK.name(), this::handleLogoutResponse);
     }
 
+
+    /**
+     * Lấy instance duy nhất của AuthService.
+     *
+     * <p>Lần gọi đầu tiên bắt buộc phải truyền database để khởi tạo service.
+     *
+     * @return instance duy nhất của AuthService
+     */
     public static AuthService getInstance() {
         return INSTANCE;
     }

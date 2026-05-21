@@ -4,6 +4,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,11 @@ import org.slf4j.LoggerFactory;
  */
 public class LogoutCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogoutCommand.class);
+    private final AuctionManager auctionManager;
+
+    public LogoutCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Thực thi lệnh đăng xuất.
@@ -29,7 +35,7 @@ public class LogoutCommand implements Command {
         try {
             User currentUser = session.getCurrentUser();
             if (currentUser != null) {
-                AuctionManager.getInstance().userLoggedOut(currentUser);
+                auctionManager.userLoggedOut(currentUser);
                 currentUser.setOnline(false);
                 LOGGER.info("Đăng xuất: " + currentUser.getUsername());
                 session.setCurrentUser(null);

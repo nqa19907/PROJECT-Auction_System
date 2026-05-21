@@ -3,8 +3,7 @@ package auction_system.common.models.auctions;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.items.Item;
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Auction extends Entity {
     private Item item;
-    private Seller seller;
+    private Participant participant;
     private final List<BidTransaction> bids;
     private BidTransaction currentHighestBid;
     private LocalDateTime startTime;
@@ -37,10 +36,10 @@ public class Auction extends Entity {
      * @param startTime Thời gian bắt đầu.
      * @param endTime   Thời gian kết thúc.
      */
-    public Auction(Item item, Seller seller, LocalDateTime startTime, LocalDateTime endTime) {
+    public Auction(Item item, Participant participant, LocalDateTime startTime, LocalDateTime endTime) {
         super();
         this.item = item;
-        this.seller = seller;
+        this.participant = participant;
         this.startTime = startTime;
         this.endTime = endTime;
 
@@ -86,7 +85,7 @@ public class Auction extends Entity {
      *
      * @return Người thắng cuộc, hoặc null nếu không ai đặt giá.
      */
-    public Bidder calculateWinner() {
+    public Participant calculateWinner() {
         // Chỉ được tiính người thắng khi phiên đấu giá đã kết thúc
         if (this.status != AuctionStatus.FINISHED) {
             throw new IllegalStateException(
@@ -94,7 +93,7 @@ public class Auction extends Entity {
         }
 
         if (this.currentHighestBid != null) {
-            return currentHighestBid.getBidder();
+            return currentHighestBid.getParticipant();
         }
 
         // Trường hợp không ai đặt giá
@@ -170,7 +169,7 @@ public class Auction extends Entity {
         // Chỉ kết thúc khi đang RUNNING và đã qua giờ kết thúc
         if (this.status == AuctionStatus.RUNNING && !LocalDateTime.now().isBefore(this.endTime)) {
             setStatus(AuctionStatus.FINISHED);
-            Bidder winner = calculateWinner();
+            Participant winner = calculateWinner();
             String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";
             String message = Protocol.Response.AUCTION_ENDED.name() 
                     + Protocol.SEPARATOR + this.getId() 
@@ -193,12 +192,12 @@ public class Auction extends Entity {
         this.observers = new CopyOnWriteArrayList<>();
     }
 
-    public Seller getSeller() {
-        return seller;
+    public Participant getParticipant() {
+        return participant;
     }
 
-    public void setSeller(Seller seller) {
-        this.seller = seller;
+    public void setParticipant(Participant participant) {
+        this.participant = participant;
     }
 
     public Item getItem() {
@@ -250,7 +249,7 @@ public class Auction extends Entity {
         return "Auction{"
                 + "id='" + id + '\'' // Sử dụng id từ lớp Entity
                 + ", item=" + item
-                + ", seller=" + seller
+                + ", seller=" + participant
                 + ", bids=" + bids
                 + ", currentHighestBid=" + currentHighestBid
                 + ", startTime=" + startTime

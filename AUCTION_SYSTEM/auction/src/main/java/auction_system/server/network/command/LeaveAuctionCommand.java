@@ -1,7 +1,9 @@
 package auction_system.server.network.command;
 
 import auction_system.common.network.Protocol;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +12,11 @@ import org.slf4j.LoggerFactory;
  */
 public class LeaveAuctionCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(LeaveAuctionCommand.class);
+    private final AuctionManager auctionManager;
+
+    public LeaveAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Thực thi lệnh rời phiên đấu giá.
@@ -36,7 +43,7 @@ public class LeaveAuctionCommand implements Command {
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho "
                     + username, e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

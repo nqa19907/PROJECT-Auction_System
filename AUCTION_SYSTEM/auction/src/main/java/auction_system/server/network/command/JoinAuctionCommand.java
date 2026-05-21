@@ -5,6 +5,7 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,11 @@ import org.slf4j.LoggerFactory;
  */
 public class JoinAuctionCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(JoinAuctionCommand.class);
+    private final AuctionManager auctionManager;
+
+    public JoinAuctionCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Thực thi lệnh tham gia phiên đấu giá.
@@ -37,7 +43,7 @@ public class JoinAuctionCommand implements Command {
             }
 
             String auctionId = parts[1];
-            Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
+            Auction auction = auctionManager.getAuctionById(auctionId);
 
             if (auction == null) {
                 return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
@@ -58,7 +64,7 @@ public class JoinAuctionCommand implements Command {
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho " 
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho "
                     + username, e);
             return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";

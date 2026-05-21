@@ -3,7 +3,8 @@ package auction_system.server.network.command;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.session.ClientSession;
+import auction_system.server.session.Cl
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,11 @@ import org.slf4j.LoggerFactory;
  */
 public class LoginCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
+    private final AuctionManager auctionManager;
+
+    public LoginCommand(AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    }
 
     /**
      * Xử lý đăng nhập bằng Email và Password.
@@ -40,20 +46,20 @@ public class LoginCommand implements Command {
 
         try {
             // Gọi hàm findUserByCredentials (đã được sửa ở AuctionManager để quét theo email)
-            User user = AuctionManager.getInstance().findUserByCredentials(email, password);
+            User user = auctionManager.findUserByCredentials(email, password);
             if (user == null) {
                 return failPrefix + "Email hoặc mật khẩu không đúng";
             }
 
             // Ngăn chặn đăng nhập đồng thời trên nhiều thiết bị
-            if (AuctionManager.getInstance().isAlreadyOnline(user.getId())) {
+            if (auctionManager.isAlreadyOnline(user.getId())) {
                 return failPrefix + "Tài khoản này đang đăng nhập ở nơi khác";
             }
 
             session.setCurrentUser(user);
             // Sử dụng hành vi của đối tượng thay vì thay đổi trạng thái trực tiếp
             user.setOnline(true);
-            AuctionManager.getInstance().userLoggedIn(user);
+            auctionManager.userLoggedIn(user);
 
             String role = user.getRoleName();
             LOGGER.info("Đăng nhập thành công: " + email
