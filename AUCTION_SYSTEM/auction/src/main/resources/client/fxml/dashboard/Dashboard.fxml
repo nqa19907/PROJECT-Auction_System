@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="mainLayout" minWidth="960" styleClass="dashboard-background" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.dashboard.DashboardController">
+    <top>
+        <VBox id="headerWrapper">
+
+            <!-- ===== NAVBAR ===== -->
+            <HBox id="navBar" alignment="CENTER_LEFT" minWidth="960" prefHeight="64" spacing="12" styleClass="nav-bar">
+
+                <!-- Logo -->
+                <HBox id="logoWrapper" alignment="CENTER_LEFT" spacing="8">
+                    <Region prefHeight="200.0" prefWidth="200.0" styleClass="icon-gavel" />
+                    <Label styleClass="text-header" text="AuctionHub" />
+                </HBox>
+
+                <!-- Search bar -->
+                <HBox id="searchWrapper" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
+                    <Region maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="20.0" prefWidth="20.0" styleClass="icon-search" />
+                    <TextField fx:id="searchField" maxWidth="1.7976931348623157E308" promptText="Search for brand, model, artist..." styleClass="search-input" HBox.hgrow="ALWAYS" />
+                </HBox>
+
+                <!-- Right side -->
+                <HBox id="actionButtonsWrapper" alignment="CENTER" minWidth="300" spacing="16">
+
+                    <!-- button sign in -->
+                    <Button fx:id="btnSignOut" onAction="#handleSignOut" styleClass="btn-primary" text="Đăng xuất" />
+                </HBox>
+
+            </HBox>
+
+        </VBox>
+    </top>
+
+    <center>
+      <StackPane fx:id="contentArea" styleClass="main-content-area" />
+    </center>
+    <left>
+        <!-- Đưa id="sidebar" để JavaFX tự mapping vào biến sidebarController bên trong DashboardController -->
+        <fx:include source="../components/Sidebar.fxml" fx:id="sidebar" BorderPane.alignment="CENTER"/>
+    </left>
+    <right>
+        <fx:include source="../components/Profile.fxml" fx:id="profile" BorderPane.alignment="CENTER"/>
+    </right>
+    <stylesheets>
+        <URL value="@../../css/global.css" />
+        <URL value="@../../css/inputs.css" />
+        <URL value="@../../css/variables.css" />
+        <URL value="@../../css/buttons.css" />
+        <URL value="@../../css/images.css" />
+        <URL value="@../../css/layout.css" />
+        <URL value="@../../css/typography.css" />
+        <URL value="@../../css/icons.css" />
+    </stylesheets>
+
+</BorderPane>

@@ -27,7 +27,7 @@ public final class SceneManager {
      * Chuyển đổi màn hình hiển thị dựa trên tên file FXML.
      *
      * @param triggerNode Một component bất kỳ trên màn hình hiện tại để tìm ra Stage gốc
-     * @param fxmlName Tên file FXML cần đổi sang (Ví dụ: "Dashboard.fxml")
+     * @param fxmlName    Tên file FXML cần đổi sang (Ví dụ: "Dashboard.fxml")
      */
     public static void switchScene(Node triggerNode, String fxmlName) {
         switchScene(triggerNode, fxmlName, -1, -1);
@@ -37,9 +37,9 @@ public final class SceneManager {
      * Chuyển đổi màn hình hiển thị dựa trên tên file FXML, có tuỳ chỉnh kích thước.
      *
      * @param triggerNode Một component bất kỳ trên màn hình hiện tại để tìm ra Stage gốc
-     * @param fxmlName Tên file FXML cần đổi sang
-     * @param width Chiều rộng cửa sổ (-1 nếu muốn giữ nguyên mặc định)
-     * @param height Chiều cao cửa sổ (-1 nếu muốn giữ nguyên mặc định)
+     * @param fxmlName    Tên file FXML cần đổi sang
+     * @param width       Chiều rộng cửa sổ (-1 nếu muốn giữ nguyên mặc định)
+     * @param height      Chiều cao cửa sổ (-1 nếu muốn giữ nguyên mặc định)
      */
     public static void switchScene(Node triggerNode, String fxmlName, double width, double height) {
         if (triggerNode == null) {
@@ -59,7 +59,7 @@ public final class SceneManager {
     /**
      * Chuyển đổi màn hình hiển thị trên một Stage cụ thể.
      *
-     * @param stage Stage cần thay đổi Scene
+     * @param stage    Stage cần thay đổi Scene
      * @param fxmlName Tên file FXML cần đổi sang
      */
     public static void switchScene(Stage stage, String fxmlName) {
@@ -70,9 +70,9 @@ public final class SceneManager {
      * Chuyển đổi màn hình hiển thị trên một Stage cụ thể, có tuỳ chỉnh kích thước.
      *
      * @param currentStage Stage cần thay đổi Scene
-     * @param fxmlName Tên file FXML cần đổi sang
-     * @param width Chiều rộng cửa sổ mới
-     * @param height Chiều cao cửa sổ mới
+     * @param fxmlName     Tên file FXML cần đổi sang
+     * @param width        Chiều rộng cửa sổ mới
+     * @param height       Chiều cao cửa sổ mới
      */
     public static void switchScene(Stage currentStage, String fxmlName,
                                     double width, double height) {

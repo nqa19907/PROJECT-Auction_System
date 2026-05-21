@@ -1,5 +1,7 @@
-package auction_system.client.controllers;
+package auction_system.client.controllers.auction;
 
+import auction_system.client.utils.Router;
+import auction_system.client.utils.ViewConstants;
 import java.io.IOException;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -398,15 +400,7 @@ public class AuctionDetailController implements Initializable {
     @FXML
     private void handleCancel() {
         LOGGER.info("Huỷ, quay về Dashboard");
-        try {
-            Node view = FXMLLoader.load(
-                    getClass().getResource("/client/fxml/ItemList.fxml")
-            );
-            ((StackPane) bidInput.getScene().lookup("#contentArea"))
-                    .getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Router.navigateContent(bidInput, ViewConstants.ITEM_LIST_VIEW);
     }
 
     /**

@@ -38,7 +38,7 @@ public class ClientApp extends Application {
         loadFonts();
 
         // Load giao diện đăng nhập
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Login.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/auth/Login.fxml"));
         Parent root = loader.load();
         Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
         

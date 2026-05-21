@@ -17,7 +17,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 
-<BorderPane styleClass="root-pane" stylesheets="@../css/global.css,@../css/auction-hub.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.AuctionDetailController">
+<BorderPane styleClass="root-pane" stylesheets="@../../css/global.css,@../../css/auction-hub.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.AuctionDetailController">
 
     <!-- ═══════════════════════════════════════════
          TOP BAR

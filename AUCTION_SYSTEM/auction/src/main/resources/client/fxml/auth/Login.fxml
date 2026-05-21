@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 
-<StackPane prefHeight="700.0" prefWidth="900" styleClass="login-background" stylesheets="@../css/global.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.LoginController">
+<StackPane prefHeight="700.0" prefWidth="900" styleClass="login-background" stylesheets="@../../css/global.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auth.LoginController">
 
     <!-- Decorative circles -->
     <Circle fill="#c8872a" opacity="0.07" radius="200" translateX="230" translateY="-270" />

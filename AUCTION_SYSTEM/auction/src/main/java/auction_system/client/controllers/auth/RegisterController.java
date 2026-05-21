@@ -1,5 +1,6 @@
-package auction_system.client.controllers;
+package auction_system.client.controllers.auth;
 
+import auction_system.client.utils.ViewConstants;
 import auction_system.common.utils.SecurityUtils;
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -51,12 +52,12 @@ public class RegisterController {
         
         // TODO: Viết thêm hàm AuthService.getInstance().register(...) để gửi Socket lên Server.
         // Tạm thời vẫn điều hướng để test giao diện
-        navigateTo("/client/fxml/Login.fxml", "Đăng nhập");
+        navigateTo(ViewConstants.LOGIN_VIEW, "Đăng nhập");
     }
 
     @FXML
     private void handleGoToLogin() {
-        navigateTo("/fxml/login.fxml", "Đăng nhập");
+        navigateTo(ViewConstants.LOGIN_VIEW, "Đăng nhập");
     }
 
     private void navigateTo(String path, String title) {
