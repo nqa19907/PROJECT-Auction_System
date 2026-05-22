@@ -119,7 +119,8 @@ public class ItemListController {
 
         long currentPrice;
         try {
-            // parseDouble trước vì dữ liệu từ server có thể gửi về định dạng thập phân (vd: "15500.0").
+            // parseDouble trước vì dữ liệu từ server có thể gửi về định dạng thập phân
+            // (vd: "15500.0").
             // Sau đó ép kiểu sang (long) để dùng nội bộ trong logic frontend.
             currentPrice = (long) Double.parseDouble(selectedParts[IDX_PRICE]);
         } catch (NumberFormatException e) {

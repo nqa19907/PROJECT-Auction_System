@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * Controller cho màn hình chi tiết phiên đấu giá.
  * Quản lý bảng lịch sử, biểu đồ giá, đặt giá và trạng thái realtime.
  *
- * NEW ARCHITECTURE: This controller now uses a ViewModel (AuctionViewModel) to manage
+ * <p>NEW ARCHITECTURE: This controller now uses a ViewModel (AuctionViewModel) to manage
  * the UI state and business logic. The controller's primary responsibility is to
  * bind UI components to the ViewModel and delegate user actions to it.
  */
