@@ -7,6 +7,8 @@ import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
+
 import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ public class ServerApp {
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
         final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         final User user = authService.register(
             "qa",
@@ -55,7 +58,7 @@ public class ServerApp {
             "123456",
             "BIDDER");
         final SocketServer socketServer = SocketServer.getInstance(
-                port, authService, auctionManager, auctionBidService);
+                port, authService, auctionManager, auctionBidService, participantItemService);
 
 
 

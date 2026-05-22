@@ -2,12 +2,15 @@ package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.utils.ViewConstants;
+import auction_system.common.models.users.Participant;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import javafx.application.Application;
@@ -75,12 +78,14 @@ public class ClientApp extends Application {
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
         final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         localServer = SocketServer.getInstance(
             port,
             authService,
             auctionManager,
-            auctionBidService
+            auctionBidService,
+            participantItemService
         );
 
         final Thread serverThread = new Thread(localServer::start);

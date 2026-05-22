@@ -2,7 +2,6 @@ package auction_system.server.network;
 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
-import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
@@ -104,13 +103,13 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(
-                        Protocol.Command.LOGOUT.name(),
-                        new LogoutCommand(auctionManager)));
+                    Protocol.Command.LOGOUT.name(),
+                    new LogoutCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.PUBLISH_ITEM.name(), 
-                        new PublishItemCommand(participantItemService, auctionManager));
+                        new PublishItemCommand(participantItemService, auctionManager)));
     }
-
+                            
     /**
      * Lắng nghe dữ liệu từ client và chuyển tiếp đến command handler.
      */

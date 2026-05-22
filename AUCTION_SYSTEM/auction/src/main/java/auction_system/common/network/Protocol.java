@@ -25,12 +25,12 @@ public final class Protocol {
         LOGOUT,
         
         // Auction
-        PUBLISH_ITEM,
         LIST_AUCTIONS,
         GET_AUCTION,
         JOIN_AUCTION,
         LEAVE_AUCTION,
-        PLACE_BID
+        PLACE_BID,
+        PUBLISH_ITEM
     }
 
     /**
@@ -50,8 +50,7 @@ public final class Protocol {
         JOIN_OK, JOIN_FAIL,
         LEAVE_OK,
         BID_OK, BID_FAIL,
-        PUBLISH_ITEM_OK,
-        PUBLISH_ITEM_FAIL,
+        PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,
