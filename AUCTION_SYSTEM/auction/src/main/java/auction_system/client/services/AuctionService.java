@@ -16,6 +16,7 @@ public class AuctionService {
     private static final AuctionService INSTANCE = new AuctionService();
     private FetchAuctionsCallback currentListCallback;
     private FetchAuctionDetailCallback currentDetailCallback;
+    private PlaceBidCallback currentBidCallback;
 
     /**
      * Khởi tạo AuctionService ẩn (private) và tự động đăng ký bộ lắng nghe lệnh phản hồi.
@@ -27,6 +28,12 @@ public class AuctionService {
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.AUCTION_DETAIL.name(), this::handleAuctionDetailResponse
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BID_OK.name(), this::handlePlaceBidSuccess
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BID_FAIL.name(), this::handlePlaceBidFailure
         );
     }
 
@@ -49,6 +56,14 @@ public class AuctionService {
     @FunctionalInterface
     public interface FetchAuctionDetailCallback {
         void onResult(String[] auctionDetailData);
+    }
+
+    /**
+     * Định nghĩa giao diện Callback trả kết quả đặt giá về Controller.
+     */
+    @FunctionalInterface
+    public interface PlaceBidCallback {
+        void onResult(boolean isSuccess, String message);
     }
 
     /**
@@ -115,4 +130,53 @@ public class AuctionService {
         currentDetailCallback.onResult(parts);
         currentDetailCallback = null;
     }
+
+    /**
+     * Gửi yêu cầu đặt giá cho một phiên đấu giá.
+     *
+     * @param auctionId Mã phiên đấu giá.
+     * @param amount Số tiền đặt giá.
+     * @param callback Hàm xử lý kết quả đặt giá trả về.
+     */
+    public void placeBid(String auctionId, double amount, PlaceBidCallback callback) {
+        this.currentBidCallback = callback;
+        String request = Protocol.Command.PLACE_BID.name()
+                + Protocol.SEPARATOR + auctionId
+                + Protocol.SEPARATOR + amount;
+        NetworkClient.getInstance().sendCommand(request);
+    }
+
+    /**
+     * Xử lý khi đặt giá thành công.
+     *
+     * @param response Chuỗi phản hồi từ mạng do Server trả về.
+     */
+    private void handlePlaceBidSuccess(String response) {
+        if (currentBidCallback == null) {
+            return;
+        }
+        LOGGER.info("AuctionService đặt giá thành công: " + response);
+        // BID_OK|auctionId|amount
+        currentBidCallback.onResult(true, "Đặt giá thành công!");
+        currentBidCallback = null;
+    }
+
+    /**
+     * Xử lý khi đặt giá thất bại.
+     *
+     * @param response Chuỗi phản hồi từ mạng do Server trả về.
+     */
+    private void handlePlaceBidFailure(String response) {
+        if (currentBidCallback == null) {
+            return;
+        }
+        LOGGER.warn("AuctionService đặt giá thất bại: " + response);
+        // BID_FAIL|message
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        String message = (parts.length > 1) ? parts[1] : "Lỗi đặt giá không xác định.";
+        
+        currentBidCallback.onResult(false, message);
+        currentBidCallback = null;
+    }
+
 }
