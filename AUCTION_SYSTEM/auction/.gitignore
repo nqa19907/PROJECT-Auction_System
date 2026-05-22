@@ -36,3 +36,6 @@ target/
 
 Thumbs.db
 target/
+
+# Runtime serialized data
+AUCTION_SYSTEM/auction/data/
