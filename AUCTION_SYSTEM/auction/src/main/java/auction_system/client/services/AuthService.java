@@ -1,168 +1,226 @@
 package auction_system.client.services;
 
 import auction_system.client.network.NetworkClient;
-import auction_system.client.network.dto.LoginResult;
-import auction_system.common.models.users.User;
+import auction_system.client.network.dto.AuthResult;
 import auction_system.common.network.Protocol;
-import auction_system.common.utils.SecurityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /**
- * Service xử lý các tác vụ liên quan đến xác thực người dùng.
+ * Service xử lý xác thực ở phía client.
  *
- * <p>Singleton: Eager Initialization
+ * <p>Service này chỉ gửi request qua socket và nhận response bất đồng bộ từ server.
+ * Logic kiểm tra mật khẩu, hash mật khẩu và ghi database thuộc trách nhiệm của server.
  */
 public final class AuthService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
-    private AuthCallback currentCallback;
 
-    // Định nghĩa hằng số cho cấu trúc gói tin LOGIN_OK: LOGIN_OK|userId|username|email|role
-    private static final int IDX_USER_ID = 1;
-    private static final int IDX_USERNAME = 2;
-    private static final int IDX_EMAIL = 3;
-    private static final int IDX_ROLE = 4;
-    private static final int IDX_BALANCE = 5;
-    private User currentUser; // Đảm bảo dùng lớp cha User
+    private static final Logger logger = Logger.getLogger(AuthService.class.getName());
+    private static final AuthService instance = new AuthService();
 
-    private static final AuthService INSTANCE = new AuthService();
+    private AuthCallback loginCallback;
+    private AuthCallback registerCallback;
 
     private AuthService() {
         NetworkClient.getInstance().registerHandler(
-            Protocol.Response.LOGIN_OK.name(), this::handleLoginSuccess);
+                Protocol.Response.LOGIN_OK.name(),
+                this::handleLoginResponse);
         NetworkClient.getInstance().registerHandler(
-            Protocol.Response.LOGIN_FAIL.name(), this::handleLoginFailure);
+                Protocol.Response.LOGIN_FAIL.name(),
+                this::handleLoginResponse);
         NetworkClient.getInstance().registerHandler(
-            Protocol.Response.LOGOUT_OK.name(), this::handleLogoutResponse);
+                Protocol.Response.REGISTER_OK.name(),
+                this::handleRegisterResponse);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.REGISTER_FAIL.name(),
+                this::handleRegisterResponse);
     }
 
-
     /**
-     * Lấy instance duy nhất của AuthService.
+     * Lấy service xác thực duy nhất ở phía client.
      *
      * @return instance duy nhất của AuthService
      */
     public static AuthService getInstance() {
-        return INSTANCE;
+        return instance;
     }
 
     /**
-     * Giao diện chức năng phục vụ phản hồi bất đồng bộ từ Server.
+     * Callback nhận kết quả xác thực bất đồng bộ từ server.
      */
     @FunctionalInterface
     public interface AuthCallback {
-        void onResult(LoginResult result);
+
+        /**
+         * Nhận kết quả xác thực.
+         *
+         * @param result kết quả xác thực đã được parse
+         */
+        void onResult(AuthResult result);
     }
 
     /**
-     * Xử lý gửi gói tin đăng nhập và phân tích phản hồi thô từ mạng.
+     * Gửi yêu cầu đăng nhập tới server.
      *
-     * @param email    Địa chỉ email người dùng.
-     * @param password Mật khẩu người dùng.
-     * @param callback Hàm phản hồi sau khi nhận kết quả từ server.
+     * @param email email người dùng nhập
+     * @param password mật khẩu gốc từ form đăng nhập
+     * @param callback callback nhận kết quả đăng nhập
      */
-    public void login(String email, String password, AuthCallback callback) {
-        this.currentCallback = callback;
-        
-        // Băm mật khẩu ra chuỗi SHA-256 trước khi gửi
-        String hashedPassword = SecurityUtils.hashPassword(password);
-        String request = Protocol.Command.LOGIN.name()
-                        + Protocol.SEPARATOR
-                        + email
-                        + Protocol.SEPARATOR
-                        + hashedPassword;
+    public void login(
+            final String email,
+            final String password,
+            final AuthCallback callback) {
+        loginCallback = callback;
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (containsSeparator(email) || containsSeparator(password)) {
+            notifyLoginAndClear(new AuthResult(false, "Thông tin đăng nhập không hợp lệ."));
+            return;
+        }
+
+        final String request = Protocol.Command.LOGIN.name()
+                + Protocol.SEPARATOR
+                + email
+                + Protocol.SEPARATOR
+                + password;
+
+        final boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
-            if (this.currentCallback != null) {
-                this.currentCallback.onResult(new LoginResult(false, "Mất kết nối tới máy chủ!"));
-                this.currentCallback = null;
-            }
-        }
-    }
-
-    private void handleLoginSuccess(String response) {
-        if (currentCallback == null) {
-            return;
-        }
-
-        LOGGER.info("Đăng nhập thành công, đang khởi tạo dữ liệu người dùng.");
-        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        
-        // Trích xuất thông tin an toàn
-        String username = getPart(parts, IDX_USERNAME, "Unknown");
-        String email = getPart(parts, IDX_EMAIL, "unknown@example.com");
-        String role = getPart(parts, IDX_ROLE, "BIDDER");
-        double balance = parseDouble(getPart(parts, IDX_BALANCE, "0.0"));
-
-        // SRP: Ủy thác việc tạo User cho Factory
-        this.currentUser = UserFactory.create(role, username, email, balance);
-        
-        currentCallback.onResult(new LoginResult(true, null));
-        currentCallback = null;
-    }
-
-    private void handleLoginFailure(String response) {
-        if (currentCallback == null) {
-            return;
-        }
-
-        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        String reason = (parts.length > 1) ? parts[1] : "Sai tài khoản hoặc mật khẩu!";
-        
-        currentCallback.onResult(new LoginResult(false, reason));
-        currentCallback = null;
-    }
-
-    private String getPart(String[] parts, int index, String defaultValue) {
-        return (parts.length > index) ? parts[index] : defaultValue;
-    }
-
-    private double parseDouble(String value) {
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException e) {
-            LOGGER.error("Không thể phân tích giá trị số: {}", value);
-            return 0.0;
+            notifyLoginAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
     }
 
     /**
-     * Xử lý gửi gói tin đăng xuất từ mạng.
+     * Gửi yêu cầu đăng ký tài khoản tới server.
      *
-     * @param callback Hàm phản hồi sau khi nhận kết quả từ server.
+     * @param username tên đăng nhập
+     * @param email email đăng ký
+     * @param password mật khẩu gốc từ form đăng ký
+     * @param roleName vai trò người dùng
+     * @param callback callback nhận kết quả đăng ký
      */
-    public void logout(AuthCallback callback) {
-        this.currentCallback = callback;
-        String request = Protocol.Command.LOGOUT.name();
+    public void register(
+            final String username,
+            final String email,
+            final String password,
+            final String roleName,
+            final AuthCallback callback) {
+        registerCallback = callback;
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
-        if (!sent) {
-            if (this.currentCallback != null) {
-                this.currentCallback.onResult(new LoginResult(false, "Mất kết nối tới máy chủ!"));
-                this.currentCallback = null;
-            }
-        }
-    }
-
-    private void handleLogoutResponse(String response) {
-        if (currentCallback == null) {
+        if (containsSeparator(username)
+                || containsSeparator(email)
+                || containsSeparator(password)
+                || containsSeparator(roleName)) {
+            notifyRegisterAndClear(new AuthResult(false, "Thông tin đăng ký không hợp lệ."));
             return;
         }
 
-        LOGGER.info("AuthService xử lý phản hồi đăng xuất: " + response);
-        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        String cmd = parts[0];
+        final String request = Protocol.Command.REGISTER.name()
+                + Protocol.SEPARATOR
+                + username
+                + Protocol.SEPARATOR
+                + email
+                + Protocol.SEPARATOR
+                + password
+                + Protocol.SEPARATOR
+                + roleName;
 
-        if (Protocol.Response.LOGOUT_OK.name().equals(cmd)) {
-            currentCallback.onResult(new LoginResult(true, null));
+        final boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (!sent) {
+            notifyRegisterAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
-
-        // Giải phóng callback
-        currentCallback = null;
     }
 
-    public User getCurrentUser() {
-        return currentUser;
+    /**
+     * Gửi yêu cầu đăng xuất tới server.
+     */
+    public void logout() {
+        NetworkClient.getInstance().sendCommand(Protocol.Command.LOGOUT.name());
+    }
+
+    /**
+     * Xử lý phản hồi đăng nhập từ server.
+     *
+     * @param response phản hồi dạng chuỗi từ server
+     */
+    private void handleLoginResponse(final String response) {
+        logger.info("Xử lý phản hồi đăng nhập: " + response);
+
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String command = parts[0];
+
+        if (Protocol.Response.LOGIN_OK.name().equals(command)) {
+            notifyLoginAndClear(new AuthResult(true, null));
+            return;
+        }
+
+        final String message = extractMessage(parts, "Email hoặc mật khẩu không đúng.");
+        notifyLoginAndClear(new AuthResult(false, message));
+    }
+
+    /**
+     * Xử lý phản hồi đăng ký từ server.
+     *
+     * @param response phản hồi dạng chuỗi từ server
+     */
+    private void handleRegisterResponse(final String response) {
+        logger.info("Xử lý phản hồi đăng ký: " + response);
+
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String command = parts[0];
+
+        if (Protocol.Response.REGISTER_OK.name().equals(command)) {
+            notifyRegisterAndClear(new AuthResult(true, "Đăng ký tài khoản thành công."));
+            return;
+        }
+
+        final String message = extractMessage(parts, "Đăng ký tài khoản thất bại.");
+        notifyRegisterAndClear(new AuthResult(false, message));
+    }
+
+    /**
+     * Tách thông báo từ response.
+     *
+     * @param parts mảng dữ liệu đã tách từ response
+     * @param defaultMessage thông báo mặc định
+     * @return thông báo phù hợp để hiển thị
+     */
+    private String extractMessage(final String[] parts, final String defaultMessage) {
+        if (parts.length > 1 && !parts[1].isBlank()) {
+            return parts[1];
+        }
+
+        return defaultMessage;
+    }
+
+    /**
+     * Kiểm tra dữ liệu có chứa ký tự phân tách protocol hay không.
+     *
+     * @param value giá trị cần kiểm tra
+     * @return true nếu chứa ký tự phân tách
+     */
+    private boolean containsSeparator(final String value) {
+        return value != null && value.contains(Protocol.SEPARATOR);
+    }
+
+    /**
+     * Gửi kết quả đăng nhập về UI và xóa callback đang chờ.
+     *
+     * @param result kết quả đăng nhập
+     */
+    private void notifyLoginAndClear(final AuthResult result) {
+        if (loginCallback != null) {
+            loginCallback.onResult(result);
+            loginCallback = null;
+        }
+    }
+
+    /**
+     * Gửi kết quả đăng ký về UI và xóa callback đang chờ.
+     *
+     * @param result kết quả đăng ký
+     */
+    private void notifyRegisterAndClear(final AuthResult result) {
+        if (registerCallback != null) {
+            registerCallback.onResult(result);
+            registerCallback = null;
+        }
     }
 }

@@ -1,87 +1,108 @@
 package auction_system.server.network.command;
 
-import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Xử lý lệnh đăng nhập.
+ * Xử lý lệnh đăng nhập từ client.
+ *
+ * <p>Command này chỉ đọc request, gọi AuthService để xác thực bằng database,
+ * sau đó cập nhật trạng thái online thông qua AuctionManager.
  */
 public class LoginCommand implements Command {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
-    private final AuctionManager auctionManager;
-    private final AuthService authService;
 
-    public LoginCommand(AuthService authService, AuctionManager auctionManager) {
-        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+    private static final Logger logger = Logger.getLogger(LoginCommand.class.getName());
+
+    private final AuthService authService;
+    private final AuctionManager auctionManager;
+
+    /**
+     * Khởi tạo command đăng nhập.
+     *
+     * @param authService service xác thực làm việc với database
+     * @param auctionManager manager theo dõi trạng thái online
+     */
+    public LoginCommand(
+            final AuthService authService,
+            final AuctionManager auctionManager) {
         this.authService = Objects.requireNonNull(authService, "authService");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**
-     * Xử lý đăng nhập bằng Email và Password.
+     * Thực thi lệnh đăng nhập.
      *
-     * <p>Lệnh:       {@code LOGIN|email|password}
-     * Thành công: {@code LOGIN_OK|userId|username|email|role|balance}
-     * Thất bại:   {@code LOGIN_FAIL|message}
-     *
-     * @param parts   Mảng tham số từ lệnh đã tách.
-     * @param session Phiên làm việc của Client hiện tại để lưu thông tin sau khi đăng nhập.
+     * @param parts mảng tham số theo dạng {@code LOGIN|email|password}
+     * @param session phiên làm việc của client hiện tại
+     * @return phản hồi gửi về client
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
-        // Gom chung chuỗi tiền tố báo lỗi để tái sử dụng
-        String failPrefix = Protocol.Response.LOGIN_FAIL.name() + Protocol.SEPARATOR;
-
+    public String execute(final String[] parts, final ClientSession session) {
         if (parts.length < 3) {
-            LOGGER.warn("Từ chối đăng nhập: " + "Sai cú pháp lệnh");
-            return failPrefix + "Thiếu thông tin đăng nhập";
+            logger.warning("Từ chối đăng nhập vì request thiếu tham số.");
+            return buildFailResponse("Thiếu thông tin đăng nhập.");
         }
 
-        // CHỈNH SỬA: Đổi tên biến từ username thành email để phản ánh 
-        // đúng dữ liệu từ Client gửi lên
-        String email = parts[1].trim();
-        String password = parts[2].trim();
+        final String email = parts[1].trim();
+        final String password = parts[2];
 
         try {
-            // Gọi hàm findUserByCredentials (đã được sửa ở AuctionManager để quét theo email)
-            User user = auctionManager.findUserByCredentials(email, password);
-            if (user == null) {
-                return failPrefix + "Email hoặc mật khẩu không đúng";
+            final Optional<User> authenticatedUser = authService.login(email, password);
+            if (authenticatedUser.isEmpty()) {
+                return buildFailResponse("Email hoặc mật khẩu không đúng.");
             }
 
-            // Ngăn chặn đăng nhập đồng thời trên nhiều thiết bị
+            final User user = authenticatedUser.get();
             if (auctionManager.isAlreadyOnline(user.getId())) {
-                return failPrefix + "Tài khoản này đang đăng nhập ở nơi khác";
+                return buildFailResponse("Tài khoản này đang đăng nhập ở nơi khác.");
             }
 
             session.setCurrentUser(user);
-            // Sử dụng hành vi của đối tượng thay vì thay đổi trạng thái trực tiếp
             user.setOnline(true);
             auctionManager.userLoggedIn(user);
 
-            String role = user.getRoleName();
-            double balance = (user instanceof Participant p) ? p.getBalance() : 0.0;
-
-            LOGGER.info("Đăng nhập thành công: " + email
-                    + " [" + role + "]");
-
-            // Trả về gói tin thành công, tầng network phía dưới sẽ tự bắn chuỗi này về Client
-            return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR
-                    + user.getId() + Protocol.SEPARATOR
-                    + user.getUsername() + Protocol.SEPARATOR
-                    + user.getEmail() + Protocol.SEPARATOR
-                    + role + Protocol.SEPARATOR
-                    + balance;
-        } catch (Exception e) {
-            // Bắt mọi lỗi hệ thống để không làm chết thread của client
-            LOGGER.error("Lỗi hệ thống khi đăng nhập cho email: " + email, e);
-            return failPrefix + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            logger.info("Đăng nhập thành công: " + email + " [" + user.getRoleName() + "]");
+            return buildSuccessResponse(user);
+        } catch (IllegalArgumentException exception) {
+            return buildFailResponse(exception.getMessage());
+        } catch (RuntimeException exception) {
+            logger.log(Level.SEVERE, "Lỗi hệ thống khi đăng nhập: " + email, exception);
+            return buildFailResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
         }
+    }
+
+    /**
+     * Tạo phản hồi đăng nhập thành công.
+     *
+     * @param user người dùng đã xác thực
+     * @return chuỗi phản hồi thành công
+     */
+    private String buildSuccessResponse(final User user) {
+        return Protocol.Response.LOGIN_OK.name()
+                + Protocol.SEPARATOR
+                + user.getId()
+                + Protocol.SEPARATOR
+                + user.getUsername()
+                + Protocol.SEPARATOR
+                + user.getRoleName();
+    }
+
+    /**
+     * Tạo phản hồi đăng nhập thất bại.
+     *
+     * @param message thông báo lỗi
+     * @return chuỗi phản hồi thất bại
+     */
+    private String buildFailResponse(final String message) {
+        return Protocol.Response.LOGIN_FAIL.name()
+                + Protocol.SEPARATOR
+                + message;
     }
 }

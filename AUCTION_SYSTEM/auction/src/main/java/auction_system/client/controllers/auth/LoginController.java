@@ -129,4 +129,17 @@ public class LoginController {
             errorLabel.setManaged(true);
         }
     }
+
+    /**
+     * Chuyển từ màn đăng nhập sang màn đăng ký.
+     */
+    @FXML
+    private void handleGoToRegister() {
+        LOGGER.info("Chuyển sang màn đăng ký tài khoản.");
+        SceneManager.switchScene(
+                registerLabel,
+                ViewConstants.REGISTER_VIEW,
+                900,
+                700);
+    }
 }

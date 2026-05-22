@@ -69,7 +69,8 @@ public class ClientApp extends Application {
      * trực tiếp service server khi đăng nhập.
      */
     private void startLocalServerAndConnect() {
-        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final SerializedDatabase database = new SerializedDatabase(
+            Path.of("AUCTION_SYSTEM/auction/data"));
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);

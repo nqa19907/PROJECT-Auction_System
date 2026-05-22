@@ -247,7 +247,7 @@ public final class AuthService {
                     defaultBalance,
                     normalizedRoleName
                 );
-            case "BIDDER":
+            case "BIDDER": 
                 return new Participant(
                     username,
                     email,

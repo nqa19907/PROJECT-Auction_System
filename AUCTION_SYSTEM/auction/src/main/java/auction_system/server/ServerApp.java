@@ -1,5 +1,6 @@
 package auction_system.server;
 
+import auction_system.common.models.users.User;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
@@ -17,7 +18,7 @@ public class ServerApp {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
 
     /** Đường dẫn thư mục lưu trữ dữ liệu serialization. */
-    private static final Path DATA_DIRECTORY = Path.of("data");
+    private static final Path DATA_DIRECTORY = Path.of("AUCTION_SYSTEM/auction/data");
 
     /**
      * Ngăn việc khởi tạo lớp tiện ích ServerApp từ bên ngoài.
@@ -48,8 +49,15 @@ public class ServerApp {
         final AuthService authService = new AuthService(database);
         final AuctionBidService auctionBidService = new AuctionBidService(database);
 
+        final User user = authService.register(
+            "qa",
+            "qa@gmail.com",
+            "123456",
+            "BIDDER");
         final SocketServer socketServer = SocketServer.getInstance(
                 port, authService, auctionManager, auctionBidService);
+
+
 
         LOGGER.info("Đang khởi động hệ thống đấu giá...");
 
