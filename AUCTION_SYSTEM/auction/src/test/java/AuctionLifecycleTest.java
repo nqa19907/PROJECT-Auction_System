@@ -2,7 +2,7 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public class AuctionLifecycleTest {
 
     private Item item;
-    private Seller seller;
+    private Participant seller;
     private Auction auction;
 
     @BeforeEach
@@ -30,7 +30,7 @@ public class AuctionLifecycleTest {
                 .sellerId("SN001")
                 .build();
 
-        seller = new Seller("John", "john@gmail.com", "123456", 10_000.0);
+        seller = new Participant("John", "john@gmail.com", "123456", 10_000.0, "SELLER");
 
         auction = new Auction(item, seller,
                 LocalDateTime.now(),
@@ -49,7 +49,7 @@ public class AuctionLifecycleTest {
 
     @Test
     void testNewAuction_SellerAndItemAreSet() {
-        assertSame(seller, auction.getParticipant(), "Seller phải được gán đúng");
+        assertSame(seller, auction.getParticipant(), "Participant phải được gán đúng");
         assertSame(item, auction.getItem(), "Item phải được gán đúng");
     }
 

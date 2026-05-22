@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.auctions.Entity;
 import auction_system.common.models.items.Art;
 import auction_system.common.models.items.Electronic;
@@ -16,103 +16,98 @@ import auction_system.common.models.items.Vehicle;
 import auction_system.common.models.items.builder.ArtBuilder;
 import auction_system.common.models.items.builder.ElectronicBuilder;
 import auction_system.common.models.items.builder.VehicleBuilder;
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 
 /**
- * Kiem thu toan dien cac lop model: Entity, User, Participant,
- * Bidder, Seller, Item (Art, Electronic, Vehicle), BidTransaction.
+ * Kiem thu cac model hien tai: Entity, User, Participant, Item,
+ * Auction va BidTransaction.
  */
 public class ModelTest {
 
-    // =========================================================================
-    // Entity - UUID, equals, hashCode, toString
-    // =========================================================================
-
     @Test
     void testEntityAutoGeneratesUuidOnCreate() {
-        Bidder bidder = new Bidder("user1", "u1@mail.com", "pass", 1000);
+        Participant participant = new Participant("user1", "u1@mail.com", "pass", 1000);
 
-        assertNotNull(bidder.getId(), "Entity phai tu sinh UUID");
-        assertFalse(bidder.getId().isEmpty(), "UUID khong duoc rong");
+        assertNotNull(participant.getId(), "Entity phai tu sinh UUID");
+        assertFalse(participant.getId().isEmpty(), "UUID khong duoc rong");
     }
 
     @Test
     void testEntityTwoInstancesHaveDifferentIds() {
-        Bidder bidder1 = new Bidder("u1", "u1@mail.com", "pw", 100);
-        Bidder bidder2 = new Bidder("u2", "u2@mail.com", "pw", 100);
+        Participant participant1 = new Participant("u1", "u1@mail.com", "pw", 100);
+        Participant participant2 = new Participant("u2", "u2@mail.com", "pw", 100);
 
-        assertNotEquals(bidder1.getId(), bidder2.getId());
+        assertNotEquals(participant1.getId(), participant2.getId());
     }
 
     @Test
     void testEntityEqualsReflexiveReturnsTrue() {
-        Bidder bidder = new Bidder("u1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("u1", "u1@mail.com", "pw", 100);
 
-        assertEquals(bidder, bidder);
+        assertEquals(participant, participant);
     }
 
     @Test
     void testEntityEqualsDifferentIdReturnsFalse() {
-        Bidder bidder1 = new Bidder("user1", "u1@mail.com", "pw", 100);
-        Bidder bidder2 = new Bidder("user2", "u2@mail.com", "pw", 200);
+        Participant participant1 = new Participant("user1", "u1@mail.com", "pw", 100);
+        Participant participant2 = new Participant("user2", "u2@mail.com", "pw", 200);
 
-        assertNotEquals(bidder1, bidder2);
+        assertNotEquals(participant1, participant2);
     }
 
     @Test
     void testEntityEqualsNullReturnsFalse() {
-        Bidder bidder = new Bidder("u1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("u1", "u1@mail.com", "pw", 100);
 
-        assertNotEquals(null, bidder);
+        assertNotEquals(null, participant);
     }
 
     @Test
     void testEntityHashCodeConsistentAcrossCalls() {
-        Bidder bidder = new Bidder("user1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("user1", "u1@mail.com", "pw", 100);
 
-        assertEquals(bidder.hashCode(), bidder.hashCode());
+        assertEquals(participant.hashCode(), participant.hashCode());
     }
 
     @Test
     void testEntityHashCodeDifferentForDifferentIds() {
-        Bidder bidder1 = new Bidder("u1", "u1@mail.com", "pw", 100);
-        Bidder bidder2 = new Bidder("u2", "u2@mail.com", "pw", 100);
+        Participant participant1 = new Participant("u1", "u1@mail.com", "pw", 100);
+        Participant participant2 = new Participant("u2", "u2@mail.com", "pw", 100);
 
-        assertNotEquals(bidder1.hashCode(), bidder2.hashCode());
+        assertNotEquals(participant1.hashCode(), participant2.hashCode());
     }
 
     @Test
     void testEntityCreatedAtIsNotNull() {
-        Seller seller = new Seller("seller1", "s1@mail.com", "pw", 5000, 4.0f);
+        Participant participant = new Participant("seller1", "s1@mail.com", "pw", 5000);
 
-        assertNotNull(seller.getCreatedAt());
+        assertNotNull(participant.getCreatedAt());
     }
 
     @Test
     void testEntityCreatedAtIsWithinExpectedRange() {
         LocalDateTime before = LocalDateTime.now();
-        Bidder bidder = new Bidder("u1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("u1", "u1@mail.com", "pw", 100);
         LocalDateTime after = LocalDateTime.now();
 
-        assertFalse(bidder.getCreatedAt().isBefore(before));
-        assertFalse(bidder.getCreatedAt().isAfter(after));
+        assertFalse(participant.getCreatedAt().isBefore(before));
+        assertFalse(participant.getCreatedAt().isAfter(after));
     }
 
     @Test
     void testEntityToStringContainsId() {
-        Bidder bidder = new Bidder("u1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("u1", "u1@mail.com", "pw", 100);
 
-        assertTrue(bidder.toString().contains(bidder.getId()));
+        assertTrue(participant.toString().contains(participant.getId()));
     }
 
     @Test
     void testEntityToStringContainsClassName() {
-        Bidder bidder = new Bidder("u1", "u1@mail.com", "pw", 100);
+        Participant participant = new Participant("u1", "u1@mail.com", "pw", 100);
 
-        assertTrue(bidder.toString().contains("Bidder"));
+        assertTrue(participant.toString().contains("Participant"));
     }
 
     @Test
@@ -131,223 +126,106 @@ public class ModelTest {
                 });
     }
 
-    // =========================================================================
-    // User - getters/setters
-    // =========================================================================
-
     @Test
     void testUserGettersReturnCorrectValues() {
-        Bidder bidder = new Bidder("alice", "alice@mail.com", "secret", 5000);
+        Participant participant = new Participant("alice", "alice@mail.com", "secret", 5000);
 
-        assertEquals("alice", bidder.getUsername());
-        assertEquals("alice@mail.com", bidder.getEmail());
-        assertEquals("secret", bidder.getPassword());
+        assertEquals("alice", participant.getUsername());
+        assertEquals("alice@mail.com", participant.getEmail());
+        assertEquals("secret", participant.getPassword());
     }
 
     @Test
     void testUserIsOnlineDefaultIsFalse() {
-        Bidder bidder = new Bidder("user", "user@mail.com", "pw", 100);
+        Participant participant = new Participant("user", "user@mail.com", "pw", 100);
 
-        assertFalse(bidder.isOnline());
+        assertFalse(participant.isOnline());
     }
 
     @Test
     void testUserSetOnlineTrueUpdatesStatus() {
-        Bidder bidder = new Bidder("user", "user@mail.com", "pw", 100);
-        bidder.setOnline(true);
+        Participant participant = new Participant("user", "user@mail.com", "pw", 100);
+        participant.setOnline(true);
 
-        assertTrue(bidder.isOnline());
+        assertTrue(participant.isOnline());
     }
 
     @Test
     void testUserSetOnlineFalseUpdatesStatus() {
-        Bidder bidder = new Bidder("user", "user@mail.com", "pw", 100);
-        bidder.setOnline(true);
-        bidder.setOnline(false);
+        Participant participant = new Participant("user", "user@mail.com", "pw", 100);
+        participant.setOnline(true);
+        participant.setOnline(false);
 
-        assertFalse(bidder.isOnline());
+        assertFalse(participant.isOnline());
     }
 
     @Test
     void testUserSetUsernameUpdatesValue() {
-        Bidder bidder = new Bidder("oldname", "u@mail.com", "pw", 100);
-        bidder.setUsername("newname");
+        Participant participant = new Participant("oldname", "u@mail.com", "pw", 100);
+        participant.setUsername("newname");
 
-        assertEquals("newname", bidder.getUsername());
+        assertEquals("newname", participant.getUsername());
     }
 
     @Test
     void testUserSetEmailUpdatesValue() {
-        Bidder bidder = new Bidder("user", "old@mail.com", "pw", 100);
-        bidder.setEmail("new@mail.com");
+        Participant participant = new Participant("user", "old@mail.com", "pw", 100);
+        participant.setEmail("new@mail.com");
 
-        assertEquals("new@mail.com", bidder.getEmail());
+        assertEquals("new@mail.com", participant.getEmail());
     }
 
     @Test
     void testUserSetPasswordUpdatesValue() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "oldpw", 100);
-        bidder.setPassword("newpw");
+        Participant participant = new Participant("user", "u@mail.com", "oldpw", 100);
+        participant.setPassword("newpw");
 
-        assertEquals("newpw", bidder.getPassword());
+        assertEquals("newpw", participant.getPassword());
     }
 
     @Test
-    void testBidderGetRoleNameReturnsBidder() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 100);
+    void testParticipantDefaultRoleNameReturnsParticipant() {
+        Participant participant = new Participant("user", "u@mail.com", "pw", 100);
 
-        assertEquals("BIDDER", bidder.getRoleName());
+        assertEquals("PARTICIPANT", participant.getRoleName());
     }
 
     @Test
-    void testSellerGetRoleNameReturnsSeller() {
-        Seller seller = new Seller("seller", "s@mail.com", "pw", 1000, 4.0f);
+    void testParticipantRoleNameReturnsNormalizedRole() {
+        Participant participant = new Participant("user", "u@mail.com", "pw", 100, "bidder");
 
-        assertEquals("SELLER", seller.getRoleName());
+        assertEquals("BIDDER", participant.getRoleName());
     }
 
-    // =========================================================================
-    // Participant - balance, addFunds, withdrawFunds
-    // =========================================================================
+    @Test
+    void testParticipantBlankRoleFallsBackToParticipant() {
+        Participant participant = new Participant("user", "u@mail.com", "pw", 100, " ");
+
+        assertEquals("PARTICIPANT", participant.getRoleName());
+    }
+
+    @Test
+    void testParticipantSetRoleNameUpdatesValue() {
+        Participant participant = new Participant("user", "u@mail.com", "pw", 100);
+        participant.setRoleName("seller");
+
+        assertEquals("SELLER", participant.getRoleName());
+    }
 
     @Test
     void testParticipantGetBalanceReturnsInitialValue() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 3000);
+        Participant participant = new Participant("user", "u@mail.com", "pw", 3000);
 
-        assertEquals(3000, bidder.getBalance(), 0.001);
+        assertEquals(3000, participant.getBalance(), 0.001);
     }
 
     @Test
     void testParticipantSetBalanceUpdatesValue() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-        bidder.setBalance(5000);
+        Participant participant = new Participant("user", "u@mail.com", "pw", 1000);
+        participant.setBalance(5000);
 
-        assertEquals(5000, bidder.getBalance(), 0.001);
+        assertEquals(5000, participant.getBalance(), 0.001);
     }
-
-    @Test
-    void testParticipantAddFundsIncreasesBalance() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-        bidder.addFunds(500);
-
-        assertEquals(1500, bidder.getBalance(), 0.001);
-    }
-
-    @Test
-    void testParticipantAddFundsZeroThrowsException() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-
-        assertThrows(IllegalArgumentException.class, () -> bidder.addFunds(0));
-    }
-
-    @Test
-    void testParticipantAddFundsNegativeThrowsException() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-
-        assertThrows(IllegalArgumentException.class, () -> bidder.addFunds(-100));
-    }
-
-    @Test
-    void testParticipantWithdrawFundsSuccessReturnsTrue() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-
-        assertTrue(bidder.withdrawFunds(400));
-        assertEquals(600, bidder.getBalance(), 0.001);
-    }
-
-    @Test
-    void testParticipantWithdrawFundsInsufficientReturnsFalse() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 100);
-
-        assertFalse(bidder.withdrawFunds(999));
-        assertEquals(100, bidder.getBalance(), 0.001);
-    }
-
-    @Test
-    void testParticipantWithdrawFundsExactBalanceReturnsTrue() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 500);
-
-        assertTrue(bidder.withdrawFunds(500));
-        assertEquals(0, bidder.getBalance(), 0.001);
-    }
-
-    @Test
-    void testParticipantWithdrawFundsZeroReturnsFalse() {
-        Bidder bidder = new Bidder("user", "u@mail.com", "pw", 1000);
-
-        assertFalse(bidder.withdrawFunds(0));
-    }
-
-    // =========================================================================
-    // Seller
-    // =========================================================================
-
-    @Test
-    void testSellerGetRatingReturnsInitialValue() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 4.5f);
-
-        assertEquals(4.5f, seller.getRating(), 0.001f);
-    }
-
-    @Test
-    void testSellerSetRatingUpdatesValue() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 3.0f);
-        seller.setRating(4.8f);
-
-        assertEquals(4.8f, seller.getRating(), 0.001f);
-    }
-
-    @Test
-    void testSellerListItemForAuctionAssignsSellerIdToItem() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 4.0f);
-        Art art = new ArtBuilder()
-                .itemName("Sunrise")
-                .startPrice(50000.0)
-                .sellerId("tmp")
-                .build();
-
-        seller.listItemForAuction(art);
-
-        assertEquals(seller.getId(), art.getSellerId());
-    }
-
-    @Test
-    void testSellerListItemNullThrowsException() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 4.0f);
-
-        assertThrows(RuntimeException.class, () -> seller.listItemForAuction(null));
-    }
-
-    @Test
-    void testSellerDelistItemNotOwnedThrowsException() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 4.0f);
-        Art art = new ArtBuilder()
-                .itemName("Fake")
-                .startPrice(100.0)
-                .sellerId("other")
-                .build();
-
-        assertThrows(RuntimeException.class, () -> seller.delistItem(art));
-    }
-
-    @Test
-    void testSellerDelistAfterListSucceeds() {
-        Seller seller = new Seller("seller1", "s@mail.com", "pw", 2000, 4.0f);
-        Art art = new ArtBuilder()
-                .itemName("Piece")
-                .startPrice(100.0)
-                .sellerId("tmp")
-                .build();
-        seller.listItemForAuction(art);
-
-        seller.delistItem(art);
-
-        assertThrows(RuntimeException.class, () -> seller.delistItem(art));
-    }
-
-    // =========================================================================
-    // Art
-    // =========================================================================
 
     @Test
     void testArtGettersReturnCorrectValues() {
@@ -422,10 +300,6 @@ public class ModelTest {
         assertEquals(1800.0, art.getCurrentPrice(), 0.001);
     }
 
-    // =========================================================================
-    // Electronic
-    // =========================================================================
-
     @Test
     void testElectronicGettersReturnCorrectValues() {
         Electronic electronic = new ElectronicBuilder()
@@ -471,10 +345,6 @@ public class ModelTest {
 
         assertNotEquals(el1.getId(), el2.getId());
     }
-
-    // =========================================================================
-    // Vehicle
-    // =========================================================================
 
     @Test
     void testVehicleGettersReturnCorrectValues() {
@@ -536,40 +406,51 @@ public class ModelTest {
         assertTrue(vehicle instanceof Item);
     }
 
-    // =========================================================================
-    // BidTransaction
-    // =========================================================================
-
-    // Hàm phụ giúp tạo nhanh một đối tượng Auction hợp lệ để phục vụ việc test
-    private auction_system.common.models.auctions.Auction createDummyAuction() {
-        Seller dummySeller = new Seller("tmp_seller", "seller@mail.com", "pw", 1000, 4.0f);
-        Item dummyItem = new auction_system.common.models.items.builder.ElectronicBuilder()
+    private Auction createDummyAuction() {
+        Participant seller = new Participant("tmp_seller", "seller@mail.com", "pw", 1000, "SELLER");
+        Item item = new ElectronicBuilder()
                 .itemName("Tmp Item")
                 .startPrice(1000.0)
-                .sellerId(dummySeller.getId())
+                .sellerId(seller.getId())
                 .build();
         LocalDateTime now = LocalDateTime.now();
-        return new auction_system.common.models.auctions.Auction(dummyItem, dummySeller, now, now.plusDays(1));
+        return new Auction(item, seller, now, now.plusDays(1));
+    }
+
+    @Test
+    void testAuctionConstructorAssignsParticipantAndItem() {
+        Participant seller = new Participant("seller", "seller@mail.com", "pw", 1000, "SELLER");
+        Item item = new ElectronicBuilder()
+                .itemName("Phone")
+                .startPrice(1000.0)
+                .sellerId(seller.getId())
+                .build();
+
+        Auction auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusDays(1));
+
+        assertSame(seller, auction.getParticipant());
+        assertSame(item, auction.getItem());
     }
 
     @Test
     void testBidTransactionGettersReturnCorrectValues() {
-        Bidder bidder = new Bidder("bidder1", "b1@mail.com", "pw", 10000);
+        Participant participant = new Participant("participant1", "p1@mail.com", "pw", 10000, "BIDDER");
         double amount = 3500.0;
         Auction dummyAuction = createDummyAuction();
-        BidTransaction bid = new BidTransaction(bidder, amount, dummyAuction);
+        BidTransaction bid = new BidTransaction(participant, amount, dummyAuction);
 
-        assertSame(bidder, bid.getBidder());
+        assertSame(participant, bid.getParticipant());
         assertEquals(amount, bid.getAmount(), 0.001);
+        assertEquals(dummyAuction.getId(), bid.getAuctionId());
         assertNotNull(bid.getTimestamp());
     }
 
     @Test
     void testBidTransactionTimestampIsSetOnCreation() {
         LocalDateTime before = LocalDateTime.now();
-        Bidder dummyBidder = new Bidder("tmp", "tmp@mail.com", "pw", 1000);
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
         Auction dummyAuction = createDummyAuction();
-        BidTransaction bid = new BidTransaction(dummyBidder, 5000.0, dummyAuction);
+        BidTransaction bid = new BidTransaction(participant, 5000.0, dummyAuction);
         LocalDateTime after = LocalDateTime.now();
 
         assertFalse(bid.getTimestamp().isBefore(before));
@@ -578,9 +459,9 @@ public class ModelTest {
 
     @Test
     void testBidTransactionHasNonNullId() {
-        Bidder dummyBidder = new Bidder("tmp", "tmp@mail.com", "pw", 1000);
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
         Auction dummyAuction = createDummyAuction();
-        BidTransaction bid = new BidTransaction(dummyBidder, 1000.0, dummyAuction);
+        BidTransaction bid = new BidTransaction(participant, 1000.0, dummyAuction);
 
         assertNotNull(bid.getId());
         assertFalse(bid.getId().isEmpty());
@@ -588,10 +469,10 @@ public class ModelTest {
 
     @Test
     void testBidTransactionTwoInstancesHaveDifferentIds() {
-        Bidder dummyBidder = new Bidder("tmp", "tmp@mail.com", "pw", 1000);
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
         Auction dummyAuction = createDummyAuction();
-        BidTransaction bid1 = new BidTransaction(dummyBidder, 2500.0, dummyAuction);
-        BidTransaction bid2 = new BidTransaction(dummyBidder, 3500.0, dummyAuction);
+        BidTransaction bid1 = new BidTransaction(participant, 2500.0, dummyAuction);
+        BidTransaction bid2 = new BidTransaction(participant, 3500.0, dummyAuction);
 
         assertNotEquals(bid1.getId(), bid2.getId());
     }
@@ -599,9 +480,9 @@ public class ModelTest {
     @Test
     void testBidTransactionAmountIsPreservedExactly() {
         double amount = 12345.678;
-        Bidder dummyBidder = new Bidder("tmp", "tmp@mail.com", "pw", 1000);
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
         Auction dummyAuction = createDummyAuction();
-        BidTransaction bid = new BidTransaction(dummyBidder, amount, dummyAuction);
+        BidTransaction bid = new BidTransaction(participant, amount, dummyAuction);
 
         assertEquals(amount, bid.getAmount(), 0.00001);
     }

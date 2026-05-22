@@ -15,8 +15,8 @@ public class BidTransaction extends Entity {
     /**
      * Khởi tạo một giao dịch đặt giá mới.
      *
-     * @param participant Người đặt giá.
-     * @param amount Số tiền đặt giá.
+     * @param bidder  Người đặt giá.
+     * @param amount  Số tiền đặt giá.
      * @param auction Phiên mà nó thuộc về.
      */
     public BidTransaction(Participant bidder, double amount, Auction auction) {

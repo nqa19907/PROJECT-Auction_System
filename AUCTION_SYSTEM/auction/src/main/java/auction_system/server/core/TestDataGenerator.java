@@ -4,8 +4,7 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ArtBuilder;
 import auction_system.common.models.items.builder.ElectronicBuilder;
 import auction_system.common.models.users.Admin;
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import java.time.LocalDateTime;
@@ -56,10 +55,8 @@ public final class TestDataGenerator {
             User user;
             if ("ADMIN".equals(role)) {
                 user = new Admin(name, email, pass);
-            } else if ("SELLER".equals(role)) {
-                user = new Seller(name, email, pass, balance);
             } else {
-                user = new Bidder(name, email, pass, balance);
+                user = new Participant(name, email, pass, balance, role);
             }
 
             manager.registerUser(user);
@@ -92,12 +89,12 @@ public final class TestDataGenerator {
             int endOffset = (int) data[6];
 
             User user = userCache.get(sellerName);
-            if (user instanceof Seller seller) {
+            if (user instanceof Participant seller) {
                 Item item = createItem(type, itemName, desc, price, seller.getId());
                 manager.createAuction(
-                    item, 
-                    seller, 
-                    now.plusHours(startOffset), 
+                    item,
+                    seller,
+                    now.plusHours(startOffset),
                     now.plusHours(endOffset)
                 );
             }

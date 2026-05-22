@@ -4,9 +4,7 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
-import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.Participant;
-import auction_system.common.models.users.Seller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +20,12 @@ public class CoreBiddingLogicTest {
 
     private double startPrice;
     private Item item;
-    private Seller seller;
+    private Participant seller;
     private Auction auction;
 
     @BeforeEach
     void setUp() {
-        // Arrange: Chuẩn bị dữ liệu mặc định cho mỗi bài test (khởi tạo Item, Seller, Auction)
+        // Arrange: Chuẩn bị dữ liệu mặc định cho mỗi bài test (khởi tạo Item, Participant, Auction)
         startPrice = 2000;
         item = new ElectronicBuilder()
                 .itemName("OPPO Find X9 Ultra")
@@ -35,8 +33,8 @@ public class CoreBiddingLogicTest {
                 .startPrice(startPrice)
                 .sellerId("61h23s1")
                 .build();
-        seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
-                "69420", 69420);
+        seller = new Participant("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
+                "69420", 69420, "SELLER");
 
         auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.startAuction();
@@ -160,8 +158,8 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_AuctionEndedWithBids_ReturnsHighestBidder() {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
-        Bidder expectedWinner = new Bidder("Phạm Việt Hoàng", "pvhgay@gmail.com",
-                "123456789", 4000);
+        Participant expectedWinner = new Participant("Phạm Việt Hoàng", "pvhgay@gmail.com",
+                "123456789", 4000, "BIDDER");
         BidTransaction bid = new BidTransaction(expectedWinner, 2500, auction);
         auction.placeBid(bid);
 
@@ -203,9 +201,9 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_MultipleBidders_ReturnsCorrectWinner() {
         // Arrange
-        Bidder bidder1 = new Bidder("Alice", "alice@mail.com", "pw1", 20000);
-        Bidder bidder2 = new Bidder("Bob", "bob@mail.com", "pw2", 20000);
-        Bidder bidder3 = new Bidder("Charlie", "charlie@mail.com", "pw3", 20000);
+        Participant bidder1 = new Participant("Alice", "alice@mail.com", "pw1", 20000, "BIDDER");
+        Participant bidder2 = new Participant("Bob", "bob@mail.com", "pw2", 20000, "BIDDER");
+        Participant bidder3 = new Participant("Charlie", "charlie@mail.com", "pw3", 20000, "BIDDER");
         auction.placeBid(new BidTransaction(bidder1, 2500, auction));
         auction.placeBid(new BidTransaction(bidder2, 5000, auction));
         auction.placeBid(new BidTransaction(bidder3, 8000, auction));

@@ -244,10 +244,17 @@ public final class AuthService {
                     username,
                     email,
                     hashedPassword,
-                    defaultBalance
+                    defaultBalance,
+                    normalizedRoleName
                 );
             case "BIDDER":
-                return new Participant(username, email, hashedPassword, defaultBalance);
+                return new Participant(
+                    username,
+                    email,
+                    hashedPassword,
+                    defaultBalance,
+                    normalizedRoleName
+                );
             default:
                 throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
         }

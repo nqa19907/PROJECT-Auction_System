@@ -43,17 +43,22 @@ public class ClientApp extends Application {
     @Override
     public void start(final Stage stage) throws Exception {
         try {
-            NetworkClient.getInstance().connect(
-                NetworkConfig.SERVER_HOST,
-                NetworkConfig.SERVER_PORT
-            );
-        } catch (IOException e) {
-            LOGGER.warn("Không thể kết nối tới server. Đang khởi chạy server nội bộ...");
-            startLocalServerAndConnect();
-        }
+            try {
+                NetworkClient.getInstance().connect(
+                    NetworkConfig.SERVER_HOST,
+                    NetworkConfig.SERVER_PORT
+                );
+            } catch (IOException e) {
+                LOGGER.warn("Không thể kết nối tới server. Đang khởi chạy server nội bộ...");
+                startLocalServerAndConnect();
+            }
 
-        loadFonts();
-        loadLoginScene(stage);
+            loadFonts();
+            loadLoginScene(stage);
+        } catch (Exception exception) {
+            LOGGER.error("Khởi chạy JavaFX thất bại.", exception);
+            throw exception;
+        }
     }
 
     /**
