@@ -2,12 +2,15 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.services.ItemPublishService;
 import auction_system.client.utils.Router;
+import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -25,6 +28,8 @@ import org.slf4j.LoggerFactory;
  */
 public class PublishItemController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishItemController.class);
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     private TextField fieldTenTaiSan;
@@ -118,17 +123,19 @@ public class PublishItemController implements Initializable {
 
             setLoadingState(true);
             ItemPublishService.getInstance().publishItem(
-                    category,
-                    itemName,
-                    description,
-                    condition,
-                    startPrice,
-                    startTime,
-                    endTime,
-                    this::handlePublishResult);
+                category,
+                itemName,
+                description,
+                condition,
+                startPrice,
+                startTime,
+                endTime,
+                (success, message) -> Platform.runLater(
+                    () -> handlePublishResult(success, message)));
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }
+
     }
 
     /**
@@ -142,8 +149,7 @@ public class PublishItemController implements Initializable {
 
         if (success) {
             LOGGER.info("Đăng bán sản phẩm thành công.");
-            Router.navigateContent(btnConfirm, ViewConstants.ITEM_LIST_VIEW);
-            Router.updateSidebarActive(btnConfirm, AppConstants.UI_ID_CATEGORY_ALL);
+            handleGoDashboard(null);
             return;
         }
 
@@ -206,7 +212,7 @@ public class PublishItemController implements Initializable {
     /**
      * Chuyển dữ liệu text thành thời gian.
      *
-     * <p>Định dạng hợp lệ: yyyy-MM-ddTHH:mm, ví dụ 2026-05-22T14:30.</p>
+     * <p>Định dạng hợp lệ: {@code dd/MM/yyyy HH:mm}, ví dụ {@code 22/05/2026 14:30}.
      *
      * @param value giá trị người dùng nhập
      * @param fieldName tên trường dùng trong thông báo lỗi
@@ -214,14 +220,17 @@ public class PublishItemController implements Initializable {
      */
     private LocalDateTime parseDateTime(final String value, final String fieldName) {
         if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException("Trường " + fieldName + " không được để trống.");
+            throw new IllegalArgumentException(
+                    "Trường " + fieldName + " không được để trống.");
         }
 
         try {
-            return LocalDateTime.parse(value.trim());
+            return LocalDateTime.parse(value.trim(), DATE_TIME_FORMATTER);
         } catch (DateTimeParseException exception) {
             throw new IllegalArgumentException(
-                    "Trường " + fieldName + " phải có dạng yyyy-MM-ddTHH:mm.");
+                    "Trường "
+                            + fieldName
+                            + " phải có dạng dd/MM/yyyy HH:mm, ví dụ 22/05/2026 14:30.");
         }
     }
 

@@ -1,5 +1,6 @@
 package auction_system.server.network.command;
 
+import auction_system.common.exceptions.InvalidItemException;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.items.Art;
 import auction_system.common.models.items.Electronic;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -78,11 +80,20 @@ public final class PublishItemCommand implements Command {
             return Protocol.Response.PUBLISH_ITEM_OK.name()
                     + Protocol.SEPARATOR
                     + "Đăng bán sản phẩm thành công.";
-        } catch (IllegalArgumentException | DateTimeParseException exception) {
+        } catch (IllegalArgumentException
+            | DateTimeParseException
+            | InvalidItemException exception) {
             LOGGER.warning("Đăng bán sản phẩm thất bại: " + exception.getMessage());
+
             return Protocol.Response.PUBLISH_ITEM_FAIL.name()
                     + Protocol.SEPARATOR
                     + exception.getMessage();
+        } catch (RuntimeException exception) {
+            LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng bán sản phẩm.", exception);
+
+            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + "Lỗi hệ thống khi đăng bán sản phẩm. Vui lòng thử lại sau.";
         }
     }
 

@@ -27,6 +27,9 @@ public final class ItemPublishService {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.PUBLISH_ITEM_FAIL.name(),
                 this::handlePublishFailure);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ERROR.name(), 
+                this::handlePublishError);
     }
 
     /**
@@ -156,5 +159,20 @@ public final class ItemPublishService {
         return value
                 .replace(Protocol.SEPARATOR, " ")
                 .trim();
+    }
+
+    /**
+     * Xử lý lỗi chung từ server trong lúc đang chờ kết quả đăng bán.
+     *
+     * @param response phản hồi lỗi từ server
+     */
+    private void handlePublishError(final String response) {
+        if (currentCallback == null) {
+            return;
+        }
+
+        notifyCallback(
+                false,
+                extractMessage(response, "Server không xử lý được yêu cầu đăng bán."));
     }
 }
