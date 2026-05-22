@@ -406,6 +406,40 @@ public class ModelTest {
         assertTrue(vehicle instanceof Item);
     }
 
+    // =========================================================================
+    // Builder — currentPrice override logic (if currentPrice > 0)
+    // =========================================================================
+
+    @Test
+    void testElectronicBuilder_CurrentPrice_OverridesWhenPositive() {
+        Electronic e = new ElectronicBuilder()
+                .itemName("Item").startPrice(1000.0).currentPrice(1200.0).sellerId("s1")
+                .build();
+
+        assertEquals(1200.0, e.getCurrentPrice());
+    }
+
+    @Test
+    void testElectronicBuilder_CurrentPriceZero_FallsBackToStartPrice() {
+        // currentPrice = 0 không vượt điều kiện `if (currentPrice > 0)` trong build()
+        // → không override → phải fallback về startPrice
+        Electronic e = new ElectronicBuilder()
+                .itemName("Item").startPrice(2000.0).currentPrice(0).sellerId("s1")
+                .build();
+
+        assertEquals(2000.0, e.getCurrentPrice(),
+                "currentPrice = 0 không nên override startPrice");
+    }
+
+    @Test
+    void testVehicleBuilder_CurrentPrice_OverridesWhenPositive() {
+        Vehicle v = new VehicleBuilder()
+                .itemName("Car").startPrice(20000.0).currentPrice(22000.0).sellerId("s1")
+                .build();
+
+        assertEquals(22000.0, v.getCurrentPrice());
+    }
+
     private Auction createDummyAuction() {
         Participant seller = new Participant("tmp_seller", "seller@mail.com", "pw", 1000, "SELLER");
         Item item = new ElectronicBuilder()
