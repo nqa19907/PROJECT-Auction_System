@@ -8,6 +8,7 @@ import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
+import auction_system.common.models.users.User;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -61,6 +62,15 @@ public class DashboardController {
         if (sidebarController != null) {
             sidebarController.setOnCategorySelected(this::loadItemList);
             sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
+        }
+
+        setupUserProfile();
+    }
+
+    private void setupUserProfile() {
+        User user = AuthService.getInstance().getCurrentUser();
+        if (profileController != null && user != null) {
+            profileController.setUserData(user);
         }
     }
 

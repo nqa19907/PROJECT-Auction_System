@@ -14,8 +14,7 @@
 
 <!-- ===== MAIN FORM ===== -->
 
-
-   <VBox maxHeight="1.7976931348623157E308" spacing="16" styleClass="profile-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProfileController">
+<VBox maxHeight="1.7976931348623157E308" spacing="16" styleClass="profile-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProfileController">
    <VBox spacing="8.0">
       <children>
                <Label styleClass="profile-section-title" text="Thông tin cá nhân" />
@@ -36,13 +35,13 @@
                      </StackPane>
                      <VBox spacing="4.0">
                         <children>
-                           <Label prefWidth="140.0" styleClass="profile-username" text="Phạm Nhật Vượng Vin" wrapText="true">
+                           <Label fx:id="lblUsername" prefWidth="140.0" styleClass="profile-username" text="Phạm Nhật Vượng Vin" wrapText="true">
                               <VBox.margin>
                                  <Insets />
                               </VBox.margin>
                            </Label>
                            <Region VBox.vgrow="ALWAYS" />
-                           <Label styleClass="profile-email" text="template@gmail.com">
+                           <Label fx:id="lblEmail" styleClass="profile-email" text="template@gmail.com">
                               <VBox.margin>
                                  <Insets />
                               </VBox.margin>
@@ -50,7 +49,7 @@
                            <Region VBox.vgrow="ALWAYS" />
                            <HBox maxHeight="-Infinity" maxWidth="-Infinity" styleClass="badge">
                               <children>
-                                 <Label text="Người đấu giá" />
+                                 <Label fx:id="lblRole" text="Người đấu giá" />
                               </children>
                            </HBox>
                         </children>
@@ -61,8 +60,8 @@
          </VBox>
       </children>
    </VBox>
-   <Region prefHeight="200.0" prefWidth="200.0" styleClass="profile-divider-line" />
-   <VBox spacing="8.0">
+   <Region fx:id="profileDivider" prefHeight="200.0" prefWidth="200.0" styleClass="profile-divider-line" />
+   <VBox fx:id="walletSection" spacing="8.0">
       <children>
                <Label styleClass="profile-section-title" text="Ví" />
          <VBox spacing="16.0">
@@ -74,7 +73,7 @@
                            <Label styleClass="field-label" text="Số dư tài khoản" />
                            <HBox alignment="BASELINE_LEFT">
                               <children>
-                                 <Label styleClass="metric-value" text="69420" />
+                                 <Label fx:id="lblBalance" styleClass="metric-value" text="69420" />
                                  <Label styleClass="metric-unit" text="VNĐ" />
                               </children>
                            </HBox>

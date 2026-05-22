@@ -4,8 +4,7 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,16 +16,16 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CoreBiddingLogicTest {
-    private static final Logger logger = LoggerFactory.getLogger(CoreBiddingLogicTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CoreBiddingLogicTest.class);
 
     private double startPrice;
     private Item item;
-    private Seller seller;
+    private Participant seller;
     private Auction auction;
 
     @BeforeEach
     void setUp() {
-        // Arrange: Chuẩn bị dữ liệu mặc định cho mỗi bài test (khởi tạo Item, Seller, Auction)
+        // Arrange: Chuẩn bị dữ liệu mặc định cho mỗi bài test (khởi tạo Item, Participant, Auction)
         startPrice = 2000;
         item = new ElectronicBuilder()
                 .itemName("OPPO Find X9 Ultra")
@@ -34,8 +33,8 @@ public class CoreBiddingLogicTest {
                 .startPrice(startPrice)
                 .sellerId("61h23s1")
                 .build();
-        seller = new Seller("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
-                "69420", 69420, 4.69f);
+        seller = new Participant("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
+                "69420", 69420, "SELLER");
 
         auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.startAuction();
@@ -159,8 +158,8 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_AuctionEndedWithBids_ReturnsHighestBidder() {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
-        Bidder expectedWinner = new Bidder("Phạm Việt Hoàng", "pvhgay@gmail.com",
-                "123456789", 4000);
+        Participant expectedWinner = new Participant("Phạm Việt Hoàng", "pvhgay@gmail.com",
+                "123456789", 4000, "BIDDER");
         BidTransaction bid = new BidTransaction(expectedWinner, 2500, auction);
         auction.placeBid(bid);
 
@@ -169,7 +168,7 @@ public class CoreBiddingLogicTest {
         auction.endAuction();
 
         // Assert: Xác định được người thắng phải trùng với người vừa đặt giá
-        Bidder actualWinner = auction.calculateWinner();
+        Participant actualWinner = auction.calculateWinner();
         assertSame(expectedWinner, actualWinner);
     }
 
@@ -180,7 +179,7 @@ public class CoreBiddingLogicTest {
         auction.endAuction();
 
         // Assert: Do không có người mua nên người thắng phải là null
-        Bidder actualWinner = auction.calculateWinner();
+        Participant actualWinner = auction.calculateWinner();
         assertNull(actualWinner, "Không có lượt đặt giá thì người chiến thắng phải là null");
     }
 
@@ -192,7 +191,7 @@ public class CoreBiddingLogicTest {
 
         // Act & Assert: Cố gắng gọi hàm tính người thắng sớm sẽ ném ra ngoại lệ
         String actualMessage = assertThrows(IllegalStateException.class, () -> {
-            Bidder winner = auction.calculateWinner();
+            auction.calculateWinner();
         }).getMessage();
 
         String expectedMessage = "Phiên đấu giá chưa kết thúc, chưa thể tìm được người thắng!";
@@ -202,9 +201,9 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_MultipleBidders_ReturnsCorrectWinner() {
         // Arrange
-        Bidder bidder1 = new Bidder("Alice", "alice@mail.com", "pw1", 20000);
-        Bidder bidder2 = new Bidder("Bob", "bob@mail.com", "pw2", 20000);
-        Bidder bidder3 = new Bidder("Charlie", "charlie@mail.com", "pw3", 20000);
+        Participant bidder1 = new Participant("Alice", "alice@mail.com", "pw1", 20000, "BIDDER");
+        Participant bidder2 = new Participant("Bob", "bob@mail.com", "pw2", 20000, "BIDDER");
+        Participant bidder3 = new Participant("Charlie", "charlie@mail.com", "pw3", 20000, "BIDDER");
         auction.placeBid(new BidTransaction(bidder1, 2500, auction));
         auction.placeBid(new BidTransaction(bidder2, 5000, auction));
         auction.placeBid(new BidTransaction(bidder3, 8000, auction));

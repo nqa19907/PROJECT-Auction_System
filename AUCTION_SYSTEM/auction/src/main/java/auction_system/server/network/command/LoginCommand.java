@@ -1,9 +1,12 @@
 package auction_system.server.network.command;
 
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +15,19 @@ import org.slf4j.LoggerFactory;
  */
 public class LoginCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
+    private final AuctionManager auctionManager;
+    private final AuthService authService;
+
+    public LoginCommand(AuthService authService, AuctionManager auctionManager) {
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+        this.authService = Objects.requireNonNull(authService, "authService");
+    }
 
     /**
      * Xử lý đăng nhập bằng Email và Password.
      *
      * <p>Lệnh:       {@code LOGIN|email|password}
-     * Thành công: {@code LOGIN_OK|userId|username|role}
+     * Thành công: {@code LOGIN_OK|userId|username|email|role|balance}
      * Thất bại:   {@code LOGIN_FAIL|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
@@ -40,22 +50,24 @@ public class LoginCommand implements Command {
 
         try {
             // Gọi hàm findUserByCredentials (đã được sửa ở AuctionManager để quét theo email)
-            User user = AuctionManager.getInstance().findUserByCredentials(email, password);
+            User user = auctionManager.findUserByCredentials(email, password);
             if (user == null) {
                 return failPrefix + "Email hoặc mật khẩu không đúng";
             }
 
             // Ngăn chặn đăng nhập đồng thời trên nhiều thiết bị
-            if (AuctionManager.getInstance().isAlreadyOnline(user.getId())) {
+            if (auctionManager.isAlreadyOnline(user.getId())) {
                 return failPrefix + "Tài khoản này đang đăng nhập ở nơi khác";
             }
 
             session.setCurrentUser(user);
             // Sử dụng hành vi của đối tượng thay vì thay đổi trạng thái trực tiếp
             user.setOnline(true);
-            AuctionManager.getInstance().userLoggedIn(user);
+            auctionManager.userLoggedIn(user);
 
             String role = user.getRoleName();
+            double balance = (user instanceof Participant p) ? p.getBalance() : 0.0;
+
             LOGGER.info("Đăng nhập thành công: " + email
                     + " [" + role + "]");
 
@@ -63,7 +75,9 @@ public class LoginCommand implements Command {
             return Protocol.Response.LOGIN_OK.name() + Protocol.SEPARATOR
                     + user.getId() + Protocol.SEPARATOR
                     + user.getUsername() + Protocol.SEPARATOR
-                    + role;
+                    + user.getEmail() + Protocol.SEPARATOR
+                    + role + Protocol.SEPARATOR
+                    + balance;
         } catch (Exception e) {
             // Bắt mọi lỗi hệ thống để không làm chết thread của client
             LOGGER.error("Lỗi hệ thống khi đăng nhập cho email: " + email, e);

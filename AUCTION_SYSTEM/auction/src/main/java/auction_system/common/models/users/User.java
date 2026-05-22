@@ -79,4 +79,6 @@ public abstract class User extends Entity implements AuctionObserver {
      * @return Chuỗi đại diện cho vai trò.
      */
     public abstract String getRoleName();
+
+    public abstract String getRoleDisplayName();
 }

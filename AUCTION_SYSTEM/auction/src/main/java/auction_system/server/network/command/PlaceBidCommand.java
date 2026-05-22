@@ -2,93 +2,127 @@ package auction_system.server.network.command;
 
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
-import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
-import auction_system.common.models.users.Bidder;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
-import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.exceptions.DatabaseException;
+import auction_system.server.services.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Xử lý lệnh đặt giá từ client.
+ *
+ * <p>Command này chỉ chịu trách nhiệm đọc request, kiểm tra dữ liệu đầu vào ở
+ * mức giao thức và trả response cho client. Logic đặt giá thật sự thuộc về
+ * {@link AuctionBidService}.
+ *
+ * <p>Định dạng lệnh:
+ * {@code PLACE_BID|auctionId|amount}
  */
 public class PlaceBidCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
 
+    /** Service xử lý nghiệp vụ đặt giá. */
+    private final AuctionBidService auctionBidService;
+
     /**
-     * Thực thi lệnh đặt giá.
+     * Khởi tạo command đặt giá.
      *
-     * <p>Lệnh:       {@code PLACE_BID|auctionId|amount}
-     * Thành công: {@code BID_OK|auctionId|newPrice}
-     * Thất bại:   {@code BID_FAIL|message} hoặc {@code ERROR|message}
+     * @param auctionBidService service xử lý nghiệp vụ đặt giá
+     */
+    public PlaceBidCommand(final AuctionBidService auctionBidService) {
+        this.auctionBidService =
+                Objects.requireNonNull(auctionBidService, "auctionBidService");
+    }
+
+    /**
+     * Thực thi lệnh đặt giá từ client.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách.
-     * @param session Phiên làm việc của Client.
-     * @return Chuỗi phản hồi cho client.
+     * @param parts   mảng tham số đã tách từ request
+     * @param session phiên làm việc của client
+     * @return response gửi lại cho client
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final String[] parts, final ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
-                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
-                        + "Bạn cần đăng nhập trước";
-            }
-
-            User currentUser = session.getCurrentUser();
-            // Xác minh quyền: chỉ người mua (Bidder) mới được phép đặt giá
-            if (!(currentUser instanceof Bidder)) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                        + "Chỉ người mua (Bidder) mới có thể đặt giá";
+                return buildErrorResponse("Bạn cần đăng nhập trước.");
             }
 
             if (parts.length < 3) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                        + "Thiếu thông tin đặt giá";
+                return buildBidFailResponse("Thiếu thông tin đặt giá.");
             }
 
             String auctionId = parts[1];
-            double amount;
-            try {
-                amount = Double.parseDouble(parts[2]);
-            } catch (NumberFormatException ex) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                        + "Số tiền không hợp lệ";
-            }
+            double amount = parseAmount(parts[2]);
+            User currentUser = session.getCurrentUser();
 
-            if (amount <= 0) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                        + "Số tiền phải lớn hơn 0";
-            }
+            BidTransaction bidTransaction =
+                    auctionBidService.placeBid(auctionId, currentUser, amount);
 
-            Auction auction = AuctionManager.getInstance().getAuctionById(auctionId);
-            if (auction == null) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                        + "Không tìm thấy phiên đấu giá";
-            }
+            return Protocol.Response.BID_OK.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+                    + Protocol.SEPARATOR
+                    + bidTransaction.getAmount();
+        } catch (NumberFormatException e) {
+            return buildBidFailResponse("Số tiền không hợp lệ.");
+        } catch (AuctionClosedException
+                | InvalidBidException
+                | DatabaseException e) {
+            return buildBidFailResponse(e.getMessage());
+        } catch (RuntimeException e) {
+            LOGGER.info("Lỗi hệ thống khi xử lý lệnh đặt giá.", e);
 
-            Bidder bidder = (Bidder) currentUser;
-            BidTransaction bid = new BidTransaction(bidder, amount, auction);
-
-            // Lớp Auction sẽ tự kiểm tra tính hợp lệ của số tiền và thời gian,
-            // nếu sai sẽ ném ra Exception
-            try {
-                auction.placeBid(bid);
-                LOGGER.info(bidder.getUsername() + " đặt " + amount + " cho phiên " + auctionId);
-                return Protocol.Response.BID_OK.name() + Protocol.SEPARATOR 
-                        + auctionId + Protocol.SEPARATOR + amount;
-            } catch (AuctionClosedException | InvalidBidException ex) {
-                return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR + ex.getMessage();
-            }
-        } catch (Exception e) {
-            String username = session.isLoggedIn() 
-                    ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh đặt giá cho " 
-                    + username, e);
-            return Protocol.Response.BID_FAIL.name() + Protocol.SEPARATOR 
-                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            return buildBidFailResponse(
+                    "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
         }
+    }
+
+    /**
+     * Chuyển chuỗi số tiền client gửi lên thành số thực.
+     *
+     * @param rawAmount chuỗi số tiền
+     * @return số tiền đặt giá
+     */
+    private double parseAmount(final String rawAmount) {
+        if (rawAmount == null || rawAmount.isBlank()) {
+            throw new NumberFormatException("Số tiền rỗng.");
+        }
+
+        double amount = Double.parseDouble(rawAmount);
+
+        if (amount <= 0) {
+            throw new InvalidBidException("Số tiền đặt giá phải lớn hơn 0.");
+        }
+
+        return amount;
+    }
+
+    /**
+     * Tạo response lỗi chung.
+     *
+     * @param message thông báo lỗi
+     * @return response theo protocol
+     */
+    private String buildErrorResponse(final String message) {
+        return Protocol.Response.ERROR.name()
+                + Protocol.SEPARATOR
+                + message;
+    }
+
+    /**
+     * Tạo response đặt giá thất bại.
+     *
+     * @param message thông báo lỗi
+     * @return response theo protocol
+     */
+    private String buildBidFailResponse(final String message) {
+        return Protocol.Response.BID_FAIL.name()
+                + Protocol.SEPARATOR
+                + message;
     }
 }

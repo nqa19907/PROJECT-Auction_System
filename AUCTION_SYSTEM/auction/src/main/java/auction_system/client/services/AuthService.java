@@ -2,6 +2,7 @@ package auction_system.client.services;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.network.dto.LoginResult;
+import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.common.utils.SecurityUtils;
 import org.slf4j.Logger;
@@ -14,19 +15,33 @@ import org.slf4j.LoggerFactory;
  */
 public final class AuthService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
-    private static final AuthService INSTANCE = new AuthService();
     private AuthCallback currentCallback;
 
+    // Định nghĩa hằng số cho cấu trúc gói tin LOGIN_OK: LOGIN_OK|userId|username|email|role
+    private static final int IDX_USER_ID = 1;
+    private static final int IDX_USERNAME = 2;
+    private static final int IDX_EMAIL = 3;
+    private static final int IDX_ROLE = 4;
+    private static final int IDX_BALANCE = 5;
+    private User currentUser; // Đảm bảo dùng lớp cha User
+
+    private static final AuthService INSTANCE = new AuthService();
+
     private AuthService() {
-        // Đăng ký hóng tin nhắn LOGIN_OK và LOGIN_FAIL một lần duy nhất
         NetworkClient.getInstance().registerHandler(
-            Protocol.Response.LOGIN_OK.name(), this::handleLoginResponse);
+            Protocol.Response.LOGIN_OK.name(), this::handleLoginSuccess);
         NetworkClient.getInstance().registerHandler(
-            Protocol.Response.LOGIN_FAIL.name(), this::handleLoginResponse);
+            Protocol.Response.LOGIN_FAIL.name(), this::handleLoginFailure);
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.LOGOUT_OK.name(), this::handleLogoutResponse);
     }
 
+
+    /**
+     * Lấy instance duy nhất của AuthService.
+     *
+     * @return instance duy nhất của AuthService
+     */
     public static AuthService getInstance() {
         return INSTANCE;
     }
@@ -66,24 +81,50 @@ public final class AuthService {
         }
     }
 
-    private void handleLoginResponse(String response) {
+    private void handleLoginSuccess(String response) {
         if (currentCallback == null) {
             return;
         }
 
-        LOGGER.info("AuthService xử lý phản hồi: " + response);
+        LOGGER.info("Đăng nhập thành công, đang khởi tạo dữ liệu người dùng.");
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        String cmd = parts[0];
+        
+        // Trích xuất thông tin an toàn
+        String username = getPart(parts, IDX_USERNAME, "Unknown");
+        String email = getPart(parts, IDX_EMAIL, "unknown@example.com");
+        String role = getPart(parts, IDX_ROLE, "BIDDER");
+        double balance = parseDouble(getPart(parts, IDX_BALANCE, "0.0"));
 
-        if (Protocol.Response.LOGIN_OK.name().equals(cmd)) {
-            currentCallback.onResult(new LoginResult(true, null));
-        } else if (Protocol.Response.LOGIN_FAIL.name().equals(cmd)) {
-            String reason = (parts.length > 1) ? parts[1] : "Sai tài khoản hoặc mật khẩu!";
-            currentCallback.onResult(new LoginResult(false, reason));
+        // SRP: Ủy thác việc tạo User cho Factory
+        this.currentUser = UserFactory.create(role, username, email, balance);
+        
+        currentCallback.onResult(new LoginResult(true, null));
+        currentCallback = null;
+    }
+
+    private void handleLoginFailure(String response) {
+        if (currentCallback == null) {
+            return;
         }
 
-        // Giải phóng callback sau khi dùng xong tránh kẹt bộ nhớ
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        String reason = (parts.length > 1) ? parts[1] : "Sai tài khoản hoặc mật khẩu!";
+        
+        currentCallback.onResult(new LoginResult(false, reason));
         currentCallback = null;
+    }
+
+    private String getPart(String[] parts, int index, String defaultValue) {
+        return (parts.length > index) ? parts[index] : defaultValue;
+    }
+
+    private double parseDouble(String value) {
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            LOGGER.error("Không thể phân tích giá trị số: {}", value);
+            return 0.0;
+        }
     }
 
     /**
@@ -119,5 +160,9 @@ public final class AuthService {
 
         // Giải phóng callback
         currentCallback = null;
+    }
+
+    public User getCurrentUser() {
+        return currentUser;
     }
 }

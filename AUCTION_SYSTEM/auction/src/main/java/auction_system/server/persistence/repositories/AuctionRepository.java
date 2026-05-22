@@ -164,7 +164,7 @@ public class AuctionRepository extends SerializedRepository<Auction> {
             throw new DatabaseException("Sản phẩm đấu giá không được null.");
         }
 
-        if (auction.getSeller() == null && isBlank(auction.getSellerId())) {
+        if (auction.getParticipant() == null && isBlank(auction.getSellerId())) {
             throw new DatabaseException("Người bán của phiên đấu giá không hợp lệ.");
         }
 
@@ -197,11 +197,11 @@ public class AuctionRepository extends SerializedRepository<Auction> {
             return auction.getSellerId();
         }
 
-        if (auction.getSeller() == null) {
+        if (auction.getParticipant() == null) {
             return null;
         }
 
-        return auction.getSeller().getId();
+        return auction.getParticipant().getId();
     }
 
     /**

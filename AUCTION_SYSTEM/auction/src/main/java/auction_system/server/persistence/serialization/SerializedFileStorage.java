@@ -12,6 +12,8 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +27,8 @@ import java.util.Objects;
  * @param <T> kiểu đối tượng cần lưu trữ
  */
 public class SerializedFileStorage<T extends Serializable> implements FileStorage<T> {
+    private static final DateTimeFormatter backupTimestampFormatter =
+        DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /** Đường dẫn file dữ liệu .ser. */
     private final Path filePath;
@@ -52,9 +56,8 @@ public class SerializedFileStorage<T extends Serializable> implements FileStorag
         } catch (EOFException exception) {
             return new LinkedHashMap<>();
         } catch (IOException | ClassNotFoundException exception) {
-            throw new DatabaseException(
-                "Không thể đọc dữ liệu từ file: " + filePath,
-                exception);
+            backupUnreadableFile(exception);
+            return new LinkedHashMap<>();
         }
     }
 
@@ -132,6 +135,28 @@ public class SerializedFileStorage<T extends Serializable> implements FileStorag
                 StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException exception) {
             Files.move(tempFile, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    /**
+     * Sao lưu file serialization cũ/hỏng để ứng dụng có thể khởi động lại với
+     * kho dữ liệu rỗng sau khi model thay đổi.
+     *
+     * @param cause lỗi đọc file ban đầu
+     */
+    private void backupUnreadableFile(final Exception cause) {
+        final String timestamp = LocalDateTime.now().format(backupTimestampFormatter);
+        final Path backupPath = filePath.resolveSibling(
+            filePath.getFileName() + "." + timestamp + ".bak"
+        );
+
+        try {
+            Files.move(filePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException backupException) {
+            cause.addSuppressed(backupException);
+            throw new DatabaseException(
+                "Không thể đọc hoặc sao lưu dữ liệu từ file: " + filePath,
+                cause);
         }
     }
 }
