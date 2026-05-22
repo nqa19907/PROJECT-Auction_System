@@ -27,6 +27,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Controller cho màn hình chi tiết phiên đấu giá.
  * Quản lý bảng lịch sử, biểu đồ giá, đặt giá và trạng thái realtime.
+ *
+ * NEW ARCHITECTURE: This controller now uses a ViewModel (AuctionViewModel) to manage
+ * the UI state and business logic. The controller's primary responsibility is to
+ * bind UI components to the ViewModel and delegate user actions to it.
  */
 public class AuctionDetailController implements Initializable {
 
@@ -106,6 +110,9 @@ public class AuctionDetailController implements Initializable {
 
     /**
      * Kết nối các thành phần UI với ViewModel.
+     * This is a core part of the new architecture. All UI components are bound
+     * to the ViewModel's properties. When the ViewModel's data changes, the UI
+     * updates automatically.
      */
     private void bindViewModel() {
         auctionId.textProperty().bind(Bindings.concat("Phiên #", viewModel.auctionIdProperty()));
@@ -173,6 +180,9 @@ public class AuctionDetailController implements Initializable {
 
     /**
      * Xử lý sự kiện người dùng đặt giá mới.
+     * The controller now delegates the entire bidding logic to the ViewModel.
+     * It passes the raw input and a callback to handle the result.
+     * This keeps the controller clean and focused on UI interaction.
      */
     @FXML
     private void placeBid() {

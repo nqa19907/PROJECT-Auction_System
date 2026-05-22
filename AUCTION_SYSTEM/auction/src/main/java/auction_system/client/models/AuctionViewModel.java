@@ -41,6 +41,7 @@ public class AuctionViewModel {
 
     // ── Trạng thái nội bộ ───────────────────────────────────
 
+    // Dùng Set để mỗi bidder chỉ được tính một lần trong participantCount.
     private final Set<String> bidders = new HashSet<>();
     private final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -72,7 +73,7 @@ public class AuctionViewModel {
         this.openingPrice.set(context.openingPrice());
         this.currentPrice.set(context.currentPrice());
 
-        // Khởi tạo điểm đầu tiên cho biểu đồ với dữ liệu thật
+        // Điểm đầu tiên neo biểu đồ theo giá hiện tại của phiên khi mở màn chi tiết.
         String timeStr = LocalTime.now().format(timeFmt);
         chartData.add(new XYChart.Data<>(timeStr, context.currentPrice()));
     }
@@ -126,6 +127,7 @@ public class AuctionViewModel {
     public void submitBid(String rawAmount, BidSubmissionCallback callback) {
         long amount;
         try {
+            // Cho phép nhập kèm dấu phân cách/đơn vị, chỉ giữ lại chữ số để gửi server.
             String sanitizedAmount = rawAmount.replaceAll("[^0-9]", "");
             if (sanitizedAmount.isEmpty()) {
                 callback.onComplete(false, "Vui lòng nhập số tiền.");

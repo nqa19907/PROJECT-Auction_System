@@ -65,9 +65,11 @@ public class LoginCommand implements Command {
                 return failPrefix + "Tài khoản này đang đăng nhập ở nơi khác";
             }
 
+            // Gán người dùng hiện tại cho phiên làm việc
             session.setCurrentUser(user);
             // Sử dụng hành vi của đối tượng thay vì thay đổi trạng thái trực tiếp
             user.setOnline(true);
+            // Thông báo cho AuctionManager rằng người dùng đã đăng nhập
             auctionManager.userLoggedIn(user);
 
             String role = user.getRoleName();

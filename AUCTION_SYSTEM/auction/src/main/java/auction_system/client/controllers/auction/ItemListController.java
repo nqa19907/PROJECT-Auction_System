@@ -119,16 +119,18 @@ public class ItemListController {
 
         long currentPrice;
         try {
-            // selectedParts[IDX_PRICE] chứa số thực (VD: "15500.0"). 
-            // Phải parse thành Double rồi ép kiểu sang Long
+            // parseDouble trước vì dữ liệu từ server có thể gửi về định dạng thập phân (vd: "15500.0").
+            // Sau đó ép kiểu sang (long) để dùng nội bộ trong logic frontend.
             currentPrice = (long) Double.parseDouble(selectedParts[IDX_PRICE]);
         } catch (NumberFormatException e) {
             LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
             return;
         }
 
+        // Tạo giá mặc định khởi điểm phòng trường hợp server không trả về
         long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
 
+        // Nạp giá khởi điểm nếu có trong response (tại index 6)
         if (selectedParts.length > IDX_OPENING_PRICE) {
             try {
                 String rawPrice = selectedParts[IDX_OPENING_PRICE].replaceAll("[^0-9]", "");
@@ -146,6 +148,7 @@ public class ItemListController {
                         productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
 
         if (auctionDetailController != null) {
+            // Truyền đối tượng Context chứa dữ liệu đã parse vào màn chi tiết
             auctionDetailController.initAuction(
                     new AuctionDisplayContext(
                             selectedItemId,
