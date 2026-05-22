@@ -58,6 +58,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param auctionManager manager quản lý phiên đấu giá và trạng thái online
      * @param authService service xác thực tài khoản bằng database
      * @param auctionBidService service xử lý đặt giá
+     * @param participantItemService service xử lý item người dùng
      */
     public ClientHandler(
             final Socket socket,

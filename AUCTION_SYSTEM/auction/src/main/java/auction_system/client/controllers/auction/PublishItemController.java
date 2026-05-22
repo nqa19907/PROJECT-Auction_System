@@ -107,7 +107,8 @@ public class PublishItemController implements Initializable {
             String condition = readRequired(comboCondition, "Vui lòng chọn tình trạng.");
             String description = readRequired(fieldDescription, "Mô tả không được để trống.");
             double startPrice = parsePositiveMoney(fieldStartingPrice.getText(), "giá khởi điểm");
-            LocalDateTime startTime = parseDateTime(fieldStartingTime.getText(), "thời gian bắt đầu");
+            LocalDateTime startTime = parseDateTime(
+                        fieldStartingTime.getText(), "thời gian bắt đầu");
             LocalDateTime endTime = parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc");
 
             if (!endTime.isAfter(startTime)) {

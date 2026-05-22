@@ -8,7 +8,6 @@ import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.services.ParticipantItemService;
-
 import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,7 @@ public class ServerApp {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
 
     /** Đường dẫn thư mục lưu trữ dữ liệu serialization. */
-    private static final Path DATA_DIRECTORY = Path.of("AUCTION_SYSTEM/auction/data");
+    private static final Path DATA_DIRECTORY = Path.of("data");
 
     /**
      * Ngăn việc khởi tạo lớp tiện ích ServerApp từ bên ngoài.

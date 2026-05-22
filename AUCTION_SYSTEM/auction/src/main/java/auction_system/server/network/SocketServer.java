@@ -6,7 +6,6 @@ import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.services.ParticipantItemService;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -85,6 +84,7 @@ public class SocketServer {
      * @param authService       service xác thực dùng chung của server
      * @param auctionManager    manager đấu giá dùng chung của server
      * @param auctionBidService service đặt giá dùng chung của server
+     * @param participantItemService service xử lý item người dùng
      * @return instance duy nhất của {@link SocketServer}
      */
     public static SocketServer getInstance(
