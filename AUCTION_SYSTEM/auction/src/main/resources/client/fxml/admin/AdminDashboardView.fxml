@@ -12,26 +12,38 @@
             styleClass="admin-root">
 
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="18" styleClass="admin-header">
+        <!-- Use a VBox with two rows so header elements can wrap to second line on narrow widths -->
+        <VBox spacing="6" styleClass="admin-header">
             <children>
-                <Label text="AuctionHub" styleClass="brand-title"/>
-                <Label text="· Admin" styleClass="brand-subtitle"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <children>
+                        <VBox spacing="0">
+                            <children>
+                                <Label text="AuctionHub" styleClass="brand-title"/>
+                                <!-- subtitle removed for cleaner look -->
+                            </children>
+                        </VBox>
 
-                <Region HBox.hgrow="ALWAYS"/>
+                        <Region HBox.hgrow="ALWAYS"/>
 
-                <Label text="128 người dùng" styleClass="stat-chip"/>
-                <Label text="24 phiên đang chạy" styleClass="stat-text"/>
-                <Label text="5 bị ban" styleClass="stat-text"/>
+                        <Label text="Admin" styleClass="admin-name"/>
+                        <!-- Nút quay về màn hình chính (thay cho đăng xuất) -->
+                        <Button fx:id="btnBack" onAction="#handleBack" text="Quay về" styleClass="btn-secondary"/>
+                    </children>
+                </HBox>
 
-                <Region minWidth="24"/>
-
-                <Label text="Admin" styleClass="admin-name"/>
-                <Button fx:id="btnLogout" text="Đăng xuất" styleClass="logout-button"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <children>
+                        <Label text="128 người dùng" styleClass="stat-chip"/>
+                        <Label text="24 phiên đang chạy" styleClass="stat-text"/>
+                        <Label text="5 bị ban" styleClass="stat-text"/>
+                    </children>
+                </HBox>
             </children>
             <padding>
-                <Insets top="22" right="34" bottom="22" left="34"/>
+                <Insets top="12" right="34" bottom="12" left="34"/>
             </padding>
-        </HBox>
+        </VBox>
     </top>
 
     <center>

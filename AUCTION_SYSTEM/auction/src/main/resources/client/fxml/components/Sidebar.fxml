@@ -50,7 +50,7 @@
             </children>
         </HBox>
 
-        <HBox id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
+        <HBox id="testAdminView" fx:id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
             <children>
                 <Region styleClass="icon-add" />
                 <Label styleClass="text-body" text="Thử màn hình admin" />

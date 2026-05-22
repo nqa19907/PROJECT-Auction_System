@@ -9,14 +9,8 @@ import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
 import auction_system.common.models.users.User;
-import java.io.IOException;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -64,7 +58,19 @@ public class DashboardController {
         if (sidebarController != null) {
             sidebarController.setOnCategorySelected(this::loadItemList);
             sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
-            sidebarController.setOnAdminSelected(this::loadAdminView);
+
+            // Chỉ hiển thị và cho phép thử màn hình admin khi user hiện tại là ADMIN
+            // Lưu ý: đây là kiểm soát giao diện (client-side). Cần kiểm tra quyền chi tiết ở server
+            User currentUser = AuthService.getInstance().getCurrentUser();
+            boolean isAdmin = false;
+            if (currentUser != null) {
+                isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRoleName());
+            }
+
+            sidebarController.setAdminDemoVisible(isAdmin);
+            if (isAdmin) {
+                sidebarController.setOnAdminSelected(this::loadAdminView);
+            }
         }
 
         setupUserProfile();
@@ -78,23 +84,19 @@ public class DashboardController {
     }
 
     @FXML
-    private void handleSignOut(ActionEvent event) {
+    private void handleSignOut() {
         LOGGER.info("Thực hiện đăng xuất: Gọi service để logout khỏi Server...");
 
         // Gọi AuthService để gửi lệnh LOGOUT lên server
-        AuthService.getInstance().logout(result -> {
-            Platform.runLater(() -> {
-                if (result.isSuccess()) {
-                    LOGGER.info(
-                            "Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
-                } else {
-                    LOGGER.warn(
-                            "Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
-                }
-                // Luôn chuyển người dùng về màn hình đăng nhập dù kết quả trả về ra sao
-                SceneManager.switchScene(btnSignOut, ViewConstants.LOGIN_VIEW, 900, 700);
-            });
-        });
+        AuthService.getInstance().logout(result -> Platform.runLater(() -> {
+            if (result.isSuccess()) {
+                LOGGER.info("Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
+            } else {
+                LOGGER.warn("Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
+            }
+            // Luôn chuyển người dùng về màn hình đăng nhập dù kết quả trả về ra sao
+            SceneManager.switchScene(btnSignOut, ViewConstants.LOGIN_VIEW, 900, 700);
+        }));
     }
 
     private void loadPublishItemView() {
@@ -120,34 +122,10 @@ public class DashboardController {
     }
 
     private void loadAdminView() {
-        LOGGER.info("Mở cửa sổ Admin Dashboard riêng biệt");
+        LOGGER.info("Chuyển sang giao diện Admin Demo bên trong Dashboard (thay vì mở cửa sổ mới)");
 
-        try {
-            // Load FXML của Admin Dashboard
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource(ViewConstants.ADMIN_DEMO_VIEW)
-            );
-            Parent adminRoot = loader.load();
-
-            // Tạo Scene mới và thêm CSS
-            Scene adminScene = new Scene(adminRoot, 1280, 720);
-            String adminCss = getClass().getResource("/client/css/admin-dashboard.css")
-                    .toExternalForm();
-            adminScene.getStylesheets().add(adminCss);
-
-            // Tạo cửa sổ mới
-            Stage adminStage = new Stage();
-            adminStage.setTitle("AuctionHub - Admin Dashboard");
-            adminStage.setScene(adminScene);
-            adminStage.setMinWidth(1024);
-            adminStage.setMinHeight(640);
-
-            // Hiển thị
-            adminStage.show();
-
-        } catch (IOException e) {
-            LOGGER.error("Không thể mở Admin Dashboard", e);
-        }
+        // Tương tự như loadPublishItemView, nạp view vào vùng content của Dashboard
+        Router.navigateContent(contentArea, ViewConstants.ADMIN_DEMO_VIEW);
     }
 
 

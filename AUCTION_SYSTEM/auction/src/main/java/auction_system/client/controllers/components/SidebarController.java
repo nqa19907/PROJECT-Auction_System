@@ -1,7 +1,6 @@
 package auction_system.client.controllers.components;
 
 import auction_system.client.utils.CategoryUtil;
-import auction_system.common.constants.AppConstants;
 import java.util.function.Consumer;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -21,6 +20,9 @@ public class SidebarController {
     public static final String ADMIN_DEMO_VIEW = "testAdminView";
     @FXML
     private VBox categorySidebar;
+    // Tham chiếu tới HBox của mục "Thử màn hình admin" để có thể ẩn/hiện theo vai trò
+    @FXML
+    private javafx.scene.layout.HBox testAdminView;
 
     // Áp dụng Null Object Pattern (empty lambda) để tránh phải check null mỗi khi gọi
     private Consumer<String> onCategorySelected = (c) -> {};
@@ -46,6 +48,21 @@ public class SidebarController {
      */
     public void setOnAdminSelected(final Runnable callback) {
         this.onAdminSelected = callback;
+    }
+
+    /**
+     * Hiện/ẩn mục "Thử màn hình admin" trên sidebar.
+     * Khi ẩn, mục không chiếm không gian layout (managed=false) và không hiển thị (visible=false).
+     * Lưu ý: đây chỉ là kiểm soát giao diện (client-side). Việc kiểm tra quyền truy cập dữ liệu
+     * phải được thực hiện ở server hoặc ở các controller tiếp nhận dữ liệu (server-side).
+     *
+     * @param visible true để hiển thị, false để ẩn hoàn toàn
+     */
+    public void setAdminDemoVisible(boolean visible) {
+        if (testAdminView != null) {
+            testAdminView.setManaged(visible);
+            testAdminView.setVisible(visible);
+        }
     }
 
     @FXML
