@@ -437,3 +437,9 @@
     -fx-font-weight: bold;
     -fx-text-fill: #D4860B;
 }
+
+.root-pane .text-error {
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-text-fill: -color-error-text;
+}

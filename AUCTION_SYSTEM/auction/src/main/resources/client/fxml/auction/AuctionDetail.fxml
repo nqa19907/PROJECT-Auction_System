@@ -128,14 +128,28 @@
                 <VBox spacing="14" styleClass="place-bid-card">
                     <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
                     <Label styleClass="section-title" text="Đặt giá của bạn" />
-
-                    <HBox alignment="CENTER_LEFT" spacing="12">
-                        <Label styleClass="currency-symbol" text="VNĐ" />
-                        <TextField fx:id="bidInput" promptText="Nhập số tiền..." styleClass="bid-input" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="quickBid100" onAction="#quickAdd100" styleClass="quick-btn" text="+100.000 VNĐ" />
-                        <Button fx:id="quickBid500" onAction="#quickAdd500" styleClass="quick-btn" text="+500.000 VNĐ" />
-                        <Button fx:id="quickBid1000" onAction="#quickAdd1000" styleClass="quick-btn" text="+1.000.000 VNĐ" />
-                    </HBox>
+               <VBox spacing="7.0">
+                  <children>
+      
+                                      <HBox alignment="CENTER_LEFT" spacing="12">
+                              <Label styleClass="currency-symbol" text="VNĐ" />
+                              <TextField fx:id="bidInput" promptText="Nhập số tiền..." styleClass="bid-input" HBox.hgrow="ALWAYS" />
+                              <Button fx:id="quickBid100" onAction="#quickAdd100" styleClass="quick-btn" text="+100.000 VNĐ" />
+                              <Button fx:id="quickBid500" onAction="#quickAdd500" styleClass="quick-btn" text="+500.000 VNĐ" />
+                              <Button fx:id="quickBid1000" onAction="#quickAdd1000" styleClass="quick-btn" text="+1.000.000 VNĐ" />
+                          </HBox>
+                     <HBox spacing="12.0">
+                        <children>
+                           <Label style="-fx-text-fill: transparent;" styleClass="currency-symbol" text="VNĐ" textFill="WHITE" />
+                           <VBox>
+                              <children>
+                                 <Label fx:id="lblError" styleClass="text-error" visible="false" />
+                              </children>
+                           </VBox>
+                        </children>
+                     </HBox>
+                  </children>
+               </VBox>
 
                     <HBox alignment="CENTER_RIGHT" spacing="12">
                         <Label fx:id="minBidHint" styleClass="hint-label" text="Giá tối thiểu: 160.000 VNĐ" />
