@@ -5,7 +5,6 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
-import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -89,13 +88,28 @@ public class AuctionManager {
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.database = Objects.requireNonNull(database, "database");
+        loadPersistentState();
         startAuctionScheduler();
 
         try {
-            TestDataGenerator.generate(this);
+            if (userRegistry.isEmpty() || auctionList.isEmpty()) {
+                TestDataGenerator.generate(this);
+            }
         } catch (Exception exception) {
             LOGGER.warn("Không thể khởi tạo user mẫu: " + exception.getMessage());
         }
+    }
+
+    /**
+     * Nạp dữ liệu đã lưu từ database serialization vào trạng thái runtime.
+     */
+    private void loadPersistentState() {
+        database.users().findAll().forEach(user -> userRegistry.put(user.getUsername(), user));
+        auctionList.addAll(database.auctions().findAll());
+
+        LOGGER.info("Đã nạp " + userRegistry.size()
+                + " user và " + auctionList.size()
+                + " phiên đấu giá từ database.");
     }
 
     // =========================================================================
@@ -152,6 +166,7 @@ public class AuctionManager {
             final LocalDateTime endTime) {
         final Auction newAuction = new Auction(item, seller, startTime, endTime);
         auctionList.add(newAuction);
+        database.items().save(item);
         database.auctions().save(newAuction);
 
         LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()
@@ -259,10 +274,20 @@ public class AuctionManager {
      * Đăng ký người dùng mới vào hệ thống.
      *
      * @param user Người dùng mới (username phải chưa tồn tại).
+     * @return người dùng đã được lưu hoặc người dùng đã tồn tại trong database
      */
-    public void registerUser(final User user) {
-        userRegistry.put(user.getUsername(), user);
-        LOGGER.info("Đăng ký mới: " + user.getUsername());
+    public User registerUser(final User user) {
+        Objects.requireNonNull(user, "user");
+
+        User persistedUser = database.users()
+                .findByEmail(user.getEmail())
+                .or(() -> database.users().findByUsername(user.getUsername()))
+                .orElseGet(() -> database.users().save(user));
+
+        userRegistry.put(persistedUser.getUsername(), persistedUser);
+        LOGGER.info("Đăng ký/nạp user: " + persistedUser.getUsername());
+
+        return persistedUser;
     }
 
     /**

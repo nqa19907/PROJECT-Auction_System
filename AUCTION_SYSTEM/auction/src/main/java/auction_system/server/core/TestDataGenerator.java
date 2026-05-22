@@ -36,13 +36,11 @@ public final class TestDataGenerator {
 
         // 1. Định nghĩa mảng người dùng: {Username, Email, RawPassword, Balance, Role}
         Object[][] userData = {
-            {"SieuThiDienMay", "meomaybe@gmail.com", "1", 10_000_000.0, "SELLER"},
-            {"Thế giới chân dài", "thegioichandai@gmail.com", "2", 100_000_000.0, "SELLER"},
-            {"Nguyễn Văn User", "1", "1", 100_000_000.0, "BIDDER"},
-            {"Nguyễn Văn Admin", "2", "2", 100_000_000.0, "ADMIN"},
-            {"NguoiDauGia1", "3", "3", 100_000_000.0, "BIDDER"},
-            {"NguoiDauGia2", "4", "4", 50_000_000.0, "BIDDER"},
-            {"AdminHub", "admin@auctionhub.vn", "admin", 0.0, "ADMIN"}
+            {"Test Seller", "s1", "1", 20_000_000.0, "SELLER"},
+            {"Test Art Seller", "s2", "1", 20_000_000.0, "SELLER"},
+            {"Test Bidder", "b1", "1", 100_000_000.0, "BIDDER"},
+            {"Low Balance Bidder", "b2", "1", 200_000.0, "BIDDER"},
+            {"Test Admin", "a", "1", 0.0, "ADMIN"}
         };
 
         for (Object[] data : userData) {
@@ -59,22 +57,23 @@ public final class TestDataGenerator {
                 user = new Participant(name, email, pass, balance, role);
             }
 
-            manager.registerUser(user);
-            userCache.put(name, user);
+            User persistedUser = manager.registerUser(user);
+            userCache.put(name, persistedUser);
         }
 
         // 2. Định nghĩa mảng phiên đấu giá: 
         // {Type, Name, Description, StartPrice, SellerName, StartOffsetHours, EndOffsetHours}
         Object[][] auctionData = {
-            {"E", "iPhone 15 Pro Max", "Bản 256GB màu Titan.", 28_000_000.0,
-                "SieuThiDienMay", -1, 48},
-            {"A", "Tranh 'Hoàng Hôn'", "Sơn dầu 80x120cm.", 5_000_000.0,
-                "Thế giới chân dài", 2, 120},
-            {"E", "Laptop Dell XPS 15", "i9, 32GB RAM, RTX 4070.", 45_000_000.0,
-                "SieuThiDienMay", -24, 12},
-            {"A", "Bức Tượng 'Suy Tư'", "Đồng nguyên khối, cao 50cm.", 12_000_000.0,
-                "Thế giới chân dài", -120, -24},
-            {"E", "Sony WH-1000XM5", "Chống ồn, fullbox.", 4_500_000.0, "SieuThiDienMay", 24, 72}
+            {"E", "Test Live Phone", "Phiên đang chạy, dùng để test đặt giá nhanh.",
+                100_000.0, "Test Seller", -1, 48},
+            {"E", "Test Live Laptop", "Phiên đang chạy với giá cao hơn một chút.",
+                500_000.0, "Test Seller", -2, 24},
+            {"A", "Test Upcoming Painting", "Phiên chưa bắt đầu, dùng để test trạng thái OPEN.",
+                300_000.0, "Test Art Seller", 2, 72},
+            {"A", "Test Finished Statue", "Phiên đã kết thúc, dùng để test trạng thái FINISHED.",
+                400_000.0, "Test Art Seller", -120, -24},
+            {"E", "Test Future Headphone", "Phiên bắt đầu sau 24 giờ.",
+                150_000.0, "Test Seller", 24, 96}
         };
 
         LocalDateTime now = LocalDateTime.now();
