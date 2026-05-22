@@ -127,6 +127,38 @@ public final class AuthService {
     }
 
     /**
+     * Nạp tiền vào tài khoản participant và lưu xuống database.
+     *
+     * @param currentUser người dùng đang đăng nhập trong session
+     * @param amount số tiền cần nạp
+     * @return số dư mới sau khi nạp
+     */
+    public double deposit(final User currentUser, final double amount) {
+        if (!(currentUser instanceof Participant participant)) {
+            throw new IllegalArgumentException("Chỉ tài khoản người tham gia mới có ví.");
+        }
+
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Số tiền nạp phải lớn hơn 0.");
+        }
+
+        return database.executeInTransaction(() -> {
+            participant.setBalance(participant.getBalance() + amount);
+            database.users().save(participant);
+            database.flushAll();
+
+            LOGGER.info(
+                "Đã nạp {} cho tài khoản {}. Số dư mới: {}",
+                amount,
+                participant.getUsername(),
+                participant.getBalance()
+            );
+
+            return participant.getBalance();
+        });
+    }
+
+    /**
      * Tìm người dùng hợp lệ theo email và mật khẩu.
      *
      * @param email email đã được chuẩn hóa

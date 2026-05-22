@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
  * JOIN_AUCTION|auctionId
  * LEAVE_AUCTION|auctionId
  * PLACE_BID|auctionId|amount
+ * DEPOSIT|amount
  * LOGOUT
  * </pre>
  *
@@ -52,6 +53,8 @@ import org.slf4j.LoggerFactory;
  *   LEAVE_OK|auctionId
  *   BID_OK|auctionId|newPrice
  *   BID_FAIL|message
+ *   DEPOSIT_OK|balance
+ *   DEPOSIT_FAIL|message
  *   LOGOUT_OK
  *   ERROR|message
  * </pre>

@@ -23,6 +23,7 @@ public final class Protocol {
         LOGIN,
         REGISTER,
         LOGOUT,
+        DEPOSIT,
         
         // Auction
         LIST_AUCTIONS,
@@ -42,6 +43,7 @@ public final class Protocol {
         LOGIN_OK, LOGIN_FAIL,
         REGISTER_OK, REGISTER_FAIL,
         LOGOUT_OK,
+        DEPOSIT_OK, DEPOSIT_FAIL,
         
         // Auction Responses
         AUCTION_LIST,

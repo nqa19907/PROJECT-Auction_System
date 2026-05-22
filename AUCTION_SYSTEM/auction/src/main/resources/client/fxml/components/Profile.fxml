@@ -14,7 +14,7 @@
 
 <!-- ===== MAIN FORM ===== -->
 
-<VBox maxHeight="1.7976931348623157E308" spacing="16" styleClass="profile-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProfileController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" prefWidth="275.0" spacing="16" styleClass="profile-container" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProfileController">
    <VBox spacing="8.0">
       <children>
                <Label styleClass="profile-section-title" text="Thông tin cá nhân" />
@@ -41,7 +41,7 @@
                               </VBox.margin>
                            </Label>
                            <Region VBox.vgrow="ALWAYS" />
-                           <Label fx:id="lblEmail" styleClass="profile-email" text="template@gmail.com">
+                           <Label fx:id="lblEmail" styleClass="profile-email" text="template@gmail.com" wrapText="true">
                               <VBox.margin>
                                  <Insets />
                               </VBox.margin>
@@ -73,8 +73,8 @@
                            <Label styleClass="field-label" text="Số dư tài khoản" />
                            <HBox alignment="BASELINE_LEFT">
                               <children>
-                                 <Label fx:id="lblBalance" styleClass="metric-value" text="69420" />
-                                 <Label styleClass="metric-unit" text="VNĐ" />
+                                 <Label fx:id="lblBalance" styleClass="profile-balance-value" text="69420" />
+                                 <Label styleClass="profile-balance-unit" text="VNĐ" />
                               </children>
                            </HBox>
                         </children>
@@ -90,6 +90,7 @@
                                 <Button fx:id="btnDeposit" maxHeight="1.7976931348623157E308" onAction="#handleDeposit" styleClass="btn-deposit" text="Nạp tiền" />
                         </children>
                      </HBox>
+                     <Label fx:id="lblDepositMessage" styleClass="deposit-message" visible="false" wrapText="true" />
                   </children>
                </VBox>
             </children>
