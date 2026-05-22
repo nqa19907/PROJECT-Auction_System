@@ -1,7 +1,6 @@
 package auction_system.server.services;
 
-import auction_system.common.models.users.Bidder;
-import auction_system.common.models.users.Seller;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
@@ -241,14 +240,14 @@ public final class AuthService {
 
         switch (normalizedRoleName) {
             case "SELLER":
-                return new Seller(
+                return new Participant(
                     username,
                     email,
                     hashedPassword,
                     defaultBalance
                 );
             case "BIDDER":
-                return new Bidder(username, email, hashedPassword, defaultBalance);
+                return new Participant(username, email, hashedPassword, defaultBalance);
             default:
                 throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
         }

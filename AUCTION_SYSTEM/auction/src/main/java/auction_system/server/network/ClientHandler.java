@@ -54,28 +54,28 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @param socket            Socket kết nối từ client.
      * @param auctionManager    Quản lý thông tin các phiên đấu giá.
-     * @param authService2       Dịch vụ xác thực tài khoản.
+     * @param authService     Dịch vụ xác thực tài khoản.
      * @param auctionBidService Dịch vụ đặt giá.
      */
     public ClientHandler(
             final Socket socket,
             final AuctionManager auctionManager,
-            final auction_system.server.services.AuthService authService2,
-            final AuctionBidService auctionBidService) {
+            final AuthService authService,
+            final AuctionBidService auctionBidService) { 
         this.socket = Objects.requireNonNull(socket, "socket");
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
-        this.authService = Objects.requireNonNull(authService2, "authService");
+        this.authService = Objects.requireNonNull(authService, "authService");
         this.session = new ClientSession(this, auctionManager);
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
-
+        
         /*
          * Bản đồ ánh xạ từ tên lệnh theo giao thức sang đối tượng xử lý (Command) tương ứng.
          */
         this.commandMap = Map.ofEntries(
                 Map.entry(Protocol.Command.LOGIN.name(),
-                        new LoginCommand(auctionManager)),
+                        new LoginCommand(authService, auctionManager)),
                 Map.entry(Protocol.Command.REGISTER.name(),
-                        new RegisterCommand(auctionManager)),
+                        new RegisterCommand(authService)),
                 Map.entry(Protocol.Command.LIST_AUCTIONS.name(),
                         new ListAuctionsCommand(auctionManager)),
                 Map.entry(Protocol.Command.GET_AUCTION.name(),

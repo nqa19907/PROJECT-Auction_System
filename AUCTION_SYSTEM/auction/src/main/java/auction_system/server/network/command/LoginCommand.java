@@ -4,6 +4,7 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -15,9 +16,11 @@ import org.slf4j.LoggerFactory;
 public class LoginCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
     private final AuctionManager auctionManager;
+    private final AuthService authService;
 
-    public LoginCommand(AuctionManager auctionManager) {
+    public LoginCommand(AuthService authService, AuctionManager auctionManager) {
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+        this.authService = Objects.requireNonNull(authService, "authService");
     }
 
     /**

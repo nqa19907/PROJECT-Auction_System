@@ -94,11 +94,11 @@ public class ClientApp extends Application {
                 NetworkConfig.SERVER_HOST,
                 NetworkConfig.SERVER_PORT
             );
-        } catch (InterruptedException exception) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.warn("Luồng chờ kết nối lại server nội bộ bị gián đoạn.");
-        } catch (IOException exception) {
-            LOGGER.error("Kết nối lại server nội bộ thất bại: {}", exception.getMessage());
+        } catch (IOException e) {
+            LOGGER.error("Kết nối lại server nội bộ thất bại: {}", e.getMessage());
         }
     }
 
