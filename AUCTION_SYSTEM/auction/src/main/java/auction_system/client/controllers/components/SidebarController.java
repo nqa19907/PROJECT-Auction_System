@@ -1,7 +1,6 @@
 package auction_system.client.controllers.components;
 
 import auction_system.client.utils.CategoryUtil;
-import auction_system.common.constants.AppConstants;
 import java.util.function.Consumer;
 import javafx.fxml.FXML;
 import javafx.scene.Node;

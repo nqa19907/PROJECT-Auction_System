@@ -5,6 +5,8 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -89,6 +91,7 @@ public class SocketServer {
             final int port,
             final AuthService authService,
             final AuctionManager auctionManager,
+            final ParticipantItemService participantItemService,
             final AuctionBidService auctionBidService) {
         if (instance == null) {
             synchronized (SocketServer.class) {
@@ -116,7 +119,8 @@ public class SocketServer {
             final int port,
             final AuctionManager auctionManager,
             final AuthService authService,
-            final AuctionBidService auctionBidService) {
+            final AuctionBidService auctionBidService,
+            final ParticipantItemService participantItemService) {
         this.port = port;
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
         this.authService = Objects.requireNonNull(authService, "authService");

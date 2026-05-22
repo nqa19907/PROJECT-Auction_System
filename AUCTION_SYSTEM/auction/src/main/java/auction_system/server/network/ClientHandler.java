@@ -2,6 +2,7 @@ package auction_system.server.network;
 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
@@ -13,9 +14,11 @@ import auction_system.server.network.command.ListAuctionsCommand;
 import auction_system.server.network.command.LoginCommand;
 import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
+import auction_system.server.network.command.PublishItemCommand;
 import auction_system.server.network.command.RegisterCommand;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
 import auction_system.server.session.ClientSession;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,6 +45,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final AuctionManager auctionManager;
     private final AuthService authService;
     private final AuctionBidService auctionBidService;
+    private final ParticipantItemService participantItemService;
     private final Map<String, Command> commandMap;
     private final ClientSession session;
 
@@ -60,12 +64,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
             final Socket socket,
             final AuctionManager auctionManager,
             final AuthService authService,
-            final AuctionBidService auctionBidService) {
+            final AuctionBidService auctionBidService,
+            final ParticipantItemService participantItemService) {
         this.socket = Objects.requireNonNull(socket, "socket");
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
         this.authService = Objects.requireNonNull(authService, "authService");
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         this.session = new ClientSession(this, auctionManager);
+        this.participantItemService = participantItemService;
         this.commandMap = createCommandMap();
     }
 
@@ -100,6 +106,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 Map.entry(
                         Protocol.Command.LOGOUT.name(),
                         new LogoutCommand(auctionManager)));
+                Map.entry(
+                        Protocol.Command.PUBLISH_ITEM.name(), 
+                        new PublishItemCommand(participantItemService, auctionManager));
     }
 
     /**
