@@ -20,3 +20,6 @@ Thumbs.db
 
 # VS Code
 .vscode/
+
+# Runtime serialized data
+AUCTION_SYSTEM/auction/data/
