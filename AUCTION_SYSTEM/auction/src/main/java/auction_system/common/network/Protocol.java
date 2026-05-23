@@ -30,7 +30,8 @@ public final class Protocol {
         GET_AUCTION,
         JOIN_AUCTION,
         LEAVE_AUCTION,
-        PLACE_BID
+        PLACE_BID,
+        ADMIN_CANCEL_AUCTION
     }
 
     /**
@@ -55,6 +56,10 @@ public final class Protocol {
         // Broadcast Updates
         UPDATE_PRICE,
         AUCTION_STARTED,
-        AUCTION_ENDED
+        AUCTION_ENDED,
+
+        // Admin responses
+        ADMIN_CANCEL_AUCTION_OK,
+        ADMIN_CANCEL_AUCTION_FAIL
     }
 }
