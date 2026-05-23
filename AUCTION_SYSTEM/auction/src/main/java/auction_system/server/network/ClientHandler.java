@@ -8,6 +8,7 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
 import auction_system.server.network.command.GetAuctionCommand;
+import auction_system.server.network.command.GetBidHistoryCommand;
 import auction_system.server.network.command.JoinAuctionCommand;
 import auction_system.server.network.command.LeaveAuctionCommand;
 import auction_system.server.network.command.ListAuctionsCommand;
@@ -81,6 +82,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new ListAuctionsCommand(auctionManager)),
                 Map.entry(Protocol.Command.GET_AUCTION.name(),
                         new GetAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.GET_BID_HISTORY.name(),
+                        new GetBidHistoryCommand(auctionBidService)),
                 Map.entry(Protocol.Command.JOIN_AUCTION.name(),
                         new JoinAuctionCommand(auctionManager)),
                 Map.entry(Protocol.Command.LEAVE_AUCTION.name(),
@@ -91,7 +94,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new DepositCommand(authService)),
                 Map.entry(Protocol.Command.LOGOUT.name(),
                         new LogoutCommand(auctionManager))
-        );
+            );
     }
 
     // =========================================================================

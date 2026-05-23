@@ -6,6 +6,7 @@ import auction_system.common.models.auctions.BidRow;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
@@ -22,6 +23,12 @@ import javafx.scene.chart.XYChart;
  * Chứa toàn bộ trạng thái và logic của view, giúp Controller "mỏng" hơn.
  */
 public class AuctionViewModel {
+
+    private static final int IDX_BID_TIME = 0;
+    private static final int IDX_BIDDER = 1;
+    private static final int IDX_BID_AMOUNT = 2;
+    private static final int MIN_BID_HISTORY_PARTS = 3;
+    private static final String VALID_BID_STATUS = "Hợp lệ";
 
     // ── Thuộc tính dùng cho data binding ────────────────────
 
@@ -106,6 +113,107 @@ public class AuctionViewModel {
 
         priceChangeText.set("+" + CurrencyFormatter.formatVnd(change) + " so với trước");
     }
+
+    /**
+     * Nạp lịch sử đặt giá đã lấy từ server vào bảng và biểu đồ.
+     *
+     * <p>Dữ liệu đầu vào dùng format đã parse từ BID_HISTORY:
+     * {@code time|bidder|amount}. Server trả theo thứ tự thời gian tăng dần,
+     * còn bảng UI hiển thị lượt mới nhất ở đầu danh sách.
+     *
+     * @param rows danh sách dòng lịch sử bid đã parse từ response socket
+     */
+    public void loadBidHistory(final List<String[]> rows) {
+        // Reset dữ liệu runtime trước khi dựng lại từ lịch sử server.
+        bidHistory.clear();
+        chartData.clear();
+        bidders.clear();
+
+        // previousPrice dùng để tính mức tăng của từng bid so với mốc liền trước.
+        long previousPrice = openingPrice.get();
+        long latestPrice = currentPrice.get();
+        long latestChange = 0L;
+        int parsedBidCount = 0;
+
+        if (rows != null) {
+            for (String[] row : rows) {
+                // Bỏ qua record lỗi để một dòng hỏng không làm mất toàn bộ lịch sử.
+                if (row == null || row.length < MIN_BID_HISTORY_PARTS) {
+                    continue;
+                }
+
+                final long amount = parseBidAmount(row[IDX_BID_AMOUNT]);
+                if (amount <= 0) {
+                    continue;
+                }
+
+                final String time = row[IDX_BID_TIME];
+                final String bidder = row[IDX_BIDDER];
+                final long change = amount - previousPrice;
+
+                // Cập nhật các biến lưu trữ thông tin mới nhất
+                previousPrice = amount;
+                latestPrice = amount;
+                latestChange = change;
+                parsedBidCount++;
+
+                // Chart giữ thứ tự thời gian tăng dần, bảng thêm mới nhất lên đầu.
+                bidders.add(bidder);
+                chartData.add(new XYChart.Data<>(time, amount));
+                bidHistory.add(0, new BidRow(time, bidder, amount, change, VALID_BID_STATUS));
+            }
+        }
+
+        // Đồng bộ lại các property mà UI đang bind sau khi load lịch sử.
+        currentPrice.set(latestPrice);
+        bidCount.set(parsedBidCount);
+        participantCount.set(bidders.size());
+        updateHistoryFallbackChartPoint(parsedBidCount);
+        updatePriceChangeText(latestChange);
+    }
+
+    /**
+     * Chuyển chuỗi amount từ protocol thành số nguyên dùng cho UI.
+     *
+     * @param rawAmount chuỗi giá đặt từ server
+     * @return số tiền đã parse, hoặc 0 nếu dữ liệu không hợp lệ
+     */
+    private long parseBidAmount(final String rawAmount) {
+        try {
+            return (long) Double.parseDouble(rawAmount);
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
+
+    /**
+     * Thêm điểm neo cho chart khi phiên chưa có lịch sử bid hợp lệ.
+     *
+     * @param parsedBidCount số bid hợp lệ đã nạp được
+     */
+    private void updateHistoryFallbackChartPoint(final int parsedBidCount) {
+        if (parsedBidCount > 0) {
+            return;
+        }
+
+        chartData.add(new XYChart.Data<>(
+                LocalTime.now().format(timeFmt),
+                currentPrice.get()
+        ));
+    }
+
+    /**
+     * Cập nhật dòng mô tả mức tăng giá mới nhất.
+     *
+     * @param latestChange mức thay đổi của bid mới nhất so với bid trước đó
+     */
+    private void updatePriceChangeText(final long latestChange) {
+        priceChangeText.set(
+                "+" + CurrencyFormatter.formatVnd(latestChange) + " so với trước"
+        );
+    }
+
+
 
     // ── Getter cho các thuộc tính ───────────────────────────
 

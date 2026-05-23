@@ -7,6 +7,8 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -217,4 +219,34 @@ public class AuctionBidService {
                         "Không tìm thấy phiên đấu giá: " + auctionId));
     }
 
+    /**
+     * Lấy lịch sử đặt giá của một phiên theo thứ tự thời gian tăng dần.
+     *
+     * <p>Command phía network dùng dữ liệu này để dựng response BID_HISTORY;
+     * service giữ quyền truy cập repository để command không phụ thuộc trực
+     * tiếp vào tầng persistence.
+     *
+     * @param auctionId mã phiên đấu giá cần lấy lịch sử
+     * @return danh sách giao dịch đặt giá của phiên
+     */
+    public List<BidTransaction> getBidHistory(final String auctionId) {
+        validateAuctionId(auctionId);
+
+        return database.bidTransactions()
+                .findByAuctionId(auctionId)
+                .stream()
+                .sorted(Comparator.comparing(BidTransaction::getTimestamp))
+                .toList();
+    }
+
+    /**
+     * Kiểm tra mã phiên cho các nghiệp vụ chỉ cần auctionId.
+     *
+     * @param auctionId mã phiên đấu giá cần kiểm tra
+     */
+    private void validateAuctionId(final String auctionId) {
+        if (auctionId == null || auctionId.isBlank()) {
+            throw new InvalidBidException("Mã phiên đấu giá không được rỗng.");
+        }
+    }
 }

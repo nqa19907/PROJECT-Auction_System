@@ -2,6 +2,7 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
+import auction_system.client.services.AuctionService;
 import auction_system.client.utils.CurrencyFormatter;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
@@ -88,6 +89,32 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
+        loadBidHistory(context.auctionId());
+    }
+
+    /**
+     * Tải lịch sử đặt giá đã lưu của phiên hiện tại và đưa vào ViewModel.
+     *
+     * <p>Socket callback có thể chạy trên thread nền, nên mọi cập nhật tới
+     * ObservableList/JavaFX binding được đưa về JavaFX Application Thread bằng
+     * {@link Platform#runLater(Runnable)}.
+     *
+     * @param auctionIdValue mã phiên đấu giá cần tải lịch sử bid
+     */
+    private void loadBidHistory(final String auctionIdValue) {
+        AuctionService.getInstance().fetchBidHistory(auctionIdValue, rows -> {
+            Platform.runLater(() -> {
+                // ViewModel dựng lại bảng, biểu đồ và các chỉ số từ dữ liệu server.
+                viewModel.loadBidHistory(rows);
+
+                // Sau khi chart có dữ liệu thật, cập nhật lại trục Y theo khoảng giá mới.
+                AuctionPriceChartConfigurer.updateAxis(
+                        numberYaxis,
+                        viewModel.getOpeningPriceValue(),
+                        viewModel.getCurrentPriceValue()
+                );
+            });
+        });
     }
 
     /**

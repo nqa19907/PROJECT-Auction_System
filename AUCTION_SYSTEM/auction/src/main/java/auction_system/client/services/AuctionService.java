@@ -16,6 +16,10 @@ public class AuctionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
     private static final AuctionService INSTANCE = new AuctionService();
 
+    // =========================================================================
+    // PROTOCOL PARSING CONSTANTS
+    // =========================================================================
+
     // AUCTION_LIST có dòng đầu là header, dữ liệu phiên bắt đầu từ dòng tiếp theo.
     private static final int FIRST_AUCTION_RECORD_INDEX = 1;
 
@@ -30,10 +34,23 @@ public class AuctionService {
     private static final int MIN_BID_OK_PARTS = 4;
     private static final int IDX_BID_NEW_BALANCE = 3;
 
+    // BID_HISTORY|auctionId|count~time|bidder|amount~...
+    private static final int FIRST_BID_HISTORY_RECORD_INDEX = 1;
+    private static final int MIN_BID_HISTORY_PARTS = 3;
+
+    // =========================================================================
+    // PENDING CALLBACKS
+    // =========================================================================
+
     // Mỗi request async hiện chỉ giữ một callback đang chờ response tương ứng.
     private FetchAuctionsCallback currentListCallback;
     private FetchAuctionDetailCallback currentDetailCallback;
     private PlaceBidCallback currentBidCallback;
+    private FetchBidHistoryCallback currentBidHistoryCallback;
+
+    // =========================================================================
+    // SINGLETON LIFECYCLE
+    // =========================================================================
 
     /**
      * Khởi tạo AuctionService ẩn (private) và tự động đăng ký bộ lắng nghe lệnh phản hồi.
@@ -52,12 +69,18 @@ public class AuctionService {
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_FAIL.name(), this::handlePlaceBidFailure
         );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
+        );
     }
 
     public static AuctionService getInstance() {
         return INSTANCE;
     }
 
+    // =========================================================================
+    // CALLBACK CONTRACTS
+    // =========================================================================
 
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
@@ -82,6 +105,21 @@ public class AuctionService {
     public interface PlaceBidCallback {
         void onResult(boolean isSuccess, String message, double newBalance);
     }
+
+    /**
+     * Callback nhận lịch sử đặt giá đã được parse từ phản hồi BID_HISTORY.
+     *
+     * <p>Mỗi phần tử trong danh sách là một mảng theo thứ tự:
+     * {@code time}, {@code bidder}, {@code amount}.
+     */
+    @FunctionalInterface
+    public interface FetchBidHistoryCallback {
+        void onResult(List<String[]> bidHistoryRows);
+    }
+
+    // =========================================================================
+    // AUCTION LIST
+    // =========================================================================
 
     /**
      * Gửi yêu cầu lấy danh sách phiên đấu giá hiện có lên Server.
@@ -122,6 +160,10 @@ public class AuctionService {
         currentListCallback = null; // Giải phóng bộ nhớ
     }
 
+    // =========================================================================
+    // AUCTION DETAIL
+    // =========================================================================
+
     /**
      * Gửi yêu cầu lấy thông tin chi tiết một phiên đấu giá.
      *
@@ -151,6 +193,10 @@ public class AuctionService {
         currentDetailCallback.onResult(parts);
         currentDetailCallback = null;
     }
+
+    // =========================================================================
+    // BID SUBMISSION
+    // =========================================================================
 
     /**
      * Gửi yêu cầu đặt giá cho một phiên đấu giá.
@@ -216,6 +262,63 @@ public class AuctionService {
         currentBidCallback.onResult(false, message, 0);
         currentBidCallback = null;
     }
+
+    // =========================================================================
+    // BID HISTORY
+    // =========================================================================
+
+    /**
+     * Gửi yêu cầu lấy lịch sử đặt giá của một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần lấy lịch sử
+     * @param callback callback nhận danh sách dòng lịch sử đặt giá
+     */
+    public void fetchBidHistory(
+            final String auctionId,
+            final FetchBidHistoryCallback callback) {
+        this.currentBidHistoryCallback = callback;
+
+        NetworkClient.getInstance().sendCommand(
+            Protocol.Command.GET_BID_HISTORY.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+        );
+    }
+
+    /**
+     * Bóc tách phản hồi lịch sử bid từ server.
+     *
+     * <p>Record đầu tiên là header {@code BID_HISTORY|auctionId|count}; các
+     * record còn lại mới là từng dòng dữ liệu để bảng/biểu đồ sử dụng.
+     *
+     * @param response phản hồi BID_HISTORY dạng chuỗi theo protocol socket
+     */
+    private void handleBidHistoryResponse(final String response) {
+        if (currentBidHistoryCallback == null) {
+            return;
+        }
+
+        LOGGER.info("AuctionService nhận lịch sử bid: " + response);
+
+        List<String[]> bidHistoryRows = new ArrayList<>();
+
+        String[] records = response.split(Protocol.RECORD_SEPARATOR);
+
+        for (int i = FIRST_BID_HISTORY_RECORD_INDEX; i < records.length; i++) {
+            String[] parts = records[i].split(Protocol.SEPARATOR_REGEX);
+
+            if (parts.length >= MIN_BID_HISTORY_PARTS) {
+                bidHistoryRows.add(parts);
+            }
+        }
+
+        currentBidHistoryCallback.onResult(bidHistoryRows);
+        currentBidHistoryCallback = null;
+    }
+
+    // =========================================================================
+    // RESPONSE PARSING HELPERS
+    // =========================================================================
 
     /**
      * Đọc số dư mới từ response BID_OK.
