@@ -1,6 +1,5 @@
 package auction_system.server;
 
-import auction_system.common.models.users.User;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
@@ -51,11 +50,14 @@ public class ServerApp {
         final AuctionBidService auctionBidService = new AuctionBidService(database);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
-        final User user = authService.register(
-            "qa",
-            "qa@gmail.com",
-            "123456",
-            "BIDDER");
+        if (!authService.isEmailTaken("qa@gmail.com")) {
+            authService.register(
+                "qa",
+                "qa@gmail.com",
+                "123456",
+                "PARTICIPANT");
+        }
+
         final SocketServer socketServer = SocketServer.getInstance(
                 port, authService, auctionManager, auctionBidService, participantItemService);
 

@@ -1,5 +1,7 @@
 package auction_system.common.models.users;
 
+import java.util.Locale;
+
 /**
  * Lớp đại diện cho người tham gia hệ thống đấu giá.
  *
@@ -12,6 +14,23 @@ public class Participant extends User {
 
     private double balance;
     private String roleName;
+
+    /**
+     * Khởi tạo participant với vai trò mặc định.
+     *
+     * @param username tên đăng nhập
+     * @param email địa chỉ email
+     * @param password mật khẩu đã xử lý
+     * @param balance số dư ban đầu
+     */
+    public Participant(
+        final String username,
+        final String email,
+        final String password,
+        final double balance) {
+
+        this(username, email, password, balance, participantRoleName);
+    }
 
     /**
      * Khởi tạo participant với vai trò cụ thể.
@@ -31,7 +50,7 @@ public class Participant extends User {
 
         super(username, email, password);
         this.balance = balance;
-        setRoleName("PARTICIPANT");
+        setRoleName(roleName);
     }
 
     /**
@@ -87,7 +106,7 @@ public class Participant extends User {
             return;
         }
 
-        this.roleName = roleName.trim().toUpperCase();
+        this.roleName = roleName.trim().toUpperCase(Locale.ROOT);
     }
 
     @Override

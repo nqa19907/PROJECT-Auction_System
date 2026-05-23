@@ -18,6 +18,8 @@ public final class ViewConstants {
 
     // Dashboard View
     public static final String DASHBOARD_VIEW = BASE_PATH + "dashboard/Dashboard.fxml";
+    public static final String ADMIN_DASHBOARD_VIEW = BASE_PATH 
+                    + "dashboard/AdminDashboardView.fxml";
 
     // Auction Views
     public static final String ITEM_LIST_VIEW = BASE_PATH + "auction/ItemList.fxml";

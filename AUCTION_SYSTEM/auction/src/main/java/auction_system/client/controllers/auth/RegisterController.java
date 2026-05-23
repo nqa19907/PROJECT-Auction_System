@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 public class RegisterController {
 
     private static final Logger logger = LoggerFactory.getLogger(RegisterController.class);
-    private static final String defaultRoleName = "BIDDER";
+    private static final String defaultRoleName = "PARTICIPANT";
 
     @FXML
     private TextField nameField;

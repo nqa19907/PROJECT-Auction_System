@@ -56,7 +56,7 @@ public final class TestDataGenerator {
             if ("ADMIN".equals(role)) {
                 user = new Admin(name, email, pass);
             } else {
-                user = new Participant(name, email, pass, balance, role);
+                user = new Participant(name, email, pass, balance);
             }
 
             manager.registerUser(user);

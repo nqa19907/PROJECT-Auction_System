@@ -147,7 +147,12 @@ public final class AuthService {
         final String command = parts[0];
 
         if (Protocol.Response.LOGIN_OK.name().equals(command)) {
-            notifyLoginAndClear(new AuthResult(true, null));
+            notifyLoginAndClear(new AuthResult(
+                    true,
+                    null,
+                    extractPart(parts, 1),
+                    extractPart(parts, 2),
+                    extractPart(parts, 3)));
             return;
         }
 
@@ -188,6 +193,21 @@ public final class AuthService {
         }
 
         return defaultMessage;
+    }
+
+    /**
+     * Lấy một phần dữ liệu trong response nếu tồn tại.
+     *
+     * @param parts mảng dữ liệu đã tách từ response
+     * @param index vị trí cần lấy
+     * @return giá trị tại vị trí tương ứng hoặc null nếu không tồn tại
+     */
+    private String extractPart(final String[] parts, final int index) {
+        if (parts.length > index && !parts[index].isBlank()) {
+            return parts[index];
+        }
+
+        return null;
     }
 
     /**

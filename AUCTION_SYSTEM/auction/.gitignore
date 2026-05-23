@@ -36,3 +36,6 @@ target/
 
 Thumbs.db
 target/
+
+**/*.ser
+**/*.ser.tmp
