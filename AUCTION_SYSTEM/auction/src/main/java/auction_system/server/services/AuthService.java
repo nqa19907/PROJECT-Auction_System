@@ -53,6 +53,7 @@ public final class AuthService {
         return database.executeInTransaction(
             () -> findValidUser(normalizedEmail, password)
         );
+    
     }
 
     /**

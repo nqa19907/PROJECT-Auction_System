@@ -9,28 +9,9 @@ package auction_system.common.models.users;
  */
 public class Participant extends User {
     private static final String participantRoleName = "PARTICIPANT";
-    private static final String sellerRoleName = "SELLER";
-    private static final String bidderRoleName = "BIDDER";
 
     private double balance;
     private String roleName;
-
-    /**
-     * Khởi tạo participant với vai trò mặc định.
-     *
-     * @param username tên đăng nhập
-     * @param email địa chỉ email
-     * @param password mật khẩu đã xử lý
-     * @param balance số dư ban đầu
-     */
-    public Participant(
-        final String username,
-        final String email,
-        final String password,
-        final double balance) {
-
-        this(username, email, password, balance, participantRoleName);
-    }
 
     /**
      * Khởi tạo participant với vai trò cụ thể.
@@ -50,7 +31,7 @@ public class Participant extends User {
 
         super(username, email, password);
         this.balance = balance;
-        setRoleName(roleName);
+        setRoleName("PARTICIPANT");
     }
 
     /**

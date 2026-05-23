@@ -1,6 +1,7 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.services.ItemPublishService;
+import auction_system.client.services.ItemPublishService.PublishItemCallback;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
@@ -112,9 +113,10 @@ public class PublishItemController implements Initializable {
             String condition = readRequired(comboCondition, "Vui lòng chọn tình trạng.");
             String description = readRequired(fieldDescription, "Mô tả không được để trống.");
             double startPrice = parsePositiveMoney(fieldStartingPrice.getText(), "giá khởi điểm");
-            LocalDateTime startTime = parseDateTime(
-                        fieldStartingTime.getText(), "thời gian bắt đầu");
-            LocalDateTime endTime = parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc");
+
+            
+            LocalDateTime startTime = LocalDateTime.now();
+            LocalDateTime endTime = LocalDateTime.now().plusHours(2);
 
             if (!endTime.isAfter(startTime)) {
                 showError("Thời gian kết thúc phải sau thời gian bắt đầu.");
@@ -132,6 +134,8 @@ public class PublishItemController implements Initializable {
                 endTime,
                 (success, message) -> Platform.runLater(
                     () -> handlePublishResult(success, message)));
+    
+                
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
         }

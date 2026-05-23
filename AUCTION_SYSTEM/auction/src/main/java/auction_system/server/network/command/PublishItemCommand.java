@@ -119,7 +119,8 @@ public final class PublishItemCommand implements Command {
      * @return Participant hợp lệ.
      */
     private Participant requireParticipant(User user) {
-        if (!(user instanceof Participant participant)) {
+        Participant participant = (Participant) user;
+        if (!(user instanceof Participant)) {
             throw new IllegalArgumentException("Tài khoản hiện tại không có quyền đăng bán.");
         }
         return participant;
