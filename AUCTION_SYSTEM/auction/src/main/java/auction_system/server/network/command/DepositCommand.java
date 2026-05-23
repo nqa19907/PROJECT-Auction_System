@@ -36,6 +36,7 @@ public class DepositCommand implements Command {
     @Override
     public String execute(final String[] parts, final ClientSession session) {
         try {
+            // Kiểm tra trạng thái đăng nhập. Chỉ user đã đăng nhập mới được nạp tiền.
             if (!session.isLoggedIn()) {
                 return buildFailResponse("Bạn cần đăng nhập trước.");
             }
@@ -44,9 +45,13 @@ public class DepositCommand implements Command {
                 return buildFailResponse("Thiếu số tiền cần nạp.");
             }
 
+            // Parse và validate số tiền từ chuỗi text
             double amount = parseAmount(parts[1]);
+            
+            // Gọi AuthService để cập nhật số dư của user hiện tại
             double newBalance = authService.deposit(session.getCurrentUser(), amount);
 
+            // Trả về kết quả thành công cùng số dư mới
             return Protocol.Response.DEPOSIT_OK.name()
                     + Protocol.SEPARATOR
                     + newBalance;
@@ -60,6 +65,14 @@ public class DepositCommand implements Command {
         }
     }
 
+    /**
+     * Chuyển đổi và validate chuỗi số tiền nạp.
+     *
+     * @param rawAmount chuỗi số tiền từ client
+     * @return số tiền (double) hợp lệ
+     * @throws NumberFormatException nếu chuỗi không phải số
+     * @throws IllegalArgumentException nếu số tiền <= 0
+     */
     private double parseAmount(final String rawAmount) {
         if (rawAmount == null || rawAmount.isBlank()) {
             throw new NumberFormatException("Số tiền rỗng.");

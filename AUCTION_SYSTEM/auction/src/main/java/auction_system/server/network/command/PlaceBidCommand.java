@@ -3,6 +3,7 @@ package auction_system.server.network.command;
 import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.auctions.BidTransaction;
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.persistence.exceptions.DatabaseException;
@@ -21,9 +22,15 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Định dạng lệnh:
  * {@code PLACE_BID|auctionId|amount}
+ *
+ * <p>Phản hồi thành công:
+ * {@code BID_OK|auctionId|amount|newBalance}
  */
 public class PlaceBidCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
+    private static final int MIN_PLACE_BID_PARTS = 3;
+    private static final int IDX_REQUEST_AUCTION_ID = 1;
+    private static final int IDX_REQUEST_AMOUNT = 2;
 
     /** Service xử lý nghiệp vụ đặt giá. */
     private final AuctionBidService auctionBidService;
@@ -52,22 +59,25 @@ public class PlaceBidCommand implements Command {
                 return buildErrorResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (parts.length < 3) {
+            if (parts.length < MIN_PLACE_BID_PARTS) {
                 return buildBidFailResponse("Thiếu thông tin đặt giá.");
             }
 
-            String auctionId = parts[1];
-            double amount = parseAmount(parts[2]);
+            String auctionId = parts[IDX_REQUEST_AUCTION_ID];
+            double amount = parseAmount(parts[IDX_REQUEST_AMOUNT]);
             User currentUser = session.getCurrentUser();
 
             BidTransaction bidTransaction =
                     auctionBidService.placeBid(auctionId, currentUser, amount);
+            Participant bidder = bidTransaction.getParticipant();
 
             return Protocol.Response.BID_OK.name()
                     + Protocol.SEPARATOR
                     + auctionId
                     + Protocol.SEPARATOR
-                    + bidTransaction.getAmount();
+                    + bidTransaction.getAmount()
+                    + Protocol.SEPARATOR
+                    + bidder.getBalance();
         } catch (NumberFormatException e) {
             return buildBidFailResponse("Số tiền không hợp lệ.");
         } catch (AuctionClosedException

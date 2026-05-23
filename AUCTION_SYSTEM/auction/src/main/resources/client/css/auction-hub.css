@@ -186,11 +186,14 @@
 }
 
 .root-pane .chart-axis {
+    -fx-font-family: "Google Sans Code";
     -fx-font-size: 11px;
+    -fx-tick-label-font: 11px "Google Sans Code";
     -fx-tick-label-fill: #A07040;
 }
 
 .root-pane .chart-axis .axis-label {
+    -fx-font-family: "Google Sans Code";
     -fx-font-size: 11px;
     -fx-text-fill: #A07040;
 }
@@ -233,6 +236,21 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
     -fx-padding: 0;
+    -fx-table-cell-border-color: transparent;
+}
+
+.root-pane .bid-table .table-cell {
+    -fx-alignment: CENTER_LEFT;
+    -fx-border-color: transparent #F3E4CB transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 0 12 0 12;
+    -fx-text-fill: #4B3215;
+}
+
+.root-pane .bid-table .numeric-table-cell {
+    -fx-font-family: "Google Sans Code";
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_RIGHT;
 }
 
 .root-pane .bid-table .column-header-background {
@@ -252,24 +270,60 @@
 
 .root-pane .bid-table .table-row-cell {
     -fx-background-color: #FFFFFF;
-    -fx-border-color: #F5E8D0;
-    -fx-border-width: 0 0 0.5 0;
+    -fx-border-color: #F3E4CB;
+    -fx-border-width: 0 0 1 0;
     -fx-font-size: 13px;
     -fx-font-weight: normal;
     -fx-text-fill: #3D2800;
 }
 
 .root-pane .bid-table .table-row-cell:odd {
-    -fx-background-color: #FFFBF5;
+    -fx-background-color: #FFFDF8;
 }
 
 .root-pane .bid-table .table-row-cell:selected {
-    -fx-background-color: #FFE8B0;
+    -fx-background-color: #FFE7B8;
     -fx-text-fill: #3D2800;
 }
 
 .root-pane .bid-table .table-row-cell:hover {
-    -fx-background-color: #FFF3DE;
+    -fx-background-color: #FFF4E4;
+}
+
+.root-pane .bid-table .latest-bid-row,
+.root-pane .bid-table .latest-bid-row:odd {
+    -fx-background-color: #FFF0D6;
+}
+
+.root-pane .bid-table .latest-bid-row .table-cell {
+    -fx-text-fill: #2D1C08;
+}
+
+.root-pane .bid-table .price-table-cell {
+    -fx-font-weight: bold;
+    -fx-text-fill: #2D1C08;
+}
+
+.root-pane .bid-table .change-table-cell {
+    -fx-text-fill: #157347;
+}
+
+.root-pane .status-badge {
+    -fx-background-color: #FFF5E6;
+    -fx-background-radius: 999;
+    -fx-border-color: #EACB98;
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8A5A17;
+}
+
+.root-pane .status-badge-leading {
+    -fx-background-color: #EAF7EF;
+    -fx-border-color: #8CC9A4;
+    -fx-text-fill: #1C7A49;
 }
 
 /* ── Input ───────────────────────────────── */
@@ -288,7 +342,7 @@
     -fx-padding: 10 14 10 14;
     -fx-font-size: 16px;
     -fx-font-weight: bold;
-    -fx-text-fill: #3D2800;
+    -fx-text-fill: #6E4A22;
     -fx-prompt-text-fill: #C0A070;
     -fx-min-height: 44px;
 }

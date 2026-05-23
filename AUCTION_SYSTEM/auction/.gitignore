@@ -1,41 +1,23 @@
-target/
-
-*.class
-
-*.jar
-*.war
-
-.idea/
-.vscode/
-
+# Maven build output
 target/
 **/target/
 
+# Compiled/package artifacts
 *.class
-*.log
+*.jar
+*.war
 
-.project
-.classpath
-.settings/
+# Runtime serialized data generated while testing locally
+data/
 
-.DS_Store 
-
-.vscode/
-
+# IDE metadata
 .idea/
 *.iml
-
-.idea/workspace.xml
-.idea/*
-
-.classpath
+.vscode/
 .project
+.classpath
 .settings/
 
+# OS files
 .DS_Store
-
 Thumbs.db
-target/
-
-# Runtime serialized data
-AUCTION_SYSTEM/auction/data/

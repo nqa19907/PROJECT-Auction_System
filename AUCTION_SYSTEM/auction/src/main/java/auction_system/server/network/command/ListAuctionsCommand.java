@@ -25,7 +25,7 @@ public class ListAuctionsCommand implements Command {
      *
      * <p>Lệnh:       {@code LIST_AUCTIONS}
      * Thành công: {@code AUCTION_LIST|n} và theo sau là n dòng, mỗi dòng có định dạng:
-     * {@code auctionId|itemName|currentPrice|status|endTime}
+     * {@code auctionId|itemName|currentPrice|status|endTime|itemType|startPrice}
      * Thất bại:   {@code ERROR|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách (không dùng).
@@ -55,7 +55,8 @@ public class ListAuctionsCommand implements Command {
                         .append(Protocol.SEPARATOR).append(currentPrice)
                         .append(Protocol.SEPARATOR).append(auction.getStatus().name())
                         .append(Protocol.SEPARATOR).append(auction.getEndTime())
-                        .append(Protocol.SEPARATOR).append(item.getClass().getSimpleName());
+                        .append(Protocol.SEPARATOR).append(item.getClass().getSimpleName())
+                        .append(Protocol.SEPARATOR).append(item.getStartPrice());
             }
             return response.toString();
         } catch (Exception e) {

@@ -28,14 +28,15 @@ public final class Protocol {
         // Auction
         LIST_AUCTIONS,
         GET_AUCTION,
+        GET_BID_HISTORY,
         JOIN_AUCTION,
         LEAVE_AUCTION,
         PLACE_BID,
+
         // Admin
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
         ADMIN_DELETE_USER
-
     }
 
     /**
@@ -54,6 +55,7 @@ public final class Protocol {
         AUCTION_LIST,
         AUCTION_DETAIL,
         JOIN_OK, JOIN_FAIL,
+        BID_HISTORY,
         LEAVE_OK,
         BID_OK, BID_FAIL,
 

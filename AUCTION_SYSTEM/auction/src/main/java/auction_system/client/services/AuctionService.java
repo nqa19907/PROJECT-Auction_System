@@ -4,6 +4,7 @@ import auction_system.client.network.NetworkClient;
 import auction_system.common.network.Protocol;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalDouble;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +15,42 @@ import org.slf4j.LoggerFactory;
 public class AuctionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionService.class);
     private static final AuctionService INSTANCE = new AuctionService();
+
+    // =========================================================================
+    // PROTOCOL PARSING CONSTANTS
+    // =========================================================================
+
+    // AUCTION_LIST có dòng đầu là header, dữ liệu phiên bắt đầu từ dòng tiếp theo.
+    private static final int FIRST_AUCTION_RECORD_INDEX = 1;
+
+    // Format tối thiểu: auctionId|itemName|currentPrice|status|endTime.
+    private static final int MIN_AUCTION_LIST_PARTS = 5;
+
+    // BID_FAIL|message.
+    private static final int MIN_BID_FAIL_PARTS = 2;
+    private static final int IDX_BID_FAIL_MESSAGE = 1;
+
+    // BID_OK|auctionId|amount|newBalance.
+    private static final int MIN_BID_OK_PARTS = 4;
+    private static final int IDX_BID_NEW_BALANCE = 3;
+
+    // BID_HISTORY|auctionId|count~time|bidder|amount~...
+    private static final int FIRST_BID_HISTORY_RECORD_INDEX = 1;
+    private static final int MIN_BID_HISTORY_PARTS = 3;
+
+    // =========================================================================
+    // PENDING CALLBACKS
+    // =========================================================================
+
+    // Mỗi request async hiện chỉ giữ một callback đang chờ response tương ứng.
     private FetchAuctionsCallback currentListCallback;
     private FetchAuctionDetailCallback currentDetailCallback;
     private PlaceBidCallback currentBidCallback;
+    private FetchBidHistoryCallback currentBidHistoryCallback;
+
+    // =========================================================================
+    // SINGLETON LIFECYCLE
+    // =========================================================================
 
     /**
      * Khởi tạo AuctionService ẩn (private) và tự động đăng ký bộ lắng nghe lệnh phản hồi.
@@ -35,12 +69,18 @@ public class AuctionService {
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_FAIL.name(), this::handlePlaceBidFailure
         );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
+        );
     }
 
     public static AuctionService getInstance() {
         return INSTANCE;
     }
 
+    // =========================================================================
+    // CALLBACK CONTRACTS
+    // =========================================================================
 
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
@@ -63,8 +103,23 @@ public class AuctionService {
      */
     @FunctionalInterface
     public interface PlaceBidCallback {
-        void onResult(boolean isSuccess, String message);
+        void onResult(boolean isSuccess, String message, double newBalance);
     }
+
+    /**
+     * Callback nhận lịch sử đặt giá đã được parse từ phản hồi BID_HISTORY.
+     *
+     * <p>Mỗi phần tử trong danh sách là một mảng theo thứ tự:
+     * {@code time}, {@code bidder}, {@code amount}.
+     */
+    @FunctionalInterface
+    public interface FetchBidHistoryCallback {
+        void onResult(List<String[]> bidHistoryRows);
+    }
+
+    // =========================================================================
+    // AUCTION LIST
+    // =========================================================================
 
     /**
      * Gửi yêu cầu lấy danh sách phiên đấu giá hiện có lên Server.
@@ -90,11 +145,13 @@ public class AuctionService {
 
         LOGGER.info("AuctionService xử lý phản hồi: " + response);
         List<String[]> auctionList = new ArrayList<>();
+
+        // AUCTION_LIST là response nhiều dòng, khác với phần lớn response một dòng.
         String[] lines = response.split(Protocol.RECORD_SEPARATOR);
 
-        for (int i = 1; i < lines.length; ++i) {
+        for (int i = FIRST_AUCTION_RECORD_INDEX; i < lines.length; ++i) {
             String[] parts = lines[i].split(Protocol.SEPARATOR_REGEX);
-            if (parts.length >= 5) {
+            if (parts.length >= MIN_AUCTION_LIST_PARTS) {
                 auctionList.add(parts);
             }
         }
@@ -102,6 +159,10 @@ public class AuctionService {
         currentListCallback.onResult(auctionList);
         currentListCallback = null; // Giải phóng bộ nhớ
     }
+
+    // =========================================================================
+    // AUCTION DETAIL
+    // =========================================================================
 
     /**
      * Gửi yêu cầu lấy thông tin chi tiết một phiên đấu giá.
@@ -126,10 +187,16 @@ public class AuctionService {
             return;
         }
         LOGGER.info("AuctionService nhận chi tiết: " + response);
+
+        // Controller/ViewModel phía trên đang chịu trách nhiệm hiểu thứ tự các field chi tiết.
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
         currentDetailCallback.onResult(parts);
         currentDetailCallback = null;
     }
+
+    // =========================================================================
+    // BID SUBMISSION
+    // =========================================================================
 
     /**
      * Gửi yêu cầu đặt giá cho một phiên đấu giá.
@@ -140,6 +207,8 @@ public class AuctionService {
      */
     public void placeBid(String auctionId, double amount, PlaceBidCallback callback) {
         this.currentBidCallback = callback;
+
+        // Giữ format request đúng protocol server: PLACE_BID|auctionId|amount.
         String request = Protocol.Command.PLACE_BID.name()
                 + Protocol.SEPARATOR + auctionId
                 + Protocol.SEPARATOR + amount;
@@ -156,8 +225,20 @@ public class AuctionService {
             return;
         }
         LOGGER.info("AuctionService đặt giá thành công: " + response);
-        // BID_OK|auctionId|amount
-        currentBidCallback.onResult(true, "Đặt giá thành công!");
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        // BID_OK|auctionId|amount|newBalance.
+        // Số dư phải lấy từ server vì server xử lý hoàn/trừ tiền.
+        OptionalDouble parsedBalance = parseBidBalance(parts);
+        if (parsedBalance.isEmpty()) {
+            currentBidCallback.onResult(false, "Phản hồi đặt giá không hợp lệ.", 0);
+            currentBidCallback = null;
+            return;
+        }
+
+        double newBalance = parsedBalance.getAsDouble();
+        UserSessionService.getInstance().updateCurrentUserBalance(newBalance);
+
+        currentBidCallback.onResult(true, "Đặt giá thành công!", newBalance);
         currentBidCallback = null;
     }
 
@@ -173,10 +254,95 @@ public class AuctionService {
         LOGGER.warn("AuctionService đặt giá thất bại: " + response);
         // BID_FAIL|message
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        String message = (parts.length > 1) ? parts[1] : "Lỗi đặt giá không xác định.";
+
+        // Server cũ hoặc lỗi mạng có thể trả thiếu message, nên fallback message vẫn cần có.
+        String message = (parts.length >= MIN_BID_FAIL_PARTS)
+                ? parts[IDX_BID_FAIL_MESSAGE] : "Lỗi đặt giá không xác định.";
         
-        currentBidCallback.onResult(false, message);
+        currentBidCallback.onResult(false, message, 0);
         currentBidCallback = null;
+    }
+
+    // =========================================================================
+    // BID HISTORY
+    // =========================================================================
+
+    /**
+     * Gửi yêu cầu lấy lịch sử đặt giá của một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần lấy lịch sử
+     * @param callback callback nhận danh sách dòng lịch sử đặt giá
+     */
+    public void fetchBidHistory(
+            final String auctionId,
+            final FetchBidHistoryCallback callback) {
+        this.currentBidHistoryCallback = callback;
+
+        NetworkClient.getInstance().sendCommand(
+            Protocol.Command.GET_BID_HISTORY.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+        );
+    }
+
+    /**
+     * Bóc tách phản hồi lịch sử bid từ server.
+     *
+     * <p>Record đầu tiên là header {@code BID_HISTORY|auctionId|count}; các
+     * record còn lại mới là từng dòng dữ liệu để bảng/biểu đồ sử dụng.
+     *
+     * @param response phản hồi BID_HISTORY dạng chuỗi theo protocol socket
+     */
+    private void handleBidHistoryResponse(final String response) {
+        if (currentBidHistoryCallback == null) {
+            return;
+        }
+
+        LOGGER.info("AuctionService nhận lịch sử bid: " + response);
+
+        List<String[]> bidHistoryRows = new ArrayList<>();
+
+        String[] records = response.split(Protocol.RECORD_SEPARATOR);
+
+        for (int i = FIRST_BID_HISTORY_RECORD_INDEX; i < records.length; i++) {
+            String[] parts = records[i].split(Protocol.SEPARATOR_REGEX);
+
+            if (parts.length >= MIN_BID_HISTORY_PARTS) {
+                bidHistoryRows.add(parts);
+            }
+        }
+
+        currentBidHistoryCallback.onResult(bidHistoryRows);
+        currentBidHistoryCallback = null;
+    }
+
+    // =========================================================================
+    // RESPONSE PARSING HELPERS
+    // =========================================================================
+
+    /**
+     * Đọc số dư mới từ response BID_OK.
+     *
+     * <p>Trả về rỗng khi response không đúng format để tránh cập nhật sai
+     * số dư hiện tại của user.
+     *
+     * @param parts response đã tách theo ký tự phân cách protocol
+     * @return số dư mới nếu parse được
+     */
+    private OptionalDouble parseBidBalance(String[] parts) {
+        if (parts.length < MIN_BID_OK_PARTS) {
+            LOGGER.warn("Phản hồi BID_OK thiếu số dư mới.");
+            return OptionalDouble.empty();
+        }
+
+        try {
+            return OptionalDouble.of(Double.parseDouble(parts[IDX_BID_NEW_BALANCE]));
+        } catch (NumberFormatException e) {
+            LOGGER.warn(
+                    "Không thể đọc số dư mới từ phản hồi BID_OK: {}",
+                    parts[IDX_BID_NEW_BALANCE]);
+            return OptionalDouble.empty();
+        }
     }
 
 }

@@ -95,8 +95,9 @@ public final class AuthService {
         String role = getPart(parts, IDX_ROLE, "BIDDER");
         double balance = parseDouble(getPart(parts, IDX_BALANCE, "0.0"));
 
-        // SRP: Ủy thác việc tạo User cho Factory
+        // SRP: Ủy thác việc tạo User cho Factory.
         this.currentUser = UserFactory.create(role, username, email, balance);
+        UserSessionService.getInstance().setCurrentUser(this.currentUser);
         
         currentCallback.onResult(new LoginResult(true, null));
         currentCallback = null;
@@ -155,6 +156,8 @@ public final class AuthService {
         String cmd = parts[0];
 
         if (Protocol.Response.LOGOUT_OK.name().equals(cmd)) {
+            this.currentUser = null;
+            UserSessionService.getInstance().clearSession();
             currentCallback.onResult(new LoginResult(true, null));
         }
 
@@ -163,6 +166,6 @@ public final class AuthService {
     }
 
     public User getCurrentUser() {
-        return currentUser;
+        return UserSessionService.getInstance().getCurrentUser();
     }
 }

@@ -88,10 +88,12 @@ public class AuctionManager {
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.database = Objects.requireNonNull(database, "database");
+        // Nạp trạng thái từ lần chạy trước (nếu có)
         loadPersistentState();
         startAuctionScheduler();
 
         try {
+            // Nếu không có dữ liệu cũ, tạo dữ liệu mẫu
             if (userRegistry.isEmpty() || auctionList.isEmpty()) {
                 TestDataGenerator.generate(this);
             }
@@ -102,6 +104,7 @@ public class AuctionManager {
 
     /**
      * Nạp dữ liệu đã lưu từ database serialization vào trạng thái runtime.
+     * Việc này giúp server "nhớ" lại các user và auction từ lần chạy trước.
      */
     private void loadPersistentState() {
         database.users().findAll().forEach(user -> userRegistry.put(user.getUsername(), user));
@@ -290,6 +293,8 @@ public class AuctionManager {
 
     /**
      * Đăng ký người dùng mới vào hệ thống.
+     * Nếu user đã tồn tại trong DB (dựa trên email/username), trả về user đó.
+     * Nếu chưa, lưu user mới vào DB và trả về.
      *
      * @param user Người dùng mới (username phải chưa tồn tại).
      * @return người dùng đã được lưu hoặc người dùng đã tồn tại trong database
@@ -297,11 +302,14 @@ public class AuctionManager {
     public User registerUser(final User user) {
         Objects.requireNonNull(user, "user");
 
+        // Thử tìm user bằng email, nếu không thấy thì thử bằng username.
+        // Nếu cả hai đều không tồn tại, lưu user mới vào DB.
         User persistedUser = database.users()
                 .findByEmail(user.getEmail())
                 .or(() -> database.users().findByUsername(user.getUsername()))
                 .orElseGet(() -> database.users().save(user));
 
+        // Cập nhật registry in-memory
         userRegistry.put(persistedUser.getUsername(), persistedUser);
         LOGGER.info("Đăng ký/nạp user: " + persistedUser.getUsername());
 
