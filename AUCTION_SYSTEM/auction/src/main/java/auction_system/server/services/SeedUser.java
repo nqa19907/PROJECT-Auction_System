@@ -27,10 +27,10 @@ public final class SeedUser {
         final AuthService authService = new AuthService(database);
 
         final User user = authService.register(
-                "testuser02",
-                "testuser02@example.com",
+                "qaaa",
+                "qaaa@gmail.com",
                 "123456",
-                "BIDDER");
+                "ADMIN");
 
         System.out.println("Đã tạo user: " + user.getUsername());
         System.out.println("Email: " + user.getEmail());
