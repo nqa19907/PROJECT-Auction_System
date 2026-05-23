@@ -34,6 +34,7 @@ public final class Protocol {
         // Admin
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
+        ADMIN_DELETE_USER
 
     }
 
@@ -65,7 +66,9 @@ public final class Protocol {
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,
-        ADMIN_DELETE_AUCTION_FAIL
+        ADMIN_DELETE_AUCTION_FAIL,
+        ADMIN_DELETE_USER_OK,
+        ADMIN_DELETE_USER_FAIL
 
     }
 }

@@ -354,6 +354,29 @@ public class AuctionManager {
     }
 
     /**
+     * Xóa người dùng theo ID.
+     *
+     * <p>Chỉ xóa ở tầng dữ liệu người dùng:
+     * - registry trong bộ nhớ
+     * - trạng thái online
+     * - repository users trong database
+     *
+     * @param userId ID người dùng cần xóa
+     * @return true nếu xóa thành công, false nếu không tìm thấy
+     */
+    public boolean deleteUser(final String userId) {
+        User target = findUserById(userId);
+        if (target == null) {
+            return false;
+        }
+
+        activeUsers.remove(target.getId());
+        userRegistry.remove(target.getUsername());
+
+        return database.users().deleteById(userId);
+    }
+
+    /**
      * Lấy danh sách tất cả Bidder đã đăng ký.
      *
      * @return List Bidder.
