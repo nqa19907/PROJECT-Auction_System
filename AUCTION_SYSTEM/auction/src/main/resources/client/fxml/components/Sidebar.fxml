@@ -43,12 +43,20 @@
                 <Insets bottom="15.0" left="20.0" right="20.0" top="15.0" />
             </VBox.margin>
         </Region>
-        <HBox id="publishItem" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
+        <HBox id="publishItem" fx:id="publishItem" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
             <children>
                 <Region styleClass="icon-add" />
                 <Label styleClass="text-body" text="Đăng bán" />
             </children>
         </HBox>
+
+        <HBox id="testAdminView" fx:id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-add" />
+                <Label styleClass="text-body" text="Thử màn hình admin" />
+            </children>
+        </HBox>
+
     </children>
    <stylesheets>
       <URL value="@../../css/buttons.css" />

@@ -217,6 +217,24 @@ public class AuctionManager {
         return true;
     }
 
+    /**
+     * Xóa hẳn một phiên đấu giá theo ID.
+     *
+     * @param auctionId ID phiên cần xóa.
+     * @return true nếu xóa thành công, false nếu không tìm thấy.
+     */
+    public boolean deleteAuction(final String auctionId) {
+        final Auction auction = getAuctionById(auctionId);
+        if (auction == null) {
+            return false;
+        }
+
+        auctionList.remove(auction);
+        database.auctions().deleteById(auctionId);
+        LOGGER.info("Xóa phiên đấu giá: " + auctionId);
+        return true;
+    }
+
     // =========================================================================
     // Quản lý trạng thái online
     // =========================================================================
@@ -341,6 +359,29 @@ public class AuctionManager {
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Xóa người dùng theo ID.
+     *
+     * <p>Chỉ xóa ở tầng dữ liệu người dùng:
+     * - registry trong bộ nhớ
+     * - trạng thái online
+     * - repository users trong database
+     *
+     * @param userId ID người dùng cần xóa
+     * @return true nếu xóa thành công, false nếu không tìm thấy
+     */
+    public boolean deleteUser(final String userId) {
+        User target = findUserById(userId);
+        if (target == null) {
+            return false;
+        }
+
+        activeUsers.remove(target.getId());
+        userRegistry.remove(target.getUsername());
+
+        return database.users().deleteById(userId);
     }
 
     /**
