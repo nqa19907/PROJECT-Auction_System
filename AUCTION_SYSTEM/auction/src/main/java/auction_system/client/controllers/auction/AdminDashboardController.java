@@ -107,6 +107,15 @@ public class AdminDashboardController {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(),
                 this::handleAdminDeleteAuctionFail);
+
+        // Đăng ký handler phản hồi xóa người dùng
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_DELETE_USER_OK.name(),
+                this::handleAdminDeleteUserOk);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
+                this::handleAdminDeleteUserFail);
     }
 
     /**
@@ -160,7 +169,7 @@ public class AdminDashboardController {
     private void bindActions() {
         btnRefreshUsers.setOnAction(event -> refreshUsers());
         btnRefreshAuctions.setOnAction(event -> refreshAuctions());
-        btnDeleteUser.setOnAction(event -> removeSelectedUserRowOnly());
+        btnDeleteUser.setOnAction(event -> deleteSelectedUser());
         btnDeleteAuction.setOnAction(event -> deleteSelectedAuction());
     }
 
@@ -252,17 +261,23 @@ public class AdminDashboardController {
     }
 
     /**
-     * Xoa dong user dang chon tren UI.
-     *
-     * <p>Chi tac dong du lieu hien thi trong bang, khong ghi vao database.
+     * Xoa user dang chon tren UI.
      */
-    private void removeSelectedUserRowOnly() {
+    private void deleteSelectedUser() {
         final UserRow selected = tblUsers.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Thong bao", "Vui long chon nguoi dung can xoa tren bang.");
+            showInfo("Thông báo", "Vui lòng chọn người dùng cần xóa trên bảng.");
             return;
         }
-        userRows.remove(selected);
+
+        String userId = selected.getId();
+        String request = Protocol.Command.ADMIN_DELETE_USER.name()
+                + Protocol.SEPARATOR + userId;
+
+        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu xóa người dùng tới server.");
+        }
     }
 
     /**
@@ -314,6 +329,41 @@ public class AdminDashboardController {
         if (!sent) {
             showInfo("Lỗi", "Không gửi được yêu cầu xóa phiên tới server.");
         }
+    }
+
+    /**
+     * Xử lý phản hồi xóa người dùng thành công từ server.
+     *
+     * <p>Khi nhận được userId hợp lệ, hàm sẽ xóa dòng tương ứng khỏi bảng
+     * người dùng và hiển thị thông báo thành công.
+     *
+     * @param response chuỗi phản hồi theo protocol
+     */
+    private void handleAdminDeleteUserOk(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            if (parts.length > 1) {
+                String userId = parts[1];
+                userRows.removeIf(row -> userId.equals(row.getId()));
+                tblUsers.refresh();
+                showInfo("Thành công", "Đã xóa người dùng " + userId);
+            }
+        });
+    }
+
+    /**
+     * Xử lý phản hồi xóa người dùng thất bại từ server.
+     *
+     * <p>Hàm tách thông điệp lỗi từ phản hồi và hiển thị cho quản trị viên.
+     *
+     * @param response chuỗi phản hồi theo protocol
+     */
+    private void handleAdminDeleteUserFail(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            String message = parts.length > 1 ? parts[1] : "Xóa người dùng thất bại.";
+            showInfo("Lỗi", message);
+        });
     }
 
     /**
