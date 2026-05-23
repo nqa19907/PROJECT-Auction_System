@@ -7,6 +7,7 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +50,15 @@ public class LoginCommand implements Command {
         String password = parts[2].trim();
 
         try {
-            // Gọi hàm findUserByCredentials (đã được sửa ở AuctionManager để quét theo email)
-            User user = auctionManager.findUserByCredentials(email, password);
-            if (user == null) {
+            // Optional<User> biểu diễn kết quả đăng nhập có thể có user hoặc rỗng.
+            // Nếu thông tin sai, AuthService trả Optional.empty() thay vì trả null.
+            Optional<User> authenticatedUser = authService.login(email, password);
+            if (authenticatedUser.isEmpty()) {
                 return failPrefix + "Email hoặc mật khẩu không đúng";
             }
+
+            // Tới đây Optional chắc chắn có user vì đã kiểm tra isEmpty() ở trên.
+            User user = authenticatedUser.get();
 
             // Ngăn chặn đăng nhập đồng thời trên nhiều thiết bị
             if (auctionManager.isAlreadyOnline(user.getId())) {

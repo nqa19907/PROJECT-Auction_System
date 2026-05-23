@@ -34,6 +34,7 @@ public class ItemListController {
     private static final int IDX_STATUS = 3;
     private static final int IDX_END_TIME = 4;
     private static final int IDX_CATEGORY = 5;
+    private static final int IDX_OPENING_PRICE = 6;
     private static final int MIN_PARTS_LENGTH = 5;
 
     @FXML private FlowPane productsGrid;
@@ -57,7 +58,7 @@ public class ItemListController {
 
         // Gọi Service, cung cấp một hàm Callback để tự động xử lý khi có dữ liệu trả về
         AuctionService.getInstance().fetchAuctionList(auctionList -> {
-            // Bọc trong Platform.runLater để đảm bảo việc vẽ giao diện chạy trên luồng của JavaFX
+            // Bọc trong Platform.runLater để đảm bảo giao diện chạy trên luồng của JavaFX
             Platform.runLater(() -> {
                 this.allAuctions = auctionList;
                 renderGrid();
@@ -108,17 +109,19 @@ public class ItemListController {
     }
 
     private void navigateToAuctionDetail(String[] selectedParts) {
-        if (selectedParts == null || selectedParts.length < 5) {
+        if (selectedParts == null || selectedParts.length < MIN_PARTS_LENGTH) {
             LOGGER.warn("Không thể mở AuctionDetail vì dữ liệu item không hợp lệ.");
             return;
         }
 
-        String selectedItemId = selectedParts[0];
-        String itemName = selectedParts[1];
+        String selectedItemId = selectedParts[IDX_ID];
+        String itemName = selectedParts[IDX_NAME];
 
         long currentPrice;
         try {
-            currentPrice = Long.parseLong(selectedParts[2].replaceAll("[^0-9]", ""));
+            // selectedParts[IDX_PRICE] chứa số thực (VD: "15500.0"). 
+            // Phải parse thành Double rồi ép kiểu sang Long
+            currentPrice = (long) Double.parseDouble(selectedParts[IDX_PRICE]);
         } catch (NumberFormatException e) {
             LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
             return;
@@ -126,9 +129,10 @@ public class ItemListController {
 
         long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
 
-        if (selectedParts.length > 6) {
+        if (selectedParts.length > IDX_OPENING_PRICE) {
             try {
-                openingPrice = Long.parseLong(selectedParts[6].replaceAll("[^0-9]", ""));
+                String rawPrice = selectedParts[IDX_OPENING_PRICE].replaceAll("[^0-9]", "");
+                openingPrice = Long.parseLong(rawPrice);
             } catch (NumberFormatException e) {
                 LOGGER.warn("Giá khởi điểm không hợp lệ, tạm dùng giá hiện tại trừ 1.000.000.");
             }
@@ -136,9 +140,10 @@ public class ItemListController {
 
         LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
 
-        // Tận dụng Router để chuyển trang, sử dụng đường dẫn chuẩn từ ViewConstants
-        AuctionDetailController auctionDetailController = Router.navigateContentAndGetController(
-                productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
+        // Tận dụng Router để chuyển trang, dùng đường dẫn chuẩn từ ViewConstants
+        AuctionDetailController auctionDetailController = 
+                Router.navigateContentAndGetController(
+                        productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
 
         if (auctionDetailController != null) {
             auctionDetailController.initAuction(

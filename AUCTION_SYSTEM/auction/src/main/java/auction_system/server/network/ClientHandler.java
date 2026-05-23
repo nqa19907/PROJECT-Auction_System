@@ -5,7 +5,11 @@ import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.network.command.AdminCancelAuctionCommand;
+import auction_system.server.network.command.AdminDeleteAuctionCommand;
+import auction_system.server.network.command.AdminDeleteUserCommand;
 import auction_system.server.network.command.Command;
+import auction_system.server.network.command.DepositCommand;
 import auction_system.server.network.command.GetAuctionCommand;
 import auction_system.server.network.command.JoinAuctionCommand;
 import auction_system.server.network.command.LeaveAuctionCommand;
@@ -86,8 +90,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new LeaveAuctionCommand(auctionManager)),
                 Map.entry(Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
+                Map.entry(Protocol.Command.DEPOSIT.name(),
+                        new DepositCommand(authService)),
                 Map.entry(Protocol.Command.LOGOUT.name(),
-                        new LogoutCommand(auctionManager))
+                        new LogoutCommand(auctionManager)),
+                Map.entry(Protocol.Command.ADMIN_CANCEL_AUCTION.name(),
+                        new AdminCancelAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.ADMIN_DELETE_AUCTION.name(),
+                        new AdminDeleteAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.ADMIN_DELETE_USER.name(),
+                        new AdminDeleteUserCommand(auctionManager))
         );
     }
 

@@ -57,6 +57,8 @@ public class AuctionManagerTest {
     private Auction makeAuction(Participant seller) {
         Item item = new ElectronicBuilder()
                 .itemName("Test Item")
+                // Bắt buộc có mô tả để qua validate của ItemRepository.
+                .description("Mô tả sản phẩm test")
                 .startPrice(1000.0)
                 .sellerId(seller.getId())
                 .build();

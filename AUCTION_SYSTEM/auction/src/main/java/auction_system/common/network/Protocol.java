@@ -23,13 +23,19 @@ public final class Protocol {
         LOGIN,
         REGISTER,
         LOGOUT,
+        DEPOSIT,
         
         // Auction
         LIST_AUCTIONS,
         GET_AUCTION,
         JOIN_AUCTION,
         LEAVE_AUCTION,
-        PLACE_BID
+        PLACE_BID,
+        // Admin
+        ADMIN_CANCEL_AUCTION,
+        ADMIN_DELETE_AUCTION,
+        ADMIN_DELETE_USER
+
     }
 
     /**
@@ -42,6 +48,7 @@ public final class Protocol {
         LOGIN_OK, LOGIN_FAIL,
         REGISTER_OK, REGISTER_FAIL,
         LOGOUT_OK,
+        DEPOSIT_OK, DEPOSIT_FAIL,
         
         // Auction Responses
         AUCTION_LIST,
@@ -53,6 +60,15 @@ public final class Protocol {
         // Broadcast Updates
         UPDATE_PRICE,
         AUCTION_STARTED,
-        AUCTION_ENDED
+        AUCTION_ENDED,
+
+        // Admin responses
+        ADMIN_CANCEL_AUCTION_OK,
+        ADMIN_CANCEL_AUCTION_FAIL,
+        ADMIN_DELETE_AUCTION_OK,
+        ADMIN_DELETE_AUCTION_FAIL,
+        ADMIN_DELETE_USER_OK,
+        ADMIN_DELETE_USER_FAIL
+
     }
 }
