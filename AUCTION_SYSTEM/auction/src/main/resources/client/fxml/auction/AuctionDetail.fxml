@@ -116,7 +116,7 @@
                             <TableColumn fx:id="colTime" prefWidth="140" text="Thời gian" />
                             <TableColumn fx:id="colBidder" prefWidth="300" text="Người đấu giá" />
                             <TableColumn fx:id="colPrice" prefWidth="220" style="-fx-alignment: CENTER_RIGHT;" text="Giá trả (VNĐ)" />
-                            <TableColumn fx:id="colChange" prefWidth="220" style="-fx-alignment: CENTER_RIGHT;" text="+/- so trước" />
+                            <TableColumn fx:id="colChange" prefWidth="220" style="-fx-alignment: CENTER_RIGHT;" text="Mức tăng" />
                             <TableColumn fx:id="colStatus" prefWidth="170" style="-fx-alignment: CENTER;" text="Trạng thái" />
                         </columns>
                         <placeholder>

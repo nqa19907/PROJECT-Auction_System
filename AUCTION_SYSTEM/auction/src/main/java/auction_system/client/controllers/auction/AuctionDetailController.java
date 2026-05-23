@@ -89,6 +89,11 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
+        AuctionPriceChartConfigurer.updateAxis(
+                numberYaxis,
+                viewModel.getOpeningPriceValue(),
+                priceSeries
+        );
         loadBidHistory(context.auctionId());
     }
 
@@ -111,7 +116,7 @@ public class AuctionDetailController implements Initializable {
                 AuctionPriceChartConfigurer.updateAxis(
                         numberYaxis,
                         viewModel.getOpeningPriceValue(),
-                        viewModel.getCurrentPriceValue()
+                        priceSeries
                 );
             });
         });
@@ -259,7 +264,7 @@ public class AuctionDetailController implements Initializable {
                     AuctionPriceChartConfigurer.updateAxis(
                             numberYaxis, 
                             viewModel.getOpeningPriceValue(), 
-                            amount
+                            priceSeries
                     );
                 } else {
                     // Khi thất bại, hiển thị lỗi ngay dưới ô nhập thay vì Alert

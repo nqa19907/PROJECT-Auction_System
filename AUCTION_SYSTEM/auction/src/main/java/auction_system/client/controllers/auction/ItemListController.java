@@ -35,7 +35,7 @@ public class ItemListController {
     private static final int IDX_END_TIME = 4;
     private static final int IDX_CATEGORY = 5;
     private static final int IDX_OPENING_PRICE = 6;
-    private static final int MIN_PARTS_LENGTH = 5;
+    private static final int MIN_PARTS_LENGTH = 7;
 
     @FXML private FlowPane productsGrid;
     @FXML private Label categoryTitle;

@@ -46,7 +46,8 @@ import org.slf4j.LoggerFactory;
  *   LOGIN_FAIL|message
  *   REGISTER_OK
  *   REGISTER_FAIL|message
- *   AUCTION_LIST|n   (sau đó n dòng: auctionId|itemName|currentPrice|status|endTime|itemType)
+ *   AUCTION_LIST|n   (sau đó n dòng:
+ *       auctionId|itemName|currentPrice|status|endTime|itemType|startPrice)
  *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
  *   JOIN_OK|auctionId
  *   JOIN_FAIL|message
