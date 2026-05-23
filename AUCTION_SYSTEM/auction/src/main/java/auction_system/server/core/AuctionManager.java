@@ -214,6 +214,24 @@ public class AuctionManager {
         return true;
     }
 
+    /**
+     * Xóa hẳn một phiên đấu giá theo ID.
+     *
+     * @param auctionId ID phiên cần xóa.
+     * @return true nếu xóa thành công, false nếu không tìm thấy.
+     */
+    public boolean deleteAuction(final String auctionId) {
+        final Auction auction = getAuctionById(auctionId);
+        if (auction == null) {
+            return false;
+        }
+
+        auctionList.remove(auction);
+        database.auctions().deleteById(auctionId);
+        LOGGER.info("Xóa phiên đấu giá: " + auctionId);
+        return true;
+    }
+
     // =========================================================================
     // Quản lý trạng thái online
     // =========================================================================

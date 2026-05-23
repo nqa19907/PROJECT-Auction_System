@@ -6,6 +6,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.AdminCancelAuctionCommand;
+import auction_system.server.network.command.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
 import auction_system.server.network.command.GetAuctionCommand;
@@ -93,7 +94,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 Map.entry(Protocol.Command.LOGOUT.name(),
                         new LogoutCommand(auctionManager)),
                 Map.entry(Protocol.Command.ADMIN_CANCEL_AUCTION.name(),
-                        new AdminCancelAuctionCommand(auctionManager))
+                        new AdminCancelAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.ADMIN_DELETE_AUCTION.name(),
+                        new AdminDeleteAuctionCommand(auctionManager))
         );
     }
 
