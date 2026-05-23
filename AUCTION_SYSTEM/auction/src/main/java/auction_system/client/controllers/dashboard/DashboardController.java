@@ -3,6 +3,7 @@ package auction_system.client.controllers.dashboard;
 import auction_system.client.controllers.auction.ItemListController;
 import auction_system.client.controllers.components.ProfileController;
 import auction_system.client.controllers.components.SidebarController;
+import auction_system.client.security.RoleUiPolicy;
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
@@ -29,8 +30,6 @@ public class DashboardController {
     @FXML
     private StackPane contentArea;
 
-    // JavaFX sẽ tự động bind file FXML được include có fx:id="sidebar" vào biến này
-    // Quy tắc đặt tên: [fx:id] + "Controller"
     @FXML
     private SidebarController sidebarController;
 
@@ -39,43 +38,51 @@ public class DashboardController {
 
     /**
      * Khởi tạo màn hình Dashboard.
-     * Mặt định phóng to tối đa cửa sổ.
+     *
+     * <p>Mặc định phóng to cửa sổ và nạp danh sách sản phẩm.
      */
     @FXML
     public void initialize() {
-        // Đợi giao diện được gắn vào Scene xong thì lấy Stage hiện tại và phóng to (maximize)
         Platform.runLater(() -> {
             Stage stage = (Stage) contentArea.getScene().getWindow();
             if (stage != null) {
                 stage.setMaximized(true);
             }
-
-            // Tự động load giao diện trang chủ (Tất cả sản phẩm) sau khi Scene đã sẵn sàng
             handleShowItems();
         });
 
-        // Thiết lập liên kết giao tiếp với Sidebar
         if (sidebarController != null) {
-            sidebarController.setOnCategorySelected(this::loadItemList);
-            sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
-
-            // Chỉ hiển thị và cho phép thử màn hình admin khi user hiện tại là ADMIN
-            // Lưu ý: đây là kiểm soát giao diện (client-side). Cần kiểm tra quyền chi tiết ở server
-            User currentUser = AuthService.getInstance().getCurrentUser();
-            boolean isAdmin = false;
-            if (currentUser != null) {
-                isAdmin = "ADMIN".equalsIgnoreCase(currentUser.getRoleName());
-            }
-
-            sidebarController.setAdminDemoVisible(isAdmin);
-            if (isAdmin) {
-                sidebarController.setOnAdminSelected(this::loadAdminView);
-            }
+            setupSidebarCallbacks();
+            applySidebarPolicyByRole();
         }
 
         setupUserProfile();
     }
 
+    /**
+     * Gắn callback điều hướng cho Sidebar.
+     */
+    private void setupSidebarCallbacks() {
+        sidebarController.setOnCategorySelected(this::loadItemList);
+        sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
+        sidebarController.setOnAdminSelected(this::loadAdminView);
+    }
+
+    /**
+     * Áp dụng chính sách hiển thị Sidebar theo vai trò user hiện tại.
+     *
+     * <p>Lưu ý: đây là kiểm soát giao diện (client-side).
+     * Quyền nghiệp vụ vẫn cần kiểm tra ở server-side.
+     */
+    private void applySidebarPolicyByRole() {
+        User currentUser = AuthService.getInstance().getCurrentUser();
+        String roleName = currentUser != null ? currentUser.getRoleName() : null;
+        sidebarController.applyPolicy(RoleUiPolicy.sidebarItemsForRole(roleName));
+    }
+
+    /**
+     * Đồng bộ thông tin user lên khu vực profile.
+     */
     private void setupUserProfile() {
         User user = AuthService.getInstance().getCurrentUser();
         if (profileController != null && user != null) {
@@ -83,27 +90,33 @@ public class DashboardController {
         }
     }
 
+    /**
+     * Xử lý đăng xuất.
+     */
     @FXML
     private void handleSignOut() {
-        LOGGER.info("Thực hiện đăng xuất: Gọi service để logout khỏi Server...");
-
-        // Gọi AuthService để gửi lệnh LOGOUT lên server
+        LOGGER.info("Thực hiện đăng xuất: gọi service để logout khỏi server...");
         AuthService.getInstance().logout(result -> Platform.runLater(() -> {
             if (result.isSuccess()) {
-                LOGGER.info("Đăng xuất thành công. Đóng Dashboard và quay về màn hình Đăng nhập.");
+                LOGGER.info("Đăng xuất thành công. Quay về màn hình đăng nhập.");
             } else {
-                LOGGER.warn("Đăng xuất có lỗi (hoặc không phản hồi): " + result.getErrorMessage());
+                LOGGER.warn("Đăng xuất có lỗi: {}", result.getErrorMessage());
             }
-            // Luôn chuyển người dùng về màn hình đăng nhập dù kết quả trả về ra sao
             SceneManager.switchScene(btnSignOut, ViewConstants.LOGIN_VIEW, 900, 700);
         }));
     }
 
+    /**
+     * Điều hướng sang màn hình đăng bán.
+     */
     private void loadPublishItemView() {
-        LOGGER.info("Chuyển sang giao diện đăng bán");
+        LOGGER.info("Chuyển sang giao diện đăng bán.");
         Router.navigateContent(contentArea, ViewConstants.PUBLISH_ITEM_VIEW);
     }
 
+    /**
+     * Mở danh sách sản phẩm mặc định.
+     */
     @FXML
     private void handleShowItems() {
         if (sidebarController != null) {
@@ -112,8 +125,13 @@ public class DashboardController {
         loadItemList(AppConstants.CATEGORY_ALL);
     }
 
-    private void loadItemList(String category) {
-        LOGGER.info("Chuyển sang giao diện danh sách, lọc theo danh mục: " + category);
+    /**
+     * Nạp danh sách sản phẩm theo danh mục.
+     *
+     * @param category danh mục cần lọc
+     */
+    private void loadItemList(final String category) {
+        LOGGER.info("Chuyển sang danh sách, lọc theo danh mục: {}", category);
         ItemListController controller = Router.navigateContentAndGetController(
                 contentArea, ViewConstants.ITEM_LIST_VIEW);
         if (controller != null) {
@@ -121,13 +139,11 @@ public class DashboardController {
         }
     }
 
+    /**
+     * Nạp màn hình admin demo trong vùng content của Dashboard.
+     */
     private void loadAdminView() {
-        LOGGER.info("Chuyển sang giao diện Admin Demo bên trong Dashboard (thay vì mở cửa sổ mới)");
-
-        // Tương tự như loadPublishItemView, nạp view vào vùng content của Dashboard
+        LOGGER.info("Chuyển sang giao diện admin demo trong Dashboard.");
         Router.navigateContent(contentArea, ViewConstants.ADMIN_DEMO_VIEW);
     }
-
-
-
 }
