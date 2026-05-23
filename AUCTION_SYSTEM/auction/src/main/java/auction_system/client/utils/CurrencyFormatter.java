@@ -28,4 +28,17 @@ public final class CurrencyFormatter {
     public static String formatVnd(final long amount) {
         return VND_FORMAT.format(amount) + " VNĐ";
     }
+
+    /**
+     * Format số tiền không kèm đơn vị.
+     *
+     * <p>Dùng cho các màn hình đã có label đơn vị riêng, tránh hiển thị trùng
+     * chữ "VNĐ".
+     *
+     * @param amount số tiền cần format
+     * @return chuỗi số tiền đã format
+     */
+    public static String formatAmount(final double amount) {
+        return VND_FORMAT.format(amount);
+    }
 }

@@ -114,7 +114,7 @@ public class AuctionViewModel {
      */
     @FunctionalInterface
     public interface BidSubmissionCallback {
-        void onComplete(boolean success, String message);
+        void onComplete(boolean success, String message, double newBalance);
     }
 
     /**
@@ -130,19 +130,20 @@ public class AuctionViewModel {
             // Cho phép nhập kèm dấu phân cách/đơn vị, chỉ giữ lại chữ số để gửi server.
             String sanitizedAmount = rawAmount.replaceAll("[^0-9]", "");
             if (sanitizedAmount.isEmpty()) {
-                callback.onComplete(false, "Vui lòng nhập số tiền.");
+                callback.onComplete(false, "Vui lòng nhập số tiền.", 0);
                 return;
             }
             amount = Long.parseLong(sanitizedAmount);
         } catch (NumberFormatException e) {
-            callback.onComplete(false, "Số tiền không hợp lệ.");
+            callback.onComplete(false, "Số tiền không hợp lệ.", 0);
             return;
         }
 
         if (amount <= currentPrice.get()) {
             callback.onComplete(
                 false,
-                "Giá phải lớn hơn " + CurrencyFormatter.formatVnd(currentPrice.get())
+                "Giá phải lớn hơn " + CurrencyFormatter.formatVnd(currentPrice.get()),
+                0
             );
             return;
         }

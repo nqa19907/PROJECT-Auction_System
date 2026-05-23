@@ -1,9 +1,12 @@
 package auction_system.client.controllers.components;
 
+import auction_system.client.services.UserSessionService;
 import auction_system.client.services.WalletService;
+import auction_system.client.utils.CurrencyFormatter;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -50,6 +53,20 @@ public class ProfileController {
         if (fieldDeposit != null) {
             fieldDeposit.setOnAction(this::handleDeposit);
         }
+        setupBalanceListener();
+    }
+
+    /**
+     * Lắng nghe số dư chung trong session để sidebar tự cập nhật sau bid/deposit.
+     *
+     * <p>Balance có thể được cập nhật từ luồng mạng, nên mọi thao tác với label
+     * phải được đưa về JavaFX Application Thread.
+     */
+    private void setupBalanceListener() {
+        UserSessionService.getInstance()
+                .currentBalanceProperty()
+                .addListener((obs, oldBalance, newBalance) ->
+                        updateBalanceLabelOnFxThread(newBalance.doubleValue()));
     }
 
     /**
@@ -114,7 +131,8 @@ public class ProfileController {
                 currentParticipant.setBalance(balance);
                 updateBalanceLabel(balance);
                 fieldDeposit.clear();
-                LOGGER.info("Nạp tiền thành công. Số dư mới: {}", balance);
+                String formattedBalance = CurrencyFormatter.formatAmount(balance);
+                LOGGER.info("Nạp tiền thành công. Số dư mới: {}", formattedBalance);
                 showDepositMessage(message, STYLE_DEPOSIT_SUCCESS);
                 return;
             }
@@ -140,7 +158,21 @@ public class ProfileController {
     }
 
     private void updateBalanceLabel(double balance) {
-        lblBalance.setText(String.format("%,.0f", balance));
+        lblBalance.setText(CurrencyFormatter.formatAmount(balance));
+    }
+
+    /**
+     * Cập nhật label số dư đúng JavaFX Application Thread.
+     *
+     * @param balance số dư cần hiển thị
+     */
+    private void updateBalanceLabelOnFxThread(double balance) {
+        if (Platform.isFxApplicationThread()) {
+            updateBalanceLabel(balance);
+            return;
+        }
+
+        Platform.runLater(() -> updateBalanceLabel(balance));
     }
 
     private void setDepositLoading(boolean isLoading) {

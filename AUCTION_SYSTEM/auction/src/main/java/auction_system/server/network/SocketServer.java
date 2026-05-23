@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  *   JOIN_OK|auctionId
  *   JOIN_FAIL|message
  *   LEAVE_OK|auctionId
- *   BID_OK|auctionId|newPrice
+ *   BID_OK|auctionId|amount|newBalance
  *   BID_FAIL|message
  *   DEPOSIT_OK|balance
  *   DEPOSIT_FAIL|message

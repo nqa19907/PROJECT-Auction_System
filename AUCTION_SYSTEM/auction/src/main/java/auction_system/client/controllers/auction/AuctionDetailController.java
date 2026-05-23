@@ -2,6 +2,7 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
+import auction_system.client.utils.CurrencyFormatter;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
@@ -203,25 +204,30 @@ public class AuctionDetailController implements Initializable {
         placeBidBtn.setText("Đang gửi...");
 
         // Chuyển toàn bộ logic đặt giá (kiểm tra dữ liệu, gọi service) sang ViewModel.
-        viewModel.submitBid(rawAmount, (success, message) -> {
+        viewModel.submitBid(rawAmount, (success, message, newBalance) -> {
             // Callback này có thể chạy từ luồng mạng.
             // Mọi cập nhật UI phải được đưa về JavaFX Application Thread.
             Platform.runLater(() -> {
                 // Luôn mở lại nút và khôi phục nội dung sau khi có phản hồi.
                 placeBidBtn.setDisable(false);
                 placeBidBtn.setText("Đặt giá ngay  →");
+                keepFocusInBidInput();
 
                 if (success) {
+                    final long amount = Long.parseLong(rawAmount.replaceAll("[^0-9]", ""));
+
                     // Khi thành công, xóa ô nhập và ẩn thông báo lỗi
                     // UI sẽ cập nhật qua broadcast realtime (UPDATE_PRICE)
                     // từ server để đảm bảo mọi client đồng bộ cùng một trạng thái.
                     bidInput.clear();
                     lblError.setVisible(false);
                     lblError.setManaged(false);
-                    LOGGER.info("Đặt giá thành công: {}", message);
+                    String formattedBidAmount = CurrencyFormatter.formatAmount(amount);
+                    String formattedBalance = CurrencyFormatter.formatAmount(newBalance);
+                    LOGGER.info("Đặt giá thành công với số tiền: {}", formattedBidAmount);
+                    LOGGER.info("Số dư mới sau khi đặt giá: {}", formattedBalance);
                     
                     // Tạm thời tự cập nhật giao diện ngay khi nhận phản hồi thành công từ Server
-                    long amount = Long.parseLong(rawAmount.replaceAll("[^0-9]", ""));
                     viewModel.processNewBid(amount, "Bạn", true);
                     AuctionPriceChartConfigurer.updateAxis(
                             numberYaxis, 
@@ -236,6 +242,18 @@ public class AuctionDetailController implements Initializable {
                 }
             });
         });
+    }
+
+    /**
+     * Giữ focus trong form đặt giá sau khi nút gửi bị disable/enable.
+     *
+     * <p>Khi nút đặt giá bị disable trong lúc chờ server, JavaFX có thể tự
+     * chuyển focus sang control kế tiếp trong scene, hiện là ô nạp tiền ở
+     * sidebar. Request focus lại input đặt giá để người dùng không bị nhảy
+     * khỏi ngữ cảnh đấu giá.
+     */
+    private void keepFocusInBidInput() {
+        bidInput.requestFocus();
     }
 
     @FXML
