@@ -1,14 +1,17 @@
 package auction_system.client.controllers.auction;
 
+import auction_system.client.network.NetworkClient;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -95,6 +98,15 @@ public class AdminDashboardController {
         bindActions();
         refreshUsers();
         refreshAuctions();
+
+        // Đăng ký handler phản hồi xóa phiên từ server
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(),
+                this::handleAdminDeleteAuctionOk);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(),
+                this::handleAdminDeleteAuctionFail);
     }
 
     /**
@@ -149,7 +161,7 @@ public class AdminDashboardController {
         btnRefreshUsers.setOnAction(event -> refreshUsers());
         btnRefreshAuctions.setOnAction(event -> refreshAuctions());
         btnDeleteUser.setOnAction(event -> removeSelectedUserRowOnly());
-        btnDeleteAuction.setOnAction(event -> stopSelectedAuctionRowOnly());
+        btnDeleteAuction.setOnAction(event -> deleteSelectedAuction());
     }
 
     /**
@@ -254,18 +266,54 @@ public class AdminDashboardController {
     }
 
     /**
-     * Dung phien dang chon tren UI.
+     * Xử lý phản hồi xóa phiên thành công từ server.
      *
-     * <p>Chi doi trang thai hien thi thanh CANCELED tren bang, khong ghi vao database.
+     * @param response chuỗi phản hồi theo protocol
      */
-    private void stopSelectedAuctionRowOnly() {
+    private void handleAdminDeleteAuctionOk(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            if (parts.length > 1) {
+                String auctionId = parts[1];
+                auctionRows.removeIf(row -> auctionId.equals(row.getId()));
+                tblAuctions.refresh();
+                showInfo("Thành công", "Đã xóa phiên " + auctionId);
+            }
+        });
+    }
+
+    /**
+     * Xử lý phản hồi xóa phiên thất bại từ server.
+     *
+     * @param response chuỗi phản hồi theo protocol
+     */
+    private void handleAdminDeleteAuctionFail(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            String message = parts.length > 1 ? parts[1] : "Xóa phiên thất bại.";
+            showInfo("Lỗi", message);
+        });
+    }
+
+    /**
+     * Gửi yêu cầu xóa phiên đang chọn lên server.
+     *
+     * <p>Chỉ khi server trả về thành công thì bảng mới xóa dòng tương ứng.
+     */
+    private void deleteSelectedAuction() {
         final AuctionRow selected = tblAuctions.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Thong bao", "Vui long chon phien can dung tren bang.");
+            showInfo("Thông báo", "Vui lòng chọn phiên cần xóa trên bảng.");
             return;
         }
-        selected.setStatus("CANCELED");
-        tblAuctions.refresh();
+        String auctionId = selected.getId();
+        String request = Protocol.Command.ADMIN_DELETE_AUCTION.name()
+                + Protocol.SEPARATOR + auctionId;
+
+        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu xóa phiên tới server.");
+        }
     }
 
     /**
