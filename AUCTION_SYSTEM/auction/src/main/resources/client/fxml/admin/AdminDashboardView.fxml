@@ -12,36 +12,35 @@
             styleClass="admin-root">
 
     <top>
-        <!-- Use a VBox with two rows so header elements can wrap to second line on narrow widths -->
-        <VBox spacing="6" styleClass="admin-header">
+        <!-- Header 2 hàng: thương hiệu + thống kê -->
+        <VBox spacing="12" styleClass="admin-header">
             <children>
-                <HBox alignment="CENTER_LEFT" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="16" styleClass="header-main-row">
                     <children>
-                        <VBox spacing="0">
+                        <VBox spacing="2">
                             <children>
                                 <Label text="AuctionHub" styleClass="brand-title"/>
-                                <!-- subtitle removed for cleaner look -->
+                                <Label text="Bảng điều khiển quản trị" styleClass="brand-subtitle"/>
                             </children>
                         </VBox>
 
                         <Region HBox.hgrow="ALWAYS"/>
 
-                        <Label text="Admin" styleClass="admin-name"/>
-                        <!-- Nút quay về màn hình chính (thay cho đăng xuất) -->
-                        <Button fx:id="btnBack" onAction="#handleBack" text="Quay về" styleClass="btn-secondary"/>
+                        <Label text="Admin" styleClass="admin-badge"/>
+                        <Button fx:id="btnBack" onAction="#handleBack" text="Quay về" styleClass="header-action-button"/>
                     </children>
                 </HBox>
 
-                <HBox alignment="CENTER_LEFT" spacing="12">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="header-stats-row">
                     <children>
                         <Label text="128 người dùng" styleClass="stat-chip"/>
-                        <Label text="24 phiên đang chạy" styleClass="stat-text"/>
-                        <Label text="5 bị ban" styleClass="stat-text"/>
+                        <Label text="24 phiên đang chạy" styleClass="stat-chip"/>
+                        <Label text="5 bị ban" styleClass="stat-chip alert"/>
                     </children>
                 </HBox>
             </children>
             <padding>
-                <Insets top="12" right="34" bottom="12" left="34"/>
+                <Insets top="16" right="34" bottom="16" left="34"/>
             </padding>
         </VBox>
     </top>

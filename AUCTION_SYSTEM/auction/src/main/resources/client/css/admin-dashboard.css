@@ -15,6 +15,14 @@
     -fx-border-width: 0 0 1 0;
 }
 
+.header-main-row {
+    -fx-min-height: 44;
+}
+
+.header-stats-row {
+    -fx-padding: 2 0 0 0;
+}
+
 .brand-title {
     -fx-font-size: 22px; /* slightly smaller for cleaner header */
     -fx-font-weight: 700;
@@ -23,6 +31,7 @@
 
 .brand-subtitle {
     -fx-font-size: 13px;
+    -fx-font-weight: 600;
     -fx-text-fill: #c8913b;
 }
 
@@ -38,29 +47,36 @@
     -fx-text-fill: #a05f00;
 }
 
-.stat-text {
-    -fx-font-size: 15px;
-    -fx-text-fill: #2b2118;
+.stat-chip.alert {
+    -fx-background-color: #ffe3cf;
+    -fx-border-color: #f2b58b;
+    -fx-text-fill: #9a3f00;
 }
 
-.admin-name {
-    -fx-font-size: 14px;
+.admin-badge {
+    -fx-background-color: #fff0cf;
+    -fx-background-radius: 999;
+    -fx-padding: 6 14;
+    -fx-font-size: 15px;
     -fx-font-weight: 700;
-    -fx-text-fill: #6d3f00;
+    -fx-text-fill: #7b4a00;
 }
 
-.logout-button {
-    -fx-background-color: #ff444b;
-    -fx-background-radius: 18;
-    -fx-padding: 13 25;
-    -fx-font-size: 15px;
-    -fx-font-weight: 800;
-    -fx-text-fill: white;
+.header-action-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 22;
+    -fx-border-color: #e09b1a;
+    -fx-border-radius: 22;
+    -fx-border-width: 1.5;
+    -fx-padding: 9 22;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ba7800;
     -fx-cursor: hand;
 }
 
-.logout-button:hover {
-    -fx-background-color: #e7333b;
+.header-action-button:hover {
+    -fx-background-color: #fff4df;
 }
 
 /* BODY */
