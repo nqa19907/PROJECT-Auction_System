@@ -35,5 +35,16 @@ public final class SeedUser {
         System.out.println("Đã tạo user: " + user.getUsername());
         System.out.println("Email: " + user.getEmail());
         System.out.println("Role: " + user.getRoleName());
+
+        final User admin = authService.register(
+                "admin02",
+                "admin02@example.com",
+                "123456",
+                "ADMIN");
+
+        System.out.println("Đã tạo user: " + admin.getUsername());
+        System.out.println("Email: " + admin.getEmail());
+        System.out.println("Role: " + admin.getRoleName());
+
     }
 }
