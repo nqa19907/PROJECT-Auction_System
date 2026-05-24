@@ -2,6 +2,7 @@ package auction_system.server.services;
 
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
@@ -15,7 +16,7 @@ import java.util.logging.Logger;
 /**
  * Service xử lý nghiệp vụ đặt giá trong phiên đấu giá.
  *
- * <p>Lớp này là nơi duy nhất nên xử lý thao tác đặt giá thật sự trên server.
+ * <p>Lớp này là nơi duy nhất xử lý thao tác đặt giá thật sự trên server.
  * Command chỉ đọc request và trả response, còn service chịu trách nhiệm kiểm
  * tra quyền, kiểm tra dữ liệu, cập nhật auction, lưu lịch sử bid và đảm bảo
  * thao tác ghi database được thực hiện trong transaction.
@@ -40,24 +41,27 @@ public class AuctionBidService {
     /**
      * Đặt giá cho một phiên đấu giá.
      *
-     * <p>Phương thức này dùng transaction ở mức database để tránh trường hợp nhiều
-     * client cùng đặt giá và ghi chéo dữ liệu. Sau khi {@link Auction#placeBid}
-     * xử lý hợp lệ, service lưu cả giao dịch đặt giá và phiên đấu giá đã cập nhật.
+     * <p>Phương thức này dùng transaction ở mức database để tránh trường hợp
+     * nhiều client cùng đặt giá và ghi chéo dữ liệu. Trước khi nhận bid, service
+     * cập nhật trạng thái phiên theo thời gian thật để phiên hết hạn không còn
+     * nhận giá mới.
      *
-     * @param auctionId   mã phiên đấu giá
+     * @param auctionId mã phiên đấu giá
      * @param currentUser người dùng hiện tại trong session
-     * @param amount      số tiền đặt giá
+     * @param amount số tiền đặt giá
      * @return giao dịch đặt giá đã được ghi nhận
      */
     public BidTransaction placeBid(
             final String auctionId,
             final User currentUser,
             final double amount) {
-        
+
         validateRequest(auctionId, currentUser, amount);
 
         BidTransaction savedBid = database.executeInTransaction(() -> {
             Auction auction = findAuctionOrThrow(auctionId);
+            refreshAuctionLifecycle(auction);
+
             Participant bidder = (Participant) currentUser;
             BidTransaction previousHighestBid = auction.getCurrentHighestBid();
 
@@ -91,15 +95,15 @@ public class AuctionBidService {
     /**
      * Kiểm tra request đặt giá trước khi thao tác database.
      *
-     * @param auctionId   mã phiên đấu giá
+     * @param auctionId mã phiên đấu giá
      * @param currentUser người dùng hiện tại
-     * @param amount      số tiền đặt giá
+     * @param amount số tiền đặt giá
      */
     private void validateRequest(
             final String auctionId,
             final User currentUser,
             final double amount) {
-        
+
         if (auctionId == null || auctionId.isBlank()) {
             throw new InvalidBidException("Mã phiên đấu giá không được rỗng.");
         }
@@ -217,6 +221,22 @@ public class AuctionBidService {
                 .findById(auctionId)
                 .orElseThrow(() -> new DatabaseException(
                         "Không tìm thấy phiên đấu giá: " + auctionId));
+    }
+
+    /**
+     * Cập nhật trạng thái phiên theo thời gian thật trước khi xử lý đặt giá.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     */
+    private void refreshAuctionLifecycle(final Auction auction) {
+        final AuctionStatus oldStatus = auction.getStatus();
+        auction.startAuction();
+        auction.endAuction();
+
+        if (oldStatus != auction.getStatus()) {
+            database.auctions().save(auction);
+            database.flushAll();
+        }
     }
 
     /**

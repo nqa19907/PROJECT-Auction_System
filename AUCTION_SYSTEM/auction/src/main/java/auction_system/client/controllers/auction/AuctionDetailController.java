@@ -94,6 +94,7 @@ public class AuctionDetailController implements Initializable {
                 viewModel.getOpeningPriceValue(),
                 priceSeries
         );
+        startCountdownTimer(context.endTime(), context.status());
         loadBidHistory(context.auctionId());
     }
 
@@ -203,12 +204,44 @@ public class AuctionDetailController implements Initializable {
     private void startRealtimeVisuals() {
         liveIndicatorAnimation = new LiveIndicatorAnimation(liveDot);
         liveIndicatorAnimation.start();
+    }
+
+    /**
+     * Khởi động đồng hồ dựa trên thời gian kết thúc thật từ server.
+     *
+     * @param endTime thời gian kết thúc phiên đấu giá
+     * @param status trạng thái hiện tại của phiên đấu giá
+     */
+    private void startCountdownTimer(
+            final java.time.LocalDateTime endTime,
+            final String status) {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
 
         countdownTimer = new AuctionCountdownTimer(
-            timerLabel,
-            AuctionCountdownTimer.DEFAULT_SECONDS_LEFT
-        );
+                timerLabel,
+                endTime,
+                this::markAuctionFinishedOnUi);
         countdownTimer.start();
+
+        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
+            markAuctionFinishedOnUi();
+        }
+    }
+
+    /**
+     * Cập nhật giao diện khi phiên đã hết giờ hoặc đã bị đóng.
+     */
+    private void markAuctionFinishedOnUi() {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        timerLabel.setText("Kết thúc");
+        placeBidBtn.setDisable(true);
+        minBidHint.textProperty().unbind();
+        minBidHint.setText("Phiên đấu giá đã kết thúc.");
     }
 
     /**

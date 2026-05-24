@@ -114,9 +114,12 @@ public class PublishItemController implements Initializable {
             String description = readRequired(fieldDescription, "Mô tả không được để trống.");
             double startPrice = parsePositiveMoney(fieldStartingPrice.getText(), "giá khởi điểm");
 
-            
-            LocalDateTime startTime = LocalDateTime.now();
-            LocalDateTime endTime = LocalDateTime.now().plusHours(2);
+            LocalDateTime startTime = parseDateTime(
+                    fieldStartingTime.getText(),
+                    "thời gian bắt đầu");
+            LocalDateTime endTime = parseDateTime(
+                    fieldEndingTime.getText(),
+                    "thời gian kết thúc");
 
             if (!endTime.isAfter(startTime)) {
                 showError("Thời gian kết thúc phải sau thời gian bắt đầu.");

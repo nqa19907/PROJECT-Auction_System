@@ -2,7 +2,8 @@ package auction_system.server.services;
 
 import auction_system.common.models.users.User;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.AuthService;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 /**
@@ -22,13 +23,15 @@ public final class SeedUser {
      * @param args tham số dòng lệnh, hiện chưa sử dụng
      */
     public static void main(final String[] args) {
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
         final SerializedDatabase database =
                 new SerializedDatabase(Path.of("AUCTION_SYSTEM/auction/data"));
         final AuthService authService = new AuthService(database);
 
         final User user = authService.register(
-                "qaaa",
-                "qaaa@gmail.com",
+                "admin5",
+                "admin5@gmail.com",
                 "123456",
                 "ADMIN");
 

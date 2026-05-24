@@ -1,6 +1,7 @@
 package auction_system.server.network.command;
 
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
@@ -36,7 +37,9 @@ public class ListAuctionsCommand implements Command {
     @Override
     public String execute(String[] parts, ClientSession session) {
         try {
-            List<Auction> auctions = auctionManager.getAllAuctions();
+            List<Auction> auctions = auctionManager.getAllAuctions().stream()
+                    .filter(this::isVisibleToClient)
+                    .toList();
             StringBuilder response = new StringBuilder();
             response.append(Protocol.Response.AUCTION_LIST.name())
                     .append(Protocol.SEPARATOR).append(auctions.size());
@@ -64,5 +67,16 @@ public class ListAuctionsCommand implements Command {
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
+    }
+
+    /**
+     * Kiểm tra phiên còn nên hiển thị trên danh sách tham gia đấu giá hay không.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     * @return true nếu phiên chưa kết thúc hoặc chưa bị hủy
+     */
+    private boolean isVisibleToClient(final Auction auction) {
+        return auction.getStatus() != AuctionStatus.FINISHED
+                && auction.getStatus() != AuctionStatus.CANCELED;
     }
 }

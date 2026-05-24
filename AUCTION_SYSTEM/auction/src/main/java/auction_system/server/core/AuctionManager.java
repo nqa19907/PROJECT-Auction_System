@@ -128,12 +128,7 @@ public class AuctionManager {
         scheduler.scheduleAtFixedRate(() -> {
             for (final Auction auction : auctionList) {
                 try {
-                    final AuctionStatus status = auction.getStatus();
-                    if (status == AuctionStatus.OPEN) {
-                        auction.startAuction();
-                    } else if (status == AuctionStatus.RUNNING) {
-                        auction.endAuction();
-                    }
+                    refreshAuctionLifecycle(auction);
                 } catch (Exception e) {
                     LOGGER.warn("Lỗi scheduler phiên " + auction.getId()
                             + ": " + e.getMessage());
@@ -185,10 +180,14 @@ public class AuctionManager {
      * @return Phiên đấu giá, hoặc null nếu không tìm thấy.
      */
     public Auction getAuctionById(final String auctionId) {
-        return auctionList.stream()
+        final Auction auction = auctionList.stream()
                 .filter(a -> a.getId().equals(auctionId))
                 .findFirst()
                 .orElse(null);
+        if (auction != null) {
+            refreshAuctionLifecycle(auction);
+        }
+        return auction;
     }
 
     /**
@@ -197,7 +196,37 @@ public class AuctionManager {
      * @return Unmodifiable list các phiên đấu giá.
      */
     public List<Auction> getAllAuctions() {
+        refreshAllAuctionLifecycles();
         return Collections.unmodifiableList(auctionList);
+    }
+
+    /**
+     * Cập nhật trạng thái tất cả phiên theo thời gian hiện tại và lưu xuống database.
+     */
+    public void refreshAllAuctionLifecycles() {
+        for (final Auction auction : auctionList) {
+            refreshAuctionLifecycle(auction);
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái một phiên theo thời gian hiện tại và lưu nếu có thay đổi.
+     *
+     * @param auction phiên đấu giá cần cập nhật
+     */
+    public void refreshAuctionLifecycle(final Auction auction) {
+        if (auction == null) {
+            return;
+        }
+
+        final AuctionStatus oldStatus = auction.getStatus();
+        auction.startAuction();
+        auction.endAuction();
+
+        if (oldStatus != auction.getStatus()) {
+            database.auctions().save(auction);
+            database.flushAll();
+        }
     }
 
     /**

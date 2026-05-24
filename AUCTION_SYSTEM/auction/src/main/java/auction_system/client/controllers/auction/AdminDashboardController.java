@@ -1,7 +1,9 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.services.AuthService;
 import auction_system.client.utils.Router;
+import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.users.User;
@@ -35,6 +37,8 @@ import javafx.scene.layout.BorderPane;
  * Ngoai ra co refresh va tim kiem nhanh cho ca 2 bang.
  */
 public class AdminDashboardController {
+    private static final double LOGIN_WINDOW_WIDTH = 900.0;
+    private static final double LOGIN_WINDOW_HEIGHT = 700.0;
 
     @FXML
     private BorderPane root;
@@ -384,7 +388,12 @@ public class AdminDashboardController {
      */
     @FXML
     private void handleBack() {
-        Router.navigateContent(root, ViewConstants.ITEM_LIST_VIEW);
+        AuthService.getInstance().logout(result -> Platform.runLater(() ->
+                SceneManager.switchScene(
+                        root,
+                        ViewConstants.LOGIN_VIEW,
+                        LOGIN_WINDOW_WIDTH,
+                        LOGIN_WINDOW_HEIGHT)));
     }
 
     /**
