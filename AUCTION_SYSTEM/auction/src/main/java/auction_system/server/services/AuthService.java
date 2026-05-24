@@ -1,6 +1,5 @@
 package auction_system.server.services;
 
-import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
@@ -271,13 +270,9 @@ public final class AuthService {
 
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
+        // Đăng ký tự do từ client chỉ cho phép BIDDER hoặc SELLER.
+        // Tài khoản ADMIN phải được tạo bằng luồng hệ thống (seed/khởi tạo dữ liệu).
         switch (normalizedRoleName) {
-            case "ADMIN":
-                return new Admin(
-                        username,
-                        email,
-                        hashedPassword
-                );
             case "SELLER":
                 return new Participant(
                     username,
@@ -295,7 +290,7 @@ public final class AuthService {
                     normalizedRoleName
                 );
             default:
-                throw new IllegalArgumentException("Vai trò chỉ được là Admin, BIDDER hoặc SELLER."
+                throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER."
                 );
         }
     }
@@ -361,10 +356,9 @@ public final class AuthService {
     private void validateRoleName(final String roleName) {
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
-        if (!"ADMIN".equals(normalizedRoleName)
-                && !"BIDDER".equals(normalizedRoleName)
+        if (!"BIDDER".equals(normalizedRoleName)
                 && !"SELLER".equals(normalizedRoleName)) {
-            throw new IllegalArgumentException("Vai trò chỉ được là ADMIN, BIDDER hoặc SELLER.");
+            throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
         }
     }
 
