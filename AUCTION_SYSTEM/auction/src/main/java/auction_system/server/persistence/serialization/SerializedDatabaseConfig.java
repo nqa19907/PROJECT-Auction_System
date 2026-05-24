@@ -10,9 +10,22 @@ import java.util.Objects;
  * việc đổi thư mục dữ liệu dễ hơn khi chạy trên máy khác hoặc trên CI/CD.
  */
 public class SerializedDatabaseConfig {
+    /**
+     * Thư mục dữ liệu mặc định dùng chung cho toàn bộ hệ thống.
+     * Tất cả file .ser sẽ được đặt trong thư mục này.
+     */
+    public static final Path DEFAULT_DATA_DIRECTORY = Path.of("data");
 
     /** Thư mục gốc chứa toàn bộ file dữ liệu của server. */
     private final Path dataDirectory;
+
+    /**
+     * Khởi tạo cấu hình với thư mục mặc định.
+     * Dùng constructor này để tránh mỗi nơi tự hard-code Path.of("data").
+     */
+    public SerializedDatabaseConfig() {
+        this(DEFAULT_DATA_DIRECTORY);
+    }
 
     /**
      * Khởi tạo cấu hình lưu trữ dữ liệu.

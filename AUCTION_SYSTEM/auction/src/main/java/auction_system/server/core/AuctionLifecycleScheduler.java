@@ -34,6 +34,14 @@ final class AuctionLifecycleScheduler {
 
     void shutdown() {
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException exception) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void updateAuctionStates() {
