@@ -270,6 +270,8 @@ public final class AuthService {
 
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
+        // Đăng ký tự do từ client chỉ cho phép BIDDER hoặc SELLER.
+        // Tài khoản ADMIN phải được tạo bằng luồng hệ thống (seed/khởi tạo dữ liệu).
         switch (normalizedRoleName) {
             case "SELLER":
                 return new Participant(
@@ -288,7 +290,8 @@ public final class AuthService {
                     normalizedRoleName
                 );
             default:
-                throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
+                throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER."
+                );
         }
     }
 
@@ -353,7 +356,8 @@ public final class AuthService {
     private void validateRoleName(final String roleName) {
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
-        if (!"BIDDER".equals(normalizedRoleName) && !"SELLER".equals(normalizedRoleName)) {
+        if (!"BIDDER".equals(normalizedRoleName)
+                && !"SELLER".equals(normalizedRoleName)) {
             throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
         }
     }
