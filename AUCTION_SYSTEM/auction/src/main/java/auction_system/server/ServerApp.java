@@ -46,7 +46,8 @@ public class ServerApp {
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionBidService auctionBidService =
+                new AuctionBidService(database, auctionManager);
 
         final SocketServer socketServer = SocketServer.getInstance(
                 port, authService, auctionManager, auctionBidService);

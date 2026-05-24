@@ -5,6 +5,8 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.util.Comparator;
@@ -27,14 +29,25 @@ public class AuctionBidService {
 
     /** Database serialization dùng chung phía server. */
     private final SerializedDatabase database;
+    /** Quản lý runtime dùng để gửi realtime theo user đang online. */
+    private final AuctionManager auctionManager;
 
     /**
      * Kết quả nội bộ sau khi server ghi nhận một lượt đặt giá.
      *
+     * <p>Ngoài bid và auction, service giữ lại các user bị thay đổi số dư để
+     * phát realtime cập nhật ví sau khi transaction đã lưu thành công.
+     *
      * @param bid giao dịch đặt giá đã lưu
      * @param auction phiên đấu giá đã được cập nhật
+     * @param bidder người vừa đặt giá mới
+     * @param previousBidder người dẫn đầu cũ được hoàn tiền, có thể null
      */
-    private record SavedBidResult(BidTransaction bid, Auction auction) {
+    private record SavedBidResult(
+            BidTransaction bid,
+            Auction auction,
+            Participant bidder,
+            Participant previousBidder) {
 
     }
 
@@ -42,9 +55,14 @@ public class AuctionBidService {
      * Khởi tạo service đặt giá.
      *
      * @param database database serialization của server
+     * @param auctionManager manager runtime dùng để gửi realtime theo user
      */
-    public AuctionBidService(final SerializedDatabase database) {
+    public AuctionBidService(
+            final SerializedDatabase database,
+            final AuctionManager auctionManager) {
+
         this.database = Objects.requireNonNull(database, "database");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**
@@ -84,11 +102,31 @@ public class AuctionBidService {
             database.auctions().save(auction);
             database.flushAll();
 
-            return new SavedBidResult(bidTransaction, auction);
+            // Giữ lại người dẫn đầu cũ để sau transaction có thể gửi realtime số dư mới.
+            Participant previousBidder = previousHighestBid == null
+                    ? null
+                    : previousHighestBid.getParticipant();
+
+            return new SavedBidResult(
+                    bidTransaction,
+                    auction,
+                    bidder,
+                    previousBidder);
+
         });
 
         // Sau khi bid transaction và auction đã được lưu, mới broadcast realtime.
         savedBidResult.auction().notifyObservers();
+
+        // Gửi cập nhật ví cho người vừa đặt giá vì số dư của họ đã bị giữ lại.
+        notifyBalanceUpdated(savedBidResult.bidder());
+
+        // Nếu có người dẫn đầu cũ khác người đặt giá mới, gửi số dư mới sau khi hoàn tiền.
+        Participant previousBidder = savedBidResult.previousBidder();
+        if (previousBidder != null
+                && !previousBidder.getId().equals(savedBidResult.bidder().getId())) {
+            notifyBalanceUpdated(previousBidder);
+        }
 
         BidTransaction savedBid = savedBidResult.bid();
 
@@ -219,6 +257,28 @@ public class AuctionBidService {
         return previousHighestBid != null
                 && previousHighestBid.getParticipant() != null
                 && previousHighestBid.getParticipant().getId().equals(bidder.getId());
+    }
+
+    /**
+     * Gửi realtime số dư mới cho một user bị ảnh hưởng bởi lượt đặt giá.
+     *
+     * <p>Message được gửi theo user online thay vì theo auction observer, để ví
+     * vẫn cập nhật realtime dù user đang ở màn hình chính hoặc xem phiên khác.
+     *
+     * @param participant user cần nhận số dư mới
+     */
+    private void notifyBalanceUpdated(final Participant participant) {
+        if (participant == null) {
+            return;
+        }
+
+        String message = Protocol.Response.BALANCE_UPDATED.name()
+                + Protocol.SEPARATOR
+                + participant.getId()
+                + Protocol.SEPARATOR
+                + participant.getBalance();
+
+        auctionManager.notifyUser(participant.getId(), message);
     }
 
     /**

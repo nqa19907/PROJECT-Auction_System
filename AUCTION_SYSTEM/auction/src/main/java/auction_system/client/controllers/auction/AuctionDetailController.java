@@ -106,6 +106,8 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
+        // TODO: Khi AuctionDisplayContext có status, disable bidInput/placeBidBtn
+        // nếu status != RUNNING.
         AuctionPriceChartConfigurer.updateAxis(
                 numberYaxis,
                 viewModel.getOpeningPriceValue(),
@@ -286,6 +288,8 @@ public class AuctionDetailController implements Initializable {
      */
     @FXML
     private void placeBid() {
+        // TODO: Chặn submit ở client nếu phiên không còn RUNNING,
+        // trước khi gửi PLACE_BID lên server.
         lblError.setVisible(false);
         lblError.setManaged(false);
 

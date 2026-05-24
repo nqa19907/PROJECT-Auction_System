@@ -73,7 +73,7 @@ public class ClientApp extends Application {
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
 
         localServer = SocketServer.getInstance(
             port,

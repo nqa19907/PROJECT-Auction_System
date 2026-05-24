@@ -86,6 +86,8 @@ public class ItemListController {
             String auctionId = parts[IDX_ID];
             String itemName = parts[IDX_NAME];
             String currentPriceStr = parts[IDX_PRICE];
+            // TODO: Hiển thị status/endTime trên ProductCard để user biết
+            // phiên đang RUNNING/OPEN/FINISHED.
             // Các trường status và endTime tạm thời bị loại bỏ
             // do không được dùng đến trong setCardDetails
 
@@ -116,6 +118,8 @@ public class ItemListController {
 
         String selectedItemId = selectedParts[IDX_ID];
         String itemName = selectedParts[IDX_NAME];
+        // TODO: Truyền selectedParts[IDX_STATUS] vào AuctionDisplayContext
+        // khi context hỗ trợ status.
 
         long currentPrice;
         try {
@@ -189,6 +193,7 @@ public class ItemListController {
 
         boolean hasItems = false;
         for (String[] parts : allAuctions) {
+            // TODO: Cân nhắc chỉ cho phiên RUNNING mở màn đặt giá, hoặc render trạng thái disabled.
             // Tên danh mục nãy ta nối trên Server giờ nó nằm ở vị trí số 5 (index = 5)
             // TODO: Kiểm tra có nên sử dụng DTO ko
             String itemCategory = (parts.length > IDX_CATEGORY)

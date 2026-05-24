@@ -180,12 +180,59 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     @Override
     public void update(final String message) {
+        if (isBalanceUpdateForAnotherUser(message)) {
+            return;
+        }
+
         send(message);
+    }
+
+    /**
+     * Kiểm tra message cập nhật ví có thuộc về user khác không.
+     *
+     * <p>Auction phát realtime message tới tất cả client đang xem phiên đấu giá.
+     * Riêng BALANCE_UPDATED chứa số dư cá nhân, nên server phải lọc lại để chỉ
+     * socket của đúng user nhận được message này.
+     *
+     * @param message message realtime từ auction
+     * @return true nếu đây là BALANCE_UPDATED nhưng không thuộc user hiện tại
+     */
+    private boolean isBalanceUpdateForAnotherUser(final String message) {
+        // Tách message realtime để đọc loại response và userId đích.
+        String[] parts = message.split(Protocol.SEPARATOR_REGEX);
+
+        // Chỉ BALANCE_UPDATED mới cần lọc riêng; các message khác vẫn gửi bình thường.
+        if (parts.length < 3
+                || !Protocol.Response.BALANCE_UPDATED.name().equals(parts[0])) {
+            return false;
+        }
+
+        // Nếu socket chưa đăng nhập thì không được nhận cập nhật số dư cá nhân.
+        User currentUser = session.getCurrentUser();
+        if (currentUser == null) {
+            return true;
+        }
+
+        // Chỉ cho socket của đúng userId nhận BALANCE_UPDATED.
+        String targetUserId = parts[1];
+        return !targetUserId.equals(currentUser.getId());
     }
 
     // =========================================================================
     // Tiện ích
     // =========================================================================
+
+    /**
+     * Gửi realtime message trực tiếp tới client đang giữ socket này.
+     *
+     * <p>Method này dùng cho thông báo theo user, ví dụ cập nhật ví, không phụ
+     * thuộc vào việc client đang theo dõi phiên đấu giá nào.
+     *
+     * @param message message cần gửi xuống client
+     */
+    public void sendDirect(final String message) {
+        send(message);
+    }
 
     /**
      * Gửi một dòng văn bản tới client qua socket.
@@ -210,6 +257,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
         final User currentUser = session.getCurrentUser();
         if (currentUser != null) {
             auctionManager.userLoggedOut(currentUser);
+
+            // Gỡ socket handler khi client mất kết nối hoặc đóng ứng dụng.
+            auctionManager.unregisterClientHandler(currentUser.getId(), this);
+
             currentUser.setOnline(false);
             LOGGER.info("Cleanup session: " + currentUser.getUsername());
             session.setCurrentUser(null);

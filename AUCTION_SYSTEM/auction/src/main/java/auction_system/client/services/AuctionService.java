@@ -38,6 +38,10 @@ public class AuctionService {
     private static final int FIRST_BID_HISTORY_RECORD_INDEX = 1;
     private static final int MIN_BID_HISTORY_PARTS = 3;
 
+    // BALANCE_UPDATED|userId|newBalance.
+    private static final int MIN_BALANCE_UPDATED_PARTS = 3;
+    private static final int IDX_BALANCE_UPDATED_BALANCE = 2;
+
     // =========================================================================
     // PENDING CALLBACKS
     // =========================================================================
@@ -71,6 +75,9 @@ public class AuctionService {
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BALANCE_UPDATED.name(), this::handleBalanceUpdated
         );
     }
 
@@ -314,6 +321,34 @@ public class AuctionService {
 
         currentBidHistoryCallback.onResult(bidHistoryRows);
         currentBidHistoryCallback = null;
+    }
+
+    /**
+     * Xử lý realtime cập nhật ví khi số dư user thay đổi do bid.
+     *
+     * <p>Trường hợp chính là user đang dẫn đầu bị người khác vượt giá, server hoàn
+     * tiền và gửi số dư mới xuống đúng socket của user đó.
+     *
+     * @param response response theo format BALANCE_UPDATED|userId|newBalance
+     */
+    private void handleBalanceUpdated(final String response) {
+        String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+
+        if (parts.length < MIN_BALANCE_UPDATED_PARTS) {
+            LOGGER.warn("BALANCE_UPDATED không hợp lệ: {}", response);
+            return;
+        }
+
+        try {
+            double newBalance = Double.parseDouble(parts[IDX_BALANCE_UPDATED_BALANCE]);
+
+            // Cập nhật nguồn dữ liệu chung; ProfileController đang listen property này.
+            UserSessionService.getInstance().updateCurrentUserBalance(newBalance);
+        } catch (NumberFormatException e) {
+            LOGGER.warn(
+                    "Không thể đọc số dư từ BALANCE_UPDATED: {}",
+                    parts[IDX_BALANCE_UPDATED_BALANCE]);
+        }
     }
 
     // =========================================================================

@@ -4,6 +4,7 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.network.ClientHandler;
 import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
@@ -71,6 +72,11 @@ public class LoginCommand implements Command {
             user.setOnline(true);
             // Thông báo cho AuctionManager rằng người dùng đã đăng nhập
             auctionManager.userLoggedIn(user);
+
+            // Đăng ký socket hiện tại để server gửi được realtime theo user.
+            if (session.getObserver() instanceof ClientHandler clientHandler) {
+                auctionManager.registerClientHandler(user.getId(), clientHandler);
+            }
 
             String role = user.getRoleName();
             double balance = (user instanceof Participant p) ? p.getBalance() : 0.0;

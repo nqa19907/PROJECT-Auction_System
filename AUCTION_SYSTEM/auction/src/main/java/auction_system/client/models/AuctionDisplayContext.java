@@ -8,6 +8,7 @@ package auction_system.client.models;
  * @param openingPrice giá khởi điểm
  * @param currentPrice giá hiện tại
  */
+// TODO: Thêm auctionStatus vào context để AuctionDetail biết phiên có được đặt giá không.
 public record AuctionDisplayContext(
         String auctionId,
         String itemTitle,

@@ -36,6 +36,18 @@ public class ClientSession {
         return currentUser;
     }
 
+    /**
+     * Lấy observer gắn với session hiện tại.
+     *
+     * <p>Trong runtime hiện tại observer chính là ClientHandler đang giữ socket,
+     * dùng để đăng ký realtime message theo user sau khi login.
+     *
+     * @return observer của session
+     */
+    public AuctionObserver getObserver() {
+        return observer;
+    }
+
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
     }

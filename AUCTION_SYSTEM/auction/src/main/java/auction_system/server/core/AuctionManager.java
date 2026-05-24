@@ -5,6 +5,7 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.server.network.ClientHandler;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -68,6 +69,9 @@ public class AuctionManager {
     /** Map người dùng đang ONLINE: userId → User. */
     private final Map<String, User> activeUsers;
 
+    /** Map socket handler đang ONLINE: userId -> ClientHandler. */
+    private final Map<String, ClientHandler> activeClientHandlers;
+
     /**
      * Registry toàn bộ người dùng đã đăng ký: username → User.
      * Trong thực tế nên lưu xuống database.
@@ -85,6 +89,7 @@ public class AuctionManager {
     private AuctionManager(final SerializedDatabase database) {
         this.auctionList = new CopyOnWriteArrayList<>();
         this.activeUsers = new ConcurrentHashMap<>();
+        this.activeClientHandlers = new ConcurrentHashMap<>();
         this.userRegistry = new ConcurrentHashMap<>();
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         this.database = Objects.requireNonNull(database, "database");
@@ -257,6 +262,66 @@ public class AuctionManager {
     public void userLoggedOut(final User user) {
         activeUsers.remove(user.getId());
         LOGGER.debug("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+    }
+
+    /**
+     * Gắn socket handler hiện tại với user vừa đăng nhập.
+     *
+     * <p>Registry này dùng cho các realtime message theo user, ví dụ cập nhật ví,
+     * không phụ thuộc vào user đang xem màn hình nào.
+     *
+     * @param userId id của user đã đăng nhập
+     * @param handler handler đang giữ socket của user
+     */
+    public void registerClientHandler(
+            final String userId,
+            final ClientHandler handler) {
+
+        if (userId == null || userId.isBlank() || handler == null) {
+            return;
+        }
+
+        activeClientHandlers.put(userId, handler);
+    }
+
+    /**
+     * Gỡ socket handler của user khi logout hoặc mất kết nối.
+     *
+     * <p>So sánh cả handler để tránh gỡ nhầm nếu sau này có reconnect hoặc thay
+     * đổi chính sách đăng nhập nhiều thiết bị.
+     *
+     * @param userId id của user cần gỡ handler
+     * @param handler handler đang bị đóng
+     */
+    public void unregisterClientHandler(
+            final String userId,
+            final ClientHandler handler) {
+
+        if (userId == null || userId.isBlank() || handler == null) {
+            return;
+        }
+
+        activeClientHandlers.remove(userId, handler);
+    }
+
+    /**
+     * Gửi message realtime trực tiếp tới user đang online.
+     *
+     * <p>Nếu user offline thì không gửi realtime. Số dư vẫn đã được lưu trong
+     * database, lần đăng nhập sau user sẽ nhận số dư mới từ LOGIN_OK.
+     *
+     * @param userId id user cần nhận message
+     * @param message message cần gửi xuống client
+     */
+    public void notifyUser(final String userId, final String message) {
+        ClientHandler handler = activeClientHandlers.get(userId);
+
+        if (handler == null) {
+            LOGGER.debug("Bỏ qua realtime theo user vì user offline: {}", userId);
+            return;
+        }
+
+        handler.sendDirect(message);
     }
 
     /**

@@ -3,6 +3,7 @@ package auction_system.server.network.command;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.network.ClientHandler;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -36,6 +37,13 @@ public class LogoutCommand implements Command {
             User currentUser = session.getCurrentUser();
             if (currentUser != null) {
                 auctionManager.userLoggedOut(currentUser);
+
+                // Gỡ socket handler khỏi registry realtime theo user.
+                if (session.getObserver() instanceof ClientHandler clientHandler) {
+                    auctionManager.unregisterClientHandler(currentUser.getId(), clientHandler);
+                }
+
+
                 currentUser.setOnline(false);
                 LOGGER.info("Đăng xuất: " + currentUser.getUsername());
                 session.setCurrentUser(null);

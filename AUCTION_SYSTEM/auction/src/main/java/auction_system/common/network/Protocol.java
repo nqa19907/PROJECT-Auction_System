@@ -61,6 +61,7 @@ public final class Protocol {
 
         // Broadcast Updates
         UPDATE_PRICE,
+        BALANCE_UPDATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
 
