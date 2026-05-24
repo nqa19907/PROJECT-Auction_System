@@ -40,8 +40,8 @@ public class LogoutCommand implements Command {
                 LOGGER.info("Đăng xuất: " + currentUser.getUsername());
                 session.setCurrentUser(null);
             }
-            // Đảm bảo client hủy theo dõi tất cả các phiên đấu giá đang tham gia
-            session.leaveAllAuctions();
+            // Đảm bảo client hủy theo dõi realtime tất cả các phiên đấu giá.
+            session.unwatchAllAuctions();
             return Protocol.Response.LOGOUT_OK.name();
         } catch (Exception e) {
             String username = session.isLoggedIn() 

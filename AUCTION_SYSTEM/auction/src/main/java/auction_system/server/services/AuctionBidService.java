@@ -29,6 +29,16 @@ public class AuctionBidService {
     private final SerializedDatabase database;
 
     /**
+     * Kết quả nội bộ sau khi server ghi nhận một lượt đặt giá.
+     *
+     * @param bid giao dịch đặt giá đã lưu
+     * @param auction phiên đấu giá đã được cập nhật
+     */
+    private record SavedBidResult(BidTransaction bid, Auction auction) {
+
+    }
+
+    /**
      * Khởi tạo service đặt giá.
      *
      * @param database database serialization của server
@@ -56,7 +66,7 @@ public class AuctionBidService {
         
         validateRequest(auctionId, currentUser, amount);
 
-        BidTransaction savedBid = database.executeInTransaction(() -> {
+        SavedBidResult savedBidResult = database.executeInTransaction(() -> {
             Auction auction = findAuctionOrThrow(auctionId);
             Participant bidder = (Participant) currentUser;
             BidTransaction previousHighestBid = auction.getCurrentHighestBid();
@@ -74,8 +84,13 @@ public class AuctionBidService {
             database.auctions().save(auction);
             database.flushAll();
 
-            return bidTransaction;
+            return new SavedBidResult(bidTransaction, auction);
         });
+
+        // Sau khi bid transaction và auction đã được lưu, mới broadcast realtime.
+        savedBidResult.auction().notifyObservers();
+
+        BidTransaction savedBid = savedBidResult.bid();
 
         LOGGER.info(
                 "Người dùng "

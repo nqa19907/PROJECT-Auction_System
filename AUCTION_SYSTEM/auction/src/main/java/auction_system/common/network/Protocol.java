@@ -29,8 +29,8 @@ public final class Protocol {
         LIST_AUCTIONS,
         GET_AUCTION,
         GET_BID_HISTORY,
-        JOIN_AUCTION,
-        LEAVE_AUCTION,
+        WATCH_AUCTION,
+        UNWATCH_AUCTION,
         PLACE_BID,
 
         // Admin
@@ -54,9 +54,9 @@ public final class Protocol {
         // Auction Responses
         AUCTION_LIST,
         AUCTION_DETAIL,
-        JOIN_OK, JOIN_FAIL,
+        WATCH_OK, WATCH_FAIL,
         BID_HISTORY,
-        LEAVE_OK,
+        UNWATCH_OK,
         BID_OK, BID_FAIL,
 
         // Broadcast Updates

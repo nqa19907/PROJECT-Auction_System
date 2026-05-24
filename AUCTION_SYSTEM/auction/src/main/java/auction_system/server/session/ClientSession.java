@@ -18,9 +18,9 @@ public class ClientSession {
      */
     private User currentUser;
     /**
-     * ID các phiên đấu giá mà client này đang theo dõi (đã JOIN).
+     * ID các phiên đấu giá mà client này đang theo dõi realtime.
      */
-    private final Set<String> joinedAuctionIds = new HashSet<>();
+    private final Set<String> watchedAuctionIds = new HashSet<>();
     /**
      * Observer (chính là ClientHandler) để đăng ký/hủy đăng ký nhận thông báo.
      */
@@ -49,11 +49,11 @@ public class ClientSession {
      *
      * @param auctionId ID của phiên đấu giá cần theo dõi.
      */
-    public void joinAuction(String auctionId) {
+    public void watchAuction(String auctionId) {
         Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.attach(observer);
-            joinedAuctionIds.add(auctionId);
+            watchedAuctionIds.add(auctionId);
         }
     }
 
@@ -62,20 +62,20 @@ public class ClientSession {
      *
      * @param auctionId ID của phiên đấu giá cần gỡ bỏ.
      */
-    public void leaveAuction(String auctionId) {
+    public void unwatchAuction(String auctionId) {
         Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.detach(observer);
         }
-        joinedAuctionIds.remove(auctionId);
+        watchedAuctionIds.remove(auctionId);
     }
 
     /**
      * Hủy theo dõi tất cả các phiên đấu giá mà client đang tham gia.
      */
-    public void leaveAllAuctions() {
+    public void unwatchAllAuctions() {
         // Tạo bản sao để tránh ConcurrentModificationException khi duyệt và xóa
-        new HashSet<>(joinedAuctionIds).forEach(this::leaveAuction);
-        joinedAuctionIds.clear();
+        new HashSet<>(watchedAuctionIds).forEach(this::unwatchAuction);
+        watchedAuctionIds.clear();
     }
 }

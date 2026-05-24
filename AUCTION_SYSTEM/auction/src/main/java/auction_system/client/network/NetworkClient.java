@@ -71,6 +71,28 @@ public class NetworkClient {
     }
 
     /**
+     * Hủy đăng ký một hàm xử lý cho một loại phản hồi từ Server.
+     *
+     * <p>Cần gọi khi màn hình JavaFX bị đóng hoặc chuyển trang để tránh controller
+     * cũ vẫn nhận realtime message sau khi không còn hiển thị.
+     *
+     * @param command Tên phản hồi từ server, ví dụ UPDATE_PRICE hoặc WATCH_OK.
+     * @param handler Hàm xử lý đã đăng ký trước đó.
+     */
+    public void unregisterHandler(String command, Consumer<String> handler) {
+        CopyOnWriteArrayList<Consumer<String>> handlers = messageHandlers.get(command);
+        if (handlers == null) {
+            return;
+        }
+
+        handlers.remove(handler);
+
+        if (handlers.isEmpty()) {
+            messageHandlers.remove(command);
+        }
+    }
+
+    /**
      * Mở kết nối tới Server.
      *
      * @param host Địa chỉ máy chủ.

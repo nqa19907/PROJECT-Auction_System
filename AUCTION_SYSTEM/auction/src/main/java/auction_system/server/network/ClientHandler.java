@@ -12,13 +12,13 @@ import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
 import auction_system.server.network.command.GetAuctionCommand;
 import auction_system.server.network.command.GetBidHistoryCommand;
-import auction_system.server.network.command.JoinAuctionCommand;
-import auction_system.server.network.command.LeaveAuctionCommand;
 import auction_system.server.network.command.ListAuctionsCommand;
 import auction_system.server.network.command.LoginCommand;
 import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
 import auction_system.server.network.command.RegisterCommand;
+import auction_system.server.network.command.UnwatchAuctionCommand;
+import auction_system.server.network.command.WatchAuctionCommand;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.session.ClientSession;
@@ -87,10 +87,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new GetAuctionCommand(auctionManager)),
                 Map.entry(Protocol.Command.GET_BID_HISTORY.name(),
                         new GetBidHistoryCommand(auctionBidService)),
-                Map.entry(Protocol.Command.JOIN_AUCTION.name(),
-                        new JoinAuctionCommand(auctionManager)),
-                Map.entry(Protocol.Command.LEAVE_AUCTION.name(),
-                        new LeaveAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.WATCH_AUCTION.name(),
+                        new WatchAuctionCommand(auctionManager)),
+                Map.entry(Protocol.Command.UNWATCH_AUCTION.name(),
+                        new UnwatchAuctionCommand(auctionManager)),
                 Map.entry(Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(Protocol.Command.DEPOSIT.name(),
@@ -205,7 +205,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     private void cleanup() {
         // Đảm bảo người dùng được đăng xuất và hủy theo dõi tất cả các phiên đấu giá
-        session.leaveAllAuctions();
+        session.unwatchAllAuctions();
 
         final User currentUser = session.getCurrentUser();
         if (currentUser != null) {

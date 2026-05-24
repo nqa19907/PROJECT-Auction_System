@@ -8,21 +8,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Xử lý lệnh rời khỏi một phiên đấu giá mà client đang theo dõi.
+ * Xử lý lệnh dừng theo dõi realtime một phiên đấu giá.
  */
-public class LeaveAuctionCommand implements Command {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LeaveAuctionCommand.class);
+public class UnwatchAuctionCommand implements Command {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnwatchAuctionCommand.class);
     private final AuctionManager auctionManager;
 
-    public LeaveAuctionCommand(AuctionManager auctionManager) {
+    public UnwatchAuctionCommand(AuctionManager auctionManager) {
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**
-     * Thực thi lệnh rời phiên đấu giá.
+     * Thực thi lệnh dừng theo dõi realtime phiên đấu giá.
      *
-     * <p>Lệnh:       {@code LEAVE_AUCTION|auctionId}
-     * Thành công: {@code LEAVE_OK|auctionId}
+     * <p>Lệnh:       {@code UNWATCH_AUCTION|auctionId}
+     * Thành công: {@code UNWATCH_OK|auctionId}
      * Thất bại:   {@code ERROR|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
@@ -37,13 +37,13 @@ public class LeaveAuctionCommand implements Command {
             }
 
             String auctionId = parts[1];
-            session.leaveAuction(auctionId);
+            session.unwatchAuction(auctionId);
 
-            return Protocol.Response.LEAVE_OK.name() + Protocol.SEPARATOR + auctionId;
+            return Protocol.Response.UNWATCH_OK.name() + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho "
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh dừng theo dõi realtime phiên đấu giá cho "
                     + username, e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
