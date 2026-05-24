@@ -30,18 +30,18 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 
 /**
- * Controller cho man hinh Admin Dashboard.
+ * Controller cho màn hình Admin Dashboard.
  *
- * <p>Man hinh nay nap du lieu that tu storage hien co cua du an.
- * Du lieu user lay tu SerializedDatabase, du lieu auction lay tu AuctionManager.
- * Ngoai ra co refresh va tim kiem nhanh cho ca 2 bang.
+ * <p>Màn hình này nạp dữ liệu thật từ storage hiện có của dự án.
+ * Dữ liệu user lấy từ SerializedDatabase, dữ liệu auction lấy từ AuctionManager.
+ * Ngoài ra có refresh và tìm kiếm nhanh cho cả 2 bảng.
  */
 public class AdminDashboardController {
 
     @FXML
     private BorderPane root;
 
-    // User table
+    // Bảng user
     @FXML
     private TableView<UserRow> tblUsers;
     @FXML
@@ -59,7 +59,7 @@ public class AdminDashboardController {
     @FXML
     private Button btnDeleteUser;
 
-    // Auction table
+    // Bảng auction
     @FXML
     private TableView<AuctionRow> tblAuctions;
     @FXML
@@ -79,18 +79,18 @@ public class AdminDashboardController {
     @FXML
     private Button btnDeleteAuction;
 
-    /** Truy cap kho du lieu .ser cua app. */
+    /** Truy cập kho dữ liệu .ser của app. */
     private SerializedDatabase database;
-    /** Manager lay danh sach auction dang duoc quan ly. */
+    /** Manager lấy danh sách auction đang được quản lý. */
     private AuctionManager auctionManager;
 
-    /** Danh sach dong goc cho bang user. */
+    /** Danh sách dòng gốc cho bảng user. */
     private final ObservableList<UserRow> userRows = FXCollections.observableArrayList();
-    /** Danh sach dong goc cho bang auction. */
+    /** Danh sách dòng gốc cho bảng auction. */
     private final ObservableList<AuctionRow> auctionRows = FXCollections.observableArrayList();
 
     /**
-     * Khoi tao controller sau khi FXML inject xong.
+     * Khởi tạo controller sau khi FXML inject xong.
      */
     @FXML
     private void initialize() {
@@ -121,7 +121,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Khoi tao datasource dung chung voi app.
+     * Khởi tạo datasource dùng chung với app.
      */
     private void initDataSource() {
         database = new SerializedDatabase(Path.of("data"));
@@ -129,7 +129,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Cau hinh bang user: cot, sap xep va tim kiem.
+     * Cấu hình bảng user: cột, sắp xếp và tìm kiếm.
      */
     private void initUserTable() {
         colUserId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -147,7 +147,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Cau hinh bang auction: cot, sap xep va tim kiem.
+     * Cấu hình bảng auction: cột, sắp xếp và tìm kiếm.
      */
     private void initAuctionTable() {
         colAuctionId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -166,7 +166,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Gan action cho nut refresh cua 2 bang.
+     * Gán action cho nút refresh của 2 bảng.
      */
     private void bindActions() {
         btnRefreshUsers.setOnAction(event -> refreshUsers());
@@ -176,7 +176,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Nap lai du lieu user tu repository.
+     * Nạp lại dữ liệu user từ repository.
      */
     private void refreshUsers() {
         database.users().reload();
@@ -192,7 +192,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Nap lai du lieu auction tu AuctionManager.
+     * Nạp lại dữ liệu auction từ AuctionManager.
      */
     private void refreshAuctions() {
         database.auctions().reload();
@@ -213,11 +213,11 @@ public class AdminDashboardController {
     }
 
     /**
-     * Predicate tim kiem cho bang user.
+     * Predicate tìm kiếm cho bảng user.
      *
-     * @param row dong user can kiem tra
-     * @param keyword tu khoa tim kiem hien tai
-     * @return true neu dong khop tu khoa, nguoc lai false
+     * @param row dòng user cần kiểm tra
+     * @param keyword từ khóa tìm kiếm hiện tại
+     * @return true nếu dòng khớp từ khóa, ngược lại false
      */
     private boolean matchUser(final UserRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
@@ -231,11 +231,11 @@ public class AdminDashboardController {
     }
 
     /**
-     * Predicate tim kiem cho bang auction.
+     * Predicate tìm kiếm cho bảng auction.
      *
-     * @param row dong auction can kiem tra
-     * @param keyword tu khoa tim kiem hien tai
-     * @return true neu dong khop tu khoa, nguoc lai false
+     * @param row dòng auction cần kiểm tra
+     * @param keyword từ khóa tìm kiếm hiện tại
+     * @return true nếu dòng khớp từ khóa, ngược lại false
      */
     private boolean matchAuction(final AuctionRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
@@ -250,10 +250,10 @@ public class AdminDashboardController {
     }
 
     /**
-     * Dinh dang gia hien tai de hien thi trong bang.
+     * Định dạng giá hiện tại để hiển thị trong bảng.
      *
-     * @param auction phien dau gia can lay gia hien tai
-     * @return chuoi gia da duoc dinh dang
+     * @param auction phiên đấu giá cần lấy giá hiện tại
+     * @return chuỗi giá đã được định dạng
      */
     private String formatPrice(final Auction auction) {
         if (auction.getItem() == null) {
@@ -263,7 +263,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Xoa user dang chon tren UI.
+     * Xóa user đang chọn trên UI.
      */
     private void deleteSelectedUser() {
         final UserRow selected = tblUsers.getSelectionModel().getSelectedItem();
@@ -379,10 +379,10 @@ public class AdminDashboardController {
     }
 
     /**
-     * Hien thong bao thong tin don gian.
+     * Hiện thông báo thông tin đơn giản.
      *
-     * @param title tieu de thong bao
-     * @param content noi dung thong bao
+     * @param title tiêu đề thông báo
+     * @param content nội dung thông báo
      */
     private void showInfo(final String title, final String content) {
         final Alert alert = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
@@ -392,7 +392,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * Xu ly khi nguoi dung nhan "Quay ve" o header Admin Dashboard.
+     * Xử lý khi người dùng nhấn "Quay về" ở header Admin Dashboard.
      */
     @FXML
     private void handleBack() {
@@ -400,7 +400,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * DTO hien thi 1 dong user tren TableView.
+     * DTO hiển thị 1 dòng user trên TableView.
      */
     public static class UserRow {
         private final SimpleStringProperty id;
@@ -409,12 +409,12 @@ public class AdminDashboardController {
         private final SimpleStringProperty status;
 
         /**
-         * Tao 1 dong hien thi user cho bang.
+         * Tạo 1 dòng hiển thị user cho bảng.
          *
          * @param id id user
-         * @param username ten dang nhap
+         * @param username tên đăng nhập
          * @param email email user
-         * @param status trang thai online/offline
+         * @param status trạng thái online/offline
          */
         public UserRow(
                 final String id,
@@ -428,7 +428,7 @@ public class AdminDashboardController {
         }
 
         /**
-         * Lay id user.
+         * Lấy id user.
          *
          * @return id user
          */
@@ -437,16 +437,16 @@ public class AdminDashboardController {
         }
 
         /**
-         * Lay ten dang nhap.
+         * Lấy tên đăng nhập.
          *
-         * @return ten dang nhap
+         * @return tên đăng nhập
          */
         public String getUsername() {
             return username.get();
         }
 
         /**
-         * Lay email user.
+         * Lấy email user.
          *
          * @return email user
          */
@@ -455,9 +455,9 @@ public class AdminDashboardController {
         }
 
         /**
-         * Lay trang thai user.
+         * Lấy trạng thái user.
          *
-         * @return ONLINE hoac OFFLINE
+         * @return ONLINE hoặc OFFLINE
          */
         public String getStatus() {
             return status.get();
@@ -465,7 +465,7 @@ public class AdminDashboardController {
     }
 
     /**
-     * DTO hien thi 1 dong auction tren TableView.
+     * DTO hiển thị 1 dòng auction trên TableView.
      */
     public static class AuctionRow {
         private final SimpleStringProperty id;
@@ -475,13 +475,13 @@ public class AdminDashboardController {
         private final SimpleStringProperty status;
 
         /**
-         * Tao 1 dong hien thi auction cho bang.
+         * Tạo 1 dòng hiển thị auction cho bảng.
          *
-         * @param id id phien dau gia
-         * @param productName ten san pham
-         * @param seller ten nguoi ban
-         * @param currentPrice gia hien tai
-         * @param status trang thai phien
+         * @param id id phiên đấu giá
+         * @param productName tên sản phẩm
+         * @param seller tên người bán
+         * @param currentPrice giá hiện tại
+         * @param status trạng thái phiên
          */
         public AuctionRow(
                 final String id,
@@ -497,54 +497,54 @@ public class AdminDashboardController {
         }
 
         /**
-         * Lay id phien.
+         * Lấy id phiên.
          *
-         * @return id phien
+         * @return id phiên
          */
         public String getId() {
             return id.get();
         }
 
         /**
-         * Lay ten san pham.
+         * Lấy tên sản phẩm.
          *
-         * @return ten san pham
+         * @return tên sản phẩm
          */
         public String getProductName() {
             return productName.get();
         }
 
         /**
-         * Lay ten nguoi ban.
+         * Lấy tên người bán.
          *
-         * @return ten nguoi ban
+         * @return tên người bán
          */
         public String getSeller() {
             return seller.get();
         }
 
         /**
-         * Lay gia hien tai.
+         * Lấy giá hiện tại.
          *
-         * @return gia hien tai da format
+         * @return giá hiện tại đã format
          */
         public String getCurrentPrice() {
             return currentPrice.get();
         }
 
         /**
-         * Lay trang thai phien.
+         * Lấy trạng thái phiên.
          *
-         * @return trang thai phien
+         * @return trạng thái phiên
          */
         public String getStatus() {
             return status.get();
         }
 
         /**
-         * Cap nhat trang thai phien tren dong hien thi.
+         * Cập nhật trạng thái phiên trên dòng hiển thị.
          *
-         * @param newStatus trang thai moi
+         * @param newStatus trạng thái mới
          */
         public void setStatus(final String newStatus) {
             status.set(newStatus);
