@@ -1,9 +1,11 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
@@ -270,9 +272,14 @@ public class AdminDashboardController {
             return;
         }
 
+        final User currentUser = UserSessionService.getInstance().getCurrentUser();
+        if (!(currentUser instanceof Admin admin)) {
+            showInfo("Lỗi", "Tài khoản hiện tại không phải admin.");
+            return;
+        }
+
         String userId = selected.getId();
-        String request = Protocol.Command.ADMIN_DELETE_USER.name()
-                + Protocol.SEPARATOR + userId;
+        String request = admin.deleteUser(userId);
 
         boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
@@ -321,9 +328,14 @@ public class AdminDashboardController {
             showInfo("Thông báo", "Vui lòng chọn phiên cần xóa trên bảng.");
             return;
         }
+        final User currentUser = UserSessionService.getInstance().getCurrentUser();
+        if (!(currentUser instanceof Admin admin)) {
+            showInfo("Lỗi", "Tài khoản hiện tại không phải admin.");
+            return;
+        }
+
         String auctionId = selected.getId();
-        String request = Protocol.Command.ADMIN_DELETE_AUCTION.name()
-                + Protocol.SEPARATOR + auctionId;
+        String request = admin.deleteAuction(auctionId);
 
         boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
