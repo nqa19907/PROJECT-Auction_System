@@ -8,16 +8,18 @@ import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +29,28 @@ import org.slf4j.LoggerFactory;
 public class ItemListController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemListController.class);
 
-    // Định nghĩa hằng số cho các index của mảng dữ liệu (Tránh Magic Numbers)
+    /** Vị trí mã phiên trong response danh sách. */
     private static final int IDX_ID = 0;
+
+    /** Vị trí tên sản phẩm trong response danh sách. */
     private static final int IDX_NAME = 1;
+
+    /** Vị trí giá hiện tại trong response danh sách. */
     private static final int IDX_PRICE = 2;
+
+    /** Vị trí trạng thái phiên trong response danh sách. */
     private static final int IDX_STATUS = 3;
+
+    /** Vị trí thời gian kết thúc trong response danh sách. */
     private static final int IDX_END_TIME = 4;
+
+    /** Vị trí danh mục sản phẩm trong response danh sách. */
     private static final int IDX_CATEGORY = 5;
+
+    /** Vị trí giá khởi điểm trong response danh sách. */
     private static final int IDX_OPENING_PRICE = 6;
+
+    /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 7;
 
     @FXML private FlowPane productsGrid;
@@ -42,59 +58,49 @@ public class ItemListController {
 
     private List<String[]> allAuctions = new ArrayList<>();
     private String filterCategory = AppConstants.CATEGORY_ALL;
+    private PauseTransition nextExpiryRefresh;
+    private boolean cleanupRegistered;
 
     /**
      * Khởi tạo giao diện và lấy dữ liệu phiên đấu giá.
      */
     @FXML
     public void initialize() {
-        LOGGER.info("Đang khởi tạo màn hình Danh sách đấu giá...");
+        LOGGER.info("Đang khởi tạo màn hình danh sách đấu giá...");
 
-        // Cài đặt khoảng cách (spacing) giữa các thẻ sản phẩm trong FlowPane
         if (productsGrid != null) {
-            productsGrid.setHgap(12); // Khoảng cách ngang (24px)
-            productsGrid.setVgap(12); // Khoảng cách dọc (24px)
+            productsGrid.setHgap(12);
+            productsGrid.setVgap(12);
         }
 
-        // Gọi Service, cung cấp một hàm Callback để tự động xử lý khi có dữ liệu trả về
-        AuctionService.getInstance().fetchAuctionList(auctionList -> {
-            // Bọc trong Platform.runLater để đảm bảo giao diện chạy trên luồng của JavaFX
-            Platform.runLater(() -> {
-                this.allAuctions = auctionList;
-                renderGrid();
-            });
-        });
+        AuctionService.getInstance().fetchAuctionList(auctionList -> Platform.runLater(() -> {
+            this.allAuctions = auctionList;
+            renderGrid();
+            registerLifecycleCleanup();
+        }));
     }
 
-    private void createProductCard(String[] parts) {
-        // Kiểm tra an toàn: Đảm bảo mảng có đủ ít nhất 5 trường dữ liệu cơ bản
+    /**
+     * Tạo một card sản phẩm từ dữ liệu phiên đấu giá.
+     *
+     * @param parts dữ liệu phiên đấu giá từ server
+     */
+    private void createProductCard(final String[] parts) {
         if (parts == null || parts.length < MIN_PARTS_LENGTH) {
             LOGGER.warn("Dữ liệu sản phẩm không hợp lệ: thiếu trường thông tin.");
             return;
         }
 
         try {
-            // 1. Nạp file FXML của thẻ sản phẩm
             FXMLLoader loader = new FXMLLoader(
                     getClass().getResource(ViewConstants.PRODUCT_CARD_VIEW));
             VBox card = loader.load();
-
-            // 2. Lấy controller của thẻ vừa nạp
             ProductCardController controller = loader.getController();
 
-            // 3. Bóc tách dữ liệu từ mảng ngay bên trong hàm
             String auctionId = parts[IDX_ID];
             String itemName = parts[IDX_NAME];
-            String currentPriceStr = parts[IDX_PRICE];
-            // TODO: Hiển thị status/endTime trên ProductCard để user biết
-            // phiên đang RUNNING/OPEN/FINISHED.
-            // Các trường status và endTime tạm thời bị loại bỏ
-            // do không được dùng đến trong setCardDetails
+            double currentPrice = Double.parseDouble(parts[IDX_PRICE]);
 
-            // 4. Chuyển đổi dữ liệu chuỗi giá tiền thành số thập phân
-            double currentPrice = Double.parseDouble(currentPriceStr);
-
-            // 5. "Bơm" dữ liệu vào thẻ và định nghĩa hành động khi nút được bấm
             controller.setCardDetails(
                     auctionId,
                     itemName,
@@ -102,15 +108,18 @@ public class ItemListController {
                     selectedItemId -> navigateToAuctionDetail(parts)
             );
 
-            // 6. Thêm thẻ sản phẩm hoàn chỉnh vào lưới hiển thị
             productsGrid.getChildren().add(card);
-
         } catch (IOException | NumberFormatException e) {
-            LOGGER.error("Lỗi khi tạo thẻ sản phẩm (ProductCard): ", e);
+            LOGGER.error("Lỗi khi tạo thẻ sản phẩm.", e);
         }
     }
 
-    private void navigateToAuctionDetail(String[] selectedParts) {
+    /**
+     * Chuyển sang màn hình chi tiết phiên đấu giá.
+     *
+     * @param selectedParts dữ liệu phiên được chọn
+     */
+    private void navigateToAuctionDetail(final String[] selectedParts) {
         if (selectedParts == null || selectedParts.length < MIN_PARTS_LENGTH) {
             LOGGER.warn("Không thể mở AuctionDetail vì dữ liệu item không hợp lệ.");
             return;
@@ -118,24 +127,25 @@ public class ItemListController {
 
         String selectedItemId = selectedParts[IDX_ID];
         String itemName = selectedParts[IDX_NAME];
-        // TODO: Truyền selectedParts[IDX_STATUS] vào AuctionDisplayContext
-        // khi context hỗ trợ status.
+        String status = selectedParts[IDX_STATUS];
+        LocalDateTime endTime;
 
         long currentPrice;
         try {
-            // parseDouble trước vì dữ liệu từ server có thể gửi về định dạng thập phân
-            // (vd: "15500.0").
-            // Sau đó ép kiểu sang (long) để dùng nội bộ trong logic frontend.
             currentPrice = (long) Double.parseDouble(selectedParts[IDX_PRICE]);
         } catch (NumberFormatException e) {
             LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
             return;
         }
 
-        // Tạo giá mặc định khởi điểm phòng trường hợp server không trả về
-        long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
+        try {
+            endTime = LocalDateTime.parse(selectedParts[IDX_END_TIME]);
+        } catch (DateTimeParseException e) {
+            LOGGER.error("Thời gian kết thúc không hợp lệ cho item ID: " + selectedItemId, e);
+            return;
+        }
 
-        // Nạp giá khởi điểm nếu có trong response (tại index 6)
+        long openingPrice = Math.max(0L, currentPrice - 1_000_000L);
         if (selectedParts.length > IDX_OPENING_PRICE) {
             try {
                 String rawPrice = selectedParts[IDX_OPENING_PRICE].replaceAll("[^0-9]", "");
@@ -147,19 +157,19 @@ public class ItemListController {
 
         LOGGER.info("Người dùng muốn đấu giá cho sản phẩm có ID: " + selectedItemId);
 
-        // Tận dụng Router để chuyển trang, dùng đường dẫn chuẩn từ ViewConstants
-        AuctionDetailController auctionDetailController = 
+        AuctionDetailController auctionDetailController =
                 Router.navigateContentAndGetController(
                         productsGrid, ViewConstants.AUCTION_DETAIL_VIEW);
 
         if (auctionDetailController != null) {
-            // Truyền đối tượng Context chứa dữ liệu đã parse vào màn chi tiết
             auctionDetailController.initAuction(
                     new AuctionDisplayContext(
                             selectedItemId,
                             itemName,
                             openingPrice,
-                            currentPrice
+                            currentPrice,
+                            status,
+                            endTime
                     )
             );
         }
@@ -168,41 +178,42 @@ public class ItemListController {
     /**
      * Thiết lập danh mục lọc và hiển thị lại lưới sản phẩm.
      *
-     * @param category Tên danh mục cần lọc (VD: Art, Electronic...).
+     * @param category tên danh mục cần lọc
      */
-    public void setFilterCategory(String category) {
+    public void setFilterCategory(final String category) {
         this.filterCategory = category;
 
-        // Cập nhật dòng text tiêu đề phía trên danh sách sản phẩm
         if (categoryTitle != null) {
             categoryTitle.setText(CategoryUtil.getTitleByCategory(category));
         }
 
-        // Nếu dữ liệu đã tải về xong mới vẽ lại
         if (!allAuctions.isEmpty()) {
             renderGrid();
         }
     }
 
+    /**
+     * Vẽ lại lưới sản phẩm, bỏ qua các phiên đã kết thúc hoặc đã bị hủy.
+     */
     private void renderGrid() {
         if (productsGrid == null) {
             return;
         }
 
-        productsGrid.getChildren().clear(); // Dọn dẹp lưới hiển thị cũ
+        stopNextExpiryRefresh();
+        productsGrid.getChildren().clear();
 
         boolean hasItems = false;
         for (String[] parts : allAuctions) {
-            // TODO: Cân nhắc chỉ cho phiên RUNNING mở màn đặt giá, hoặc render trạng thái disabled.
-            // Tên danh mục nãy ta nối trên Server giờ nó nằm ở vị trí số 5 (index = 5)
-            // TODO: Kiểm tra có nên sử dụng DTO ko
+            if (!isAuctionVisible(parts)) {
+                continue;
+            }
+
             String itemCategory = (parts.length > IDX_CATEGORY)
                     ? parts[IDX_CATEGORY] : AppConstants.CATEGORY_ALL;
 
-            // So sánh, nếu chữ khớp (hoặc đang chọn tất cả) thì mới vẽ
             if (AppConstants.CATEGORY_ALL.equals(filterCategory)
                     || filterCategory.equalsIgnoreCase(itemCategory)) {
-
                 createProductCard(parts);
                 hasItems = true;
             }
@@ -212,5 +223,87 @@ public class ItemListController {
             productsGrid.getChildren().add(
                     new Label("Không có phiên đấu giá nào thuộc danh mục này."));
         }
+
+        scheduleNextExpiryRefresh();
+    }
+
+    /**
+     * Kiểm tra phiên còn hiển thị được trên danh sách hay không.
+     *
+     * @param parts dữ liệu phiên đấu giá từ server
+     * @return true nếu phiên chưa kết thúc và chưa bị hủy
+     */
+    private boolean isAuctionVisible(final String[] parts) {
+        if (parts == null || parts.length < MIN_PARTS_LENGTH) {
+            return false;
+        }
+
+        String status = parts[IDX_STATUS];
+        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
+            return false;
+        }
+
+        try {
+            return LocalDateTime.parse(parts[IDX_END_TIME]).isAfter(LocalDateTime.now());
+        } catch (DateTimeParseException e) {
+            LOGGER.warn("Bỏ qua phiên có thời gian kết thúc không hợp lệ.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Hẹn lần render kế tiếp đúng lúc phiên gần nhất hết hạn.
+     */
+    private void scheduleNextExpiryRefresh() {
+        LocalDateTime nextEndTime = null;
+
+        for (String[] parts : allAuctions) {
+            if (!isAuctionVisible(parts)) {
+                continue;
+            }
+
+            LocalDateTime endTime = LocalDateTime.parse(parts[IDX_END_TIME]);
+            if (nextEndTime == null || endTime.isBefore(nextEndTime)) {
+                nextEndTime = endTime;
+            }
+        }
+
+        if (nextEndTime == null) {
+            return;
+        }
+
+        long millisUntilEnd = java.time.Duration
+                .between(LocalDateTime.now(), nextEndTime)
+                .toMillis();
+        nextExpiryRefresh = new PauseTransition(
+                Duration.millis(Math.max(1L, millisUntilEnd + 100L)));
+        nextExpiryRefresh.setOnFinished(event -> renderGrid());
+        nextExpiryRefresh.play();
+    }
+
+    /**
+     * Dừng lịch render hết hạn cũ trước khi dựng lại danh sách.
+     */
+    private void stopNextExpiryRefresh() {
+        if (nextExpiryRefresh != null) {
+            nextExpiryRefresh.stop();
+            nextExpiryRefresh = null;
+        }
+    }
+
+    /**
+     * Dọn timer khi màn danh sách bị thay khỏi scene.
+     */
+    private void registerLifecycleCleanup() {
+        if (cleanupRegistered || productsGrid == null) {
+            return;
+        }
+
+        cleanupRegistered = true;
+        productsGrid.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                stopNextExpiryRefresh();
+            }
+        });
     }
 }

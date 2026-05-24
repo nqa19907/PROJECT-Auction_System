@@ -89,13 +89,12 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
-        // TODO: Khi AuctionDisplayContext có status, disable bidInput/placeBidBtn
-        // nếu status != RUNNING.
         AuctionPriceChartConfigurer.updateAxis(
                 numberYaxis,
                 viewModel.getOpeningPriceValue(),
                 priceSeries
         );
+        startCountdownTimer(context.endTime(), context.status());
         loadBidHistory(context.auctionId());
 
         // Sau khi có auctionId, bắt đầu nhận broadcast realtime của phiên này.
@@ -193,6 +192,33 @@ public class AuctionDetailController implements Initializable {
      */
     private void setupChart() {
         AuctionPriceChartConfigurer.configure(bidLineChart, priceSeries);
+    }
+
+    /**
+     * Khởi động đồng hồ dựa trên thời gian kết thúc thật từ server.
+     *
+     * @param endTime thời gian kết thúc phiên đấu giá
+     * @param status trạng thái hiện tại của phiên đấu giá
+     */
+    private void startCountdownTimer(
+            final java.time.LocalDateTime endTime,
+            final String status) {
+        visuals.startCountdown(endTime, this::markAuctionFinishedOnUi);
+
+        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
+            markAuctionFinishedOnUi();
+        }
+    }
+
+    /**
+     * Cập nhật giao diện khi phiên đã hết giờ hoặc đã bị đóng.
+     */
+    private void markAuctionFinishedOnUi() {
+        timerLabel.setText("Kết thúc");
+        placeBidBtn.setDisable(true);
+        bidInput.setDisable(true);
+        minBidHint.textProperty().unbind();
+        minBidHint.setText("Phiên đấu giá đã kết thúc.");
     }
 
     /**

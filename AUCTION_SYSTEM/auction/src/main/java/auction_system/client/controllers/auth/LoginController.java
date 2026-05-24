@@ -93,8 +93,10 @@ public class LoginController {
                 setLoadingState(false);
                 
                 if (result.isSuccess()) {
-                    LOGGER.info("Đăng nhập thành công, điều hướng bằng SceneManager.");
-                    SceneManager.switchScene(loginButton, ViewConstants.DASHBOARD_VIEW);
+                    LOGGER.info("Đăng nhập thành công, điều hướng theo vai trò.");
+                    SceneManager.switchScene(
+                            loginButton,
+                            resolveDashboardView(result.getRoleName()));
                 } else {
                     showError(result.getErrorMessage());
                 }
@@ -117,6 +119,20 @@ public class LoginController {
     }
 
     /**
+     * Chọn dashboard phù hợp với vai trò người dùng sau khi đăng nhập.
+     *
+     * @param roleName vai trò được server trả về
+     * @return đường dẫn FXML của dashboard cần hiển thị
+     */
+    private String resolveDashboardView(final String roleName) {
+        if ("ADMIN".equalsIgnoreCase(roleName)) {
+            return ViewConstants.ADMIN_DASHBOARD_VIEW;
+        }
+
+        return ViewConstants.DASHBOARD_VIEW;
+    }
+
+    /**
      * Phương thức hiển thị lỗi, ghi log cảnh báo.
      *
      * @param message Nội dung thông báo lỗi.
@@ -128,5 +144,18 @@ public class LoginController {
             errorLabel.setVisible(true);
             errorLabel.setManaged(true);
         }
+    }
+
+    /**
+     * Chuyển từ màn đăng nhập sang màn đăng ký.
+     */
+    @FXML
+    private void handleGoToRegister() {
+        LOGGER.info("Chuyển sang màn đăng ký tài khoản.");
+        SceneManager.switchScene(
+                registerLabel,
+                ViewConstants.REGISTER_VIEW,
+                900,
+                700);
     }
 }

@@ -1,5 +1,6 @@
 package auction_system.server.services;
 
+import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class AuthService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
+    private static final String adminRoleName = "ADMIN";
+    private static final String participantRoleName = "PARTICIPANT";
     private static final double defaultBalance = 0.0;
     private static final int minimumPasswordLength = 6;
 
@@ -53,6 +56,7 @@ public final class AuthService {
         return database.executeInTransaction(
             () -> findValidUser(normalizedEmail, password)
         );
+    
     }
 
     /**
@@ -270,26 +274,21 @@ public final class AuthService {
 
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
-        switch (normalizedRoleName) {
-            case "SELLER":
-                return new Participant(
-                    username,
-                    email,
-                    hashedPassword,
-                    defaultBalance,
-                    normalizedRoleName
-                );
-            case "BIDDER":
-                return new Participant(
-                    username,
-                    email,
-                    hashedPassword,
-                    defaultBalance,
-                    normalizedRoleName
-                );
-            default:
-                throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
+        if (adminRoleName.equals(normalizedRoleName)) {
+            return new Admin(username, email, hashedPassword);
         }
+
+        if (participantRoleName.equals(normalizedRoleName)) {
+            return new Participant(
+                username,
+                email,
+                hashedPassword,
+                defaultBalance,
+                normalizedRoleName
+            );
+        }
+
+        throw new IllegalArgumentException("Vai trò chỉ được là ADMIN hoặc PARTICIPANT.");
     }
 
     /**
@@ -353,8 +352,9 @@ public final class AuthService {
     private void validateRoleName(final String roleName) {
         final String normalizedRoleName = roleName.toUpperCase(Locale.ROOT);
 
-        if (!"BIDDER".equals(normalizedRoleName) && !"SELLER".equals(normalizedRoleName)) {
-            throw new IllegalArgumentException("Vai trò chỉ được là BIDDER hoặc SELLER.");
+        if (!adminRoleName.equals(normalizedRoleName)
+            && !participantRoleName.equals(normalizedRoleName)) {
+            throw new IllegalArgumentException("Vai trò chỉ được là ADMIN hoặc PARTICIPANT.");
         }
     }
 

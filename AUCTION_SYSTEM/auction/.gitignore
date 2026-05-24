@@ -9,6 +9,8 @@ target/
 
 # Runtime serialized data generated while testing locally
 data/
+**/*.ser
+**/*.ser.tmp
 
 # IDE metadata
 .idea/

@@ -142,6 +142,22 @@ public class AuctionManager {
     }
 
     /**
+     * Cập nhật trạng thái tất cả phiên theo thời gian hiện tại và lưu xuống database.
+     */
+    public void refreshAllAuctionLifecycles() {
+        auctionRegistry.refreshAllAuctionLifecycles();
+    }
+
+    /**
+     * Cập nhật trạng thái một phiên theo thời gian hiện tại và lưu nếu có thay đổi.
+     *
+     * @param auction phiên đấu giá cần cập nhật
+     */
+    public void refreshAuctionLifecycle(final Auction auction) {
+        auctionRegistry.refreshAuctionLifecycle(auction);
+    }
+
+    /**
      * Huỷ một phiên đấu giá theo ID.
      *
      * @param auctionId ID phiên cần huỷ.

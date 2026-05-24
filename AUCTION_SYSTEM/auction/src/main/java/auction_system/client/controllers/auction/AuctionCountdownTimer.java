@@ -1,38 +1,47 @@
 package auction_system.client.controllers.auction;
 
+import java.time.LocalDateTime;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.control.Label;
-import javafx.util.Duration;
 
 /**
- * Quản lý đồng hồ đếm ngược của phiên đấu giá.
+ * Quản lý đồng hồ đếm ngược theo thời gian kết thúc thật của phiên đấu giá.
  */
 final class AuctionCountdownTimer {
-
-    /** Số giây mặc định còn lại của phiên đấu giá demo. */
-    static final int DEFAULT_SECONDS_LEFT = 14 * 60 + 32;
 
     /** Label hiển thị thời gian còn lại. */
     private final Label timerLabel;
 
+    /** Thời gian kết thúc thật của phiên đấu giá. */
+    private final LocalDateTime endTime;
+
+    /** Callback chạy một lần khi phiên đấu giá hết giờ. */
+    private final Runnable onFinished;
+
     /** Timeline cập nhật đồng hồ mỗi giây. */
     private final Timeline timeline;
 
-    /** Số giây còn lại. */
-    private int secondsLeft;
+    /** Đánh dấu callback kết thúc đã được gọi. */
+    private boolean finishedNotified;
 
     /**
      * Tạo timer cho label hiển thị thời gian.
      *
      * @param timerLabel label cần cập nhật
-     * @param initialSeconds số giây ban đầu
+     * @param endTime thời gian kết thúc thật của phiên
+     * @param onFinished callback khi hết giờ
      */
-    AuctionCountdownTimer(final Label timerLabel, final int initialSeconds) {
+    AuctionCountdownTimer(
+            final Label timerLabel,
+            final LocalDateTime endTime,
+            final Runnable onFinished) {
         this.timerLabel = timerLabel;
-        this.secondsLeft = initialSeconds;
-        this.timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> tick()));
+        this.endTime = endTime;
+        this.onFinished = onFinished;
+        this.timeline = new Timeline(
+                new KeyFrame(javafx.util.Duration.seconds(1), event -> updateLabel()));
         this.timeline.setCycleCount(Animation.INDEFINITE);
     }
 
@@ -52,27 +61,40 @@ final class AuctionCountdownTimer {
     }
 
     /**
-     * Giảm thời gian còn lại và cập nhật label.
-     */
-    private void tick() {
-        if (secondsLeft > 0) {
-            secondsLeft--;
-        }
-
-        updateLabel();
-    }
-
-    /**
      * Cập nhật text hiển thị thời gian.
      */
     private void updateLabel() {
-        if (secondsLeft == 0) {
+        final long secondsLeft =
+                java.time.Duration.between(LocalDateTime.now(), endTime).getSeconds();
+
+        if (secondsLeft <= 0) {
             timerLabel.setText("Kết thúc");
+            notifyFinishedOnce();
+            timeline.stop();
             return;
         }
 
-        final int minutes = secondsLeft / 60;
-        final int seconds = secondsLeft % 60;
+        final long hours = secondsLeft / 3600;
+        final long minutes = (secondsLeft % 3600) / 60;
+        final long seconds = secondsLeft % 60;
+
+        if (hours > 0) {
+            timerLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+            return;
+        }
+
         timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
+    }
+
+    /**
+     * Gọi callback kết thúc tối đa một lần.
+     */
+    private void notifyFinishedOnce() {
+        if (finishedNotified || onFinished == null) {
+            return;
+        }
+
+        finishedNotified = true;
+        onFinished.run();
     }
 }

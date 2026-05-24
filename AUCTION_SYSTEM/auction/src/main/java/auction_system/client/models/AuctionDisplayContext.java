@@ -1,5 +1,7 @@
 package auction_system.client.models;
 
+import java.time.LocalDateTime;
+
 /**
  * Dữ liệu hiển thị cần truyền từ ItemList sang BidHistory.
  *
@@ -13,6 +15,8 @@ public record AuctionDisplayContext(
         String auctionId,
         String itemTitle,
         long openingPrice,
-        long currentPrice
+        long currentPrice,
+        String status,
+        LocalDateTime endTime
 ) {
 }

@@ -73,7 +73,7 @@
                          <Label styleClass="field-title" text="Mô tả sản phẩm" />
                          <Label styleClass="asterisk" text="*" />
                      </HBox>
-                     <TextArea fx:id="handleDescription" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
+                     <TextArea fx:id="fieldDescription" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
                  </VBox>
              </VBox>
 
@@ -123,16 +123,12 @@
                          <HBox>
                              <TextField fx:id="fieldStartingPrice" promptText="0" HBox.hgrow="ALWAYS" />
                          </HBox>
-                         <Label styleClass="field-title" text="Giá tối thiểu để bắt đầu đấu giá" />
-                  <TextField fx:id="fieldStartingPrice1" promptText="0" />
                      </VBox>
                      <VBox spacing="6" GridPane.columnIndex="1">
-                         <Label styleClass="field-title" text="Bước giá tối thiểu (VNĐ)" />
+                         <Label styleClass="field-title" text="Giá tối thiểu để bắt đầu đấu giá" />
                          <HBox>
                              <TextField fx:id="fieldBidStep" promptText="50" HBox.hgrow="ALWAYS" />
                          </HBox>
-                         <Label styleClass="field-title" text="Mỗi lần trả giá phải tăng thêm ít nhất" />
-                  <TextField fx:id="fieldBidStep1" promptText="50" />
                      </VBox>
                <rowConstraints>
                   <RowConstraints />

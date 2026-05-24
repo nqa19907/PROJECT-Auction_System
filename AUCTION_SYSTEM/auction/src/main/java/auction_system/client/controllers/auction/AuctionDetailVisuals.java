@@ -1,5 +1,6 @@
 package auction_system.client.controllers.auction;
 
+import java.time.LocalDateTime;
 import javafx.scene.control.Label;
 import javafx.scene.shape.Circle;
 
@@ -8,23 +9,32 @@ import javafx.scene.shape.Circle;
  */
 final class AuctionDetailVisuals {
 
-    private final AuctionCountdownTimer countdownTimer;
+    private final Label timerLabel;
     private final LiveIndicatorAnimation liveIndicatorAnimation;
+    private AuctionCountdownTimer countdownTimer;
 
     AuctionDetailVisuals(final Label timerLabel, final Circle liveDot) {
+        this.timerLabel = timerLabel;
         this.liveIndicatorAnimation = new LiveIndicatorAnimation(liveDot);
-        this.countdownTimer = new AuctionCountdownTimer(
-                timerLabel,
-                AuctionCountdownTimer.DEFAULT_SECONDS_LEFT);
     }
 
     void start() {
         liveIndicatorAnimation.start();
+    }
+
+    void startCountdown(final LocalDateTime endTime, final Runnable onFinished) {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        countdownTimer = new AuctionCountdownTimer(timerLabel, endTime, onFinished);
         countdownTimer.start();
     }
 
     void stop() {
-        countdownTimer.stop();
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
         liveIndicatorAnimation.stop();
     }
 }

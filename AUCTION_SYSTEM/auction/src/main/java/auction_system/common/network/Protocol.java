@@ -38,7 +38,8 @@ public final class Protocol {
         ADMIN_LIST_AUCTIONS,
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
-        ADMIN_DELETE_USER
+        ADMIN_DELETE_USER,
+        PUBLISH_ITEM
     }
 
     /**
@@ -60,6 +61,7 @@ public final class Protocol {
         BID_HISTORY,
         UNWATCH_OK,
         BID_OK, BID_FAIL,
+        PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,

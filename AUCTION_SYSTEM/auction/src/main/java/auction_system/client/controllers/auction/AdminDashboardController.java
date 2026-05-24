@@ -3,9 +3,11 @@ package auction_system.client.controllers.auction;
 import auction_system.client.services.AdminDashboardService;
 import auction_system.client.services.AdminDashboardService.AuctionSnapshot;
 import auction_system.client.services.AdminDashboardService.UserSnapshot;
-import auction_system.client.utils.Router;
+import auction_system.client.services.AuthService;
+import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import java.util.Locale;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -28,6 +30,8 @@ import javafx.scene.layout.BorderPane;
  * hoac runtime manager cua server.
  */
 public class AdminDashboardController {
+    private static final double LOGIN_WINDOW_WIDTH = 900.0;
+    private static final double LOGIN_WINDOW_HEIGHT = 700.0;
 
     @FXML
     private BorderPane root;
@@ -321,6 +325,11 @@ public class AdminDashboardController {
      */
     @FXML
     private void handleBack() {
-        Router.navigateContent(root, ViewConstants.ITEM_LIST_VIEW);
+        AuthService.getInstance().logout(result -> Platform.runLater(() ->
+                SceneManager.switchScene(
+                        root,
+                        ViewConstants.LOGIN_VIEW,
+                        LOGIN_WINDOW_WIDTH,
+                        LOGIN_WINDOW_HEIGHT)));
     }
 }

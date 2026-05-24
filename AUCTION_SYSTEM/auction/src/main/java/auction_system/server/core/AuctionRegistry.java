@@ -64,14 +64,38 @@ final class AuctionRegistry {
             return null;
         }
 
-        return auctions.stream()
-                .filter(auction -> auctionId.equals(auction.getId()))
+        final Auction auction = auctions.stream()
+                .filter(candidate -> auctionId.equals(candidate.getId()))
                 .findFirst()
                 .orElse(null);
+        refreshAuctionLifecycle(auction);
+        return auction;
     }
 
     List<Auction> findAll() {
+        refreshAllAuctionLifecycles();
         return Collections.unmodifiableList(auctions);
+    }
+
+    void refreshAllAuctionLifecycles() {
+        for (final Auction auction : auctions) {
+            refreshAuctionLifecycle(auction);
+        }
+    }
+
+    void refreshAuctionLifecycle(final Auction auction) {
+        if (auction == null) {
+            return;
+        }
+
+        final AuctionStatus oldStatus = auction.getStatus();
+        auction.startAuction();
+        auction.endAuction();
+
+        if (oldStatus != auction.getStatus()) {
+            database.auctions().save(auction);
+            database.flushAll();
+        }
     }
 
     boolean cancelById(final String auctionId) {
