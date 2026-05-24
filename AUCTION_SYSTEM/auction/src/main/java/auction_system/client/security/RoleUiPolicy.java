@@ -28,7 +28,7 @@ public final class RoleUiPolicy {
         final String normalizedRole = roleName.toUpperCase(Locale.ROOT);
         return switch (normalizedRole) {
             case "ADMIN" -> EnumSet.of(SidebarItem.ADMIN_DEMO);
-            case "SELLER" -> EnumSet.of(SidebarItem.PUBLISH_ITEM);
+            case "PARTICIPANT" -> EnumSet.of(SidebarItem.PUBLISH_ITEM);
             default -> defaultItems();
         };
     }

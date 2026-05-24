@@ -51,7 +51,7 @@ public class AuctionManagerTest {
     }
 
     private Participant makeSeller() {
-        return new Participant("seller01", "seller@test.com", "pass", 10_000.0, "SELLER");
+        return new Participant("seller01", "seller@test.com", "pass", 10_000.0, "PARTICIPANT");
     }
 
     private Auction makeAuction(Participant seller) {
