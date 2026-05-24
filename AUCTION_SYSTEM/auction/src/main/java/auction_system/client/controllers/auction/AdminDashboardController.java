@@ -1,18 +1,11 @@
 package auction_system.client.controllers.auction;
 
-import auction_system.client.network.NetworkClient;
+import auction_system.client.services.AdminDashboardService;
+import auction_system.client.services.AdminDashboardService.AuctionSnapshot;
+import auction_system.client.services.AdminDashboardService.UserSnapshot;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
-import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.users.User;
-import auction_system.common.network.Protocol;
-import auction_system.server.core.AuctionManager;
-import auction_system.server.persistence.serialization.SerializedDatabase;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -30,9 +23,9 @@ import javafx.scene.layout.BorderPane;
 /**
  * Controller cho man hinh Admin Dashboard.
  *
- * <p>Man hinh nay nap du lieu that tu storage hien co cua du an.
- * Du lieu user lay tu SerializedDatabase, du lieu auction lay tu AuctionManager.
- * Ngoai ra co refresh va tim kiem nhanh cho ca 2 bang.
+ * <p>Controller chi dieu phoi UI. Du lieu quan tri duoc lay qua
+ * AdminDashboardService de client khong phu thuoc truc tiep vao persistence
+ * hoac runtime manager cua server.
  */
 public class AdminDashboardController {
 
@@ -41,15 +34,15 @@ public class AdminDashboardController {
 
     // User table
     @FXML
-    private TableView<UserRow> tblUsers;
+    private TableView<AdminUserRow> tblUsers;
     @FXML
-    private TableColumn<UserRow, String> colUserId;
+    private TableColumn<AdminUserRow, String> colUserId;
     @FXML
-    private TableColumn<UserRow, String> colUsername;
+    private TableColumn<AdminUserRow, String> colUsername;
     @FXML
-    private TableColumn<UserRow, String> colEmail;
+    private TableColumn<AdminUserRow, String> colEmail;
     @FXML
-    private TableColumn<UserRow, String> colUserStatus;
+    private TableColumn<AdminUserRow, String> colUserStatus;
     @FXML
     private TextField txtSearchUser;
     @FXML
@@ -59,17 +52,17 @@ public class AdminDashboardController {
 
     // Auction table
     @FXML
-    private TableView<AuctionRow> tblAuctions;
+    private TableView<AdminAuctionRow> tblAuctions;
     @FXML
-    private TableColumn<AuctionRow, String> colAuctionId;
+    private TableColumn<AdminAuctionRow, String> colAuctionId;
     @FXML
-    private TableColumn<AuctionRow, String> colProductName;
+    private TableColumn<AdminAuctionRow, String> colProductName;
     @FXML
-    private TableColumn<AuctionRow, String> colSeller;
+    private TableColumn<AdminAuctionRow, String> colSeller;
     @FXML
-    private TableColumn<AuctionRow, String> colCurrentPrice;
+    private TableColumn<AdminAuctionRow, String> colCurrentPrice;
     @FXML
-    private TableColumn<AuctionRow, String> colAuctionStatus;
+    private TableColumn<AdminAuctionRow, String> colAuctionStatus;
     @FXML
     private TextField txtSearchAuction;
     @FXML
@@ -77,53 +70,24 @@ public class AdminDashboardController {
     @FXML
     private Button btnDeleteAuction;
 
-    /** Truy cap kho du lieu .ser cua app. */
-    private SerializedDatabase database;
-    /** Manager lay danh sach auction dang duoc quan ly. */
-    private AuctionManager auctionManager;
+    /** Service client gui command quan tri len server. */
+    private final AdminDashboardService adminService = AdminDashboardService.getInstance();
 
     /** Danh sach dong goc cho bang user. */
-    private final ObservableList<UserRow> userRows = FXCollections.observableArrayList();
+    private final ObservableList<AdminUserRow> userRows = FXCollections.observableArrayList();
     /** Danh sach dong goc cho bang auction. */
-    private final ObservableList<AuctionRow> auctionRows = FXCollections.observableArrayList();
+    private final ObservableList<AdminAuctionRow> auctionRows = FXCollections.observableArrayList();
 
     /**
      * Khoi tao controller sau khi FXML inject xong.
      */
     @FXML
     private void initialize() {
-        initDataSource();
         initUserTable();
         initAuctionTable();
         bindActions();
         refreshUsers();
         refreshAuctions();
-
-        // Đăng ký handler phản hồi xóa phiên từ server
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(),
-                this::handleAdminDeleteAuctionOk);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(),
-                this::handleAdminDeleteAuctionFail);
-
-        // Đăng ký handler phản hồi xóa người dùng
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_OK.name(),
-                this::handleAdminDeleteUserOk);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
-                this::handleAdminDeleteUserFail);
-    }
-
-    /**
-     * Khoi tao datasource dung chung voi app.
-     */
-    private void initDataSource() {
-        database = new SerializedDatabase(Path.of("data"));
-        auctionManager = AuctionManager.getInstance(database);
     }
 
     /**
@@ -135,11 +99,11 @@ public class AdminDashboardController {
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colUserStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        final FilteredList<UserRow> filtered = new FilteredList<>(userRows, row -> true);
+        final FilteredList<AdminUserRow> filtered = new FilteredList<>(userRows, row -> true);
         txtSearchUser.textProperty().addListener((obs, oldValue, newValue) ->
             filtered.setPredicate(row -> matchUser(row, newValue)));
 
-        final SortedList<UserRow> sorted = new SortedList<>(filtered);
+        final SortedList<AdminUserRow> sorted = new SortedList<>(filtered);
         sorted.comparatorProperty().bind(tblUsers.comparatorProperty());
         tblUsers.setItems(sorted);
     }
@@ -154,11 +118,12 @@ public class AdminDashboardController {
         colCurrentPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
         colAuctionStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        final FilteredList<AuctionRow> filtered = new FilteredList<>(auctionRows, row -> true);
+        final FilteredList<AdminAuctionRow> filtered =
+                new FilteredList<>(auctionRows, row -> true);
         txtSearchAuction.textProperty().addListener((obs, oldValue, newValue) ->
             filtered.setPredicate(row -> matchAuction(row, newValue)));
 
-        final SortedList<AuctionRow> sorted = new SortedList<>(filtered);
+        final SortedList<AdminAuctionRow> sorted = new SortedList<>(filtered);
         sorted.comparatorProperty().bind(tblAuctions.comparatorProperty());
         tblAuctions.setItems(sorted);
     }
@@ -174,40 +139,35 @@ public class AdminDashboardController {
     }
 
     /**
-     * Nap lai du lieu user tu repository.
+     * Nap lai du lieu user qua server command.
      */
     private void refreshUsers() {
-        database.users().reload();
-        final List<User> users = database.users().findAll();
+        adminService.fetchUsers((success, message, users) -> {
+            if (!success) {
+                showInfo("Lỗi", fallbackMessage(message, "Không tải được danh sách người dùng."));
+                return;
+            }
 
-        userRows.setAll(users.stream()
-                .map(user -> new UserRow(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.isOnline() ? "ONLINE" : "OFFLINE"))
-                .toList());
+            userRows.setAll(users.stream()
+                    .map(this::toUserRow)
+                    .toList());
+        });
     }
 
     /**
-     * Nap lai du lieu auction tu AuctionManager.
+     * Nap lai du lieu auction qua server command.
      */
     private void refreshAuctions() {
-        database.auctions().reload();
-        final List<Auction> auctions = auctionManager.getAllAuctions();
+        adminService.fetchAuctions((success, message, auctions) -> {
+            if (!success) {
+                showInfo("Lỗi", fallbackMessage(message, "Không tải được danh sách phiên."));
+                return;
+            }
 
-        auctionRows.setAll(auctions.stream()
-                .map(auction -> new AuctionRow(
-                        auction.getId(),
-                        auction.getItem() != null
-                                ? auction.getItem().getItemName()
-                                : "(Khong co ten)",
-                        auction.getParticipant() != null
-                                ? auction.getParticipant().getUsername()
-                                : "(Khong ro)",
-                        formatPrice(auction),
-                        auction.getStatus() != null ? auction.getStatus().name() : "UNKNOWN"))
-                .toList());
+            auctionRows.setAll(auctions.stream()
+                    .map(this::toAuctionRow)
+                    .toList());
+        });
     }
 
     /**
@@ -217,7 +177,7 @@ public class AdminDashboardController {
      * @param keyword tu khoa tim kiem hien tai
      * @return true neu dong khop tu khoa, nguoc lai false
      */
-    private boolean matchUser(final UserRow row, final String keyword) {
+    private boolean matchUser(final AdminUserRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }
@@ -235,7 +195,7 @@ public class AdminDashboardController {
      * @param keyword tu khoa tim kiem hien tai
      * @return true neu dong khop tu khoa, nguoc lai false
      */
-    private boolean matchAuction(final AuctionRow row, final String keyword) {
+    private boolean matchAuction(final AdminAuctionRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }
@@ -248,66 +208,17 @@ public class AdminDashboardController {
     }
 
     /**
-     * Dinh dang gia hien tai de hien thi trong bang.
-     *
-     * @param auction phien dau gia can lay gia hien tai
-     * @return chuoi gia da duoc dinh dang
-     */
-    private String formatPrice(final Auction auction) {
-        if (auction.getItem() == null) {
-            return "0";
-        }
-        return String.format(Locale.ROOT, "%,.0f", auction.getItem().getCurrentPrice());
-    }
-
-    /**
      * Xoa user dang chon tren UI.
      */
     private void deleteSelectedUser() {
-        final UserRow selected = tblUsers.getSelectionModel().getSelectedItem();
+        final AdminUserRow selected = tblUsers.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showInfo("Thông báo", "Vui lòng chọn người dùng cần xóa trên bảng.");
             return;
         }
 
         String userId = selected.getId();
-        String request = Protocol.Command.ADMIN_DELETE_USER.name()
-                + Protocol.SEPARATOR + userId;
-
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
-        if (!sent) {
-            showInfo("Lỗi", "Không gửi được yêu cầu xóa người dùng tới server.");
-        }
-    }
-
-    /**
-     * Xử lý phản hồi xóa phiên thành công từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteAuctionOk(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            if (parts.length > 1) {
-                String auctionId = parts[1];
-                auctionRows.removeIf(row -> auctionId.equals(row.getId()));
-                tblAuctions.refresh();
-                showInfo("Thành công", "Đã xóa phiên " + auctionId);
-            }
-        });
-    }
-
-    /**
-     * Xử lý phản hồi xóa phiên thất bại từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteAuctionFail(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            String message = parts.length > 1 ? parts[1] : "Xóa phiên thất bại.";
-            showInfo("Lỗi", message);
-        });
+        adminService.deleteUser(userId, this::handleDeleteUserResult);
     }
 
     /**
@@ -316,54 +227,80 @@ public class AdminDashboardController {
      * <p>Chỉ khi server trả về thành công thì bảng mới xóa dòng tương ứng.
      */
     private void deleteSelectedAuction() {
-        final AuctionRow selected = tblAuctions.getSelectionModel().getSelectedItem();
+        final AdminAuctionRow selected = tblAuctions.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showInfo("Thông báo", "Vui lòng chọn phiên cần xóa trên bảng.");
             return;
         }
         String auctionId = selected.getId();
-        String request = Protocol.Command.ADMIN_DELETE_AUCTION.name()
-                + Protocol.SEPARATOR + auctionId;
+        adminService.deleteAuction(auctionId, this::handleDeleteAuctionResult);
+    }
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
-        if (!sent) {
-            showInfo("Lỗi", "Không gửi được yêu cầu xóa phiên tới server.");
+    /**
+     * Xu ly ket qua xoa user tu service.
+     *
+     * @param success true neu server xoa thanh cong
+     * @param userId id user vua xu ly
+     * @param message thong bao tu server/service
+     */
+    private void handleDeleteUserResult(
+            final boolean success,
+            final String userId,
+            final String message) {
+        if (!success) {
+            showInfo("Lỗi", fallbackMessage(message, "Xóa người dùng thất bại."));
+            return;
+        }
+
+        userRows.removeIf(row -> userId.equals(row.getId()));
+        tblUsers.refresh();
+        showInfo("Thành công", message);
+    }
+
+    /**
+     * Xu ly ket qua xoa auction tu service.
+     *
+     * @param success true neu server xoa thanh cong
+     * @param auctionId id phien vua xu ly
+     * @param message thong bao tu server/service
+     */
+    private void handleDeleteAuctionResult(
+            final boolean success,
+            final String auctionId,
+            final String message) {
+        if (!success) {
+            showInfo("Lỗi", fallbackMessage(message, "Xóa phiên thất bại."));
+            return;
+        }
+
+        auctionRows.removeIf(row -> auctionId.equals(row.getId()));
+        tblAuctions.refresh();
+        showInfo("Thành công", message);
+    }
+
+    private AdminUserRow toUserRow(final UserSnapshot user) {
+        return new AdminUserRow(user.id(), user.username(), user.email(), user.status());
+    }
+
+    private AdminAuctionRow toAuctionRow(final AuctionSnapshot auction) {
+        return new AdminAuctionRow(
+                auction.id(),
+                auction.productName(),
+                auction.seller(),
+                formatPrice(auction.currentPrice()),
+                auction.status());
+    }
+
+    private String formatPrice(final String rawPrice) {
+        try {
+            return String.format(Locale.ROOT, "%,.0f", Double.parseDouble(rawPrice));
+        } catch (NumberFormatException exception) {
+            return rawPrice == null || rawPrice.isBlank() ? "0" : rawPrice;
         }
     }
 
-    /**
-     * Xử lý phản hồi xóa người dùng thành công từ server.
-     *
-     * <p>Khi nhận được userId hợp lệ, hàm sẽ xóa dòng tương ứng khỏi bảng
-     * người dùng và hiển thị thông báo thành công.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteUserOk(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            if (parts.length > 1) {
-                String userId = parts[1];
-                userRows.removeIf(row -> userId.equals(row.getId()));
-                tblUsers.refresh();
-                showInfo("Thành công", "Đã xóa người dùng " + userId);
-            }
-        });
-    }
-
-    /**
-     * Xử lý phản hồi xóa người dùng thất bại từ server.
-     *
-     * <p>Hàm tách thông điệp lỗi từ phản hồi và hiển thị cho quản trị viên.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteUserFail(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            String message = parts.length > 1 ? parts[1] : "Xóa người dùng thất bại.";
-            showInfo("Lỗi", message);
-        });
+    private String fallbackMessage(final String message, final String fallback) {
+        return message == null || message.isBlank() ? fallback : message;
     }
 
     /**
@@ -385,157 +322,5 @@ public class AdminDashboardController {
     @FXML
     private void handleBack() {
         Router.navigateContent(root, ViewConstants.ITEM_LIST_VIEW);
-    }
-
-    /**
-     * DTO hien thi 1 dong user tren TableView.
-     */
-    public static class UserRow {
-        private final SimpleStringProperty id;
-        private final SimpleStringProperty username;
-        private final SimpleStringProperty email;
-        private final SimpleStringProperty status;
-
-        /**
-         * Tao 1 dong hien thi user cho bang.
-         *
-         * @param id id user
-         * @param username ten dang nhap
-         * @param email email user
-         * @param status trang thai online/offline
-         */
-        public UserRow(
-                final String id,
-                final String username,
-                final String email,
-                final String status) {
-            this.id = new SimpleStringProperty(id);
-            this.username = new SimpleStringProperty(username);
-            this.email = new SimpleStringProperty(email);
-            this.status = new SimpleStringProperty(status);
-        }
-
-        /**
-         * Lay id user.
-         *
-         * @return id user
-         */
-        public String getId() {
-            return id.get();
-        }
-
-        /**
-         * Lay ten dang nhap.
-         *
-         * @return ten dang nhap
-         */
-        public String getUsername() {
-            return username.get();
-        }
-
-        /**
-         * Lay email user.
-         *
-         * @return email user
-         */
-        public String getEmail() {
-            return email.get();
-        }
-
-        /**
-         * Lay trang thai user.
-         *
-         * @return ONLINE hoac OFFLINE
-         */
-        public String getStatus() {
-            return status.get();
-        }
-    }
-
-    /**
-     * DTO hien thi 1 dong auction tren TableView.
-     */
-    public static class AuctionRow {
-        private final SimpleStringProperty id;
-        private final SimpleStringProperty productName;
-        private final SimpleStringProperty seller;
-        private final SimpleStringProperty currentPrice;
-        private final SimpleStringProperty status;
-
-        /**
-         * Tao 1 dong hien thi auction cho bang.
-         *
-         * @param id id phien dau gia
-         * @param productName ten san pham
-         * @param seller ten nguoi ban
-         * @param currentPrice gia hien tai
-         * @param status trang thai phien
-         */
-        public AuctionRow(
-                final String id,
-                final String productName,
-                final String seller,
-                final String currentPrice,
-                final String status) {
-            this.id = new SimpleStringProperty(id);
-            this.productName = new SimpleStringProperty(productName);
-            this.seller = new SimpleStringProperty(seller);
-            this.currentPrice = new SimpleStringProperty(currentPrice);
-            this.status = new SimpleStringProperty(status);
-        }
-
-        /**
-         * Lay id phien.
-         *
-         * @return id phien
-         */
-        public String getId() {
-            return id.get();
-        }
-
-        /**
-         * Lay ten san pham.
-         *
-         * @return ten san pham
-         */
-        public String getProductName() {
-            return productName.get();
-        }
-
-        /**
-         * Lay ten nguoi ban.
-         *
-         * @return ten nguoi ban
-         */
-        public String getSeller() {
-            return seller.get();
-        }
-
-        /**
-         * Lay gia hien tai.
-         *
-         * @return gia hien tai da format
-         */
-        public String getCurrentPrice() {
-            return currentPrice.get();
-        }
-
-        /**
-         * Lay trang thai phien.
-         *
-         * @return trang thai phien
-         */
-        public String getStatus() {
-            return status.get();
-        }
-
-        /**
-         * Cap nhat trang thai phien tren dong hien thi.
-         *
-         * @param newStatus trang thai moi
-         */
-        public void setStatus(final String newStatus) {
-            status.set(newStatus);
-        }
     }
 }

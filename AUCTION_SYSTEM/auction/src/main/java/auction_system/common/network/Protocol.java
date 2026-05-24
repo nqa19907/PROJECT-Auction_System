@@ -34,6 +34,8 @@ public final class Protocol {
         PLACE_BID,
 
         // Admin
+        ADMIN_LIST_USERS,
+        ADMIN_LIST_AUCTIONS,
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
         ADMIN_DELETE_USER
@@ -66,6 +68,10 @@ public final class Protocol {
         AUCTION_ENDED,
 
         // Admin responses
+        ADMIN_USER_LIST,
+        ADMIN_USER_LIST_FAIL,
+        ADMIN_AUCTION_LIST,
+        ADMIN_AUCTION_LIST_FAIL,
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,
