@@ -49,7 +49,7 @@ public class ParticipantItemService {
         validateItem(item);
 
         return database.executeInTransaction(
-            () -> saveItemForSeller(seller, item)
+                () -> saveItemForSeller(seller, item)
         );
     }
 
@@ -69,7 +69,7 @@ public class ParticipantItemService {
         validateText(itemId, "Mã sản phẩm không được rỗng.");
 
         return database.executeInTransaction(
-            () -> deleteItemForSeller(seller, itemId.trim())
+                () -> deleteItemForSeller(seller, itemId.trim())
         );
     }
 
@@ -99,10 +99,10 @@ public class ParticipantItemService {
         database.flushAll();
 
         LOGGER.info(
-            "Participant "
-                + seller.getUsername()
-                + " đăng sản phẩm "
-                + savedItem.getItemName()
+                "Participant "
+                        + seller.getUsername()
+                        + " đăng sản phẩm "
+                        + savedItem.getItemName()
         );
 
         return savedItem;
@@ -141,10 +141,10 @@ public class ParticipantItemService {
      */
     private Item findItemOrThrow(final String itemId) {
         return database.items()
-            .findById(itemId)
-            .orElseThrow(
-                () -> new InvalidItemException("Không tìm thấy sản phẩm: " + itemId)
-            );
+                .findById(itemId)
+                .orElseThrow(
+                        () -> new InvalidItemException("Không tìm thấy sản phẩm: " + itemId)
+                );
     }
 
     /**
@@ -165,8 +165,24 @@ public class ParticipantItemService {
 
         final Participant participant = (Participant) currentUser;
 
+        if (!canSell(participant)) {
+            throw new InvalidItemException(
+                    "Người dùng không có quyền bán sản phẩm."
+            );
+        }
 
         return participant;
+    }
+
+    /**
+     * Kiểm tra participant có quyền bán sản phẩm hay không dựa trên role.
+     *
+     * @param participant participant cần kiểm tra
+     * @return true nếu role là SELLER hoặc PARTICIPANT
+     */
+    private boolean canSell(final Participant participant) {
+        final String role = participant.getRoleName();
+        return "SELLER".equals(role) || "PARTICIPANT".equals(role);
     }
 
     /**
@@ -210,13 +226,13 @@ public class ParticipantItemService {
      */
     private void validateItemCanBeDeleted(final String itemId) {
         final boolean hasActiveAuction = database.auctions()
-            .findByItemId(itemId)
-            .stream()
-            .anyMatch(this::isActiveAuction);
+                .findByItemId(itemId)
+                .stream()
+                .anyMatch(this::isActiveAuction);
 
         if (hasActiveAuction) {
             throw new InvalidItemException(
-                "Không thể gỡ sản phẩm đang có phiên đấu giá mở hoặc đang chạy."
+                    "Không thể gỡ sản phẩm đang có phiên đấu giá mở hoặc đang chạy."
             );
         }
     }
