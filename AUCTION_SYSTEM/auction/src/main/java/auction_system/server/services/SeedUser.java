@@ -30,8 +30,8 @@ public final class SeedUser {
         final AuthService authService = new AuthService(database);
 
         final User user = authService.register(
-                "admin5",
-                "admin5@gmail.com",
+                "admin",
+                "admin@gmail.com",
                 "123456",
                 "ADMIN");
 

@@ -29,7 +29,7 @@ public class UserDto implements Serializable {
      * @param email    Địa chỉ email.
      * @param isOnline Trạng thái online.
      * @param isBanned Trạng thái cấm.
-     * @param roleName Vai trò người dùng (VD: ADMIN, SELLER, BIDDER).
+     * @param roleName Vai trò người dùng (ví dụ: ADMIN hoặc PARTICIPANT).
      */
     public UserDto(String id, String username, String email, boolean isOnline,
             boolean isBanned, String roleName) {

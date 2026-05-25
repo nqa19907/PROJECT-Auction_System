@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * <p>Lệnh client gửi lên:
  * * <pre>
  * LOGIN|username|password
- * REGISTER|username|email|password|role   (role: BIDDER / SELLER)
+ * REGISTER|username|email|password|role   (role: ADMIN / PARTICIPANT)
  * LIST_AUCTIONS
  * GET_AUCTION|auctionId
  * JOIN_AUCTION|auctionId

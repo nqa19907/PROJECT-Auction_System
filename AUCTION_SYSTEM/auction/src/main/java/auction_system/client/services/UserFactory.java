@@ -15,7 +15,7 @@ public final class UserFactory {
     /**
      * Tạo đối tượng User cụ thể dựa trên role.
      *
-     * @param role     Vai trò từ server (ADMIN, SELLER, BIDDER...).
+     * @param role     Vai trò từ server (ADMIN hoặc PARTICIPANT).
      * @param username Tên người dùng.
      * @param email    Email người dùng.
      * @param balance  Số dư tài khoản.

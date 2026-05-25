@@ -17,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Kiểm thử việc đăng sản phẩm và ghi sản phẩm xuống database serialization.
  */
 public class ParticipantItemServiceTest {
-    private static final String SELLER_ROLE = "PARTICIPANT";
+    private static final String PARTICIPANT_ROLE = "PARTICIPANT";
 
     @TempDir
     private Path tempDirectory;
@@ -34,7 +34,7 @@ public class ParticipantItemServiceTest {
                 "seller01@gmail.com",
                 "hashed-password",
                 10000.0,
-                SELLER_ROLE);
+                PARTICIPANT_ROLE);
         Item item = new Art(
                 "Tranh sơn dầu",
                 "Tranh phong cảnh còn mới.",
@@ -65,7 +65,7 @@ public class ParticipantItemServiceTest {
                 "seller02@gmail.com",
                 "hashed-password",
                 20000.0,
-                SELLER_ROLE);
+                PARTICIPANT_ROLE);
         Item item = new Art(
                 "Tượng gỗ",
                 "Tượng gỗ thủ công.",
