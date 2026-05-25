@@ -43,8 +43,6 @@ final class AuctionBidTableConfigurer {
     private static final String CHANGE_CELL_CLASS = "change-table-cell";
     /** Style class cho badge trạng thái hợp lệ. */
     private static final String STATUS_BADGE_CLASS = "status-badge";
-    /** Style class cho badge trạng thái đang dẫn đầu. */
-    private static final String LEADING_STATUS_BADGE_CLASS = "status-badge-leading";
 
     /**
      * Constructor private cho utility class.
@@ -211,10 +209,6 @@ final class AuctionBidTableConfigurer {
                 }
 
                 statusBadge.setText(value);
-                statusBadge.getStyleClass().remove(LEADING_STATUS_BADGE_CLASS);
-                if ("Dẫn đầu".equals(value)) {
-                    statusBadge.getStyleClass().add(LEADING_STATUS_BADGE_CLASS);
-                }
                 setGraphic(statusBadge);
             }
         };

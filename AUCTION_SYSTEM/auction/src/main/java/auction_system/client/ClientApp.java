@@ -2,6 +2,7 @@ package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.utils.ViewConstants;
+import auction_system.common.models.users.Participant;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
@@ -75,7 +76,7 @@ public class ClientApp extends Application {
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
+        final AuctionBidService auctionBidService = new AuctionBidService(database);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         localServer = SocketServer.getInstance(

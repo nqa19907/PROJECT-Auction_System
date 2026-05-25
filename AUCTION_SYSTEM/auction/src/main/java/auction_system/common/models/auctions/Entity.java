@@ -61,6 +61,22 @@ public abstract class Entity implements Serializable {
         return id;
     }
 
+    /**
+     * Cập nhật mã định danh cho thực thể đã được tạo ở server.
+     *
+     * <p>Client dùng phương thức này để giữ cùng id với bản ghi server sau khi
+     * đăng nhập, tránh tự sinh id mới làm sai các kiểm tra nghiệp vụ realtime.
+     *
+     * @param id mã định danh hợp lệ của thực thể
+     */
+    public void setId(final String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException("ID không được để trống!");
+        }
+
+        this.id = id;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

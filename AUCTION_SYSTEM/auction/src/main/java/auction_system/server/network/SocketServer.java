@@ -31,11 +31,11 @@ import org.slf4j.LoggerFactory;
  * <p>Lệnh client gửi lên:
  * * <pre>
  * LOGIN|username|password
- * REGISTER|username|email|password|role   (role: BIDDER / SELLER)
+ * REGISTER|username|email|password|role   (role: ADMIN / PARTICIPANT)
  * LIST_AUCTIONS
  * GET_AUCTION|auctionId
- * WATCH_AUCTION|auctionId
- * UNWATCH_AUCTION|auctionId
+ * JOIN_AUCTION|auctionId
+ * LEAVE_AUCTION|auctionId
  * PLACE_BID|auctionId|amount
  * DEPOSIT|amount
  * LOGOUT
@@ -50,9 +50,9 @@ import org.slf4j.LoggerFactory;
  *   AUCTION_LIST|n   (sau đó n dòng:
  *       auctionId|itemName|currentPrice|status|endTime|itemType|startPrice)
  *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
- *   WATCH_OK|auctionId
- *   WATCH_FAIL|message
- *   UNWATCH_OK|auctionId
+ *   JOIN_OK|auctionId
+ *   JOIN_FAIL|message
+ *   LEAVE_OK|auctionId
  *   BID_OK|auctionId|amount|newBalance
  *   BID_FAIL|message
  *   DEPOSIT_OK|balance
@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  *   ERROR|message
  * </pre>
  *
- * <p>Broadcast server tự push khi có sự kiện (đến các client đang xem phiên):
+ * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
  * * <pre>
  * UPDATE_PRICE|auctionId|newPrice
  * AUCTION_STARTED|auctionId

@@ -8,20 +8,18 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.AdminCancelAuctionCommand;
 import auction_system.server.network.command.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.AdminDeleteUserCommand;
-import auction_system.server.network.command.AdminListAuctionsCommand;
-import auction_system.server.network.command.AdminListUsersCommand;
 import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
 import auction_system.server.network.command.GetAuctionCommand;
 import auction_system.server.network.command.GetBidHistoryCommand;
+import auction_system.server.network.command.JoinAuctionCommand;
+import auction_system.server.network.command.LeaveAuctionCommand;
 import auction_system.server.network.command.ListAuctionsCommand;
 import auction_system.server.network.command.LoginCommand;
 import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
 import auction_system.server.network.command.PublishItemCommand;
 import auction_system.server.network.command.RegisterCommand;
-import auction_system.server.network.command.UnwatchAuctionCommand;
-import auction_system.server.network.command.WatchAuctionCommand;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.services.ParticipantItemService;
@@ -107,11 +105,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         Protocol.Command.GET_BID_HISTORY.name(),
                         new GetBidHistoryCommand(auctionBidService)),
                 Map.entry(
-                        Protocol.Command.WATCH_AUCTION.name(),
-                        new WatchAuctionCommand(auctionManager)),
+                        Protocol.Command.JOIN_AUCTION.name(),
+                        new JoinAuctionCommand(auctionManager)),
                 Map.entry(
-                        Protocol.Command.UNWATCH_AUCTION.name(),
-                        new UnwatchAuctionCommand(auctionManager)),
+                        Protocol.Command.LEAVE_AUCTION.name(),
+                        new LeaveAuctionCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
@@ -124,12 +122,6 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 Map.entry(
                         Protocol.Command.PUBLISH_ITEM.name(),
                         new PublishItemCommand(participantItemService, auctionManager)),
-                Map.entry(
-                        Protocol.Command.ADMIN_LIST_USERS.name(),
-                        new AdminListUsersCommand(auctionManager)),
-                Map.entry(
-                        Protocol.Command.ADMIN_LIST_AUCTIONS.name(),
-                        new AdminListAuctionsCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.ADMIN_CANCEL_AUCTION.name(),
                         new AdminCancelAuctionCommand(auctionManager)),
@@ -215,20 +207,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
 
     /**
-     * Gửi realtime message trực tiếp tới client đang giữ socket này.
-     *
-     * <p>Method này dùng cho thông báo theo user, ví dụ cập nhật ví, không phụ
-     * thuộc vào việc client đang theo dõi phiên đấu giá nào.
-     *
-     * @param message message cần gửi xuống client
-     */
-    public void sendDirect(final String message) {
-        send(message);
-    }
-
-    /**
-     * Gửi một dòng văn bản tới client qua socket.
-     * Synchronized để tránh 2 thread ghi đồng thời.
+     * Gửi một dòng dữ liệu về client qua socket.
      *
      * @param message nội dung cần gửi
      */
@@ -242,15 +221,11 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * Dọn dẹp tài nguyên và xóa trạng thái online khi client ngắt kết nối.
      */
     private void cleanup() {
-        session.unwatchAllAuctions();
+        session.leaveAllAuctions();
 
         final User currentUser = session.getCurrentUser();
         if (currentUser != null) {
             auctionManager.userLoggedOut(currentUser);
-
-            // Gỡ socket handler khi client mất kết nối hoặc đóng ứng dụng.
-            auctionManager.unregisterClientHandler(currentUser.getId(), this);
-
             currentUser.setOnline(false);
             LOGGER.info("Dọn dẹp phiên làm việc của: {}", currentUser.getUsername());
             session.setCurrentUser(null);

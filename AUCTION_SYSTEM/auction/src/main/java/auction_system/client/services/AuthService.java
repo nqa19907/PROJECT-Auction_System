@@ -21,6 +21,8 @@ public final class AuthService {
     private static final int loginEmailIndex = 3;
     private static final int loginRoleIndex = 4;
     private static final int loginBalanceIndex = 5;
+    private static final int minBalanceUpdatedPartCount = 2;
+    private static final int balanceUpdatedValueIndex = 1;
 
     private AuthCallback loginCallback;
     private AuthCallback registerCallback;
@@ -42,6 +44,9 @@ public final class AuthService {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.LOGOUT_OK.name(),
                 this::handleLogoutResponse);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.BALANCE_UPDATED.name(),
+                this::handleBalanceUpdatedResponse);
     }
 
     /**
@@ -91,7 +96,13 @@ public final class AuthService {
                 + Protocol.SEPARATOR
                 + password;
 
-        final boolean sent = NetworkClient.getInstance().sendCommand(request);
+        final NetworkClient networkClient = NetworkClient.getInstance();
+        if (!networkClient.ensureConnected()) {
+            notifyLoginAndClear(new AuthResult(false, "Mất kết nối tới máy chủ"));
+            return;
+        }
+
+        final boolean sent = networkClient.sendCommand(request);
         if (!sent) {
             notifyLoginAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
@@ -132,7 +143,13 @@ public final class AuthService {
                 + Protocol.SEPARATOR
                 + roleName;
 
-        final boolean sent = NetworkClient.getInstance().sendCommand(request);
+        final NetworkClient networkClient = NetworkClient.getInstance();
+        if (!networkClient.ensureConnected()) {
+            notifyRegisterAndClear(new AuthResult(false, "Mất kết nối tới máy chủ"));
+            return;
+        }
+
+        final boolean sent = networkClient.sendCommand(request);
         if (!sent) {
             notifyRegisterAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
@@ -154,8 +171,13 @@ public final class AuthService {
     public void logout(final AuthCallback callback) {
         logoutCallback = callback;
 
-        final boolean sent =
-                NetworkClient.getInstance().sendCommand(Protocol.Command.LOGOUT.name());
+        final NetworkClient networkClient = NetworkClient.getInstance();
+        if (!networkClient.ensureConnected()) {
+            notifyLogoutAndClear(new AuthResult(false, "Mất kết nối tới máy chủ"));
+            return;
+        }
+
+        final boolean sent = networkClient.sendCommand(Protocol.Command.LOGOUT.name());
         if (!sent) {
             notifyLogoutAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
@@ -231,6 +253,25 @@ public final class AuthService {
     }
 
     /**
+     * Cập nhật số dư realtime độc lập với màn hình hiện tại.
+     *
+     * <p>Handler này đặt ở AuthService vì AuthService luôn được khởi tạo trong
+     * vòng đời đăng nhập, nên người bị outbid vẫn thấy số dư được hoàn ngay cả
+     * khi không đứng ở màn chi tiết đấu giá.
+     *
+     * @param response phản hồi BALANCE_UPDATED từ server
+     */
+    private void handleBalanceUpdatedResponse(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < minBalanceUpdatedPartCount) {
+            return;
+        }
+
+        UserSessionService.getInstance().updateCurrentUserBalance(
+                parseDouble(parts[balanceUpdatedValueIndex]));
+    }
+
+    /**
      * Lưu người dùng vừa đăng nhập thành công vào session client.
      *
      * @param result kết quả đăng nhập thành công
@@ -238,6 +279,7 @@ public final class AuthService {
     private void storeCurrentUser(final AuthResult result) {
         final User user = UserFactory.create(
                 result.getRoleName(),
+                result.getUserId(),
                 result.getUsername(),
                 result.getEmail(),
                 result.getBalance());

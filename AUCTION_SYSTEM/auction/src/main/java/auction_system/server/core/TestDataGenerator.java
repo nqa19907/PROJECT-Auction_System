@@ -36,10 +36,10 @@ public final class TestDataGenerator {
 
         // 1. Định nghĩa mảng người dùng: {Username, Email, RawPassword, Balance, Role}
         Object[][] userData = {
-            {"Test Seller", "s1", "1", 20_000_000.0, "SELLER"},
-            {"Test Art Seller", "s2", "1", 20_000_000.0, "SELLER"},
-            {"Test Bidder", "b1", "1", 100_000_000.0, "BIDDER"},
-            {"Low Balance Bidder", "b2", "1", 200_000.0, "BIDDER"},
+            {"Test Seller", "s1", "1", 20_000_000.0, "PARTICIPANT"},
+            {"Test Art Seller", "s2", "1", 20_000_000.0, "PARTICIPANT"},
+            {"Test Bidder", "b1", "1", 100_000_000.0, "PARTICIPANT"},
+            {"Low Balance Bidder", "b2", "1", 200_000.0, "PARTICIPANT"},
             {"Test Admin", "a", "1", 0.0, "ADMIN"}
         };
 

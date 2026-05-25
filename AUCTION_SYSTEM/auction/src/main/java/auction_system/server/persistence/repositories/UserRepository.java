@@ -103,7 +103,7 @@ public class UserRepository extends SerializedRepository<User> {
     /**
      * Tìm danh sách người dùng theo vai trò.
      *
-     * <p>Hàm này dùng được với các vai trò như BIDDER, SELLER hoặc ADMIN nếu
+     * <p>Hàm này dùng được với các vai trò như ADMIN hoặc PARTICIPANT nếu
      * model User có triển khai phương thức getRoleName().
      *
      * @param roleName tên vai trò cần tìm

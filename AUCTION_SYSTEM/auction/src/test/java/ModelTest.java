@@ -192,9 +192,9 @@ public class ModelTest {
 
     @Test
     void testParticipantRoleNameReturnsNormalizedRole() {
-        Participant participant = new Participant("user", "u@mail.com", "pw", 100, "bidder");
+        Participant participant = new Participant("user", "u@mail.com", "pw", 100, "PARTICIPANT");
 
-        assertEquals("BIDDER", participant.getRoleName());
+        assertEquals("PARTICIPANT", participant.getRoleName());
     }
 
     @Test
@@ -207,9 +207,9 @@ public class ModelTest {
     @Test
     void testParticipantSetRoleNameUpdatesValue() {
         Participant participant = new Participant("user", "u@mail.com", "pw", 100);
-        participant.setRoleName("seller");
+        participant.setRoleName("PARTICIPANT");
 
-        assertEquals("SELLER", participant.getRoleName());
+        assertEquals("PARTICIPANT", participant.getRoleName());
     }
 
     @Test
@@ -441,7 +441,7 @@ public class ModelTest {
     }
 
     private Auction createDummyAuction() {
-        Participant seller = new Participant("tmp_seller", "seller@mail.com", "pw", 1000, "SELLER");
+        Participant seller = new Participant("tmp_seller", "seller@mail.com", "pw", 1000, "PARTICIPANT");
         Item item = new ElectronicBuilder()
                 .itemName("Tmp Item")
                 .startPrice(1000.0)
@@ -453,7 +453,7 @@ public class ModelTest {
 
     @Test
     void testAuctionConstructorAssignsParticipantAndItem() {
-        Participant seller = new Participant("seller", "seller@mail.com", "pw", 1000, "SELLER");
+        Participant seller = new Participant("PARTICIPANT", "seller@mail.com", "pw", 1000, "PARTICIPANT");
         Item item = new ElectronicBuilder()
                 .itemName("Phone")
                 .startPrice(1000.0)
@@ -468,7 +468,7 @@ public class ModelTest {
 
     @Test
     void testBidTransactionGettersReturnCorrectValues() {
-        Participant participant = new Participant("participant1", "p1@mail.com", "pw", 10000, "BIDDER");
+        Participant participant = new Participant("participant1", "p1@mail.com", "pw", 10000, "PARTICIPANT");
         double amount = 3500.0;
         Auction dummyAuction = createDummyAuction();
         BidTransaction bid = new BidTransaction(participant, amount, dummyAuction);
@@ -482,7 +482,7 @@ public class ModelTest {
     @Test
     void testBidTransactionTimestampIsSetOnCreation() {
         LocalDateTime before = LocalDateTime.now();
-        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "PARTICIPANT");
         Auction dummyAuction = createDummyAuction();
         BidTransaction bid = new BidTransaction(participant, 5000.0, dummyAuction);
         LocalDateTime after = LocalDateTime.now();
@@ -493,7 +493,7 @@ public class ModelTest {
 
     @Test
     void testBidTransactionHasNonNullId() {
-        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "PARTICIPANT");
         Auction dummyAuction = createDummyAuction();
         BidTransaction bid = new BidTransaction(participant, 1000.0, dummyAuction);
 
@@ -503,7 +503,7 @@ public class ModelTest {
 
     @Test
     void testBidTransactionTwoInstancesHaveDifferentIds() {
-        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "PARTICIPANT");
         Auction dummyAuction = createDummyAuction();
         BidTransaction bid1 = new BidTransaction(participant, 2500.0, dummyAuction);
         BidTransaction bid2 = new BidTransaction(participant, 3500.0, dummyAuction);
@@ -514,7 +514,7 @@ public class ModelTest {
     @Test
     void testBidTransactionAmountIsPreservedExactly() {
         double amount = 12345.678;
-        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "BIDDER");
+        Participant participant = new Participant("tmp", "tmp@mail.com", "pw", 1000, "PARTICIPANT");
         Auction dummyAuction = createDummyAuction();
         BidTransaction bid = new BidTransaction(participant, amount, dummyAuction);
 
