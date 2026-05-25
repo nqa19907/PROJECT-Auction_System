@@ -2,7 +2,6 @@
 
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
@@ -99,7 +98,7 @@
 
                     <LineChart fx:id="bidLineChart" animated="true" createSymbols="true" prefHeight="280" styleClass="bid-chart" title="">
                         <xAxis>
-                            <CategoryAxis fx:id="categoryXaxis" label="Thời gian" styleClass="chart-axis" />
+                            <NumberAxis fx:id="numberXaxis" autoRanging="false" label="Thời gian" lowerBound="0" styleClass="chart-axis" tickUnit="1" upperBound="2" />
                         </xAxis>
                         <yAxis>
                             <NumberAxis fx:id="numberYaxis" autoRanging="false" label="Giá (VNĐ)" lowerBound="3000000" styleClass="chart-axis" tickUnit="2000000" upperBound="17000000" />

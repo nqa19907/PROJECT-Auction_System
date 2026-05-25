@@ -43,7 +43,7 @@ public class AuctionViewModel {
     private final StringProperty priceChangeText = new SimpleStringProperty("+0 VNĐ so với trước");
 
     private final ObservableList<BidRow> bidHistory = FXCollections.observableArrayList();
-    private final ObservableList<XYChart.Data<String, Number>> chartData =
+    private final ObservableList<XYChart.Data<Number, Number>> chartData =
         FXCollections.observableArrayList();
 
     // ── Trạng thái nội bộ ───────────────────────────────────
@@ -82,7 +82,7 @@ public class AuctionViewModel {
 
         // Điểm đầu tiên neo biểu đồ theo giá hiện tại của phiên khi mở màn chi tiết.
         String timeStr = LocalTime.now().format(timeFmt);
-        chartData.add(new XYChart.Data<>(timeStr, context.currentPrice()));
+        addChartPoint(timeStr, context.currentPrice());
     }
 
     /**
@@ -109,7 +109,7 @@ public class AuctionViewModel {
         String status = isCurrentUser ? "Dẫn đầu" : "Hợp lệ";
 
         bidHistory.add(0, new BidRow(timeStr, bidderName, amount, change, status));
-        chartData.add(new XYChart.Data<>(timeStr, amount));
+        addChartPoint(timeStr, amount);
 
         priceChangeText.set("+" + CurrencyFormatter.formatVnd(change) + " so với trước");
     }
@@ -159,7 +159,7 @@ public class AuctionViewModel {
 
                 // Chart giữ thứ tự thời gian tăng dần, bảng thêm mới nhất lên đầu.
                 bidders.add(bidder);
-                chartData.add(new XYChart.Data<>(time, amount));
+                addChartPoint(time, amount);
                 bidHistory.add(0, new BidRow(time, bidder, amount, change, VALID_BID_STATUS));
             }
         }
@@ -196,10 +196,23 @@ public class AuctionViewModel {
             return;
         }
 
-        chartData.add(new XYChart.Data<>(
-                LocalTime.now().format(timeFmt),
-                currentPrice.get()
-        ));
+        addChartPoint(LocalTime.now().format(timeFmt), currentPrice.get());
+    }
+
+    /**
+     * Thêm một điểm lên chart bằng số thứ tự bid làm trục X.
+     *
+     * <p>Không dùng trực tiếp chuỗi thời gian làm X vì {@code CategoryAxis}
+     * sẽ gộp các điểm có cùng timestamp, làm mất điểm khi nhiều bid cùng giây.
+     *
+     * @param time nhãn thời gian hiển thị trên trục X
+     * @param amount giá tại thời điểm đó
+     */
+    private void addChartPoint(final String time, final long amount) {
+        final XYChart.Data<Number, Number> point =
+                new XYChart.Data<>(chartData.size() + 1, amount);
+        point.setExtraValue(time);
+        chartData.add(point);
     }
 
     /**
@@ -296,7 +309,7 @@ public class AuctionViewModel {
         return bidHistory;
     }
 
-    public ObservableList<XYChart.Data<String, Number>> getChartData() {
+    public ObservableList<XYChart.Data<Number, Number>> getChartData() {
         return chartData;
     }
 

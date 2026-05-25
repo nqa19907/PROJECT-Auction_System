@@ -33,17 +33,38 @@ final class AuctionPriceChartConfigurer {
      * Cấu hình chart và gắn series dữ liệu giá.
      *
      * @param bidLineChart biểu đồ đường hiển thị giá
+     * @param numberXaxis trục X của chart
      * @param priceSeries series dữ liệu giá
      */
     static void configure(
-        final LineChart<String, Number> bidLineChart,
-        final XYChart.Series<String, Number> priceSeries
+        final LineChart<Number, Number> bidLineChart,
+        final NumberAxis numberXaxis,
+        final XYChart.Series<Number, Number> priceSeries
     ) {
         priceSeries.setName(PRICE_SERIES_NAME);
         bidLineChart.getData().add(priceSeries);
         bidLineChart.setLegendVisible(false);
         bidLineChart.setCreateSymbols(true);
         bidLineChart.setAnimated(true);
+        configureHorizontalAxis(numberXaxis, priceSeries);
+    }
+
+    /**
+     * Cập nhật giới hạn trục X/Y theo dữ liệu hiện tại.
+     *
+     * @param numberXaxis trục X của chart
+     * @param numberAxis trục Y của chart
+     * @param openingPrice giá khởi điểm
+     * @param priceSeries series dữ liệu giá đang hiển thị
+     */
+    static void updateAxes(
+        final NumberAxis numberXaxis,
+        final NumberAxis numberAxis,
+        final long openingPrice,
+        final XYChart.Series<Number, Number> priceSeries
+    ) {
+        updateHorizontalAxis(numberXaxis, priceSeries);
+        updateAxis(numberAxis, openingPrice, priceSeries);
     }
 
     /**
@@ -53,15 +74,15 @@ final class AuctionPriceChartConfigurer {
      * @param openingPrice giá khởi điểm
      * @param priceSeries series dữ liệu giá đang hiển thị
      */
-    static void updateAxis(
+    private static void updateAxis(
         final NumberAxis numberAxis,
         final long openingPrice,
-        final XYChart.Series<String, Number> priceSeries
+        final XYChart.Series<Number, Number> priceSeries
     ) {
         double minPrice = Double.MAX_VALUE;
         double maxPrice = 0D;
 
-        for (XYChart.Data<String, Number> data : priceSeries.getData()) {
+        for (XYChart.Data<Number, Number> data : priceSeries.getData()) {
             final Number value = data.getYValue();
             if (value == null) {
                 continue;
@@ -98,6 +119,76 @@ final class AuctionPriceChartConfigurer {
         numberAxis.setMinorTickVisible(false);
         numberAxis.setTickUnit(tickUnit);
         numberAxis.setTickLabelFormatter(createTickLabelFormatter());
+    }
+
+    /**
+     * Cấu hình trục X dùng số thứ tự bid, nhưng hiển thị nhãn thời gian.
+     *
+     * @param numberXaxis trục X của chart
+     * @param priceSeries series dữ liệu giá đang hiển thị
+     */
+    private static void configureHorizontalAxis(
+            final NumberAxis numberXaxis,
+            final XYChart.Series<Number, Number> priceSeries) {
+        numberXaxis.setAutoRanging(false);
+        numberXaxis.setForceZeroInRange(false);
+        numberXaxis.setMinorTickVisible(false);
+        numberXaxis.setTickUnit(1D);
+        numberXaxis.setTickLabelFormatter(createTimeTickLabelFormatter(priceSeries));
+    }
+
+    /**
+     * Cập nhật biên trục X để mỗi lượt bid chiếm một vị trí riêng.
+     *
+     * @param numberXaxis trục X của chart
+     * @param priceSeries series dữ liệu giá đang hiển thị
+     */
+    private static void updateHorizontalAxis(
+            final NumberAxis numberXaxis,
+            final XYChart.Series<Number, Number> priceSeries) {
+        configureHorizontalAxis(numberXaxis, priceSeries);
+
+        final int pointCount = priceSeries.getData().size();
+        numberXaxis.setLowerBound(0D);
+        numberXaxis.setUpperBound(Math.max(2D, pointCount + 1D));
+    }
+
+    /**
+     * Tạo formatter đổi số thứ tự trên trục X thành timestamp của điểm tương ứng.
+     *
+     * @param priceSeries series dữ liệu giá đang hiển thị
+     * @return formatter cho tick label trục X
+     */
+    private static StringConverter<Number> createTimeTickLabelFormatter(
+            final XYChart.Series<Number, Number> priceSeries) {
+        return new StringConverter<>() {
+            @Override
+            public String toString(final Number value) {
+                if (value == null) {
+                    return "";
+                }
+
+                final int bidIndex = (int) Math.round(value.doubleValue());
+                if (Math.abs(value.doubleValue() - bidIndex) > 0.001D || bidIndex <= 0) {
+                    return "";
+                }
+
+                for (XYChart.Data<Number, Number> point : priceSeries.getData()) {
+                    final Number xValue = point.getXValue();
+                    if (xValue != null && xValue.intValue() == bidIndex) {
+                        final Object label = point.getExtraValue();
+                        return label == null ? "" : label.toString();
+                    }
+                }
+
+                return "";
+            }
+
+            @Override
+            public Number fromString(final String value) {
+                return 0;
+            }
+        };
     }
 
     /**

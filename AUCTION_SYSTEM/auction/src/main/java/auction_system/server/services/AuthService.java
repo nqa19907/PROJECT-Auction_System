@@ -205,7 +205,7 @@ public final class AuthService {
         final String roleName) {
 
         if (database.users().existsByUsername(username)) {
-            throw new IllegalArgumentException("Tên đăng nhập đã tồn tại.");
+            throw new IllegalArgumentException("Tên người dùng đã tồn tại.");
         }
 
         if (database.users().existsByEmail(email)) {

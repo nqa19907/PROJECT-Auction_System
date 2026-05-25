@@ -12,7 +12,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -57,8 +56,8 @@ public class AuctionDetailController implements Initializable {
     @FXML private Label auctionTitle;
     @FXML private Label auctionId;
     @FXML private Circle liveDot;
-    @FXML private LineChart<String, Number> bidLineChart;
-    @FXML private CategoryAxis categoryXaxis;
+    @FXML private LineChart<Number, Number> bidLineChart;
+    @FXML private NumberAxis numberXaxis;
     @FXML private NumberAxis numberYaxis;
     @FXML private TableView<BidRow> bidTable;
     @FXML private TableColumn<BidRow, String> colTime;
@@ -72,7 +71,7 @@ public class AuctionDetailController implements Initializable {
 
     // ── ViewModel ────────────────────────────────────────────
     private AuctionViewModel viewModel;
-    private final XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
+    private final XYChart.Series<Number, Number> priceSeries = new XYChart.Series<>();
     private AuctionBidForm bidForm;
     private AuctionRealtimeSubscription realtimeSubscription;
     private AuctionDetailVisuals visuals;
@@ -89,7 +88,8 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
-        AuctionPriceChartConfigurer.updateAxis(
+        AuctionPriceChartConfigurer.updateAxes(
+                numberXaxis,
                 numberYaxis,
                 viewModel.getOpeningPriceValue(),
                 priceSeries
@@ -117,7 +117,8 @@ public class AuctionDetailController implements Initializable {
                 viewModel.loadBidHistory(rows);
 
                 // Sau khi chart có dữ liệu thật, cập nhật lại trục Y theo khoảng giá mới.
-                AuctionPriceChartConfigurer.updateAxis(
+                AuctionPriceChartConfigurer.updateAxes(
+                        numberXaxis,
                         numberYaxis,
                         viewModel.getOpeningPriceValue(),
                         priceSeries
@@ -191,7 +192,7 @@ public class AuctionDetailController implements Initializable {
      * Cấu hình biểu đồ lịch sử giá.
      */
     private void setupChart() {
-        AuctionPriceChartConfigurer.configure(bidLineChart, priceSeries);
+        AuctionPriceChartConfigurer.configure(bidLineChart, numberXaxis, priceSeries);
     }
 
     /**
