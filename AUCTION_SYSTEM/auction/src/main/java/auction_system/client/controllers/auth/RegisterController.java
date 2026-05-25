@@ -37,6 +37,22 @@ public class RegisterController {
     private Label errorLabel;
 
     /**
+     * Chuyển focus sang ô email khi nhấn Enter ở ô tên người dùng.
+     */
+    @FXML
+    private void handleNameEnter() {
+        emailField.requestFocus();
+    }
+
+    /**
+     * Chuyển focus sang ô mật khẩu khi nhấn Enter ở ô email.
+     */
+    @FXML
+    private void handleEmailEnter() {
+        passwordField.requestFocus();
+    }
+
+    /**
      * Xử lý sự kiện đăng ký tài khoản.
      */
     @FXML

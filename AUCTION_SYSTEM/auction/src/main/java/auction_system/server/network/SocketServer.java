@@ -246,8 +246,8 @@ public class SocketServer {
             }
         }
         final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
         final AuthService authService = new AuthService(database);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 

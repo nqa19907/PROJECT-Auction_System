@@ -28,6 +28,8 @@ public class NetworkClient {
     private BufferedReader in;
     private Thread listeningThread;
     private volatile boolean isRunning = false;
+    private String lastHost;
+    private int lastPort;
     
     // Callback để đẩy dữ liệu cho Controller (Giao diện)
     private final Map<String, CopyOnWriteArrayList<Consumer<String>>>
@@ -71,17 +73,37 @@ public class NetworkClient {
     }
 
     /**
+     * Gỡ một hàm xử lý khỏi loại phản hồi đã đăng ký.
+     *
+     * @param command tên phản hồi từ server
+     * @param handler hàm xử lý cần gỡ
+     */
+    public void unregisterHandler(String command, Consumer<String> handler) {
+        final CopyOnWriteArrayList<Consumer<String>> handlers = messageHandlers.get(command);
+        if (handlers == null) {
+            return;
+        }
+
+        handlers.remove(handler);
+        if (handlers.isEmpty()) {
+            messageHandlers.remove(command, handlers);
+        }
+    }
+
+    /**
      * Mở kết nối tới Server.
      *
      * @param host Địa chỉ máy chủ.
      * @param port Cổng kết nối.
      * @throws IOException Nếu có lỗi xảy ra khi kết nối.
      */
-    public void connect(String host, int port) throws IOException {
-        if (socket != null && !socket.isClosed()) {
+    public synchronized void connect(String host, int port) throws IOException {
+        if (isConnected()) {
             return; // Đã kết nối
         }
 
+        lastHost = host;
+        lastPort = port;
         socket = new Socket(host, port);
         out = new PrintWriter(socket.getOutputStream(), true, StandardCharsets.UTF_8);
         in = new BufferedReader(
@@ -99,13 +121,52 @@ public class NetworkClient {
     }
 
     /**
-     * Gửi một lệnh (Command) lên Server.
+     * Kiem tra socket hien tai con dung duoc hay khong.
      *
-     * @param command Chuỗi lệnh cần gửi.
-     * @return true nếu gửi thành công, false nếu chưa kết nối hoặc có lỗi.
+     * @return true neu client dang co ket noi mo toi server
+     */
+    public boolean isConnected() {
+        return socket != null
+                && socket.isConnected()
+                && !socket.isClosed()
+                && out != null
+                && in != null;
+    }
+
+    /**
+     * Dam bao client co ket noi truoc khi gui lenh nghiep vu.
+     *
+     * <p>Neu socket bi dong sau logout hoac do loi mang tam thoi, client se thu ket noi
+     * lai bang host/port gan nhat da dung khi ung dung khoi dong.
+     *
+     * @return true neu da co hoac da khoi phuc duoc ket noi
+     */
+    public synchronized boolean ensureConnected() {
+        if (isConnected()) {
+            return true;
+        }
+
+        if (lastHost == null || lastHost.isBlank()) {
+            return false;
+        }
+
+        try {
+            connect(lastHost, lastPort);
+            return true;
+        } catch (IOException exception) {
+            LOGGER.warn("Khong the ket noi lai toi server: {}", exception.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Gui mot lenh len server.
+     *
+     * @param command chuoi lenh can gui
+     * @return true neu gui thanh cong, false neu chua ket noi hoac co loi
      */
     public boolean sendCommand(String command) {
-        if (out != null && !socket.isClosed()) {
+        if (isConnected()) {
             out.println(command);
             LOGGER.info("Gửi tới Server: " + command);
             return true;

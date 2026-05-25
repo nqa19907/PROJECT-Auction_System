@@ -81,8 +81,8 @@ public class AuctionViewModel {
         this.currentPrice.set(context.currentPrice());
 
         // Điểm đầu tiên neo biểu đồ theo giá hiện tại của phiên khi mở màn chi tiết.
-        String timeStr = LocalTime.now().format(timeFmt);
-        chartData.add(new XYChart.Data<>(timeStr, context.currentPrice()));
+        String initialTimeStr = LocalTime.now().format(timeFmt);
+        chartData.add(new XYChart.Data<>(initialTimeStr, context.currentPrice()));
     }
 
     /**
@@ -93,6 +93,22 @@ public class AuctionViewModel {
      * @param isCurrentUser Liệu có phải người dùng hiện tại đặt không.
      */
     public void processNewBid(long amount, String bidderName, boolean isCurrentUser) {
+        processRealtimeBid(amount, bidderName, LocalTime.now().format(timeFmt), isCurrentUser);
+    }
+
+    /**
+     * Xử lý bid realtime do server đẩy về kèm thời gian phát sinh thật.
+     *
+     * @param amount số tiền đặt giá mới
+     * @param bidderName tên người đặt giá
+     * @param timeStr thời gian đặt giá đã format hoặc lấy từ server
+     * @param isCurrentUser true nếu bid thuộc người dùng hiện tại
+     */
+    public void processRealtimeBid(
+            long amount,
+            String bidderName,
+            String timeStr,
+            boolean isCurrentUser) {
         if (amount <= currentPrice.get()) {
             // Logic xử lý bid không hợp lệ có thể thêm ở đây
             return;
@@ -105,10 +121,7 @@ public class AuctionViewModel {
         bidders.add(bidderName);
         participantCount.set(bidders.size());
 
-        String timeStr = LocalTime.now().format(timeFmt);
-        String status = isCurrentUser ? "Dẫn đầu" : "Hợp lệ";
-
-        bidHistory.add(0, new BidRow(timeStr, bidderName, amount, change, status));
+        bidHistory.add(0, new BidRow(timeStr, bidderName, amount, change, VALID_BID_STATUS));
         chartData.add(new XYChart.Data<>(timeStr, amount));
 
         priceChangeText.set("+" + CurrencyFormatter.formatVnd(change) + " so với trước");

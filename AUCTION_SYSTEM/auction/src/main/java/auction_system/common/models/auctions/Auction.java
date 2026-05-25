@@ -24,6 +24,7 @@ public class Auction extends Entity {
     private LocalDateTime endTime;
     private AuctionStatus status;
     private String sellerId;
+    private boolean sellerPaid;
     // Dùng transient để bỏ qua thuộc tính, không
     // lưu xuống file và không gửi qua mạng.
     private transient List<AuctionObserver> observers;
@@ -49,6 +50,7 @@ public class Auction extends Entity {
         this.bids = new ArrayList<>();
         this.observers = new CopyOnWriteArrayList<>();
         this.status = AuctionStatus.OPEN;
+        this.sellerPaid = false;
     }
 
     /**
@@ -132,9 +134,18 @@ public class Auction extends Entity {
         double currentPrice = (currentHighestBid != null)
                 ? currentHighestBid.getAmount()
                 : item.getStartPrice();
-        String message = Protocol.Response.UPDATE_PRICE.name() 
-                + Protocol.SEPARATOR + this.getId() 
-                + Protocol.SEPARATOR + currentPrice;
+        String bidderName = "";
+        String bidTime = "";
+        if (currentHighestBid != null && currentHighestBid.getParticipant() != null) {
+            bidderName = currentHighestBid.getParticipant().getUsername();
+            bidTime = currentHighestBid.getTimestamp().toString();
+        }
+
+        String message = Protocol.Response.UPDATE_PRICE.name()
+                + Protocol.SEPARATOR + this.getId()
+                + Protocol.SEPARATOR + currentPrice
+                + Protocol.SEPARATOR + bidderName
+                + Protocol.SEPARATOR + bidTime;
 
         for (AuctionObserver observer : observers) {
             observer.update(message);
@@ -174,9 +185,11 @@ public class Auction extends Entity {
             setStatus(AuctionStatus.FINISHED);
             Participant winner = calculateWinner();
             String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";
-            String message = Protocol.Response.AUCTION_ENDED.name() 
-                    + Protocol.SEPARATOR + this.getId() 
-                    + Protocol.SEPARATOR + winnerUsername;
+            String itemName = (item != null) ? item.getItemName() : "";
+            String message = Protocol.Response.AUCTION_ENDED.name()
+                    + Protocol.SEPARATOR + this.getId()
+                    + Protocol.SEPARATOR + winnerUsername
+                    + Protocol.SEPARATOR + itemName;
             notifyObservers(message);
         }
     }
@@ -245,6 +258,14 @@ public class Auction extends Entity {
 
     public String getSellerId() {
         return sellerId;
+    }
+
+    public boolean isSellerPaid() {
+        return sellerPaid;
+    }
+
+    public void setSellerPaid(final boolean sellerPaid) {
+        this.sellerPaid = sellerPaid;
     }
 
     @Override

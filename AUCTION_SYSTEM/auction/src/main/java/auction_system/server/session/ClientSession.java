@@ -45,6 +45,15 @@ public class ClientSession {
     }
 
     /**
+     * Lay observer gan voi ket noi client hien tai.
+     *
+     * @return observer dung de server day thong bao realtime
+     */
+    public AuctionObserver getObserver() {
+        return observer;
+    }
+
+    /**
      * Thêm một phiên đấu giá vào danh sách theo dõi của client.
      *
      * @param auctionId ID của phiên đấu giá cần theo dõi.

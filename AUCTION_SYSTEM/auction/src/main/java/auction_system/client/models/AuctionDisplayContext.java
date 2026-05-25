@@ -16,6 +16,8 @@ public record AuctionDisplayContext(
         long openingPrice,
         long currentPrice,
         String status,
-        LocalDateTime endTime
+        LocalDateTime startTime,
+        LocalDateTime endTime,
+        String sellerId
 ) {
 }

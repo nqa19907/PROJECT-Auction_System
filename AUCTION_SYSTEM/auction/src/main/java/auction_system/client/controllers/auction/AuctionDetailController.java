@@ -2,13 +2,20 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
+import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuctionService;
+import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.CurrencyFormatter;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
+import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
@@ -39,6 +46,12 @@ public class AuctionDetailController implements Initializable {
     /** Logger của controller. */
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AuctionDetailController.class);
+
+    private static final int MIN_UPDATE_PRICE_PARTS = 3;
+    private static final int IDX_UPDATE_AUCTION_ID = 1;
+    private static final int IDX_UPDATE_AMOUNT = 2;
+    private static final int IDX_UPDATE_BIDDER = 3;
+    private static final int IDX_UPDATE_TIME = 4;
 
     // ── fx:id fields ─────────────────────────────────────────
 
@@ -75,6 +88,15 @@ public class AuctionDetailController implements Initializable {
     /** Hiệu ứng nhấp nháy cho chấm trạng thái trực tuyến. */
     private LiveIndicatorAnimation liveIndicatorAnimation;
 
+    /** Handler nhận cập nhật giá realtime từ socket. */
+    private final Consumer<String> updatePriceHandler = this::handleRealtimePriceUpdate;
+
+    /** Mã phiên đang được màn hình này theo dõi. */
+    private String activeAuctionId;
+
+    /** True nếu user hiện tại là người bán và chỉ được quan sát. */
+    private boolean sellerObserveOnly;
+
     // ── Tiện ích giao diện realtime ─────────────────────────
 
     /**
@@ -89,13 +111,17 @@ public class AuctionDetailController implements Initializable {
         }
 
         viewModel.init(context);
+        activeAuctionId = context.auctionId();
+        AuctionService.getInstance().joinAuction(activeAuctionId);
+        applySellerObserveOnlyPolicy(context);
         AuctionPriceChartConfigurer.updateAxis(
                 numberYaxis,
                 viewModel.getOpeningPriceValue(),
                 priceSeries
         );
-        startCountdownTimer(context.endTime(), context.status());
+        startCountdownTimer(context.startTime(), context.endTime(), context.status());
         loadBidHistory(context.auctionId());
+        applySellerObserveOnlyPolicy(context);
     }
 
     /**
@@ -121,6 +147,25 @@ public class AuctionDetailController implements Initializable {
                 );
             });
         });
+    }
+
+    /**
+     * Nếu người đang đăng nhập là người bán của phiên thì chỉ cho quan sát.
+     *
+     * @param context dữ liệu phiên đang mở
+     */
+    private void applySellerObserveOnlyPolicy(final AuctionDisplayContext context) {
+        final User currentUser = UserSessionService.getInstance().getCurrentUser();
+        if (currentUser == null || context.sellerId() == null) {
+            return;
+        }
+
+        if (context.sellerId().equals(currentUser.getId())) {
+            sellerObserveOnly = true;
+            placeBidBtn.setDisable(true);
+            minBidHint.textProperty().unbind();
+            minBidHint.setText("Bạn là người bán nên chỉ có thể quan sát phiên này.");
+        }
     }
 
     /**
@@ -209,14 +254,66 @@ public class AuctionDetailController implements Initializable {
     /**
      * Khởi động đồng hồ dựa trên thời gian kết thúc thật từ server.
      *
+     * @param startTime thời gian bắt đầu phiên đấu giá
      * @param endTime thời gian kết thúc phiên đấu giá
      * @param status trạng thái hiện tại của phiên đấu giá
      */
     private void startCountdownTimer(
-            final java.time.LocalDateTime endTime,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime,
             final String status) {
         if (countdownTimer != null) {
             countdownTimer.stop();
+        }
+
+        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
+            markAuctionFinishedOnUi();
+            return;
+        }
+
+        if ("OPEN".equals(status) && LocalDateTime.now().isBefore(startTime)) {
+            markAuctionWaitingOnUi();
+            countdownTimer = new AuctionCountdownTimer(
+                    timerLabel,
+                    startTime,
+                    () -> markAuctionRunningOnUi(endTime));
+            countdownTimer.start();
+            return;
+        }
+
+        markAuctionRunningOnUi(endTime);
+    }
+
+    /**
+     * Cập nhật giao diện khi phiên chưa tới thời điểm bắt đầu.
+     */
+    private void markAuctionWaitingOnUi() {
+        placeBidBtn.setDisable(true);
+        minBidHint.textProperty().unbind();
+        minBidHint.setText("Phiên đấu giá chưa bắt đầu.");
+    }
+
+    /**
+     * Cập nhật giao diện khi phiên đang chạy.
+     * Đồng hồ đếm ngược đến thời điểm kết thúc.
+     *
+     * @param endTime thời gian kết thúc phiên đấu giá
+     */
+    private void markAuctionRunningOnUi(final LocalDateTime endTime) {
+        if (countdownTimer != null) {
+            countdownTimer.stop();
+        }
+
+        placeBidBtn.setDisable(sellerObserveOnly);
+        minBidHint.textProperty().unbind();
+        if (sellerObserveOnly) {
+            minBidHint.setText("Bạn là người bán nên chỉ có thể quan sát phiên này.");
+        } else {
+            minBidHint.textProperty().bind(
+                    Bindings.concat(
+                            "Giá phải lớn hơn: ",
+                            viewModel.currentPriceFormattedProperty())
+            );
         }
 
         countdownTimer = new AuctionCountdownTimer(
@@ -224,10 +321,6 @@ public class AuctionDetailController implements Initializable {
                 endTime,
                 this::markAuctionFinishedOnUi);
         countdownTimer.start();
-
-        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
-            markAuctionFinishedOnUi();
-        }
     }
 
     /**
@@ -292,13 +385,6 @@ public class AuctionDetailController implements Initializable {
                     LOGGER.info("Đặt giá thành công với số tiền: {}", formattedBidAmount);
                     LOGGER.info("Số dư mới sau khi đặt giá: {}", formattedBalance);
                     
-                    // Tạm thời tự cập nhật giao diện ngay khi nhận phản hồi thành công từ Server
-                    viewModel.processNewBid(amount, "Bạn", true);
-                    AuctionPriceChartConfigurer.updateAxis(
-                            numberYaxis, 
-                            viewModel.getOpeningPriceValue(), 
-                            priceSeries
-                    );
                 } else {
                     // Khi thất bại, hiển thị lỗi ngay dưới ô nhập thay vì Alert
                     lblError.setText(message);
@@ -372,6 +458,11 @@ public class AuctionDetailController implements Initializable {
         if (liveIndicatorAnimation != null) {
             liveIndicatorAnimation.stop();
         }
+
+        NetworkClient.getInstance().unregisterHandler(
+                Protocol.Response.UPDATE_PRICE.name(),
+                updatePriceHandler);
+        AuctionService.getInstance().leaveAuction(activeAuctionId);
     }
 
     /**
@@ -389,6 +480,61 @@ public class AuctionDetailController implements Initializable {
      * Đăng ký socket handler để nhận dữ liệu realtime.
      */
     private void setupNetworkHandlers() {
-        // TODO: đăng ký handler socket để cập nhật bảng/biểu đồ/metric.
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_PRICE.name(),
+                updatePriceHandler);
+    }
+
+    /**
+     * Cập nhật giá, bảng bid history và biểu đồ ngay khi server broadcast bid mới.
+     *
+     * @param response thông điệp UPDATE_PRICE từ server
+     */
+    private void handleRealtimePriceUpdate(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < MIN_UPDATE_PRICE_PARTS
+                || activeAuctionId == null
+                || !activeAuctionId.equals(parts[IDX_UPDATE_AUCTION_ID])) {
+            return;
+        }
+
+        try {
+            final long amount = (long) Double.parseDouble(parts[IDX_UPDATE_AMOUNT]);
+            final String bidderName = parts.length > IDX_UPDATE_BIDDER
+                    ? parts[IDX_UPDATE_BIDDER]
+                    : "";
+            final String bidTime = parts.length > IDX_UPDATE_TIME
+                    ? formatBidTime(parts[IDX_UPDATE_TIME])
+                    : DateTimeFormatter.ofPattern("HH:mm:ss").format(java.time.LocalTime.now());
+            final User currentUser = UserSessionService.getInstance().getCurrentUser();
+            final boolean isCurrentUser = currentUser != null
+                    && bidderName.equals(currentUser.getUsername());
+
+            viewModel.processRealtimeBid(amount, bidderName, bidTime, isCurrentUser);
+            AuctionPriceChartConfigurer.updateAxis(
+                    numberYaxis,
+                    viewModel.getOpeningPriceValue(),
+                    priceSeries);
+        } catch (NumberFormatException exception) {
+            LOGGER.warn("Không thể đọc giá realtime: {}", response);
+        }
+    }
+
+    /**
+     * Định dạng timestamp server gửi về thành giờ/phút/giây cho bảng và chart.
+     *
+     * @param rawTime timestamp ISO từ server
+     * @return chuỗi thời gian ngắn dùng cho UI
+     */
+    private String formatBidTime(final String rawTime) {
+        if (rawTime == null || rawTime.isBlank()) {
+            return DateTimeFormatter.ofPattern("HH:mm:ss").format(java.time.LocalTime.now());
+        }
+
+        try {
+            return LocalDateTime.parse(rawTime).format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        } catch (RuntimeException exception) {
+            return rawTime;
+        }
     }
 }

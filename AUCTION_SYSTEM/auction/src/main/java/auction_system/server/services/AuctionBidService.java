@@ -6,6 +6,7 @@ import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.util.Comparator;
@@ -29,13 +30,29 @@ public class AuctionBidService {
     /** Database serialization dùng chung phía server. */
     private final SerializedDatabase database;
 
+    /** Manager dùng để đẩy các thông báo realtime riêng cho từng user. */
+    private final AuctionManager auctionManager;
+
     /**
      * Khởi tạo service đặt giá.
      *
      * @param database database serialization của server
      */
     public AuctionBidService(final SerializedDatabase database) {
+        this(database, null);
+    }
+
+    /**
+     * Khởi tạo service đặt giá kèm manager realtime.
+     *
+     * @param database database serialization của server
+     * @param auctionManager manager dùng để gửi thông báo realtime riêng cho user
+     */
+    public AuctionBidService(
+            final SerializedDatabase database,
+            final AuctionManager auctionManager) {
         this.database = Objects.requireNonNull(database, "database");
+        this.auctionManager = auctionManager;
     }
 
     /**
@@ -65,18 +82,20 @@ public class AuctionBidService {
             Participant bidder = (Participant) currentUser;
             BidTransaction previousHighestBid = auction.getCurrentHighestBid();
 
+            validateNotSellerBidder(auction, bidder);
             validateAvailableBalance(bidder, previousHighestBid, amount);
 
             BidTransaction bidTransaction = new BidTransaction(bidder, amount, auction);
             auction.placeBid(bidTransaction);
 
-            refundPreviousHighestBid(previousHighestBid);
-            debitBidder(bidder, amount);
+            refundPreviousHighestBid(previousHighestBid, bidder);
+            debitBidder(bidder, calculateDebitAmount(bidder, previousHighestBid, amount));
 
             saveAffectedUsers(bidder, previousHighestBid);
             database.bidTransactions().save(bidTransaction);
             database.auctions().save(auction);
             database.flushAll();
+            notifyBalanceChanges(bidder, previousHighestBid);
 
             return bidTransaction;
         });
@@ -90,6 +109,27 @@ public class AuctionBidService {
                         + auctionId);
 
         return savedBid;
+    }
+
+    /**
+     * Chặn người bán tự đặt giá sản phẩm của chính mình.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     * @param bidder người đang gửi lệnh đặt giá
+     */
+    private void validateNotSellerBidder(final Auction auction, final Participant bidder) {
+        final String sellerIdFromAuction = auction.getParticipant() != null
+                ? auction.getParticipant().getId()
+                : null;
+        final String sellerIdFromItem = auction.getItem() != null
+                ? auction.getItem().getSellerId()
+                : null;
+
+        if (bidder.getId().equals(sellerIdFromAuction)
+                || bidder.getId().equals(sellerIdFromItem)) {
+            throw new InvalidBidException(
+                    "Người bán không được đấu giá sản phẩm của chính mình.");
+        }
     }
 
     /**
@@ -151,15 +191,44 @@ public class AuctionBidService {
      * Hoàn tiền cho người đang dẫn đầu cũ khi họ bị lượt đặt giá mới vượt qua.
      *
      * @param previousHighestBid lượt đặt giá đang dẫn đầu trước đó
+     * @param bidder người đang đặt giá mới
      */
-    private void refundPreviousHighestBid(final BidTransaction previousHighestBid) {
+    private void refundPreviousHighestBid(
+            final BidTransaction previousHighestBid,
+            final Participant bidder) {
         if (previousHighestBid == null || previousHighestBid.getParticipant() == null) {
             return;
         }
 
         Participant previousBidder = previousHighestBid.getParticipant();
+        if (previousBidder.getId().equals(bidder.getId())) {
+            return;
+        }
+
         previousBidder.setBalance(
                 previousBidder.getBalance() + previousHighestBid.getAmount());
+    }
+
+    /**
+     * Tính số tiền cần giữ thêm từ ví của bidder cho lượt đặt giá mới.
+     *
+     * <p>Nếu bidder đang dẫn đầu và chỉ nâng giá của chính họ, hệ thống chỉ giữ
+     * thêm phần chênh lệch thay vì trừ lại toàn bộ mức giá mới.
+     *
+     * @param bidder người đặt giá mới
+     * @param previousHighestBid lượt đặt giá đang dẫn đầu trước đó
+     * @param amount mức giá mới
+     * @return số tiền cần trừ thêm khỏi ví
+     */
+    private double calculateDebitAmount(
+            final Participant bidder,
+            final BidTransaction previousHighestBid,
+            final double amount) {
+        if (isSameBidder(bidder, previousHighestBid)) {
+            return amount - previousHighestBid.getAmount();
+        }
+
+        return amount;
     }
 
     /**
@@ -191,6 +260,31 @@ public class AuctionBidService {
         Participant previousBidder = previousHighestBid.getParticipant();
         if (!previousBidder.getId().equals(bidder.getId())) {
             database.users().save(previousBidder);
+        }
+    }
+
+    /**
+     * Đẩy số dư mới tới các client online sau khi server đã ghi database.
+     *
+     * @param bidder người vừa đặt giá mới
+     * @param previousHighestBid lượt đặt giá dẫn đầu cũ, nếu có
+     */
+    private void notifyBalanceChanges(
+            final Participant bidder,
+            final BidTransaction previousHighestBid) {
+        if (auctionManager == null) {
+            return;
+        }
+
+        auctionManager.notifyBalanceUpdated(bidder);
+
+        if (previousHighestBid == null || previousHighestBid.getParticipant() == null) {
+            return;
+        }
+
+        final Participant previousBidder = previousHighestBid.getParticipant();
+        if (!previousBidder.getId().equals(bidder.getId())) {
+            auctionManager.notifyBalanceUpdated(previousBidder);
         }
     }
 
@@ -236,6 +330,10 @@ public class AuctionBidService {
         if (oldStatus != auction.getStatus()) {
             database.auctions().save(auction);
             database.flushAll();
+            if (auctionManager != null && auction.getStatus() == AuctionStatus.FINISHED) {
+                auctionManager.settleFinishedAuction(auction);
+                auctionManager.notifyAuctionResult(auction);
+            }
         }
     }
 

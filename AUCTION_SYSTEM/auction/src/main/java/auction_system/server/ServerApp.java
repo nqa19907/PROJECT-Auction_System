@@ -47,7 +47,7 @@ public class ServerApp {
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         if (!authService.isEmailTaken("qa@gmail.com")) {

@@ -5,6 +5,8 @@ import auction_system.common.network.Protocol;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,7 @@ public class AuctionService {
     private static final int FIRST_AUCTION_RECORD_INDEX = 1;
 
     // Format tối thiểu: auctionId|itemName|currentPrice|status|endTime.
-    private static final int MIN_AUCTION_LIST_PARTS = 5;
+    private static final int MIN_AUCTION_LIST_PARTS = 6;
 
     // BID_FAIL|message.
     private static final int MIN_BID_FAIL_PARTS = 2;
@@ -37,6 +39,16 @@ public class AuctionService {
     // BID_HISTORY|auctionId|count~time|bidder|amount~...
     private static final int FIRST_BID_HISTORY_RECORD_INDEX = 1;
     private static final int MIN_BID_HISTORY_PARTS = 3;
+    private static final int MIN_AUCTION_ENDED_PARTS = 3;
+    private static final int IDX_AUCTION_WINNER_NAME = 2;
+    private static final int IDX_AUCTION_ENDED_ITEM_NAME = 3;
+    private static final int MIN_AUCTION_WINNER_PARTS = 3;
+    private static final int IDX_AUCTION_WINNER_ITEM_NAME = 2;
+    private static final int MIN_AUCTION_LOST_PARTS = 4;
+    private static final int IDX_AUCTION_LOST_ITEM_NAME = 2;
+    private static final int IDX_AUCTION_LOST_WINNER_NAME = 3;
+    private static final int MIN_BALANCE_UPDATED_PARTS = 2;
+    private static final int IDX_BALANCE_UPDATED_VALUE = 1;
 
     // =========================================================================
     // PENDING CALLBACKS
@@ -72,10 +84,54 @@ public class AuctionService {
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
         );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUCTION_ENDED.name(), this::handleAuctionEndedResponse
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUCTION_WINNER.name(), this::handleAuctionWinnerResponse
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUCTION_LOST.name(), this::handleAuctionLostResponse
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.BALANCE_UPDATED.name(), this::handleBalanceUpdatedResponse
+        );
     }
 
     public static AuctionService getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Đăng ký client hiện tại theo dõi realtime một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần theo dõi
+     */
+    public void joinAuction(final String auctionId) {
+        if (auctionId == null || auctionId.isBlank()) {
+            return;
+        }
+
+        NetworkClient.getInstance().sendCommand(
+                Protocol.Command.JOIN_AUCTION.name()
+                        + Protocol.SEPARATOR
+                        + auctionId);
+    }
+
+    /**
+     * Hủy đăng ký theo dõi realtime một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần rời khỏi
+     */
+    public void leaveAuction(final String auctionId) {
+        if (auctionId == null || auctionId.isBlank()) {
+            return;
+        }
+
+        NetworkClient.getInstance().sendCommand(
+                Protocol.Command.LEAVE_AUCTION.name()
+                        + Protocol.SEPARATOR
+                        + auctionId);
     }
 
     // =========================================================================
@@ -314,6 +370,91 @@ public class AuctionService {
 
         currentBidHistoryCallback.onResult(bidHistoryRows);
         currentBidHistoryCallback = null;
+    }
+
+    /**
+     * Xu ly thong bao phien dau gia ket thuc cho cac client dang xem phien.
+     *
+     * @param response thong bao AUCTION_ENDED tu server
+     */
+    private void handleAuctionEndedResponse(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String winnerName = parts.length >= MIN_AUCTION_ENDED_PARTS
+                ? parts[IDX_AUCTION_WINNER_NAME]
+                : "NONE";
+
+        final String itemName = parts.length > IDX_AUCTION_ENDED_ITEM_NAME
+                ? parts[IDX_AUCTION_ENDED_ITEM_NAME]
+                : "";
+
+        showInfo(
+                "Kết thúc đấu giá",
+                "người chiến thắng vật phẩm " + itemName + " là " + winnerName);
+    }
+
+    /**
+     * Xu ly thong bao rieng gui cho nguoi thang phien dau gia.
+     *
+     * @param response thong bao AUCTION_WINNER tu server
+     */
+    private void handleAuctionWinnerResponse(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String itemName = parts.length >= MIN_AUCTION_WINNER_PARTS
+                ? parts[IDX_AUCTION_WINNER_ITEM_NAME]
+                : "";
+
+        showInfo("Thông báo", "bạn đã thắng vật phẩm " + itemName);
+    }
+
+    /**
+     * Xử lý thông báo riêng gửi cho người thua phiên đấu giá.
+     *
+     * @param response thông báo AUCTION_LOST từ server
+     */
+    private void handleAuctionLostResponse(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String itemName = parts.length >= MIN_AUCTION_LOST_PARTS
+                ? parts[IDX_AUCTION_LOST_ITEM_NAME]
+                : "";
+        final String winnerName = parts.length >= MIN_AUCTION_LOST_PARTS
+                ? parts[IDX_AUCTION_LOST_WINNER_NAME]
+                : "NONE";
+
+        showInfo(
+                "Kết thúc đấu giá",
+                "người chiến thắng vật phẩm " + itemName + " là " + winnerName);
+    }
+
+    /**
+     * Cập nhật số dư realtime khi server hoàn/trừ tiền do bid.
+     *
+     * @param response phản hồi BALANCE_UPDATED từ server
+     */
+    private void handleBalanceUpdatedResponse(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < MIN_BALANCE_UPDATED_PARTS) {
+            return;
+        }
+
+        try {
+            UserSessionService.getInstance().updateCurrentUserBalance(
+                    Double.parseDouble(parts[IDX_BALANCE_UPDATED_VALUE]));
+        } catch (NumberFormatException exception) {
+            LOGGER.warn("Không thể đọc số dư realtime: {}", parts[IDX_BALANCE_UPDATED_VALUE]);
+        }
+    }
+
+    /**
+     * Hien pop up thong bao don gian tren client.
+     *
+     * @param title tieu de pop up
+     * @param content noi dung pop up
+     */
+    private void showInfo(final String title, final String content) {
+        final Alert alert = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.showAndWait();
     }
 
     // =========================================================================

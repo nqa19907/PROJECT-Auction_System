@@ -63,8 +63,12 @@ public final class Protocol {
 
         // Broadcast Updates
         UPDATE_PRICE,
+        AUCTION_CREATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
+        AUCTION_WINNER,
+        AUCTION_LOST,
+        BALANCE_UPDATED,
 
         // Admin responses
         ADMIN_CANCEL_AUCTION_OK,

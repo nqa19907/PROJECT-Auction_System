@@ -66,7 +66,7 @@ public class LoginCommand implements Command {
 
             session.setCurrentUser(user);
             user.setOnline(true);
-            auctionManager.userLoggedIn(user);
+            auctionManager.userLoggedIn(user, session.getObserver());
 
             LOGGER.info("Đăng nhập thành công: {} [{}]", email, user.getRoleName());
             return buildSuccessResponse(user);
