@@ -5,6 +5,7 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -33,8 +34,8 @@ import org.slf4j.LoggerFactory;
  * REGISTER|username|email|password|role   (role: BIDDER / SELLER)
  * LIST_AUCTIONS
  * GET_AUCTION|auctionId
- * JOIN_AUCTION|auctionId
- * LEAVE_AUCTION|auctionId
+ * WATCH_AUCTION|auctionId
+ * UNWATCH_AUCTION|auctionId
  * PLACE_BID|auctionId|amount
  * DEPOSIT|amount
  * LOGOUT
@@ -49,9 +50,9 @@ import org.slf4j.LoggerFactory;
  *   AUCTION_LIST|n   (sau đó n dòng:
  *       auctionId|itemName|currentPrice|status|endTime|itemType|startPrice)
  *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
- *   JOIN_OK|auctionId
- *   JOIN_FAIL|message
- *   LEAVE_OK|auctionId
+ *   WATCH_OK|auctionId
+ *   WATCH_FAIL|message
+ *   UNWATCH_OK|auctionId
  *   BID_OK|auctionId|amount|newBalance
  *   BID_FAIL|message
  *   DEPOSIT_OK|balance
@@ -60,7 +61,7 @@ import org.slf4j.LoggerFactory;
  *   ERROR|message
  * </pre>
  *
- * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
+ * <p>Broadcast server tự push khi có sự kiện (đến các client đang xem phiên):
  * * <pre>
  * UPDATE_PRICE|auctionId|newPrice
  * AUCTION_STARTED|auctionId
@@ -87,13 +88,15 @@ public class SocketServer {
      * @param authService       service xác thực dùng chung của server
      * @param auctionManager    manager đấu giá dùng chung của server
      * @param auctionBidService service đặt giá dùng chung của server
+     * @param participantItemService service xử lý item người dùng
      * @return instance duy nhất của {@link SocketServer}
      */
     public static SocketServer getInstance(
             final int port,
             final AuthService authService,
             final AuctionManager auctionManager,
-            final AuctionBidService auctionBidService) {
+            final AuctionBidService auctionBidService,
+            final ParticipantItemService participantItemService) {
         if (instance == null) {
             synchronized (SocketServer.class) {
                 if (instance == null) {
@@ -101,7 +104,8 @@ public class SocketServer {
                             port,
                             auctionManager,
                             authService,
-                            auctionBidService);
+                            auctionBidService,
+                            participantItemService);
                 }
             }
         }
@@ -113,6 +117,7 @@ public class SocketServer {
     private final int port;
     private volatile boolean running = false;
     private ServerSocket serverSocket;
+    final ParticipantItemService participantItemService;
     private final ExecutorService threadPool;
     private final AuctionBidService auctionBidService;
 
@@ -120,12 +125,14 @@ public class SocketServer {
             final int port,
             final AuctionManager auctionManager,
             final AuthService authService,
-            final AuctionBidService auctionBidService) {
+            final AuctionBidService auctionBidService,
+            final ParticipantItemService participantItemService) {
         this.port = port;
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
         this.authService = Objects.requireNonNull(authService, "authService");
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        this.participantItemService = participantItemService;
     }
 
     // Lifecycle
@@ -164,7 +171,8 @@ public class SocketServer {
                         clientSocket,
                         auctionManager,
                         authService,
-                        auctionBidService));
+                        auctionBidService,
+                        participantItemService));
 
             } catch (IOException e) {
                 if (running) {
@@ -238,15 +246,17 @@ public class SocketServer {
             }
         }
         final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
         final AuthService authService = new AuthService(database);
+        final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         final SocketServer socketServer = SocketServer.getInstance(
                 port,
                 authService,
                 auctionManager,
-                auctionBidService);
+                auctionBidService,
+                participantItemService);
 
         socketServer.start();
     }

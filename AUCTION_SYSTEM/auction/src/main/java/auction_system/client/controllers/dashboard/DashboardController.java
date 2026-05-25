@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DashboardController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
+    private static final double loginWindowWidth = 900.0;
+    private static final double loginWindowHeight = 700.0;
 
     @FXML
     private Button btnSignOut;
@@ -39,44 +41,51 @@ public class DashboardController {
     /**
      * Khởi tạo màn hình Dashboard.
      *
-     * <p>Mặc định phóng to cửa sổ và nạp danh sách sản phẩm.
+     * <p>Mặc định phóng to cửa sổ, nạp danh sách sản phẩm và áp dụng policy theo role.
      */
     @FXML
     public void initialize() {
-        Platform.runLater(() -> {
-            Stage stage = (Stage) contentArea.getScene().getWindow();
-            if (stage != null) {
-                stage.setMaximized(true);
-            }
-            handleShowItems();
-        });
-
-        if (sidebarController != null) {
-            setupSidebarCallbacks();
-            applySidebarPolicyByRole();
-        }
-
+        Platform.runLater(this::maximizeAndLoadDefaultContent);
+        setupSidebarActions();
         setupUserProfile();
     }
 
     /**
-     * Gắn callback điều hướng cho Sidebar.
+     * Phóng to cửa sổ và nạp danh sách sản phẩm mặc định.
      */
-    private void setupSidebarCallbacks() {
+    private void maximizeAndLoadDefaultContent() {
+        final Stage stage = (Stage) contentArea.getScene().getWindow();
+
+        if (stage != null) {
+            stage.setMaximized(true);
+        }
+
+        handleShowItems();
+    }
+
+    /**
+     * Gắn callback điều hướng và policy hiển thị cho Sidebar.
+     */
+    private void setupSidebarActions() {
+        if (sidebarController == null) {
+            return;
+        }
+
         sidebarController.setOnCategorySelected(this::loadItemList);
         sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
         sidebarController.setOnAdminSelected(this::loadAdminView);
+        applySidebarPolicyByRole();
     }
 
     /**
      * Áp dụng chính sách hiển thị Sidebar theo vai trò user hiện tại.
      *
-     * <p>Lưu ý: đây là kiểm soát giao diện (client-side).
-     * Quyền nghiệp vụ vẫn cần kiểm tra ở server-side.
+     * <p>Đây chỉ là kiểm soát giao diện phía client. Quyền nghiệp vụ vẫn phải
+     * được kiểm tra ở server.
      */
     private void applySidebarPolicyByRole() {
-        User currentUser = AuthService.getInstance().getCurrentUser();
-        String roleName = currentUser != null ? currentUser.getRoleName() : null;
+        final User currentUser = AuthService.getInstance().getCurrentUser();
+        final String roleName = currentUser != null ? currentUser.getRoleName() : null;
         sidebarController.applyPolicy(RoleUiPolicy.sidebarItemsForRole(roleName));
     }
 
@@ -84,30 +93,35 @@ public class DashboardController {
      * Đồng bộ thông tin user lên khu vực profile.
      */
     private void setupUserProfile() {
-        User user = AuthService.getInstance().getCurrentUser();
+        final User user = AuthService.getInstance().getCurrentUser();
+
         if (profileController != null && user != null) {
             profileController.setUserData(user);
         }
     }
 
     /**
-     * Xử lý đăng xuất.
+     * Xử lý sự kiện đăng xuất khỏi hệ thống.
      */
     @FXML
     private void handleSignOut() {
-        LOGGER.info("Thực hiện đăng xuất: gọi service để logout khỏi server...");
+        LOGGER.info("Thực hiện đăng xuất: gửi lệnh LOGOUT tới server.");
+
         AuthService.getInstance().logout(result -> Platform.runLater(() -> {
-            if (result.isSuccess()) {
-                LOGGER.info("Đăng xuất thành công. Quay về màn hình đăng nhập.");
-            } else {
+            if (!result.isSuccess()) {
                 LOGGER.warn("Đăng xuất có lỗi: {}", result.getErrorMessage());
             }
-            SceneManager.switchScene(btnSignOut, ViewConstants.LOGIN_VIEW, 900, 700);
+
+            SceneManager.switchScene(
+                    btnSignOut,
+                    ViewConstants.LOGIN_VIEW,
+                    loginWindowWidth,
+                    loginWindowHeight);
         }));
     }
 
     /**
-     * Điều hướng sang màn hình đăng bán.
+     * Chuyển sang giao diện đăng bán sản phẩm.
      */
     private void loadPublishItemView() {
         LOGGER.info("Chuyển sang giao diện đăng bán.");
@@ -115,35 +129,39 @@ public class DashboardController {
     }
 
     /**
-     * Mở danh sách sản phẩm mặc định.
+     * Hiển thị toàn bộ sản phẩm trên Dashboard.
      */
     @FXML
     private void handleShowItems() {
         if (sidebarController != null) {
             sidebarController.setActiveSidebarItem(AppConstants.UI_ID_CATEGORY_ALL);
         }
+
         loadItemList(AppConstants.CATEGORY_ALL);
     }
 
     /**
      * Nạp danh sách sản phẩm theo danh mục.
      *
-     * @param category danh mục cần lọc
+     * @param category danh mục sản phẩm cần hiển thị
      */
     private void loadItemList(final String category) {
-        LOGGER.info("Chuyển sang danh sách, lọc theo danh mục: {}", category);
-        ItemListController controller = Router.navigateContentAndGetController(
-                contentArea, ViewConstants.ITEM_LIST_VIEW);
+        LOGGER.info("Chuyển sang danh sách sản phẩm, danh mục: {}", category);
+
+        final ItemListController controller = Router.navigateContentAndGetController(
+                contentArea,
+                ViewConstants.ITEM_LIST_VIEW);
+
         if (controller != null) {
             controller.setFilterCategory(category);
         }
     }
 
     /**
-     * Nạp màn hình admin demo trong vùng content của Dashboard.
+     * Nạp màn hình admin trong vùng content của Dashboard.
      */
     private void loadAdminView() {
-        LOGGER.info("Chuyển sang giao diện admin demo trong Dashboard.");
+        LOGGER.info("Chuyển sang giao diện admin trong Dashboard.");
         Router.navigateContent(contentArea, ViewConstants.ADMIN_DEMO_VIEW);
     }
 }

@@ -9,6 +9,7 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Participant;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
@@ -93,10 +94,10 @@ class BidServiceTest {
     @BeforeEach
     void setUp() {
         database   = new SerializedDatabase(tempDir);
-        bidService = new AuctionBidService(database);
+        bidService = new AuctionBidService(database, AuctionManager.getInstance(database));
 
-        seller = new Participant("seller01", "seller@mail.com", "pass", 0.0, "SELLER");
-        bidder = new Participant("bidder01", "bidder@mail.com", "pass", 100_000.0, "BIDDER");
+        seller = new Participant("seller01", "seller@mail.com", "pass", 0.0, "PARTICIPANT");
+        bidder = new Participant("bidder01", "bidder@mail.com", "pass", 100_000.0, "PARTICIPANT");
 
         Item item = new ElectronicBuilder()
                 .itemName("MacBook")
@@ -314,7 +315,7 @@ class BidServiceTest {
     @Test
     void placeBid_SecondBidByDifferentBidder_RefundsPreviousBidder() {
         Participant bidder2 = new Participant(
-                "bidder02", "bidder2@mail.com", "pass", 100_000.0, "BIDDER");
+                "bidder02", "bidder2@mail.com", "pass", 100_000.0, "PARTICIPANT");
         database.users().save(bidder);
         database.users().save(bidder2);
 
@@ -371,7 +372,7 @@ class BidServiceTest {
                     Participant p = new Participant(
                             "bidder_" + amount,
                             "bidder_" + amount + "@mail.com",
-                            "pw", 100_000.0, "BIDDER");
+                            "pw", 100_000.0, "PARTICIPANT");
                     runningAuction.placeBid(new BidTransaction(p, amount, runningAuction));
                     success.incrementAndGet();
                 } catch (InvalidBidException | AuctionClosedException e) {
@@ -423,7 +424,7 @@ class BidServiceTest {
                 try {
                     Participant p = new Participant(
                             "cb_" + amount, "cb_" + amount + "@mail.com",
-                            "pw", 100_000.0, "BIDDER");
+                            "pw", 100_000.0, "PARTICIPANT");
                     runningAuction.placeBid(new BidTransaction(p, amount, runningAuction));
                 } catch (Exception ignored) {
                     // Các lượt thua race bị từ chối là hành vi đúng — bỏ qua

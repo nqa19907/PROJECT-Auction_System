@@ -20,8 +20,6 @@ import java.util.logging.Logger;
  */
 public class ParticipantItemService {
     private static final Logger LOGGER = Logger.getLogger(ParticipantItemService.class.getName());
-    private static final String sellerRoleName = "SELLER";
-    private static final String participantRoleName = "PARTICIPANT";
 
     private final SerializedDatabase database;
 
@@ -167,30 +165,8 @@ public class ParticipantItemService {
 
         final Participant participant = (Participant) currentUser;
 
-        if (!canSell(participant)) {
-            throw new InvalidItemException("Tài khoản này không có quyền đăng sản phẩm.");
-        }
 
         return participant;
-    }
-
-    /**
-     * Kiểm tra participant có quyền bán hay không.
-     *
-     * @param participant participant cần kiểm tra
-     * @return true nếu participant có quyền bán
-     */
-    private boolean canSell(final Participant participant) {
-        final String roleName = participant.getRoleName();
-
-        if (roleName == null) {
-            return false;
-        }
-
-        final String normalizedRoleName = roleName.trim().toUpperCase();
-
-        return sellerRoleName.equals(normalizedRoleName)
-            || participantRoleName.equals(normalizedRoleName);
     }
 
     /**

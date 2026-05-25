@@ -3,7 +3,6 @@ package auction_system.client.controllers.auction;
 import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
 import auction_system.client.services.AuctionService;
-import auction_system.client.utils.CurrencyFormatter;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
@@ -25,6 +24,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.shape.Circle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+/* TODO: Lỗi ở bảng bidHistory
+    - Bị lỗi bidder2 đặt giá dẫn đầu thì nếu bidder1 vào sau ko
+      thấy được sự thay đổi ô "trạng thái" đổi sang dẫn đầu mà chỉ thấy
+      hợp lệ.
+*/
 
 /**
  * Controller cho màn hình chi tiết phiên đấu giá.
@@ -68,14 +73,9 @@ public class AuctionDetailController implements Initializable {
     // ── ViewModel ────────────────────────────────────────────
     private AuctionViewModel viewModel;
     private final XYChart.Series<String, Number> priceSeries = new XYChart.Series<>();
-
-    /** Đồng hồ đếm ngược của phiên đấu giá. */
-    private AuctionCountdownTimer countdownTimer;
-
-    /** Hiệu ứng nhấp nháy cho chấm trạng thái trực tuyến. */
-    private LiveIndicatorAnimation liveIndicatorAnimation;
-
-    // ── Tiện ích giao diện realtime ─────────────────────────
+    private AuctionBidForm bidForm;
+    private AuctionRealtimeSubscription realtimeSubscription;
+    private AuctionDetailVisuals visuals;
 
     /**
      * Khởi tạo màn hình theo đầy đủ dữ liệu item được chọn ở ItemList.
@@ -94,7 +94,11 @@ public class AuctionDetailController implements Initializable {
                 viewModel.getOpeningPriceValue(),
                 priceSeries
         );
+        startCountdownTimer(context.endTime(), context.status());
         loadBidHistory(context.auctionId());
+
+        // Sau khi có auctionId, bắt đầu nhận broadcast realtime của phiên này.
+        realtimeSubscription.watch(context.auctionId());
     }
 
     /**
@@ -131,13 +135,18 @@ public class AuctionDetailController implements Initializable {
     @Override
     public void initialize(final URL url, final ResourceBundle rb) {
         viewModel = new AuctionViewModel();
+        bidForm = new AuctionBidForm(bidInput, placeBidBtn, lblError, viewModel);
+        realtimeSubscription = new AuctionRealtimeSubscription(
+                () -> viewModel.auctionIdProperty().get(),
+                this::handleCurrentAuctionUpdated);
+        visuals = new AuctionDetailVisuals(timerLabel, liveDot);
 
         setupTable();
         setupChart();
         bindViewModel();
-        setupInputListeners();
-        setupNetworkHandlers();
-        startRealtimeVisuals();
+        bidForm.registerInputListener();
+        realtimeSubscription.registerHandlers();
+        visuals.start();
         registerLifecycleCleanup();
     }
 
@@ -164,18 +173,6 @@ public class AuctionDetailController implements Initializable {
     }
 
     /**
-     * Đăng ký sự kiện lắng nghe thay đổi nội dung ô nhập giá.
-     */
-    private void setupInputListeners() {
-        bidInput.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (lblError.isVisible()) {
-                lblError.setVisible(false);
-                lblError.setManaged(false);
-            }
-        });
-    }
-
-    /**
      * Cấu hình các cột của bảng lịch sử đấu giá.
      */
     private void setupTable() {
@@ -198,17 +195,30 @@ public class AuctionDetailController implements Initializable {
     }
 
     /**
-     * Khởi động các hiệu ứng realtime của màn hình.
+     * Khởi động đồng hồ dựa trên thời gian kết thúc thật từ server.
+     *
+     * @param endTime thời gian kết thúc phiên đấu giá
+     * @param status trạng thái hiện tại của phiên đấu giá
      */
-    private void startRealtimeVisuals() {
-        liveIndicatorAnimation = new LiveIndicatorAnimation(liveDot);
-        liveIndicatorAnimation.start();
+    private void startCountdownTimer(
+            final java.time.LocalDateTime endTime,
+            final String status) {
+        visuals.startCountdown(endTime, this::markAuctionFinishedOnUi);
 
-        countdownTimer = new AuctionCountdownTimer(
-            timerLabel,
-            AuctionCountdownTimer.DEFAULT_SECONDS_LEFT
-        );
-        countdownTimer.start();
+        if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
+            markAuctionFinishedOnUi();
+        }
+    }
+
+    /**
+     * Cập nhật giao diện khi phiên đã hết giờ hoặc đã bị đóng.
+     */
+    private void markAuctionFinishedOnUi() {
+        timerLabel.setText("Kết thúc");
+        placeBidBtn.setDisable(true);
+        bidInput.setDisable(true);
+        minBidHint.textProperty().unbind();
+        minBidHint.setText("Phiên đấu giá đã kết thúc.");
     }
 
     /**
@@ -219,73 +229,7 @@ public class AuctionDetailController implements Initializable {
      */
     @FXML
     private void placeBid() {
-        lblError.setVisible(false);
-        lblError.setManaged(false);
-
-        final String rawAmount = bidInput.getText();
-        if (rawAmount == null || rawAmount.trim().isEmpty()) {
-            // Cảnh báo ô nhập đang rỗng ngay dưới TextField
-            lblError.setText("Vui lòng nhập số tiền.");
-            lblError.setVisible(true);
-            lblError.setManaged(true);
-            return;
-        }
-
-        // Tạm khóa nút để tránh người dùng bấm nhiều lần trong lúc chờ server phản hồi.
-        placeBidBtn.setDisable(true);
-        placeBidBtn.setText("Đang gửi...");
-
-        // Chuyển toàn bộ logic đặt giá (kiểm tra dữ liệu, gọi service) sang ViewModel.
-        viewModel.submitBid(rawAmount, (success, message, newBalance) -> {
-            // Callback này có thể chạy từ luồng mạng.
-            // Mọi cập nhật UI phải được đưa về JavaFX Application Thread.
-            Platform.runLater(() -> {
-                // Luôn mở lại nút và khôi phục nội dung sau khi có phản hồi.
-                placeBidBtn.setDisable(false);
-                placeBidBtn.setText("Đặt giá ngay  →");
-                keepFocusInBidInput();
-
-                if (success) {
-                    final long amount = Long.parseLong(rawAmount.replaceAll("[^0-9]", ""));
-
-                    // Khi thành công, xóa ô nhập và ẩn thông báo lỗi
-                    // UI sẽ cập nhật qua broadcast realtime (UPDATE_PRICE)
-                    // từ server để đảm bảo mọi client đồng bộ cùng một trạng thái.
-                    bidInput.clear();
-                    lblError.setVisible(false);
-                    lblError.setManaged(false);
-                    String formattedBidAmount = CurrencyFormatter.formatAmount(amount);
-                    String formattedBalance = CurrencyFormatter.formatAmount(newBalance);
-                    LOGGER.info("Đặt giá thành công với số tiền: {}", formattedBidAmount);
-                    LOGGER.info("Số dư mới sau khi đặt giá: {}", formattedBalance);
-                    
-                    // Tạm thời tự cập nhật giao diện ngay khi nhận phản hồi thành công từ Server
-                    viewModel.processNewBid(amount, "Bạn", true);
-                    AuctionPriceChartConfigurer.updateAxis(
-                            numberYaxis, 
-                            viewModel.getOpeningPriceValue(), 
-                            priceSeries
-                    );
-                } else {
-                    // Khi thất bại, hiển thị lỗi ngay dưới ô nhập thay vì Alert
-                    lblError.setText(message);
-                    lblError.setVisible(true);
-                    lblError.setManaged(true);
-                }
-            });
-        });
-    }
-
-    /**
-     * Giữ focus trong form đặt giá sau khi nút gửi bị disable/enable.
-     *
-     * <p>Khi nút đặt giá bị disable trong lúc chờ server, JavaFX có thể tự
-     * chuyển focus sang control kế tiếp trong scene, hiện là ô nạp tiền ở
-     * sidebar. Request focus lại input đặt giá để người dùng không bị nhảy
-     * khỏi ngữ cảnh đấu giá.
-     */
-    private void keepFocusInBidInput() {
-        bidInput.requestFocus();
+        bidForm.submit();
     }
 
     @FXML
@@ -305,14 +249,14 @@ public class AuctionDetailController implements Initializable {
 
     @FXML
     private void goBack() {
-        handleCancel();
+        handleExit();
     }
 
     @FXML
-    private void handleCancel() {
+    private void handleExit() {
         LOGGER.info("Hủy bid history và quay lại ItemList");
 
-        stopUiAnimations();
+        cleanupDetailResources();
         Router.navigateContent(bidInput, ViewConstants.ITEM_LIST_VIEW);
     }
 
@@ -322,22 +266,18 @@ public class AuctionDetailController implements Initializable {
      * @param delta số tiền cộng thêm
      */
     private void adjustInput(final long delta) {
-        final String raw = bidInput.getText().replaceAll("[^0-9]", "");
-        final long base = raw.isEmpty() ? viewModel.getCurrentPriceValue() : Long.parseLong(raw);
-
-        bidInput.setText(String.valueOf(base + delta));
+        if (bidForm != null) {
+            bidForm.addToInput(delta);
+        }
     }
 
-    /**
-     * Dừng toàn bộ animation/timeline đang chạy.
-     */
-    private void stopUiAnimations() {
-        if (countdownTimer != null) {
-            countdownTimer.stop();
+    private void cleanupDetailResources() {
+        if (realtimeSubscription != null) {
+            realtimeSubscription.cleanup();
         }
 
-        if (liveIndicatorAnimation != null) {
-            liveIndicatorAnimation.stop();
+        if (visuals != null) {
+            visuals.stop();
         }
     }
 
@@ -347,15 +287,20 @@ public class AuctionDetailController implements Initializable {
     private void registerLifecycleCleanup() {
         bidInput.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
-                stopUiAnimations();
+                cleanupDetailResources();
             }
         });
     }
 
     /**
-     * Đăng ký socket handler để nhận dữ liệu realtime.
+     * Đồng bộ lại bảng và biểu đồ khi realtime báo phiên hiện tại có giá mới.
+     *
+     * <p>UPDATE_PRICE hiện chưa chứa đủ bidder/time, nên controller vẫn reload
+     * lịch sử bid từ server để ViewModel dựng lại trạng thái chuẩn.
+     *
+     * @param updatedAuctionId mã phiên vừa được server cập nhật
      */
-    private void setupNetworkHandlers() {
-        // TODO: đăng ký handler socket để cập nhật bảng/biểu đồ/metric.
+    private void handleCurrentAuctionUpdated(final String updatedAuctionId) {
+        loadBidHistory(updatedAuctionId);
     }
 }

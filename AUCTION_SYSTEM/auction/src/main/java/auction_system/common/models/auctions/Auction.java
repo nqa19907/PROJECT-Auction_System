@@ -78,9 +78,6 @@ public class Auction extends Entity {
         this.currentHighestBid = bid;
         this.bids.add(bid);
         this.item.setCurrentPrice(newBidAmount);
-
-        // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
-        notifyObservers();
     }
 
     /**

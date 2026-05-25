@@ -1,5 +1,7 @@
 package auction_system.common.models.users;
 
+import java.util.Locale;
+
 /**
  * Lớp đại diện cho người tham gia hệ thống đấu giá.
  *
@@ -9,8 +11,6 @@ package auction_system.common.models.users;
  */
 public class Participant extends User {
     private static final String participantRoleName = "PARTICIPANT";
-    private static final String sellerRoleName = "SELLER";
-    private static final String bidderRoleName = "BIDDER";
 
     private double balance;
     private String roleName;
@@ -106,7 +106,7 @@ public class Participant extends User {
             return;
         }
 
-        this.roleName = roleName.trim().toUpperCase();
+        this.roleName = roleName.trim().toUpperCase(Locale.ROOT);
     }
 
     @Override

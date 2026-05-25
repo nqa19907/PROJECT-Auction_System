@@ -1,43 +1,28 @@
 package auction_system.server.core;
 
 import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.server.network.ClientHandler;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Quản lý trung tâm cho các phiên đấu giá và người dùng — Singleton.
+ * Facade runtime trung tâm của server.
  *
- * <p>Trách nhiệm:
- * <ul>
- * <li>Tạo và tra cứu phiên đấu giá ({@link Auction}).</li>
- * <li>Theo dõi trạng thái online của người dùng.</li>
- * <li>Lưu trữ registry người dùng đã đăng ký (in-memory).</li>
- * <li>Scheduler tự động chuyển trạng thái phiên theo thời gian.</li>
- * </ul>
+ * <p>Class này giữ API cũ cho command/session đang dùng. Các trách nhiệm cụ
+ * thể được ủy quyền sang registry/scheduler riêng để manager không còn ôm cả
+ * persistence, online state, socket routing và lifecycle scheduling.
  */
 public class AuctionManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuctionManager.class);
-    private static final int SCHEDULER_INTERVAL_SECONDS = 10;
-
-    /** Database serialization của server. */
-    private final SerializedDatabase database;
 
     // =========================================================================
     // Singleton
@@ -59,23 +44,14 @@ public class AuctionManager {
     }
 
     // =========================================================================
-    // State
+    // Collaborators
     // =========================================================================
 
-    /** Danh sách phiên đấu giá (thread-safe). */
-    private final List<Auction> auctionList;
-
-    /** Map người dùng đang ONLINE: userId → User. */
-    private final Map<String, User> activeUsers;
-
-    /**
-     * Registry toàn bộ người dùng đã đăng ký: username → User.
-     * Trong thực tế nên lưu xuống database.
-     */
-    private final Map<String, User> userRegistry;
-
-    /** Scheduler kiểm tra thời gian phiên đấu giá định kỳ. */
-    private final ScheduledExecutorService scheduler;
+    private final AuctionRegistry auctionRegistry;
+    private final UserRegistry userRegistry;
+    private final OnlineUserRegistry onlineUserRegistry;
+    private final ClientConnectionRegistry clientConnectionRegistry;
+    private final AuctionLifecycleScheduler lifecycleScheduler;
 
     /**
      * Khởi tạo manager với database.
@@ -83,18 +59,20 @@ public class AuctionManager {
      * @param database database dùng để đọc ghi dữ liệu
      */
     private AuctionManager(final SerializedDatabase database) {
-        this.auctionList = new CopyOnWriteArrayList<>();
-        this.activeUsers = new ConcurrentHashMap<>();
-        this.userRegistry = new ConcurrentHashMap<>();
-        this.scheduler = Executors.newSingleThreadScheduledExecutor();
-        this.database = Objects.requireNonNull(database, "database");
-        // Nạp trạng thái từ lần chạy trước (nếu có)
+        final SerializedDatabase checkedDatabase = Objects.requireNonNull(database, "database");
+
+        this.auctionRegistry = new AuctionRegistry(checkedDatabase);
+        this.userRegistry = new UserRegistry(checkedDatabase);
+        this.onlineUserRegistry = new OnlineUserRegistry();
+        this.clientConnectionRegistry = new ClientConnectionRegistry();
+        this.lifecycleScheduler = new AuctionLifecycleScheduler(auctionRegistry);
+
         loadPersistentState();
-        startAuctionScheduler();
+        lifecycleScheduler.start();
 
         try {
             // Nếu không có dữ liệu cũ, tạo dữ liệu mẫu
-            if (userRegistry.isEmpty() || auctionList.isEmpty()) {
+            if (userRegistry.isEmpty() || auctionRegistry.isEmpty()) {
                 TestDataGenerator.generate(this);
             }
         } catch (Exception exception) {
@@ -107,46 +85,20 @@ public class AuctionManager {
      * Việc này giúp server "nhớ" lại các user và auction từ lần chạy trước.
      */
     private void loadPersistentState() {
-        database.users().findAll().forEach(user -> userRegistry.put(user.getUsername(), user));
-        auctionList.addAll(database.auctions().findAll());
+        userRegistry.loadFromPersistence();
+        auctionRegistry.loadFromPersistence();
 
-        LOGGER.info("Đã nạp " + userRegistry.size()
-                + " user và " + auctionList.size()
-                + " phiên đấu giá từ database.");
-    }
-
-    // =========================================================================
-    // Scheduler
-    // =========================================================================
-
-    /**
-     * Khởi động scheduler kiểm tra trạng thái phiên mỗi
-     * {@value #SCHEDULER_INTERVAL_SECONDS} giây.
-     * Tự động gọi {@code startAuction()} và {@code endAuction()} theo thời gian.
-     */
-    private void startAuctionScheduler() {
-        scheduler.scheduleAtFixedRate(() -> {
-            for (final Auction auction : auctionList) {
-                try {
-                    final AuctionStatus status = auction.getStatus();
-                    if (status == AuctionStatus.OPEN) {
-                        auction.startAuction();
-                    } else if (status == AuctionStatus.RUNNING) {
-                        auction.endAuction();
-                    }
-                } catch (Exception e) {
-                    LOGGER.warn("Lỗi scheduler phiên " + auction.getId()
-                            + ": " + e.getMessage());
-                }
-            }
-        }, 0, SCHEDULER_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        LOGGER.info(
+                "Đã nạp {} user và {} phiên đấu giá từ database.",
+                userRegistry.count(),
+                auctionRegistry.findAll().size());
     }
 
     /**
      * Dừng scheduler khi server tắt.
      */
     public void shutdown() {
-        scheduler.shutdown();
+        lifecycleScheduler.shutdown();
     }
 
     // =========================================================================
@@ -167,15 +119,7 @@ public class AuctionManager {
             final Participant seller,
             final LocalDateTime startTime,
             final LocalDateTime endTime) {
-        final Auction newAuction = new Auction(item, seller, startTime, endTime);
-        auctionList.add(newAuction);
-        database.items().save(item);
-        database.auctions().save(newAuction);
-
-        LOGGER.info("Phiên đấu giá mới: " + newAuction.getId()
-                + " | Item: " + item.getItemName());
-
-        return newAuction;
+        return auctionRegistry.createAuction(item, seller, startTime, endTime);
     }
 
     /**
@@ -185,10 +129,7 @@ public class AuctionManager {
      * @return Phiên đấu giá, hoặc null nếu không tìm thấy.
      */
     public Auction getAuctionById(final String auctionId) {
-        return auctionList.stream()
-                .filter(a -> a.getId().equals(auctionId))
-                .findFirst()
-                .orElse(null);
+        return auctionRegistry.findById(auctionId);
     }
 
     /**
@@ -197,7 +138,23 @@ public class AuctionManager {
      * @return Unmodifiable list các phiên đấu giá.
      */
     public List<Auction> getAllAuctions() {
-        return Collections.unmodifiableList(auctionList);
+        return auctionRegistry.findAll();
+    }
+
+    /**
+     * Cập nhật trạng thái tất cả phiên theo thời gian hiện tại và lưu xuống database.
+     */
+    public void refreshAllAuctionLifecycles() {
+        auctionRegistry.refreshAllAuctionLifecycles();
+    }
+
+    /**
+     * Cập nhật trạng thái một phiên theo thời gian hiện tại và lưu nếu có thay đổi.
+     *
+     * @param auction phiên đấu giá cần cập nhật
+     */
+    public void refreshAuctionLifecycle(final Auction auction) {
+        auctionRegistry.refreshAuctionLifecycle(auction);
     }
 
     /**
@@ -207,14 +164,7 @@ public class AuctionManager {
      * @return true nếu huỷ thành công, false nếu không tìm thấy.
      */
     public boolean cancelAuction(final String auctionId) {
-        final Auction auction = getAuctionById(auctionId);
-        if (auction == null) {
-            return false;
-        }
-        auction.setStatus(AuctionStatus.CANCELED);
-        auction.notifyObservers("AUCTION_ENDED|" + auctionId + "|NONE");
-        LOGGER.info("Huỷ phiên đấu giá: " + auctionId);
-        return true;
+        return auctionRegistry.cancelById(auctionId);
     }
 
     /**
@@ -224,15 +174,7 @@ public class AuctionManager {
      * @return true nếu xóa thành công, false nếu không tìm thấy.
      */
     public boolean deleteAuction(final String auctionId) {
-        final Auction auction = getAuctionById(auctionId);
-        if (auction == null) {
-            return false;
-        }
-
-        auctionList.remove(auction);
-        database.auctions().deleteById(auctionId);
-        LOGGER.info("Xóa phiên đấu giá: " + auctionId);
-        return true;
+        return auctionRegistry.deleteById(auctionId);
     }
 
     // =========================================================================
@@ -245,8 +187,7 @@ public class AuctionManager {
      * @param user Người dùng vừa đăng nhập.
      */
     public void userLoggedIn(final User user) {
-        activeUsers.put(user.getId(), user);
-        LOGGER.debug("Online: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        onlineUserRegistry.markOnline(user);
     }
 
     /**
@@ -255,8 +196,50 @@ public class AuctionManager {
      * @param user Người dùng vừa đăng xuất hoặc mất kết nối.
      */
     public void userLoggedOut(final User user) {
-        activeUsers.remove(user.getId());
-        LOGGER.debug("Offline: " + user.getUsername() + " (total: " + activeUsers.size() + ")");
+        onlineUserRegistry.markOffline(user);
+    }
+
+    /**
+     * Gắn socket handler hiện tại với user vừa đăng nhập.
+     *
+     * <p>Registry này dùng cho các realtime message theo user, ví dụ cập nhật ví,
+     * không phụ thuộc vào user đang xem màn hình nào.
+     *
+     * @param userId id của user đã đăng nhập
+     * @param handler handler đang giữ socket của user
+     */
+    public void registerClientHandler(
+            final String userId,
+            final ClientHandler handler) {
+        clientConnectionRegistry.register(userId, handler);
+    }
+
+    /**
+     * Gỡ socket handler của user khi logout hoặc mất kết nối.
+     *
+     * <p>So sánh cả handler để tránh gỡ nhầm nếu sau này có reconnect hoặc thay
+     * đổi chính sách đăng nhập nhiều thiết bị.
+     *
+     * @param userId id của user cần gỡ handler
+     * @param handler handler đang bị đóng
+     */
+    public void unregisterClientHandler(
+            final String userId,
+            final ClientHandler handler) {
+        clientConnectionRegistry.unregister(userId, handler);
+    }
+
+    /**
+     * Gửi message realtime trực tiếp tới user đang online.
+     *
+     * <p>Nếu user offline thì không gửi realtime. Số dư vẫn đã được lưu trong
+     * database, lần đăng nhập sau user sẽ nhận số dư mới từ LOGIN_OK.
+     *
+     * @param userId id user cần nhận message
+     * @param message message cần gửi xuống client
+     */
+    public void notifyUser(final String userId, final String message) {
+        clientConnectionRegistry.notifyUser(userId, message);
     }
 
     /**
@@ -266,7 +249,7 @@ public class AuctionManager {
      * @return true nếu đang online.
      */
     public boolean isAlreadyOnline(final String userId) {
-        return activeUsers.containsKey(userId);
+        return onlineUserRegistry.isOnline(userId);
     }
 
     /**
@@ -275,7 +258,7 @@ public class AuctionManager {
      * @return Số người online.
      */
     public int getOnlineCount() {
-        return activeUsers.size();
+        return onlineUserRegistry.count();
     }
 
     /**
@@ -284,7 +267,7 @@ public class AuctionManager {
      * @return Unmodifiable map userId → User.
      */
     public Map<String, User> getActiveUsers() {
-        return Collections.unmodifiableMap(activeUsers);
+        return onlineUserRegistry.findAll();
     }
 
     // =========================================================================
@@ -300,20 +283,7 @@ public class AuctionManager {
      * @return người dùng đã được lưu hoặc người dùng đã tồn tại trong database
      */
     public User registerUser(final User user) {
-        Objects.requireNonNull(user, "user");
-
-        // Thử tìm user bằng email, nếu không thấy thì thử bằng username.
-        // Nếu cả hai đều không tồn tại, lưu user mới vào DB.
-        User persistedUser = database.users()
-                .findByEmail(user.getEmail())
-                .or(() -> database.users().findByUsername(user.getUsername()))
-                .orElseGet(() -> database.users().save(user));
-
-        // Cập nhật registry in-memory
-        userRegistry.put(persistedUser.getUsername(), persistedUser);
-        LOGGER.info("Đăng ký/nạp user: " + persistedUser.getUsername());
-
-        return persistedUser;
+        return userRegistry.register(user);
     }
 
     /**
@@ -323,7 +293,7 @@ public class AuctionManager {
      * @return true nếu đã tồn tại.
      */
     public boolean isUsernameTaken(final String username) {
-        return userRegistry.containsKey(username);
+        return userRegistry.containsUsername(username);
     }
 
     /**
@@ -337,15 +307,7 @@ public class AuctionManager {
      * @return User nếu khớp, null nếu sai thông tin.
      */
     public User findUserByCredentials(final String email, final String password) {
-        if (email == null || password == null) {
-            return null;
-        }
-
-        return userRegistry.values().stream()
-                .filter(u -> u.getEmail().equalsIgnoreCase(email) 
-                        && u.getPassword().equals(password))
-                .findFirst()
-                .orElse(null);
+        return userRegistry.findByCredentials(email, password);
     }
 
     /**
@@ -355,10 +317,20 @@ public class AuctionManager {
      * @return User tương ứng, hoặc null.
      */
     public User findUserById(final String userId) {
-        return userRegistry.values().stream()
-                .filter(u -> u.getId().equals(userId))
-                .findFirst()
-                .orElse(null);
+        return userRegistry.findById(userId);
+    }
+
+    /**
+     * Lấy toàn bộ user đã nạp trong runtime registry.
+     *
+     * <p>API này phục vụ các command quản trị read-only. Trạng thái online vẫn
+     * nên đọc qua {@link #isAlreadyOnline(String)} vì đó là runtime state của
+     * socket, không phải dữ liệu persistence.
+     *
+     * @return danh sách user chỉ đọc
+     */
+    public List<User> getAllUsers() {
+        return userRegistry.findAll();
     }
 
     /**
@@ -373,15 +345,15 @@ public class AuctionManager {
      * @return true nếu xóa thành công, false nếu không tìm thấy
      */
     public boolean deleteUser(final String userId) {
-        User target = findUserById(userId);
+        User target = userRegistry.findById(userId);
         if (target == null) {
             return false;
         }
 
-        activeUsers.remove(target.getId());
-        userRegistry.remove(target.getUsername());
+        onlineUserRegistry.remove(target.getId());
+        userRegistry.remove(target);
 
-        return database.users().deleteById(userId);
+        return userRegistry.deleteById(userId);
     }
 
     /**
@@ -390,9 +362,7 @@ public class AuctionManager {
      * @return List Bidder.
      */
     public List<User> getAllBidders() {
-        return userRegistry.values().stream()
-                .filter(u -> u instanceof Participant)
-                .collect(Collectors.toList());
+        return userRegistry.findParticipants();
     }
 
     /**
@@ -401,8 +371,6 @@ public class AuctionManager {
      * @return List Seller.
      */
     public List<User> getAllSellers() {
-        return userRegistry.values().stream()
-                .filter(u -> u instanceof Participant)
-                .collect(Collectors.toList());
+        return userRegistry.findParticipants();
     }
 }

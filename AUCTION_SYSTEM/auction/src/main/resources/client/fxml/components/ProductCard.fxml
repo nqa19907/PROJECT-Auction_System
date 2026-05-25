@@ -11,7 +11,7 @@
       <Region fx:id="imageRegion" prefHeight="200.0" prefWidth="200.0" styleClass="img-product-rolex" />
       <Label fx:id="titleLabel" alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Đồng hồ Rolex Submariner Date 2004" wrapText="true" />
       <Label fx:id="priceLabel" style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: Đang tải ..." />
-      <Button fx:id="bidButton" styleClass="btn-bid" text="Đấu giá ngay" />
+      <Button fx:id="bidButton" styleClass="btn-bid" text="Chi tiết" />
    </children>
    <stylesheets>
       <URL value="@../../css/buttons.css" />

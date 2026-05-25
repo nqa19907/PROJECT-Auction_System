@@ -18,6 +18,7 @@ public final class ViewConstants {
 
     // Dashboard View
     public static final String DASHBOARD_VIEW = BASE_PATH + "dashboard/Dashboard.fxml";
+    public static final String ADMIN_DASHBOARD_VIEW = BASE_PATH + "admin/AdminDashboardView.fxml";
 
     // Auction Views
     public static final String ITEM_LIST_VIEW = BASE_PATH + "auction/ItemList.fxml";
@@ -27,12 +28,11 @@ public final class ViewConstants {
     // Profile Views
     public static final String HISTORY_VIEW = BASE_PATH + "profile/History.fxml";
 
-    // Component Views (These might be loaded differently, but good to have)
+    // Component Views
     public static final String PROFILE_VIEW = BASE_PATH + "components/Profile.fxml";
     public static final String SIDEBAR_VIEW = BASE_PATH + "components/Sidebar.fxml";
     public static final String PRODUCT_CARD_VIEW = BASE_PATH + "components/ProductCard.fxml";
 
-    // Test thử màn hình admin
-    public static final String ADMIN_DEMO_VIEW = BASE_PATH + "admin/AdminDashboardView.fxml";
-
+    // Admin Views
+    public static final String ADMIN_DEMO_VIEW = ADMIN_DASHBOARD_VIEW;
 }

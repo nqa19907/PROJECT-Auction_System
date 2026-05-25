@@ -6,6 +6,7 @@ import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
 import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,10 +47,22 @@ public class ServerApp {
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionBidService auctionBidService =
+                new AuctionBidService(database, auctionManager);
+        final ParticipantItemService participantItemService = new ParticipantItemService(database);
+
+        if (!authService.isEmailTaken("qa@gmail.com")) {
+            authService.register(
+                "qa",
+                "qa@gmail.com",
+                "123456",
+                "PARTICIPANT");
+        }
 
         final SocketServer socketServer = SocketServer.getInstance(
-                port, authService, auctionManager, auctionBidService);
+                port, authService, auctionManager, auctionBidService, participantItemService);
+
+
 
         LOGGER.info("Đang khởi động hệ thống đấu giá...");
 

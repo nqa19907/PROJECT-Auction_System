@@ -8,6 +8,7 @@ import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
 import java.nio.file.Path;
 import javafx.application.Application;
@@ -69,17 +70,20 @@ public class ClientApp extends Application {
      * trực tiếp service server khi đăng nhập.
      */
     private void startLocalServerAndConnect() {
-        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final SerializedDatabase database = new SerializedDatabase(
+            Path.of("data"));
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database);
+        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
+        final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         localServer = SocketServer.getInstance(
             port,
             authService,
             auctionManager,
-            auctionBidService
+            auctionBidService,
+            participantItemService
         );
 
         final Thread serverThread = new Thread(localServer::start);
