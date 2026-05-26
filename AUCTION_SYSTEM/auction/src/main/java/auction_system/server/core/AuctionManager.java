@@ -217,7 +217,7 @@ public class AuctionManager {
      * @return danh sách người dùng chỉ đọc để phục vụ cho admin.
      */
     public List<User> getAllUsers() {
-        return List.copyOf(userRegistry.values());
+        return List.copyOf(database.users().findAll());
     }
 
     /**
