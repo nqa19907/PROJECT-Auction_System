@@ -10,9 +10,9 @@ import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import javafx.application.Platform;
@@ -142,7 +142,7 @@ public class AdminDashboardController {
      * Khởi tạo datasource dùng chung với app.
      */
     private void initDataSource() {
-        database = new SerializedDatabase(Path.of("data"));
+        database = new SerializedDatabase(DatabasePathProvider.defaultDataDirectory());
         auctionManager = AuctionManager.getInstance(database);
     }
 

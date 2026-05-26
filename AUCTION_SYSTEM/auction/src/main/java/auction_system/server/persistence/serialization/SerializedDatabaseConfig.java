@@ -14,7 +14,8 @@ public class SerializedDatabaseConfig {
      * Thư mục dữ liệu mặc định dùng chung cho toàn bộ hệ thống.
      * Tất cả file .ser sẽ được đặt trong thư mục này.
      */
-    public static final Path DEFAULT_DATA_DIRECTORY = Path.of("data");
+    public static final Path DEFAULT_DATA_DIRECTORY =
+            DatabasePathProvider.defaultDataDirectory();
 
     /** Thư mục gốc chứa toàn bộ file dữ liệu của server. */
     private final Path dataDirectory;

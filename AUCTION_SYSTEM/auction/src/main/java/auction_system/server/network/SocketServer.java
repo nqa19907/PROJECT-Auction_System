@@ -2,6 +2,7 @@ package auction_system.server.network;
 
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
@@ -9,7 +10,6 @@ import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -245,7 +245,8 @@ public class SocketServer {
                         + NetworkConfig.SERVER_PORT);
             }
         }
-        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final SerializedDatabase database = new SerializedDatabase(
+                DatabasePathProvider.defaultDataDirectory());
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
         final AuthService authService = new AuthService(database);

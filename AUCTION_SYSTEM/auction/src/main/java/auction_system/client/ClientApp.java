@@ -6,12 +6,12 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
+import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
-import java.nio.file.Path;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -72,7 +72,7 @@ public class ClientApp extends Application {
      */
     private void startLocalServerAndConnect() {
         final SerializedDatabase database = new SerializedDatabase(
-            Path.of("data"));
+            DatabasePathProvider.defaultDataDirectory());
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
