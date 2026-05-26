@@ -61,7 +61,8 @@ public class ListAuctionsCommand implements Command {
                         .append(Protocol.SEPARATOR).append(auction.getEndTime())
                         .append(Protocol.SEPARATOR).append(item.getClass().getSimpleName())
                         .append(Protocol.SEPARATOR).append(item.getStartPrice())
-                        .append(Protocol.SEPARATOR).append(resolveSellerId(auction));
+                        .append(Protocol.SEPARATOR).append(resolveSellerId(auction))
+                        .append(Protocol.SEPARATOR).append(auction.isAntiSnipingEnabled());
             }
             return response.toString();
         } catch (Exception e) {

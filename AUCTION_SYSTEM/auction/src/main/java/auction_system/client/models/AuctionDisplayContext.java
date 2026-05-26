@@ -18,6 +18,7 @@ public record AuctionDisplayContext(
         String status,
         LocalDateTime startTime,
         LocalDateTime endTime,
-        String sellerId
+        String sellerId,
+        boolean antiSnipingEnabled
 ) {
 }

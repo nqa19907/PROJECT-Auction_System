@@ -32,6 +32,7 @@ public final class Protocol {
         JOIN_AUCTION,
         LEAVE_AUCTION,
         PLACE_BID,
+        SET_ANTI_SNIPING,
 
         // Admin
         ADMIN_CANCEL_AUCTION,
@@ -68,6 +69,9 @@ public final class Protocol {
         AUCTION_CREATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
+        AUCTION_EXTENDED,
+        ANTI_SNIPING_UPDATED,
+        ANTI_SNIPING_UPDATE_FAIL,
         AUCTION_WINNER,
         AUCTION_LOST,
         BALANCE_UPDATED,

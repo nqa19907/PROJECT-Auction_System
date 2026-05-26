@@ -25,6 +25,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -52,6 +53,15 @@ public class AuctionDetailController implements Initializable {
     private static final int IDX_UPDATE_AMOUNT = 2;
     private static final int IDX_UPDATE_BIDDER = 3;
     private static final int IDX_UPDATE_TIME = 4;
+    private static final int IDX_UPDATE_END_TIME = 5;
+    private static final int MIN_AUCTION_EXTENDED_PARTS = 3;
+    private static final int IDX_EXTENDED_AUCTION_ID = 1;
+    private static final int IDX_EXTENDED_END_TIME = 2;
+    private static final int MIN_ANTI_SNIPING_UPDATE_PARTS = 3;
+    private static final int IDX_ANTI_SNIPING_AUCTION_ID = 1;
+    private static final int IDX_ANTI_SNIPING_ENABLED = 2;
+    private static final int MIN_ANTI_SNIPING_FAIL_PARTS = 2;
+    private static final int IDX_ANTI_SNIPING_FAIL_MESSAGE = 1;
 
     // ── fx:id fields ─────────────────────────────────────────
 
@@ -77,6 +87,7 @@ public class AuctionDetailController implements Initializable {
     @FXML private TextField bidInput;
     @FXML private Button placeBidBtn;
     @FXML private Label lblError;
+    @FXML private CheckBox chkAntiShipping;
 
     // ── ViewModel ────────────────────────────────────────────
     private AuctionViewModel viewModel;
@@ -90,12 +101,17 @@ public class AuctionDetailController implements Initializable {
 
     /** Handler nhận cập nhật giá realtime từ socket. */
     private final Consumer<String> updatePriceHandler = this::handleRealtimePriceUpdate;
+    private final Consumer<String> auctionExtendedHandler = this::handleAuctionExtended;
+    private final Consumer<String> antiSnipingUpdatedHandler = this::handleAntiSnipingUpdated;
+    private final Consumer<String> antiSnipingFailHandler = this::handleAntiSnipingUpdateFail;
 
     /** Mã phiên đang được màn hình này theo dõi. */
     private String activeAuctionId;
 
     /** True nếu user hiện tại là người bán và chỉ được quan sát. */
     private boolean sellerObserveOnly;
+    private boolean syncingAntiSniping;
+    private LocalDateTime activeEndTime;
 
     // ── Tiện ích giao diện realtime ─────────────────────────
 
@@ -112,7 +128,9 @@ public class AuctionDetailController implements Initializable {
 
         viewModel.init(context);
         activeAuctionId = context.auctionId();
+        activeEndTime = context.endTime();
         AuctionService.getInstance().joinAuction(activeAuctionId);
+        syncAntiSnipingCheckbox(context.antiSnipingEnabled());
         applySellerObserveOnlyPolicy(context);
         AuctionPriceChartConfigurer.updateAxis(
                 numberYaxis,
@@ -157,15 +175,20 @@ public class AuctionDetailController implements Initializable {
     private void applySellerObserveOnlyPolicy(final AuctionDisplayContext context) {
         final User currentUser = UserSessionService.getInstance().getCurrentUser();
         if (currentUser == null || context.sellerId() == null) {
+            chkAntiShipping.setDisable(true);
             return;
         }
 
         if (context.sellerId().equals(currentUser.getId())) {
             sellerObserveOnly = true;
             placeBidBtn.setDisable(true);
+            chkAntiShipping.setDisable(false);
             minBidHint.textProperty().unbind();
             minBidHint.setText("Bạn là người bán nên chỉ có thể quan sát phiên này.");
+            return;
         }
+
+        chkAntiShipping.setDisable(true);
     }
 
     /**
@@ -219,6 +242,34 @@ public class AuctionDetailController implements Initializable {
                 lblError.setManaged(false);
             }
         });
+
+        chkAntiShipping.selectedProperty().addListener((obs, oldVal, newVal) ->
+                handleAntiSnipingToggle(newVal));
+    }
+
+    /**
+     * Gửi yêu cầu bật/tắt chống đặt giá phút chót khi seller thao tác checkbox.
+     *
+     * @param enabled trạng thái checkbox mới
+     */
+    private void handleAntiSnipingToggle(final boolean enabled) {
+        if (syncingAntiSniping || !sellerObserveOnly || activeAuctionId == null) {
+            return;
+        }
+
+        chkAntiShipping.setDisable(true);
+        AuctionService.getInstance().setAntiSniping(activeAuctionId, enabled);
+    }
+
+    /**
+     * Đồng bộ checkbox từ dữ liệu server mà không gửi ngược lại một request mới.
+     *
+     * @param enabled trạng thái chống đặt giá phút chót trên server
+     */
+    private void syncAntiSnipingCheckbox(final boolean enabled) {
+        syncingAntiSniping = true;
+        chkAntiShipping.setSelected(enabled);
+        syncingAntiSniping = false;
     }
 
     /**
@@ -462,6 +513,15 @@ public class AuctionDetailController implements Initializable {
         NetworkClient.getInstance().unregisterHandler(
                 Protocol.Response.UPDATE_PRICE.name(),
                 updatePriceHandler);
+        NetworkClient.getInstance().unregisterHandler(
+                Protocol.Response.AUCTION_EXTENDED.name(),
+                auctionExtendedHandler);
+        NetworkClient.getInstance().unregisterHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                antiSnipingUpdatedHandler);
+        NetworkClient.getInstance().unregisterHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name(),
+                antiSnipingFailHandler);
         AuctionService.getInstance().leaveAuction(activeAuctionId);
     }
 
@@ -483,6 +543,15 @@ public class AuctionDetailController implements Initializable {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.UPDATE_PRICE.name(),
                 updatePriceHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_EXTENDED.name(),
+                auctionExtendedHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                antiSnipingUpdatedHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name(),
+                antiSnipingFailHandler);
     }
 
     /**
@@ -511,12 +580,85 @@ public class AuctionDetailController implements Initializable {
                     && bidderName.equals(currentUser.getUsername());
 
             viewModel.processRealtimeBid(amount, bidderName, bidTime, isCurrentUser);
+            if (parts.length > IDX_UPDATE_END_TIME) {
+                applyServerEndTime(parts[IDX_UPDATE_END_TIME]);
+            }
             AuctionPriceChartConfigurer.updateAxis(
                     numberYaxis,
                     viewModel.getOpeningPriceValue(),
                     priceSeries);
         } catch (NumberFormatException exception) {
             LOGGER.warn("Không thể đọc giá realtime: {}", response);
+        }
+    }
+
+    /**
+     * Cập nhật đồng hồ khi server thông báo phiên đã được gia hạn.
+     *
+     * @param response thông báo AUCTION_EXTENDED từ server
+     */
+    private void handleAuctionExtended(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < MIN_AUCTION_EXTENDED_PARTS
+                || activeAuctionId == null
+                || !activeAuctionId.equals(parts[IDX_EXTENDED_AUCTION_ID])) {
+            return;
+        }
+
+        applyServerEndTime(parts[IDX_EXTENDED_END_TIME]);
+    }
+
+    /**
+     * Cập nhật checkbox khi server xác nhận trạng thái chống đặt giá phút chót.
+     *
+     * @param response thông báo ANTI_SNIPING_UPDATED từ server
+     */
+    private void handleAntiSnipingUpdated(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < MIN_ANTI_SNIPING_UPDATE_PARTS
+                || activeAuctionId == null
+                || !activeAuctionId.equals(parts[IDX_ANTI_SNIPING_AUCTION_ID])) {
+            return;
+        }
+
+        syncAntiSnipingCheckbox(Boolean.parseBoolean(parts[IDX_ANTI_SNIPING_ENABLED]));
+        chkAntiShipping.setDisable(!sellerObserveOnly);
+    }
+
+    /**
+     * Hiển thị lỗi khi server từ chối yêu cầu bật/tắt chống đặt giá phút chót.
+     *
+     * @param response thông báo ANTI_SNIPING_UPDATE_FAIL từ server
+     */
+    private void handleAntiSnipingUpdateFail(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final String message = parts.length >= MIN_ANTI_SNIPING_FAIL_PARTS
+                ? parts[IDX_ANTI_SNIPING_FAIL_MESSAGE]
+                : "Không thể cập nhật chống đặt giá phút chót.";
+
+        lblError.setText(message);
+        lblError.setVisible(true);
+        lblError.setManaged(true);
+        syncAntiSnipingCheckbox(!chkAntiShipping.isSelected());
+        chkAntiShipping.setDisable(!sellerObserveOnly);
+    }
+
+    /**
+     * Áp dụng thời gian kết thúc mới từ server và khởi động lại đồng hồ đếm ngược.
+     *
+     * @param rawEndTime thời gian kết thúc mới theo ISO-8601
+     */
+    private void applyServerEndTime(final String rawEndTime) {
+        try {
+            final LocalDateTime serverEndTime = LocalDateTime.parse(rawEndTime);
+            if (activeEndTime != null && !serverEndTime.isAfter(activeEndTime)) {
+                return;
+            }
+
+            activeEndTime = serverEndTime;
+            markAuctionRunningOnUi(serverEndTime);
+        } catch (RuntimeException exception) {
+            LOGGER.warn("Không thể đọc thời gian kết thúc mới: {}", rawEndTime);
         }
     }
 

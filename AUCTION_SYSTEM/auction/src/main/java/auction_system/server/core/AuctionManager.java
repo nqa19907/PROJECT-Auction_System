@@ -328,6 +328,74 @@ public class AuctionManager {
         return true;
     }
 
+    /**
+     * Cập nhật chế độ chống đặt giá phút chót cho một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần cập nhật
+     * @param currentUser người dùng đang gửi yêu cầu
+     * @param enabled true nếu muốn bật chống đặt giá phút chót
+     * @return phiên đấu giá đã được cập nhật
+     */
+    public Auction updateAntiSniping(
+            final String auctionId,
+            final User currentUser,
+            final boolean enabled) {
+        return database.executeInTransaction(() -> {
+            final Auction auction = getAuctionById(auctionId);
+            if (auction == null) {
+                throw new IllegalArgumentException("Không tìm thấy phiên đấu giá.");
+            }
+
+            if (!isAuctionSeller(auction, currentUser)) {
+                throw new IllegalArgumentException(
+                        "Chỉ người đăng bán mới được bật/tắt chống đặt giá phút chót.");
+            }
+
+            auction.setAntiSnipingEnabled(enabled);
+            database.auctions().save(auction);
+            database.flushAll();
+            notifyAntiSnipingUpdated(auction);
+            return auction;
+        });
+    }
+
+    /**
+     * Kiểm tra người dùng hiện tại có phải người bán của phiên hay không.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     * @param currentUser người dùng đang gửi yêu cầu
+     * @return true nếu người dùng là người bán của phiên
+     */
+    private boolean isAuctionSeller(final Auction auction, final User currentUser) {
+        if (auction == null || currentUser == null) {
+            return false;
+        }
+
+        final String currentUserId = currentUser.getId();
+        final String sellerIdFromAuction = auction.getParticipant() != null
+                ? auction.getParticipant().getId()
+                : null;
+        final String sellerIdFromItem = auction.getItem() != null
+                ? auction.getItem().getSellerId()
+                : null;
+
+        return currentUserId != null
+                && (currentUserId.equals(sellerIdFromAuction)
+                || currentUserId.equals(sellerIdFromItem));
+    }
+
+    /**
+     * Thông báo realtime trạng thái chống đặt giá phút chót tới các client đang xem phiên.
+     *
+     * @param auction phiên vừa được cập nhật cấu hình
+     */
+    private void notifyAntiSnipingUpdated(final Auction auction) {
+        final String message = Protocol.Response.ANTI_SNIPING_UPDATED.name()
+                + Protocol.SEPARATOR + auction.getId()
+                + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+        auction.notifyObservers(message);
+    }
+
     // =========================================================================
     // Quản lý trạng thái online
     // =========================================================================

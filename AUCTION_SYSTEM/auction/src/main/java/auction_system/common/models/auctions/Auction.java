@@ -16,6 +16,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Lớp đại diện cho một phiên đấu giá trong hệ thống.
  */
 public class Auction extends Entity {
+    private static final long ANTI_SNIPING_WINDOW_SECONDS = 30L;
+    private static final long ANTI_SNIPING_EXTENSION_SECONDS = 30L;
+
     private Item item;
     private Participant participant;
     private final List<BidTransaction> bids;
@@ -25,6 +28,7 @@ public class Auction extends Entity {
     private AuctionStatus status;
     private String sellerId;
     private boolean sellerPaid;
+    private boolean antiSnipingEnabled;
     // Dùng transient để bỏ qua thuộc tính, không
     // lưu xuống file và không gửi qua mạng.
     private transient List<AuctionObserver> observers;
@@ -51,6 +55,7 @@ public class Auction extends Entity {
         this.observers = new CopyOnWriteArrayList<>();
         this.status = AuctionStatus.OPEN;
         this.sellerPaid = false;
+        this.antiSnipingEnabled = false;
     }
 
     /**
@@ -80,9 +85,41 @@ public class Auction extends Entity {
         this.currentHighestBid = bid;
         this.bids.add(bid);
         this.item.setCurrentPrice(newBidAmount);
+        extendEndTimeIfNeeded(LocalDateTime.now());
 
         // 4. Thông báo cho tất cả mọi người đang xem biết có giá mới
         notifyObservers();
+    }
+
+    /**
+     * Gia hạn phiên nếu bid hợp lệ xuất hiện trong cửa sổ chống đặt giá phút chót.
+     *
+     * @param now thời điểm server ghi nhận bid hợp lệ
+     */
+    private void extendEndTimeIfNeeded(final LocalDateTime now) {
+        if (!antiSnipingEnabled || now == null || now.isAfter(endTime)) {
+            return;
+        }
+
+        final LocalDateTime antiSnipingStart =
+                endTime.minusSeconds(ANTI_SNIPING_WINDOW_SECONDS);
+        if (now.isBefore(antiSnipingStart)) {
+            return;
+        }
+
+        endTime = endTime.plusSeconds(ANTI_SNIPING_EXTENSION_SECONDS);
+        notifyObservers(buildAuctionExtendedMessage());
+    }
+
+    /**
+     * Tạo thông báo realtime khi phiên được gia hạn.
+     *
+     * @return thông báo theo protocol socket
+     */
+    private String buildAuctionExtendedMessage() {
+        return Protocol.Response.AUCTION_EXTENDED.name()
+                + Protocol.SEPARATOR + getId()
+                + Protocol.SEPARATOR + endTime;
     }
 
     /**
@@ -145,7 +182,8 @@ public class Auction extends Entity {
                 + Protocol.SEPARATOR + this.getId()
                 + Protocol.SEPARATOR + currentPrice
                 + Protocol.SEPARATOR + bidderName
-                + Protocol.SEPARATOR + bidTime;
+                + Protocol.SEPARATOR + bidTime
+                + Protocol.SEPARATOR + this.endTime;
 
         for (AuctionObserver observer : observers) {
             observer.update(message);
@@ -268,6 +306,14 @@ public class Auction extends Entity {
         this.sellerPaid = sellerPaid;
     }
 
+    public boolean isAntiSnipingEnabled() {
+        return antiSnipingEnabled;
+    }
+
+    public void setAntiSnipingEnabled(final boolean antiSnipingEnabled) {
+        this.antiSnipingEnabled = antiSnipingEnabled;
+    }
+
     @Override
     public String toString() {
         return "Auction{"
@@ -279,6 +325,7 @@ public class Auction extends Entity {
                 + ", startTime=" + startTime
                 + ", endTime=" + endTime
                 + ", status=" + status
+                + ", antiSnipingEnabled=" + antiSnipingEnabled
                 + ", observers=" + observers
                 + '}';
     }

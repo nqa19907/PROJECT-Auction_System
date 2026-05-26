@@ -22,6 +22,7 @@ import auction_system.server.network.command.LogoutCommand;
 import auction_system.server.network.command.PlaceBidCommand;
 import auction_system.server.network.command.PublishItemCommand;
 import auction_system.server.network.command.RegisterCommand;
+import auction_system.server.network.command.SetAntiSnipingCommand;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
 import auction_system.server.services.ParticipantItemService;
@@ -115,6 +116,9 @@ public class ClientHandler implements Runnable, AuctionObserver {
                 Map.entry(
                         Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
+                Map.entry(
+                        Protocol.Command.SET_ANTI_SNIPING.name(),
+                        new SetAntiSnipingCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.DEPOSIT.name(),
                         new DepositCommand(authService)),

@@ -96,6 +96,32 @@ public class CoreBiddingLogicTest {
     }
 
     @Test
+    void testPlaceBid_AntiSnipingEnabledAndBidInLastThirtySeconds_ExtendsEndTime() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(20);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
+
+        auction.placeBid(new BidTransaction(null, 3500, auction));
+
+        assertTrue(auction.getEndTime().isAfter(originalEndTime),
+                "Bid trong 30 giây cuối phải gia hạn thời gian kết thúc");
+        assertEquals(originalEndTime.plusSeconds(30), auction.getEndTime(),
+                "Anti-sniping phải cộng đúng 30 giây vào thời gian kết thúc");
+    }
+
+    @Test
+    void testPlaceBid_AntiSnipingEnabledAndBidBeforeLastThirtySeconds_DoesNotExtend() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(45);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
+
+        auction.placeBid(new BidTransaction(null, 3500, auction));
+
+        assertEquals(originalEndTime, auction.getEndTime(),
+                "Bid ngoài 30 giây cuối không được gia hạn thời gian kết thúc");
+    }
+
+    @Test
     void testPlaceBid_AmountEqualsStartPrice_ThrowsInvalidBidException() {
         // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (không hợp lệ)
         double invalidBidAmount = 2000;

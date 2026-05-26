@@ -134,6 +134,25 @@ public class AuctionService {
                         + auctionId);
     }
 
+    /**
+     * Gửi yêu cầu bật/tắt chống đặt giá phút chót cho một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá cần cập nhật
+     * @param enabled true nếu bật chống đặt giá phút chót
+     */
+    public void setAntiSniping(final String auctionId, final boolean enabled) {
+        if (auctionId == null || auctionId.isBlank()) {
+            return;
+        }
+
+        NetworkClient.getInstance().sendCommand(
+                Protocol.Command.SET_ANTI_SNIPING.name()
+                        + Protocol.SEPARATOR
+                        + auctionId
+                        + Protocol.SEPARATOR
+                        + enabled);
+    }
+
     // =========================================================================
     // CALLBACK CONTRACTS
     // =========================================================================
