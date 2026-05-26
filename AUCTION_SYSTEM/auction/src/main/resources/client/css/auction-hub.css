@@ -351,6 +351,29 @@
     -fx-border-color: #D4860B;
 }
 
+/* Checkbox anti shipping trong khối đặt giá */
+.root-pane .anti-shipping-checkbox {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #6E4A22;
+}
+
+.root-pane .anti-shipping-checkbox .box {
+    -fx-background-color: #FFF8EE;
+    -fx-border-color: #D8A65B;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.root-pane .anti-shipping-checkbox:selected .box {
+    -fx-background-color: #D4860B;
+    -fx-border-color: #B8700A;
+}
+
+.root-pane .anti-shipping-checkbox:selected .mark {
+    -fx-background-color: white;
+}
+
 /* ── Buttons ─────────────────────────────── */
 .root-pane .quick-btn {
     -fx-background-color: #FFF3DE;

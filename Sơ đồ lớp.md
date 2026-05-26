@@ -20,14 +20,6 @@ Tất cả các thực thể đều kế thừa trực tiếp hoặc gián tiế
     + Thuộc tính: `#username: String`, `#password: String`, `#email: String`, `#isOnline: boolean`
     + Phương thức: `+login(): void`, `+logout(): void`, `+displayDashboard(): void`, `+update(message: String): void`
 
-- **Class Bidder** (extends User):
-    + Thuộc tính: `-accountBalance: double`
-    + Phương thức: `+placeBid(item: Item, amount: double): void`, `+viewBidHistory(): void`, `+setupAutoBid(item: Item, maxPrice: double): void`
-
-- **Class Seller** (extends User):
-    + Thuộc tính: `-sellerRating: float`, `-managedItems: List<Item>`
-    + Phương thức: `+createAuction(item: Item): void`, `+updateAuction(item: Item): void`, `+deleteAuction(item: Item): void`, `+endAuction(item: Item): void`
-
 - **Class Admin** (extends User):
     + Thuộc tính: `-adminRoleLevel: int`
     + Phương thức: `+banUser(user: User): void`, `+removeInvalidItem(item: Item): void`, `+resolveDispute(): void`
