@@ -3,6 +3,11 @@
 ![Java Version](https://img.shields.io/badge/Java-21-blue)
 ![Maven](https://img.shields.io/badge/Build-Maven-orange)
 
+
+## 1. Mô tả bài toán
+
+Auction System là hệ thống đấu giá trực tuyến theo mô hình client-server.
+Người dùng có thể đăng ký, đăng nhập, đăng sản phẩm, tham gia đấu giá và đặt giá trong thời gian thực.
 Hệ thống đấu giá trực tuyến xây dựng theo kiến trúc **Client-Server** sử dụng Java thuần, kết nối Socket TCP và giao diện JavaFX.
 
 ## 👥 Thành viên nhóm
@@ -13,12 +18,13 @@ Hệ thống đấu giá trực tuyến xây dựng theo kiến trúc **Client-S
 
 ---
 
-## 🏗️ Kiến trúc & Công nghệ sử dụng
+## 2. Kiến trúc & Công nghệ sử dụng
 Dự án được thiết kế chuẩn mô hình **MVC (Model-View-Controller)** và áp dụng các kỹ thuật lập trình nâng cao:
 * **Networking:** Socket TCP (Đa luồng - Multithreading).
 * **Database:** Serialization (Lưu trữ trạng thái hệ thống qua file).
 * **Testing:** JUnit 5 (Đảm bảo logic đặt giá và concurrency).
 * **CI/CD:** GitHub Actions & Checkstyle (Google Java Style Guide).
+* **Quản lý thư viện** Maven  
 
 ### 🎨 Design Patterns áp dụng
 - **Command Pattern:** Xử lý điều hướng các yêu cầu từ Client gửi lên Server.
