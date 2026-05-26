@@ -1,6 +1,7 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.services.AuthService;
 import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
@@ -10,6 +11,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +22,9 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -28,6 +33,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 /**
  * Controller cho màn hình Admin Dashboard.
@@ -472,7 +478,18 @@ public class AdminDashboardController {
      */
     @FXML
     private void handleBack() {
-        Router.navigateContent(root, ViewConstants.ITEM_LIST_VIEW);
+        AuthService.getInstance().logout(result -> Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(ViewConstants.LOGIN_VIEW)
+                );
+                Parent loginRoot = loader.load();
+                Stage stage = (Stage) root.getScene().getWindow();
+                stage.setScene(new Scene(loginRoot));
+                stage.setTitle("Đăng nhập");
+            } catch (IOException e) {
+                showInfo("Lỗi", "Không thể chuyển về màn đăng nhập.");
+            }
+        }));
     }
 
     /**
