@@ -8,6 +8,7 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.AdminCancelAuctionCommand;
 import auction_system.server.network.command.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.AdminDeleteUserCommand;
+import auction_system.server.network.command.AdminListAuctionsCommand;
 import auction_system.server.network.command.AdminListUsersCommand;
 import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
@@ -134,7 +135,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new AdminDeleteUserCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.ADMIN_LIST_USERS.name(),
-                        new AdminListUsersCommand(auctionManager))
+                        new AdminListUsersCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.ADMIN_LIST_AUCTIONS.name(),
+                        new AdminListAuctionsCommand(auctionManager))
         );
     }
 

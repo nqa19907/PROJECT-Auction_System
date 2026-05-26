@@ -122,6 +122,14 @@ public class AdminDashboardController {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ADMIN_USER_LIST.name(),
                 this::handleAdminUserList);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_AUCTION_LIST.name(),
+                this::handleAdminAuctionList);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(),
+                this::handleAdminAuctionListFail);
     }
 
     /**
@@ -194,21 +202,11 @@ public class AdminDashboardController {
      * Nạp lại dữ liệu auction từ AuctionManager.
      */
     private void refreshAuctions() {
-        database.auctions().reload();
-        final List<Auction> auctions = database.auctions().findAll();
-
-        auctionRows.setAll(auctions.stream()
-                .map(auction -> new AuctionRow(
-                        auction.getId(),
-                        auction.getItem() != null
-                                ? auction.getItem().getItemName()
-                                : "(Khong co ten)",
-                        auction.getParticipant() != null
-                                ? auction.getParticipant().getUsername()
-                                : "(Khong ro)",
-                        formatPrice(auction),
-                        auction.getStatus() != null ? auction.getStatus().name() : "UNKNOWN"))
-                .toList());
+        boolean sent = NetworkClient.getInstance()
+                .sendCommand(Protocol.Command.ADMIN_LIST_AUCTIONS.name());
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách phiên đấu giá.");
+        }
     }
 
     /**
@@ -402,6 +400,57 @@ public class AdminDashboardController {
 
             // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
             tblUsers.refresh();
+        });
+    }
+
+    /**
+     * Xử lý phản hồi danh sách toàn bộ phiên đấu giá dành cho admin.
+     *
+     * <p>Response kỳ vọng theo format:
+     * ADMIN_AUCTION_LIST|count~auctionId|productName|seller|currentPrice|status~...
+     *
+     * <p>Hàm sẽ parse từng record phiên đấu giá và cập nhật lại bảng phiên trên UI.
+     *
+     * @param response chuỗi phản hồi từ server theo protocol
+     */
+    private void handleAdminAuctionList(final String response) {
+        Platform.runLater(() -> {
+            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
+            auctionRows.clear();
+
+            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record phiên đầu tiên.
+            for (int i = 1; i < lines.length; i++) {
+                String[] parts = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
+                if (parts.length >= 5) {
+                    auctionRows.add(new AuctionRow(
+                            parts[0], // auctionId
+                            parts[1], // productName
+                            parts[2], // seller
+                            parts[3], // currentPrice
+                            parts[4]  // status
+                    ));
+                }
+            }
+
+            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
+            tblAuctions.refresh();
+        });
+    }
+
+    /**
+     * Xử lý phản hồi lỗi khi tải danh sách phiên đấu giá cho admin.
+     *
+     * <p>Hàm tách thông điệp lỗi từ response và hiển thị cho quản trị viên.
+     *
+     * @param response chuỗi phản hồi lỗi theo protocol
+     */
+    private void handleAdminAuctionListFail(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            String message = parts.length > 1
+                    ? parts[1]
+                    : "Tải danh sách phiên đấu giá thất bại.";
+            showInfo("Lỗi", message);
         });
     }
 
