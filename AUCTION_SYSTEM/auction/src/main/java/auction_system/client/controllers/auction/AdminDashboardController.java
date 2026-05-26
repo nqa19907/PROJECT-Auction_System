@@ -118,6 +118,10 @@ public class AdminDashboardController {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
                 this::handleAdminDeleteUserFail);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_USER_LIST.name(),
+                this::handleAdminUserList);
     }
 
     /**
@@ -179,16 +183,11 @@ public class AdminDashboardController {
      * Nạp lại dữ liệu user từ repository.
      */
     private void refreshUsers() {
-        database.users().reload();
-        final List<User> users = database.users().findAll();
-
-        userRows.setAll(users.stream()
-                .map(user -> new UserRow(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.isOnline() ? "ONLINE" : "OFFLINE"))
-                .toList());
+        boolean sent = NetworkClient.getInstance()
+                .sendCommand(Protocol.Command.ADMIN_LIST_USERS.name());
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách người dùng.");
+        }
     }
 
     /**
@@ -196,7 +195,7 @@ public class AdminDashboardController {
      */
     private void refreshAuctions() {
         database.auctions().reload();
-        final List<Auction> auctions = auctionManager.getAllAuctions();
+        final List<Auction> auctions = database.auctions().findAll();
 
         auctionRows.setAll(auctions.stream()
                 .map(auction -> new AuctionRow(
@@ -375,6 +374,34 @@ public class AdminDashboardController {
             String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
             String message = parts.length > 1 ? parts[1] : "Xóa người dùng thất bại.";
             showInfo("Lỗi", message);
+        });
+    }
+
+    /**
+     * Xử lý phản hồi danh sách người dùng dành cho admin.
+     *
+     * <p>Response kỳ vọng theo format:
+     * ADMIN_USER_LIST|count~userId|username|email|status|role~...
+     *
+     * <p>Hàm sẽ parse từng record user và cập nhật lại bảng người dùng trên UI.
+     *
+     * @param response chuỗi phản hồi từ server theo protocol
+     */
+    private void handleAdminUserList(final String response) {
+        Platform.runLater(() -> {
+            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
+            userRows.clear();
+
+            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record user đầu tiên.
+            for (int i = 1; i < lines.length; i++) {
+                String[] p = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
+                if (p.length >= 4) {
+                    userRows.add(new UserRow(p[0], p[1], p[2], p[3]));
+                }
+            }
+
+            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
+            tblUsers.refresh();
         });
     }
 
