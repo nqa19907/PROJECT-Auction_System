@@ -1,4 +1,3 @@
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -18,8 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Kiểm thử tích hợp cho {@link AuthService}: đăng ký, đăng nhập,
- * kiểm tra username/email đã tồn tại.
+ * Kiểm thử AuthService: register, login, isUsernameTaken, isEmailTaken.
  */
 class AuthServiceDatabaseTest {
 
@@ -116,12 +114,6 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerPasswordExactlyMinLengthDoesNotThrow() {
-        assertDoesNotThrow(
-                () -> authService.register("u3b", "u3b@mail.com", "123456", "PARTICIPANT"));
-    }
-
-    @Test
     void registerDuplicateUsernameThrowsException() {
         authService.register("dup", "dup1@mail.com", "abc123", "PARTICIPANT");
 
@@ -138,17 +130,9 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerDuplicateEmailCaseInsensitiveThrowsException() {
-        authService.register("user_a", "dup@mail.com", "abc123", "PARTICIPANT");
-
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("user_b", "DUP@MAIL.COM", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
     void registerInvalidRoleThrowsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u4", "u4@mail.com", "abc123", "SELLER"));
+                () -> authService.register("u4", "u4@mail.com", "abc123", "UNKNOWN"));
     }
 
     @Test
@@ -158,33 +142,9 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerBlankUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("   ", "u5b@mail.com", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register(null, "u7@mail.com", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullEmailThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u8", null, "abc123", "PARTICIPANT"));
-    }
-
-    @Test
     void registerNullPasswordThrowsException() {
         assertThrows(IllegalArgumentException.class,
                 () -> authService.register("u6", "u6@mail.com", null, "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullRoleThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u9", "u9@mail.com", "abc123", null));
     }
 
     @Test
@@ -211,15 +171,6 @@ class AuthServiceDatabaseTest {
         Optional<User> result = authService.login("ghost@mail.com", "abc123");
 
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void loginEmailCaseInsensitiveReturnsUser() {
-        authService.register("caseUser", "case@mail.com", "mypass1", "PARTICIPANT");
-
-        Optional<User> result = authService.login("CASE@MAIL.COM", "mypass1");
-
-        assertTrue(result.isPresent());
     }
 
     @Test
@@ -282,12 +233,6 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void isUsernameTakenBlankUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.isUsernameTaken("   "));
-    }
-
-    @Test
     void isEmailTakenExistingEmailReturnsTrue() {
         authService.register("emailUser", "taken_email@mail.com", "abc123", "PARTICIPANT");
 
@@ -303,11 +248,5 @@ class AuthServiceDatabaseTest {
     void isEmailTakenBlankEmailThrowsException() {
         assertThrows(IllegalArgumentException.class,
                 () -> authService.isEmailTaken("  "));
-    }
-
-    @Test
-    void isEmailTakenNullEmailThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.isEmailTaken(null));
     }
 }

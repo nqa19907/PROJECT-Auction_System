@@ -18,7 +18,7 @@ public final class RoleUiPolicy {
     /**
      * Trả về tập mục Sidebar được hiển thị cho một role.
      *
-     * @param roleName tên role (ví dụ: ADMIN, SELLER, BIDDER)
+     * @param roleName tên role (ví dụ: ADMIN hoặc PARTICIPANT)
      * @return tập mục được phép hiển thị
      */
     public static Set<SidebarItem> sidebarItemsForRole(final String roleName) {
@@ -28,7 +28,7 @@ public final class RoleUiPolicy {
         final String normalizedRole = roleName.toUpperCase(Locale.ROOT);
         return switch (normalizedRole) {
             case "ADMIN" -> EnumSet.of(SidebarItem.ADMIN_DEMO);
-            case "SELLER" -> EnumSet.of(SidebarItem.PUBLISH_ITEM);
+            case "PARTICIPANT" -> EnumSet.of(SidebarItem.PUBLISH_ITEM);
             default -> defaultItems();
         };
     }

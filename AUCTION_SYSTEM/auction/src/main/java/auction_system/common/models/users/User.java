@@ -74,7 +74,7 @@ public abstract class User extends Entity implements AuctionObserver {
     }
 
     /**
-     * Lấy tên vai trò của người dùng (VD: "ADMIN", "SELLER", "BIDDER").
+     * Lấy tên vai trò của người dùng (VD: "ADMIN", "PARTICIPANT", "PARTICIPANT").
      *
      * @return Chuỗi đại diện cho vai trò.
      */

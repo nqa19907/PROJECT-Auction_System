@@ -29,13 +29,11 @@ public final class Protocol {
         LIST_AUCTIONS,
         GET_AUCTION,
         GET_BID_HISTORY,
-        WATCH_AUCTION,
-        UNWATCH_AUCTION,
+        JOIN_AUCTION,
+        LEAVE_AUCTION,
         PLACE_BID,
 
         // Admin
-        ADMIN_LIST_USERS,
-        ADMIN_LIST_AUCTIONS,
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
         ADMIN_DELETE_USER,
@@ -57,23 +55,22 @@ public final class Protocol {
         // Auction Responses
         AUCTION_LIST,
         AUCTION_DETAIL,
-        WATCH_OK, WATCH_FAIL,
+        JOIN_OK, JOIN_FAIL,
         BID_HISTORY,
-        UNWATCH_OK,
+        LEAVE_OK,
         BID_OK, BID_FAIL,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,
-        BALANCE_UPDATED,
+        AUCTION_CREATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
+        AUCTION_WINNER,
+        AUCTION_LOST,
+        BALANCE_UPDATED,
 
         // Admin responses
-        ADMIN_USER_LIST,
-        ADMIN_USER_LIST_FAIL,
-        ADMIN_AUCTION_LIST,
-        ADMIN_AUCTION_LIST_FAIL,
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,

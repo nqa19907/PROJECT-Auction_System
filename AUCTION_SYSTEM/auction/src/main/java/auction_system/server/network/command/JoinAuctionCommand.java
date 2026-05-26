@@ -10,22 +10,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Xử lý lệnh theo dõi realtime một phiên đấu giá.
+ * Xử lý lệnh tham gia một phiên đấu giá.
  */
-public class WatchAuctionCommand implements Command {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WatchAuctionCommand.class);
+public class JoinAuctionCommand implements Command {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JoinAuctionCommand.class);
     private final AuctionManager auctionManager;
 
-    public WatchAuctionCommand(AuctionManager auctionManager) {
+    public JoinAuctionCommand(AuctionManager auctionManager) {
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**
-     * Thực thi lệnh theo dõi realtime phiên đấu giá.
+     * Thực thi lệnh tham gia phiên đấu giá.
      *
-     * <p>Lệnh:       {@code WATCH_AUCTION|auctionId}
-     * Thành công: {@code WATCH_OK|auctionId}
-     * Thất bại:   {@code WATCH_FAIL|message}
+     * <p>Lệnh:       {@code JOIN_AUCTION|auctionId}
+     * Thành công: {@code JOIN_OK|auctionId}
+     * Thất bại:   {@code JOIN_FAIL|message}
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
      * @param session Phiên làm việc của Client.
@@ -39,35 +39,34 @@ public class WatchAuctionCommand implements Command {
                         + "Bạn cần đăng nhập trước";
             }
             if (parts.length < 2) {
-                return Protocol.Response.WATCH_FAIL.name() + Protocol.SEPARATOR + "Thiếu auctionId";
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR + "Thiếu auctionId";
             }
 
             String auctionId = parts[1];
             Auction auction = auctionManager.getAuctionById(auctionId);
 
             if (auction == null) {
-                return Protocol.Response.WATCH_FAIL.name() + Protocol.SEPARATOR 
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                         + "Không tìm thấy phiên đấu giá";
             }
 
             // Không cho phép theo dõi nếu phiên đấu giá đã kết thúc hoặc bị huỷ
             if (auction.getStatus() == AuctionStatus.FINISHED
                     || auction.getStatus() == AuctionStatus.CANCELED) {
-                return Protocol.Response.WATCH_FAIL.name() + Protocol.SEPARATOR 
+                return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                         + "Phiên đấu giá đã kết thúc hoặc bị huỷ";
             }
 
-            session.watchAuction(auctionId);
+            session.joinAuction(auctionId);
 
-            LOGGER.info(session.getCurrentUser().getUsername()
-                    + " theo dõi realtime phiên: " + auctionId);
-            return Protocol.Response.WATCH_OK.name() + Protocol.SEPARATOR + auctionId;
+            LOGGER.info(session.getCurrentUser().getUsername() + " tham gia phiên: " + auctionId);
+            return Protocol.Response.JOIN_OK.name() + Protocol.SEPARATOR + auctionId;
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
-            LOGGER.error("Lỗi hệ thống khi xử lý lệnh theo dõi realtime phiên đấu giá cho "
+            LOGGER.error("Lỗi hệ thống khi xử lý lệnh tham gia phiên đấu giá cho "
                     + username, e);
-            return Protocol.Response.WATCH_FAIL.name() + Protocol.SEPARATOR 
+            return Protocol.Response.JOIN_FAIL.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
     }

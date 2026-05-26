@@ -18,9 +18,9 @@ public class ClientSession {
      */
     private User currentUser;
     /**
-     * ID các phiên đấu giá mà client này đang theo dõi realtime.
+     * ID các phiên đấu giá mà client này đang theo dõi (đã JOIN).
      */
-    private final Set<String> watchedAuctionIds = new HashSet<>();
+    private final Set<String> joinedAuctionIds = new HashSet<>();
     /**
      * Observer (chính là ClientHandler) để đăng ký/hủy đăng ký nhận thông báo.
      */
@@ -36,18 +36,6 @@ public class ClientSession {
         return currentUser;
     }
 
-    /**
-     * Lấy observer gắn với session hiện tại.
-     *
-     * <p>Trong runtime hiện tại observer chính là ClientHandler đang giữ socket,
-     * dùng để đăng ký realtime message theo user sau khi login.
-     *
-     * @return observer của session
-     */
-    public AuctionObserver getObserver() {
-        return observer;
-    }
-
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
     }
@@ -57,15 +45,24 @@ public class ClientSession {
     }
 
     /**
+     * Lay observer gan voi ket noi client hien tai.
+     *
+     * @return observer dung de server day thong bao realtime
+     */
+    public AuctionObserver getObserver() {
+        return observer;
+    }
+
+    /**
      * Thêm một phiên đấu giá vào danh sách theo dõi của client.
      *
      * @param auctionId ID của phiên đấu giá cần theo dõi.
      */
-    public void watchAuction(String auctionId) {
+    public void joinAuction(String auctionId) {
         Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.attach(observer);
-            watchedAuctionIds.add(auctionId);
+            joinedAuctionIds.add(auctionId);
         }
     }
 
@@ -74,20 +71,20 @@ public class ClientSession {
      *
      * @param auctionId ID của phiên đấu giá cần gỡ bỏ.
      */
-    public void unwatchAuction(String auctionId) {
+    public void leaveAuction(String auctionId) {
         Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction != null) {
             auction.detach(observer);
         }
-        watchedAuctionIds.remove(auctionId);
+        joinedAuctionIds.remove(auctionId);
     }
 
     /**
      * Hủy theo dõi tất cả các phiên đấu giá mà client đang tham gia.
      */
-    public void unwatchAllAuctions() {
+    public void leaveAllAuctions() {
         // Tạo bản sao để tránh ConcurrentModificationException khi duyệt và xóa
-        new HashSet<>(watchedAuctionIds).forEach(this::unwatchAuction);
-        watchedAuctionIds.clear();
+        new HashSet<>(joinedAuctionIds).forEach(this::leaveAuction);
+        joinedAuctionIds.clear();
     }
 }

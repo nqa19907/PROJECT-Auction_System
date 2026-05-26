@@ -52,6 +52,7 @@ import org.junit.jupiter.api.io.TempDir;
  * </ol>
  */
 public class ParticipantItemServiceTest {
+    private static final String PARTICIPANT_ROLE = "PARTICIPANT";
 
     @TempDir
     private Path tempDir;
@@ -196,8 +197,20 @@ public class ParticipantItemServiceTest {
      * Đăng sản phẩm hợp lệ phải trả về {@link Item} đã lưu với đúng tên.
      */
     @Test
-    void listItemValidRequestReturnsPersistedItem() {
-        Item saved = itemService.listItemForAuction(seller, buildItem(seller.getId()));
+    void testListItemForAuction_SavesItemToSerializedDatabase() {
+        SerializedDatabase database = new SerializedDatabase(tempDirectory);
+        ParticipantItemService service = new ParticipantItemService(database);
+        Participant seller = new Participant(
+                "seller01",
+                "seller01@gmail.com",
+                "hashed-password",
+                10000.0,
+                PARTICIPANT_ROLE);
+        Item item = new Art(
+                "Tranh sơn dầu",
+                "Tranh phong cảnh còn mới.",
+                1500.0,
+                "");
 
         assertNotNull(saved);
         assertEquals("MacBook Pro", saved.getItemName());
@@ -222,12 +235,20 @@ public class ParticipantItemServiceTest {
      * và tìm lại được bằng {@code sellerId} sau khi đăng.
      */
     @Test
-    void listItemValidRequestItemPersistedToDatabase() {
-        itemService.listItemForAuction(seller, buildItem(seller.getId()));
-
-        List<Item> items = database.items().findBySellerId(seller.getId());
-        assertEquals(1, items.size(), "Phai co dung 1 san pham duoc luu vao database.");
-    }
+    void testListItemForAuction_ItemStillExistsAfterReloadingDatabase() {
+        SerializedDatabase database = new SerializedDatabase(tempDirectory);
+        ParticipantItemService service = new ParticipantItemService(database);
+        Participant seller = new Participant(
+                "seller02",
+                "seller02@gmail.com",
+                "hashed-password",
+                20000.0,
+                PARTICIPANT_ROLE);
+        Item item = new Art(
+                "Tượng gỗ",
+                "Tượng gỗ thủ công.",
+                2500.0,
+                "");
 
     /**
      * File {@code items.ser} phải tồn tại trên đĩa sau khi đăng sản phẩm —
