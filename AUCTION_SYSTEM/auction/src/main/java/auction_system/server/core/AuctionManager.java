@@ -212,6 +212,15 @@ public class AuctionManager {
     }
 
     /**
+     * Lấy danh sách toàn bộ người dùng hiện có trong hệ thống.
+     *
+     * @return danh sách người dùng chỉ đọc để phục vụ cho admin.
+     */
+    public List<User> getAllUsers() {
+        return List.copyOf(database.users().findAll());
+    }
+
+    /**
      * Cập nhật trạng thái tất cả phiên theo thời gian hiện tại và lưu xuống database.
      */
     public void refreshAllAuctionLifecycles() {

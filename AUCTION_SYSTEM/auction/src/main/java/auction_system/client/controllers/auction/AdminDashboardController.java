@@ -1,6 +1,7 @@
 package auction_system.client.controllers.auction;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.client.services.AuthService;
 import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
@@ -10,6 +11,7 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +22,9 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -28,6 +33,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 
 /**
  * Controller cho màn hình Admin Dashboard.
@@ -118,6 +124,18 @@ public class AdminDashboardController {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
                 this::handleAdminDeleteUserFail);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_USER_LIST.name(),
+                this::handleAdminUserList);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_AUCTION_LIST.name(),
+                this::handleAdminAuctionList);
+
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(),
+                this::handleAdminAuctionListFail);
     }
 
     /**
@@ -179,37 +197,22 @@ public class AdminDashboardController {
      * Nạp lại dữ liệu user từ repository.
      */
     private void refreshUsers() {
-        database.users().reload();
-        final List<User> users = database.users().findAll();
-
-        userRows.setAll(users.stream()
-                .map(user -> new UserRow(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.isOnline() ? "ONLINE" : "OFFLINE"))
-                .toList());
+        boolean sent = NetworkClient.getInstance()
+                .sendCommand(Protocol.Command.ADMIN_LIST_USERS.name());
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách người dùng.");
+        }
     }
 
     /**
      * Nạp lại dữ liệu auction từ AuctionManager.
      */
     private void refreshAuctions() {
-        database.auctions().reload();
-        final List<Auction> auctions = auctionManager.getAllAuctions();
-
-        auctionRows.setAll(auctions.stream()
-                .map(auction -> new AuctionRow(
-                        auction.getId(),
-                        auction.getItem() != null
-                                ? auction.getItem().getItemName()
-                                : "(Khong co ten)",
-                        auction.getParticipant() != null
-                                ? auction.getParticipant().getUsername()
-                                : "(Khong ro)",
-                        formatPrice(auction),
-                        auction.getStatus() != null ? auction.getStatus().name() : "UNKNOWN"))
-                .toList());
+        boolean sent = NetworkClient.getInstance()
+                .sendCommand(Protocol.Command.ADMIN_LIST_AUCTIONS.name());
+        if (!sent) {
+            showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách phiên đấu giá.");
+        }
     }
 
     /**
@@ -379,6 +382,85 @@ public class AdminDashboardController {
     }
 
     /**
+     * Xử lý phản hồi danh sách người dùng dành cho admin.
+     *
+     * <p>Response kỳ vọng theo format:
+     * ADMIN_USER_LIST|count~userId|username|email|status|role~...
+     *
+     * <p>Hàm sẽ parse từng record user và cập nhật lại bảng người dùng trên UI.
+     *
+     * @param response chuỗi phản hồi từ server theo protocol
+     */
+    private void handleAdminUserList(final String response) {
+        Platform.runLater(() -> {
+            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
+            userRows.clear();
+
+            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record user đầu tiên.
+            for (int i = 1; i < lines.length; i++) {
+                String[] p = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
+                if (p.length >= 4) {
+                    userRows.add(new UserRow(p[0], p[1], p[2], p[3]));
+                }
+            }
+
+            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
+            tblUsers.refresh();
+        });
+    }
+
+    /**
+     * Xử lý phản hồi danh sách toàn bộ phiên đấu giá dành cho admin.
+     *
+     * <p>Response kỳ vọng theo format:
+     * ADMIN_AUCTION_LIST|count~auctionId|productName|seller|currentPrice|status~...
+     *
+     * <p>Hàm sẽ parse từng record phiên đấu giá và cập nhật lại bảng phiên trên UI.
+     *
+     * @param response chuỗi phản hồi từ server theo protocol
+     */
+    private void handleAdminAuctionList(final String response) {
+        Platform.runLater(() -> {
+            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
+            auctionRows.clear();
+
+            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record phiên đầu tiên.
+            for (int i = 1; i < lines.length; i++) {
+                String[] parts = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
+                if (parts.length >= 5) {
+                    auctionRows.add(new AuctionRow(
+                            parts[0], // auctionId
+                            parts[1], // productName
+                            parts[2], // seller
+                            parts[3], // currentPrice
+                            parts[4]  // status
+                    ));
+                }
+            }
+
+            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
+            tblAuctions.refresh();
+        });
+    }
+
+    /**
+     * Xử lý phản hồi lỗi khi tải danh sách phiên đấu giá cho admin.
+     *
+     * <p>Hàm tách thông điệp lỗi từ response và hiển thị cho quản trị viên.
+     *
+     * @param response chuỗi phản hồi lỗi theo protocol
+     */
+    private void handleAdminAuctionListFail(final String response) {
+        Platform.runLater(() -> {
+            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+            String message = parts.length > 1
+                    ? parts[1]
+                    : "Tải danh sách phiên đấu giá thất bại.";
+            showInfo("Lỗi", message);
+        });
+    }
+
+    /**
      * Hiện thông báo thông tin đơn giản.
      *
      * @param title tiêu đề thông báo
@@ -396,7 +478,18 @@ public class AdminDashboardController {
      */
     @FXML
     private void handleBack() {
-        Router.navigateContent(root, ViewConstants.ITEM_LIST_VIEW);
+        AuthService.getInstance().logout(result -> Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(ViewConstants.LOGIN_VIEW)
+                );
+                Parent loginRoot = loader.load();
+                Stage stage = (Stage) root.getScene().getWindow();
+                stage.setScene(new Scene(loginRoot));
+                stage.setTitle("Đăng nhập");
+            } catch (IOException e) {
+                showInfo("Lỗi", "Không thể chuyển về màn đăng nhập.");
+            }
+        }));
     }
 
     /**
