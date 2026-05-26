@@ -25,6 +25,10 @@ final class AuctionLifecycleScheduler {
     }
 
     void start() {
+        /*
+         * Chạy ngay lúc start để trạng thái dữ liệu vừa nạp từ disk được cập
+         * nhật trước khi client đầu tiên lấy danh sách phiên.
+         */
         executor.scheduleAtFixedRate(
                 this::updateAuctionStates,
                 0,
@@ -33,6 +37,10 @@ final class AuctionLifecycleScheduler {
     }
 
     void shutdown() {
+        /*
+         * Server shutdown cần dừng scheduler mềm trước. Nếu task đang bị treo quá
+         * 2 giây thì shutdownNow để JVM không giữ thread nền.
+         */
         executor.shutdown();
         try {
             if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
@@ -47,6 +55,7 @@ final class AuctionLifecycleScheduler {
     private void updateAuctionStates() {
         for (final Auction auction : auctionRegistry.findAll()) {
             try {
+                // Lỗi của một phiên không được làm scheduler dừng toàn bộ vòng quét.
                 auctionRegistry.refreshAuctionLifecycle(auction);
             } catch (Exception exception) {
                 LOGGER.warn(

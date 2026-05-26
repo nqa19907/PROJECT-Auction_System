@@ -15,6 +15,11 @@ final class BidRequestValidator {
             final User currentUser,
             final double amount) {
 
+        /*
+         * Nhóm validate này chỉ kiểm tra request thô: có phiên, có đăng nhập,
+         * đúng role và số tiền dương. Các điều kiện phụ thuộc auction cụ thể
+         * được kiểm tra sau khi transaction đã lấy được auction hiện tại.
+         */
         validateAuctionId(auctionId);
 
         if (currentUser == null) {
@@ -35,9 +40,15 @@ final class BidRequestValidator {
             final BidTransaction previousHighestBid,
             final double amount) {
 
+        /*
+         * availableBalance không đơn giản là balance hiện tại nếu bidder đang là
+         * người dẫn đầu. Số tiền bid cũ đang bị giữ sẽ được hoàn trước khi giữ
+         * bid mới, nên phải cộng lại để kiểm tra khả năng chi trả.
+         */
         double availableBalance = bidder.getBalance();
 
         if (isSameBidder(bidder, previousHighestBid)) {
+            // Bid trước của chính user đang bị giữ, nên tính lại như tiền khả dụng.
             availableBalance += previousHighestBid.getAmount();
         }
 
@@ -47,6 +58,7 @@ final class BidRequestValidator {
     }
 
     void validateAuctionId(final String auctionId) {
+        // Dùng chung cho cả placeBid và getBidHistory vì hai lệnh đều cần auctionId hợp lệ.
         if (auctionId == null || auctionId.isBlank()) {
             throw new InvalidBidException("Mã phiên đấu giá không được rỗng.");
         }
@@ -56,6 +68,10 @@ final class BidRequestValidator {
             final Participant bidder,
             final BidTransaction previousHighestBid) {
 
+        /*
+         * So sánh bằng id thay vì object reference vì Participant có thể được
+         * deserialize hoặc lấy từ repository ở các thời điểm khác nhau.
+         */
         return previousHighestBid != null
                 && previousHighestBid.getParticipant() != null
                 && previousHighestBid.getParticipant().getId().equals(bidder.getId());

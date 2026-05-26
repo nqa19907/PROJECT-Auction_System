@@ -32,8 +32,11 @@ public final class Protocol {
         WATCH_AUCTION,
         UNWATCH_AUCTION,
         PLACE_BID,
+        ENABLE_AUTO_BID,
+        DISABLE_AUTO_BID,
 
         // Admin
+        // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
         ADMIN_LIST_USERS,
         ADMIN_LIST_AUCTIONS,
         ADMIN_CANCEL_AUCTION,
@@ -61,6 +64,7 @@ public final class Protocol {
         BID_HISTORY,
         UNWATCH_OK,
         BID_OK, BID_FAIL,
+        AUTO_BID_OK, AUTO_BID_FAIL,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
@@ -70,6 +74,7 @@ public final class Protocol {
         AUCTION_ENDED,
 
         // Admin responses
+        // Response dạng header|count~record1~record2 để truyền bảng quản trị qua một dòng socket.
         ADMIN_USER_LIST,
         ADMIN_USER_LIST_FAIL,
         ADMIN_AUCTION_LIST,

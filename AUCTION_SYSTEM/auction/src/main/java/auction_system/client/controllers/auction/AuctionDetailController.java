@@ -16,6 +16,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -68,12 +69,20 @@ public class AuctionDetailController implements Initializable {
     @FXML private TextField bidInput;
     @FXML private Button placeBidBtn;
     @FXML private Label lblError;
+    
+    // Auto-bid form controls.
+    @FXML private CheckBox autoBidToggle;
+    @FXML private TextField autoBidMaxInput;
+    @FXML private TextField autoBidStepInput;
+    @FXML private Button enableAutoBidBtn;
+    @FXML private Label autoBidErrorLabel;
 
     // ── ViewModel ────────────────────────────────────────────
     private AuctionViewModel viewModel;
     private final XYChart.Series<Number, Number> priceSeries = new XYChart.Series<>();
     private AuctionBidForm bidForm;
     private AuctionRealtimeSubscription realtimeSubscription;
+    private AuctionAutoBidForm autoBidForm;
     private AuctionDetailVisuals visuals;
 
     /**
@@ -137,6 +146,13 @@ public class AuctionDetailController implements Initializable {
     public void initialize(final URL url, final ResourceBundle rb) {
         viewModel = new AuctionViewModel();
         bidForm = new AuctionBidForm(bidInput, placeBidBtn, lblError, viewModel);
+        autoBidForm = new AuctionAutoBidForm(
+                autoBidToggle,
+                autoBidMaxInput,
+                autoBidStepInput,
+                enableAutoBidBtn,
+                autoBidErrorLabel,
+                viewModel);
         realtimeSubscription = new AuctionRealtimeSubscription(
                 () -> viewModel.auctionIdProperty().get(),
                 this::handleCurrentAuctionUpdated);
@@ -146,6 +162,7 @@ public class AuctionDetailController implements Initializable {
         setupChart();
         bindViewModel();
         bidForm.registerInputListener();
+        autoBidForm.registerHandlers();
         realtimeSubscription.registerHandlers();
         visuals.start();
         registerLifecycleCleanup();

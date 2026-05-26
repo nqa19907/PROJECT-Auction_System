@@ -23,6 +23,7 @@ public class AuctionService {
     private FetchAuctionsCallback currentListCallback;
     private FetchAuctionDetailCallback currentDetailCallback;
     private PlaceBidCallback currentBidCallback;
+    private AutoBidCallback currentAutoBidCallback;
     private FetchBidHistoryCallback currentBidHistoryCallback;
 
     // =========================================================================
@@ -45,6 +46,12 @@ public class AuctionService {
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_FAIL.name(), this::handlePlaceBidFailure
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUTO_BID_OK.name(), this::handleAutoBidSuccess
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUTO_BID_FAIL.name(), this::handleAutoBidFailure
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
@@ -84,6 +91,14 @@ public class AuctionService {
     @FunctionalInterface
     public interface PlaceBidCallback {
         void onResult(boolean isSuccess, String message, double newBalance);
+    }
+    
+    /**
+     * Callback trả kết quả bật đấu giá tự động.
+     */
+    @FunctionalInterface
+    public interface AutoBidCallback {
+        void onResult(boolean isSuccess, String message);
     }
 
     /**
@@ -183,6 +198,32 @@ public class AuctionService {
     }
 
     /**
+     * Gửi yêu cầu bật auto-bid cho một phiên đấu giá.
+     *
+     * <p>Format request: {@code ENABLE_AUTO_BID|auctionId|maxAmount|stepAmount}.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param maxAmount giá tối đa người dùng cho phép auto-bid
+     * @param stepAmount bước tăng mỗi lần bị vượt giá
+     * @param callback callback nhận kết quả từ server
+     */
+    public void enableAutoBid(
+            final String auctionId,
+            final long maxAmount,
+            final long stepAmount,
+            final AutoBidCallback callback) {
+
+        this.currentAutoBidCallback = callback;
+
+        final String request = Protocol.Command.ENABLE_AUTO_BID.name()
+                + Protocol.SEPARATOR + auctionId
+                + Protocol.SEPARATOR + maxAmount
+                + Protocol.SEPARATOR + stepAmount;
+
+        NetworkClient.getInstance().sendCommand(request);
+    }
+
+    /**
      * Xử lý khi đặt giá thành công.
      *
      * @param response Chuỗi phản hồi từ mạng do Server trả về.
@@ -220,6 +261,47 @@ public class AuctionService {
         
         currentBidCallback.onResult(false, message, 0);
         currentBidCallback = null;
+    }
+
+    /**
+     * Xử lý phản hồi bật auto-bid thành công.
+     *
+     * @param response phản hồi AUTO_BID_OK từ server
+     */
+    private void handleAutoBidSuccess(final String response) {
+        if (currentAutoBidCallback == null) {
+            return;
+        }
+
+        LOGGER.info("AuctionService bật auto-bid thành công: " + response);
+        currentAutoBidCallback.onResult(true, "Đã bật đấu giá tự động.");
+        currentAutoBidCallback = null;
+    }
+
+    /**
+     * Xử lý phản hồi bật auto-bid thất bại.
+     *
+     * @param response phản hồi AUTO_BID_FAIL từ server
+     */
+    private void handleAutoBidFailure(final String response) {
+        if (currentAutoBidCallback == null) {
+            return;
+        }
+
+        LOGGER.warn("AuctionService bật auto-bid thất bại: " + response);
+        currentAutoBidCallback.onResult(false, parseSimpleFailureMessage(response));
+        currentAutoBidCallback = null;
+    }
+
+    /**
+     * Lấy message từ response dạng {@code RESPONSE|message}.
+     *
+     * @param response phản hồi từ server
+     * @return message lỗi nếu có, hoặc thông báo mặc định
+     */
+    private String parseSimpleFailureMessage(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, 2);
+        return parts.length >= 2 ? parts[1] : "Yêu cầu không thành công.";
     }
 
     // =========================================================================

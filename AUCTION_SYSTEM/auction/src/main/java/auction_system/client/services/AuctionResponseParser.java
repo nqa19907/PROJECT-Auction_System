@@ -45,6 +45,11 @@ final class AuctionResponseParser {
         final List<String[]> auctionList = new ArrayList<>();
         final String[] records = response.split(Protocol.RECORD_SEPARATOR);
 
+        /*
+         * Record đầu tiên là header AUCTION_LIST|count. Các record sau giữ nguyên
+         * dạng String[] để lớp ViewModel/controller hiện tại tiếp tục dùng index
+         * field cũ mà không cần đổi toàn bộ contract UI.
+         */
         for (int i = FIRST_AUCTION_RECORD_INDEX; i < records.length; i++) {
             final String[] parts = records[i].split(Protocol.SEPARATOR_REGEX);
             if (parts.length >= MIN_AUCTION_LIST_PARTS) {
@@ -56,10 +61,18 @@ final class AuctionResponseParser {
     }
 
     static String[] parseAuctionDetail(final String response) {
+        /*
+         * Detail response đang được ViewModel đọc theo vị trí field. Parser chỉ
+         * tách chuỗi, chưa đổi sang record riêng để tránh làm rộng phạm vi refactor.
+         */
         return response.split(Protocol.SEPARATOR_REGEX);
     }
 
     static OptionalDouble parseBidOkBalance(final String response) {
+        /*
+         * BID_OK trả số dư mới để client cập nhật UserSession ngay sau bid.
+         * OptionalDouble giúp service phía trên phân biệt lỗi parse với số dư 0.
+         */
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
         if (parts.length < MIN_BID_OK_PARTS) {
             LOGGER.warn("Phản hồi BID_OK thiếu số dư mới.");
@@ -70,6 +83,10 @@ final class AuctionResponseParser {
     }
 
     static String parseBidFailureMessage(final String response) {
+        /*
+         * Server gửi message lỗi nghiệp vụ ở field thứ hai. Nếu response bị thiếu
+         * field, client vẫn cần một câu lỗi an toàn để hiển thị dưới form bid.
+         */
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
 
         return parts.length >= MIN_BID_FAIL_PARTS
@@ -81,6 +98,10 @@ final class AuctionResponseParser {
         final List<String[]> bidHistoryRows = new ArrayList<>();
         final String[] records = response.split(Protocol.RECORD_SEPARATOR);
 
+        /*
+         * BID_HISTORY gồm header và nhiều dòng time|bidder|amount. Bỏ qua dòng
+         * thiếu field để bảng lịch sử vẫn render được các dòng hợp lệ còn lại.
+         */
         for (int i = FIRST_BID_HISTORY_RECORD_INDEX; i < records.length; i++) {
             final String[] parts = records[i].split(Protocol.SEPARATOR_REGEX);
             if (parts.length >= MIN_BID_HISTORY_PARTS) {
@@ -92,6 +113,10 @@ final class AuctionResponseParser {
     }
 
     static OptionalDouble parseBalanceUpdate(final String response) {
+        /*
+         * BALANCE_UPDATED là realtime cá nhân theo user. Chỉ số dư mới cần được
+         * đưa vào UserSessionService, userId đã được server route đúng socket.
+         */
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
         if (parts.length < MIN_BALANCE_UPDATED_PARTS) {
             LOGGER.warn("BALANCE_UPDATED không hợp lệ: {}", response);
@@ -102,6 +127,10 @@ final class AuctionResponseParser {
     }
 
     private static OptionalDouble parseDouble(final String rawValue, final String responseName) {
+        /*
+         * Không ném exception lên tầng UI vì response mạng lỗi không nên làm
+         * hỏng handler. Service sẽ quyết định fallback khi OptionalDouble rỗng.
+         */
         try {
             return OptionalDouble.of(Double.parseDouble(rawValue));
         } catch (NumberFormatException exception) {

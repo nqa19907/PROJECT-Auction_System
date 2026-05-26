@@ -35,6 +35,10 @@ final class AuctionBidForm {
     }
 
     void registerInputListener() {
+        /*
+         * Khi người dùng sửa số tiền, lỗi cũ không còn chắc chắn đúng nữa.
+         * Ẩn lỗi ngay tại form giúp controller không phải biết chi tiết UI này.
+         */
         bidInput.textProperty().addListener((obs, oldValue, newValue) -> hideError());
     }
 
@@ -43,12 +47,22 @@ final class AuctionBidForm {
         // trước khi gửi PLACE_BID lên server.
         hideError();
 
+        /*
+         * Form chỉ kiểm tra điều kiện tối thiểu để có phản hồi nhanh.
+         * Các luật nghiệp vụ thật như quyền bid, số dư và trạng thái phiên
+         * vẫn được server kiểm tra trong AuctionBidService.
+         */
         final String rawAmount = bidInput.getText();
         if (rawAmount == null || rawAmount.trim().isEmpty()) {
             showError("Vui lòng nhập số tiền.");
             return;
         }
 
+        /*
+         * Khóa nút trong lúc chờ server để tránh gửi nhiều PLACE_BID liên tiếp.
+         * Callback mạng có thể chạy ngoài JavaFX Application Thread nên kết quả
+         * luôn được đưa về Platform.runLater trước khi chạm vào control.
+         */
         setSubmitting(true);
         viewModel.submitBid(rawAmount, (success, message, newBalance) ->
                 Platform.runLater(() -> handleSubmitResult(
@@ -59,6 +73,10 @@ final class AuctionBidForm {
     }
 
     void addToInput(final long delta) {
+        /*
+         * Các nút cộng nhanh dựa trên giá người dùng đang nhập. Nếu ô đang rỗng,
+         * lấy giá hiện tại của phiên làm mốc để người dùng có thể tăng nhanh.
+         */
         final String raw = bidInput.getText().replaceAll("[^0-9]", "");
         final long base = raw.isEmpty() ? viewModel.getCurrentPriceValue() : Long.parseLong(raw);
 
@@ -70,6 +88,11 @@ final class AuctionBidForm {
             final boolean success,
             final String message,
             final double newBalance) {
+        /*
+         * Dù thành công hay lỗi, form phải trở về trạng thái có thể nhập tiếp.
+         * requestFocus xử lý trường hợp JavaFX chuyển focus sang control khác
+         * sau khi nút submit bị disable/enable.
+         */
         setSubmitting(false);
         keepFocusInBidInput();
 
@@ -81,6 +104,10 @@ final class AuctionBidForm {
     }
 
     private void handleSubmitSuccess(final String rawAmount, final double newBalance) {
+        /*
+         * rawAmount có thể chứa ký tự format do người dùng nhập. Chỉ giữ chữ số
+         * cho log hiển thị, còn số dư mới đã lấy từ response BID_OK của server.
+         */
         final long amount = Long.parseLong(rawAmount.replaceAll("[^0-9]", ""));
 
         // UI sẽ cập nhật qua UPDATE_PRICE rồi reload bid history để đồng bộ với server.

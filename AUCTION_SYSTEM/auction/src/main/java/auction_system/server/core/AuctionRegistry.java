@@ -32,11 +32,16 @@ final class AuctionRegistry {
     }
 
     void loadFromPersistence() {
+        /*
+         * Registry runtime luôn được rebuild từ repository khi server start.
+         * CopyOnWriteArrayList cho phép scheduler đọc trong lúc command khác duyệt.
+         */
         auctions.clear();
         auctions.addAll(database.auctions().findAll());
     }
 
     boolean isEmpty() {
+        // Dùng cho luồng seed data mẫu sau khi nạp persistence.
         return auctions.isEmpty();
     }
 
@@ -46,6 +51,10 @@ final class AuctionRegistry {
             final LocalDateTime startTime,
             final LocalDateTime endTime) {
 
+        /*
+         * Tạo auction mới cần lưu cả item và auction để sau khi restart server
+         * vẫn khôi phục được quan hệ item/phiên trong database serialization.
+         */
         final Auction newAuction = new Auction(item, seller, startTime, endTime);
         auctions.add(newAuction);
         database.items().save(item);
@@ -60,6 +69,10 @@ final class AuctionRegistry {
     }
 
     Auction findById(final String auctionId) {
+        /*
+         * Mỗi lần lấy một phiên cụ thể đều refresh lifecycle trước khi trả ra,
+         * nhờ vậy command đặt giá hoặc xem chi tiết không dùng trạng thái cũ.
+         */
         if (auctionId == null) {
             return null;
         }
@@ -73,17 +86,26 @@ final class AuctionRegistry {
     }
 
     List<Auction> findAll() {
+        // Làm mới lifecycle trước khi trả dữ liệu để LIST_AUCTIONS không hiển thị trạng thái cũ.
         refreshAllAuctionLifecycles();
         return Collections.unmodifiableList(auctions);
     }
 
     void refreshAllAuctionLifecycles() {
+        /*
+         * Scheduler và các command list cùng dùng hàm này. Mỗi auction tự quyết
+         * định start/end theo thời gian hiện tại trong model Auction.
+         */
         for (final Auction auction : auctions) {
             refreshAuctionLifecycle(auction);
         }
     }
 
     void refreshAuctionLifecycle(final Auction auction) {
+        /*
+         * startAuction/endAuction là idempotent theo trạng thái hiện tại, nên có
+         * thể gọi nhiều lần từ scheduler, list và place bid mà không đổi sai.
+         */
         if (auction == null) {
             return;
         }
@@ -92,6 +114,7 @@ final class AuctionRegistry {
         auction.startAuction();
         auction.endAuction();
 
+        // Chỉ ghi disk khi status thật sự đổi để tránh flush liên tục mỗi vòng scheduler.
         if (oldStatus != auction.getStatus()) {
             database.auctions().save(auction);
             database.flushAll();
@@ -99,6 +122,10 @@ final class AuctionRegistry {
     }
 
     boolean cancelById(final String auctionId) {
+        /*
+         * Cancel giữ auction trong registry/database nhưng chuyển trạng thái.
+         * Observer được báo để client đang xem phiên biết phiên đã đóng.
+         */
         final Auction auction = findById(auctionId);
         if (auction == null) {
             return false;
@@ -111,6 +138,10 @@ final class AuctionRegistry {
     }
 
     boolean deleteById(final String auctionId) {
+        /*
+         * Delete loại hẳn phiên khỏi registry runtime và repository. Command admin
+         * dùng kết quả boolean để quyết định trả OK/FAIL cho client.
+         */
         final Auction auction = findById(auctionId);
         if (auction == null) {
             return false;

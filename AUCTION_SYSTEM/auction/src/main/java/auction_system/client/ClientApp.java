@@ -8,6 +8,7 @@ import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
+import auction_system.server.services.AutoBidService;
 import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -75,13 +76,16 @@ public class ClientApp extends Application {
         final int port = NetworkConfig.SERVER_PORT;
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
+        final AutoBidService autoBidService = new AutoBidService();
+        final AuctionBidService auctionBidService =
+                new AuctionBidService(database, auctionManager, autoBidService);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         localServer = SocketServer.getInstance(
             port,
             authService,
             auctionManager,
+            autoBidService,
             auctionBidService,
             participantItemService
         );

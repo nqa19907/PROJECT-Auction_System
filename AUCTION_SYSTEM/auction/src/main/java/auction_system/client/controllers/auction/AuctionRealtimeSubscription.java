@@ -42,6 +42,11 @@ final class AuctionRealtimeSubscription {
             return;
         }
 
+        /*
+         * Các handler được lưu thành field cố định để unregisterHandler nhận
+         * đúng object đã đăng ký. Nếu tạo lambda mới khi unregister, handler cũ
+         * vẫn còn sống và màn hình đã đóng vẫn nhận realtime.
+         */
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.WATCH_OK.name(),
                 watchOkHandler);
@@ -78,6 +83,7 @@ final class AuctionRealtimeSubscription {
             return;
         }
 
+        // Cleanup có thể được gọi từ nút back và từ scene listener, nên cần idempotent.
         cleanedUp = true;
         unwatch(currentAuctionIdSupplier.get());
         unregisterHandlers();
@@ -140,6 +146,7 @@ final class AuctionRealtimeSubscription {
         final String updatedAuctionId = parts[IDX_AUCTION_ID];
         final String currentAuctionId = currentAuctionIdSupplier.get();
 
+        // UPDATE_PRICE là broadcast chung; màn hình chi tiết chỉ xử lý phiên đang mở.
         if (!updatedAuctionId.equals(currentAuctionId)) {
             LOGGER.info(
                     "Bỏ qua UPDATE_PRICE của phiên khác: received={}, current={}",
