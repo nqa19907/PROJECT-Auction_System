@@ -3,6 +3,7 @@ package auction_system.server;
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
+import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
@@ -19,7 +20,7 @@ public class ServerApp {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerApp.class);
 
     /** Đường dẫn thư mục lưu trữ dữ liệu serialization. */
-    private static final Path DATA_DIRECTORY = Path.of("data");
+    private static final Path DATA_DIRECTORY = DatabasePathProvider.defaultDataDirectory();
 
     /**
      * Ngăn việc khởi tạo lớp tiện ích ServerApp từ bên ngoài.
@@ -50,7 +51,7 @@ public class ServerApp {
         final AuthService authService = new AuthService(database);
         final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
         final AuctionBidService auctionBidService =
-            new AuctionBidService(database, auctionManager, autoBidService);
+                new AuctionBidService(database, auctionManager, autoBidService);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         if (!authService.isEmailTaken("qa@gmail.com")) {

@@ -30,7 +30,7 @@ public class AuctionLifecycleTest {
                 .sellerId("SN001")
                 .build();
 
-        seller = new Participant("John", "john@gmail.com", "123456", 10_000.0, "SELLER");
+        seller = new Participant("John", "john@gmail.com", "123456", 10_000.0, "PARTICIPANT");
 
         auction = new Auction(item, seller,
                 LocalDateTime.now(),

@@ -34,6 +34,7 @@ public class AuctionBidService {
 
     /** Database serialization dùng chung phía server. */
     private final SerializedDatabase database;
+    private final AuctionManager auctionManager;
     private final AutoBidService autoBidService;
     private final BidRequestValidator bidRequestValidator;
     private final BidWalletService bidWalletService;
@@ -87,6 +88,7 @@ public class AuctionBidService {
             final AutoBidService autoBidService) {
 
         this.database = Objects.requireNonNull(database, "database");
+        this.auctionManager = auctionManager;
         this.bidRequestValidator = new BidRequestValidator();
         this.autoBidService = Objects.requireNonNull(autoBidService, "autoBidService");
         this.bidWalletService = new BidWalletService(database);
@@ -314,6 +316,8 @@ public class AuctionBidService {
         // Lấy bid dẫn đầu cũ để kiểm tra số dư và hoàn tiền nếu bị vượt.
         final BidTransaction previousHighestBid = auction.getCurrentHighestBid();
 
+        validateNotSellerBidder(auction, bidder);
+
         // Kiểm tra bidder có đủ số dư khả dụng cho mức giá mới không.
         bidRequestValidator.validateAvailableBalance(
                 bidder,
@@ -339,6 +343,27 @@ public class AuctionBidService {
                 auction,
                 bidder,
                 previousBidder);
+    }
+
+    /**
+     * Chặn người bán tự đặt giá sản phẩm của chính mình.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     * @param bidder người đang gửi lệnh đặt giá
+     */
+    private void validateNotSellerBidder(final Auction auction, final Participant bidder) {
+        final String sellerIdFromAuction = auction.getParticipant() != null
+                ? auction.getParticipant().getId()
+                : null;
+        final String sellerIdFromItem = auction.getItem() != null
+                ? auction.getItem().getSellerId()
+                : null;
+
+        if (bidder.getId().equals(sellerIdFromAuction)
+                || bidder.getId().equals(sellerIdFromItem)) {
+            throw new InvalidBidException(
+                    "Người bán không được đấu giá sản phẩm của chính mình.");
+        }
     }
 
     /**
@@ -762,6 +787,10 @@ public class AuctionBidService {
         if (oldStatus != auction.getStatus()) {
             database.auctions().save(auction);
             database.flushAll();
+            if (auctionManager != null && auction.getStatus() == AuctionStatus.FINISHED) {
+                auctionManager.settleFinishedAuction(auction);
+                auctionManager.notifyAuctionResult(auction);
+            }
         }
     }
 

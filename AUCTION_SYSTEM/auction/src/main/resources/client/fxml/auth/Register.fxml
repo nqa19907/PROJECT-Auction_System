@@ -61,6 +61,7 @@
                        text="TÊN NGƯỜI DÙNG" />
 
                 <TextField fx:id="nameField"
+                           onAction="#handleNameEnter"
                            promptText="Tên người dùng"
                            styleClass="input-field" />
             </VBox>
@@ -71,6 +72,7 @@
                        text="EMAIL" />
 
                 <TextField fx:id="emailField"
+                           onAction="#handleEmailEnter"
                            promptText="ten@example.com"
                            styleClass="input-field" />
             </VBox>

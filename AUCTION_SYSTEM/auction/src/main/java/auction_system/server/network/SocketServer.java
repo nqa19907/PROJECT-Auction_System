@@ -2,6 +2,7 @@ package auction_system.server.network;
 
 import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AuthService;
@@ -10,7 +11,6 @@ import auction_system.server.services.ParticipantItemService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,11 +32,11 @@ import org.slf4j.LoggerFactory;
  * <p>Lệnh client gửi lên:
  * * <pre>
  * LOGIN|username|password
- * REGISTER|username|email|password|role   (role: BIDDER / SELLER)
+ * REGISTER|username|email|password|role   (role: ADMIN / PARTICIPANT)
  * LIST_AUCTIONS
  * GET_AUCTION|auctionId
- * WATCH_AUCTION|auctionId
- * UNWATCH_AUCTION|auctionId
+ * JOIN_AUCTION|auctionId
+ * LEAVE_AUCTION|auctionId
  * PLACE_BID|auctionId|amount
  * DEPOSIT|amount
  * LOGOUT
@@ -51,9 +51,9 @@ import org.slf4j.LoggerFactory;
  *   AUCTION_LIST|n   (sau đó n dòng:
  *       auctionId|itemName|currentPrice|status|endTime|itemType|startPrice)
  *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
- *   WATCH_OK|auctionId
- *   WATCH_FAIL|message
- *   UNWATCH_OK|auctionId
+ *   JOIN_OK|auctionId
+ *   JOIN_FAIL|message
+ *   LEAVE_OK|auctionId
  *   BID_OK|auctionId|amount|newBalance
  *   BID_FAIL|message
  *   DEPOSIT_OK|balance
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  *   ERROR|message
  * </pre>
  *
- * <p>Broadcast server tự push khi có sự kiện (đến các client đang xem phiên):
+ * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
  * * <pre>
  * UPDATE_PRICE|auctionId|newPrice
  * AUCTION_STARTED|auctionId
@@ -253,7 +253,8 @@ public class SocketServer {
                         + NetworkConfig.SERVER_PORT);
             }
         }
-        final SerializedDatabase database = new SerializedDatabase(Path.of("data"));
+        final SerializedDatabase database = new SerializedDatabase(
+                DatabasePathProvider.defaultDataDirectory());
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
         final AuctionBidService auctionBidService =

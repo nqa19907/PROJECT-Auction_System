@@ -60,8 +60,11 @@ public class GetAuctionCommand implements Command {
                     + Protocol.SEPARATOR + item.getStartPrice()
                     + Protocol.SEPARATOR + currentPrice
                     + Protocol.SEPARATOR + auction.getStatus().name()
+                    + Protocol.SEPARATOR + auction.getStartTime()
                     + Protocol.SEPARATOR + auction.getEndTime()
-                    + Protocol.SEPARATOR + auction.getParticipant().getUsername();
+                    + Protocol.SEPARATOR + auction.getParticipant().getUsername()
+                    + Protocol.SEPARATOR + resolveSellerId(auction)
+                    + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.error("Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
@@ -69,5 +72,23 @@ public class GetAuctionCommand implements Command {
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
         }
+    }
+
+    /**
+     * Lấy mã người bán từ phiên hoặc item để client kiểm tra quyền quan sát/đặt giá.
+     *
+     * @param auction phiên đấu giá cần đọc thông tin người bán
+     * @return mã người bán, hoặc chuỗi rỗng nếu thiếu dữ liệu
+     */
+    private String resolveSellerId(final Auction auction) {
+        if (auction.getParticipant() != null && auction.getParticipant().getId() != null) {
+            return auction.getParticipant().getId();
+        }
+
+        if (auction.getItem() != null && auction.getItem().getSellerId() != null) {
+            return auction.getItem().getSellerId();
+        }
+
+        return "";
     }
 }

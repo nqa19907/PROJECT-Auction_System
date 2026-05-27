@@ -2,7 +2,6 @@ package auction_system.server.services;
 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.users.Participant;
-import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import java.util.Objects;
 
@@ -44,16 +43,6 @@ final class BidRealtimeNotifier {
             return;
         }
 
-        /*
-         * Format message giữ theo Protocol để client AuctionService có thể parse
-         * và cập nhật UserSessionService mà không cần gọi lại server.
-         */
-        final String message = Protocol.Response.BALANCE_UPDATED.name()
-                + Protocol.SEPARATOR
-                + participant.getId()
-                + Protocol.SEPARATOR
-                + participant.getBalance();
-
-        auctionManager.notifyUser(participant.getId(), message);
+        auctionManager.notifyBalanceUpdated(participant);
     }
 }

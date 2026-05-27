@@ -187,6 +187,11 @@
                   </children>
                </VBox>
 
+                    <!-- Ô chọn bật/tắt anti shipping ngay trong khu vực đặt giá -->
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <CheckBox fx:id="chkAntiShipping" styleClass="anti-shipping-checkbox" text="Anti Shipping" />
+                    </HBox>
+
                     <HBox alignment="CENTER_RIGHT" spacing="12">
                         <Label fx:id="minBidHint" styleClass="hint-label" text="Giá tối thiểu: 160.000 VNĐ" />
                         <Region HBox.hgrow="ALWAYS" />

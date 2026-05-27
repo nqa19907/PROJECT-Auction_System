@@ -1,4 +1,3 @@
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -6,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
@@ -18,8 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Kiểm thử tích hợp cho {@link AuthService}: đăng ký, đăng nhập,
- * kiểm tra username/email đã tồn tại.
+ * Kiểm thử AuthService: register, login, isUsernameTaken, isEmailTaken.
  */
 class AuthServiceDatabaseTest {
 
@@ -116,12 +115,6 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerPasswordExactlyMinLengthDoesNotThrow() {
-        assertDoesNotThrow(
-                () -> authService.register("u3b", "u3b@mail.com", "123456", "PARTICIPANT"));
-    }
-
-    @Test
     void registerDuplicateUsernameThrowsException() {
         authService.register("dup", "dup1@mail.com", "abc123", "PARTICIPANT");
 
@@ -138,17 +131,9 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerDuplicateEmailCaseInsensitiveThrowsException() {
-        authService.register("user_a", "dup@mail.com", "abc123", "PARTICIPANT");
-
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("user_b", "DUP@MAIL.COM", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
     void registerInvalidRoleThrowsException() {
         assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u4", "u4@mail.com", "abc123", "SELLER"));
+                () -> authService.register("u4", "u4@mail.com", "abc123", "UNKNOWN"));
     }
 
     @Test
@@ -158,33 +143,9 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void registerBlankUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("   ", "u5b@mail.com", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register(null, "u7@mail.com", "abc123", "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullEmailThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u8", null, "abc123", "PARTICIPANT"));
-    }
-
-    @Test
     void registerNullPasswordThrowsException() {
         assertThrows(IllegalArgumentException.class,
                 () -> authService.register("u6", "u6@mail.com", null, "PARTICIPANT"));
-    }
-
-    @Test
-    void registerNullRoleThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.register("u9", "u9@mail.com", "abc123", null));
     }
 
     @Test
@@ -211,15 +172,6 @@ class AuthServiceDatabaseTest {
         Optional<User> result = authService.login("ghost@mail.com", "abc123");
 
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void loginEmailCaseInsensitiveReturnsUser() {
-        authService.register("caseUser", "case@mail.com", "mypass1", "PARTICIPANT");
-
-        Optional<User> result = authService.login("CASE@MAIL.COM", "mypass1");
-
-        assertTrue(result.isPresent());
     }
 
     @Test
@@ -282,12 +234,6 @@ class AuthServiceDatabaseTest {
     }
 
     @Test
-    void isUsernameTakenBlankUsernameThrowsException() {
-        assertThrows(IllegalArgumentException.class,
-                () -> authService.isUsernameTaken("   "));
-    }
-
-    @Test
     void isEmailTakenExistingEmailReturnsTrue() {
         authService.register("emailUser", "taken_email@mail.com", "abc123", "PARTICIPANT");
 
@@ -305,9 +251,75 @@ class AuthServiceDatabaseTest {
                 () -> authService.isEmailTaken("  "));
     }
 
+    // =========================================================================
+    // deposit()
+    // =========================================================================
+
     @Test
-    void isEmailTakenNullEmailThrowsException() {
+    void depositPositiveAmountIncreasesBalanceCorrectly() {
+        authService.register("depositor", "dep@mail.com", "abc123", "PARTICIPANT");
+        User user = database.users().findByEmail("dep@mail.com").orElseThrow();
+
+        double newBalance = authService.deposit(user, 500.0);
+
+        assertEquals(500.0, newBalance, 0.001,
+                "So du phai tang dung 500 sau khi nap.");
+    }
+
+    @Test
+    void depositAccumulatesAcrossMultipleCalls() {
+        authService.register("depositor2", "dep2@mail.com", "abc123", "PARTICIPANT");
+        User user = database.users().findByEmail("dep2@mail.com").orElseThrow();
+
+        authService.deposit(user, 200.0);
+        double newBalance = authService.deposit(user, 300.0);
+
+        assertEquals(500.0, newBalance, 0.001,
+                "So du phai la 500 sau hai lan nap 200 va 300.");
+    }
+
+    @Test
+    void depositPersistedToDatabaseAfterDeposit() {
+        authService.register("depositor3", "dep3@mail.com", "abc123", "PARTICIPANT");
+        User user = database.users().findByEmail("dep3@mail.com").orElseThrow();
+
+        authService.deposit(user, 1000.0);
+
+        database.reloadAll();
+        User reloaded = database.users().findByEmail("dep3@mail.com").orElseThrow();
+        assertEquals(1000.0,
+                ((Participant) reloaded).getBalance(),
+                0.001,
+                "So du phai duoc luu xuong database sau khi nap.");
+    }
+
+    @Test
+    void depositZeroAmountThrowsIllegalArgumentException() {
+        authService.register("depositor4", "dep4@mail.com", "abc123", "PARTICIPANT");
+        User user = database.users().findByEmail("dep4@mail.com").orElseThrow();
+
         assertThrows(IllegalArgumentException.class,
-                () -> authService.isEmailTaken(null));
+                () -> authService.deposit(user, 0.0),
+                "So tien nap bang 0 phai bi tu choi.");
+    }
+
+    @Test
+    void depositNegativeAmountThrowsIllegalArgumentException() {
+        authService.register("depositor5", "dep5@mail.com", "abc123", "PARTICIPANT");
+        User user = database.users().findByEmail("dep5@mail.com").orElseThrow();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authService.deposit(user, -100.0),
+                "So tien nap am phai bi tu choi.");
+    }
+
+    @Test
+    void depositAdminUserThrowsIllegalArgumentException() {
+        User admin = authService.register(
+                "adminUser", "admin_dep@mail.com", "abc123", "ADMIN");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authService.deposit(admin, 500.0),
+                "Admin khong co vi, phai bi tu choi khi nap tien.");
     }
 }

@@ -27,7 +27,7 @@
                         <Region HBox.hgrow="ALWAYS"/>
 
                         <Label text="Admin" styleClass="admin-badge"/>
-                        <Button fx:id="btnBack" onAction="#handleBack" text="Quay về" styleClass="header-action-button"/>
+                        <Button fx:id="btnBack" onAction="#handleBack" text="Đăng xuất" styleClass="logout-button"/>
                     </children>
                 </HBox>
 

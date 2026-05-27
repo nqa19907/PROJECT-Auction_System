@@ -34,7 +34,7 @@ public class CoreBiddingLogicTest {
                 .sellerId("61h23s1")
                 .build();
         seller = new Participant("Nguyễn Trọng Hoàng", "lamviet7577@gmail.com",
-                "69420", 69420, "SELLER");
+                "69420", 69420, "PARTICIPANT");
 
         auction = new Auction(item, seller, LocalDateTime.now(), LocalDateTime.now().plusHours(1));
         auction.startAuction();
@@ -93,6 +93,32 @@ public class CoreBiddingLogicTest {
         // Assert
         assertEquals(bidAmount, item.getCurrentPrice(),
                 "Giá hiện tại của item phải bằng giá bid mới nhất");
+    }
+
+    @Test
+    void testPlaceBid_AntiSnipingEnabledAndBidInLastThirtySeconds_ExtendsEndTime() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(20);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
+
+        auction.placeBid(new BidTransaction(null, 3500, auction));
+
+        assertTrue(auction.getEndTime().isAfter(originalEndTime),
+                "Bid trong 30 giây cuối phải gia hạn thời gian kết thúc");
+        assertEquals(originalEndTime.plusSeconds(30), auction.getEndTime(),
+                "Anti-sniping phải cộng đúng 30 giây vào thời gian kết thúc");
+    }
+
+    @Test
+    void testPlaceBid_AntiSnipingEnabledAndBidBeforeLastThirtySeconds_DoesNotExtend() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(45);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
+
+        auction.placeBid(new BidTransaction(null, 3500, auction));
+
+        assertEquals(originalEndTime, auction.getEndTime(),
+                "Bid ngoài 30 giây cuối không được gia hạn thời gian kết thúc");
     }
 
     @Test
@@ -158,7 +184,7 @@ public class CoreBiddingLogicTest {
     void testCalculateWinner_AuctionEndedWithBids_ReturnsHighestBidder() {
         // Arrange: Tạo người thắng kỳ vọng và đặt giá hợp lệ
         Participant expectedWinner = new Participant("Phạm Việt Hoàng", "pvhgay@gmail.com",
-                "123456789", 4000, "BIDDER");
+                "123456789", 4000, "PARTICIPANT");
         BidTransaction bid = new BidTransaction(expectedWinner, 2500, auction);
         auction.placeBid(bid);
 
@@ -200,9 +226,9 @@ public class CoreBiddingLogicTest {
     @Test
     void testCalculateWinner_MultipleBidders_ReturnsCorrectWinner() {
         // Arrange
-        Participant bidder1 = new Participant("Alice", "alice@mail.com", "pw1", 20000, "BIDDER");
-        Participant bidder2 = new Participant("Bob", "bob@mail.com", "pw2", 20000, "BIDDER");
-        Participant bidder3 = new Participant("Charlie", "charlie@mail.com", "pw3", 20000, "BIDDER");
+        Participant bidder1 = new Participant("Alice", "alice@mail.com", "pw1", 20000, "PARTICIPANT");
+        Participant bidder2 = new Participant("Bob", "bob@mail.com", "pw2", 20000, "PARTICIPANT");
+        Participant bidder3 = new Participant("Charlie", "charlie@mail.com", "pw3", 20000, "PARTICIPANT");
         auction.placeBid(new BidTransaction(bidder1, 2500, auction));
         auction.placeBid(new BidTransaction(bidder2, 5000, auction));
         auction.placeBid(new BidTransaction(bidder3, 8000, auction));

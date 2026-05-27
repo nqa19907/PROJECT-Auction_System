@@ -25,7 +25,7 @@ import javafx.scene.chart.XYChart;
 public class AuctionViewModel {
 
     private static final int IDX_BID_TIME = 0;
-    private static final int IDX_BIDDER = 1;
+    private static final int IDX_PARTICIPANT_NAME = 1;
     private static final int IDX_BID_AMOUNT = 2;
     private static final int MIN_BID_HISTORY_PARTS = 3;
     private static final String VALID_BID_STATUS = "Hợp lệ";
@@ -93,6 +93,22 @@ public class AuctionViewModel {
      * @param isCurrentUser Liệu có phải người dùng hiện tại đặt không.
      */
     public void processNewBid(long amount, String bidderName, boolean isCurrentUser) {
+        processRealtimeBid(amount, bidderName, LocalTime.now().format(timeFmt), isCurrentUser);
+    }
+
+    /**
+     * Xử lý bid realtime do server đẩy về kèm thời gian phát sinh thật.
+     *
+     * @param amount số tiền đặt giá mới
+     * @param bidderName tên người đặt giá
+     * @param timeStr thời gian đặt giá đã format hoặc lấy từ server
+     * @param isCurrentUser true nếu bid thuộc người dùng hiện tại
+     */
+    public void processRealtimeBid(
+            long amount,
+            String bidderName,
+            String timeStr,
+            boolean isCurrentUser) {
         if (amount <= currentPrice.get()) {
             // Logic xử lý bid không hợp lệ có thể thêm ở đây
             return;
@@ -105,7 +121,6 @@ public class AuctionViewModel {
         bidders.add(bidderName);
         participantCount.set(bidders.size());
 
-        String timeStr = LocalTime.now().format(timeFmt);
         String status = isCurrentUser ? "Dẫn đầu" : "Hợp lệ";
 
         bidHistory.add(0, new BidRow(timeStr, bidderName, amount, change, status));
@@ -148,7 +163,7 @@ public class AuctionViewModel {
                 }
 
                 final String time = row[IDX_BID_TIME];
-                final String bidder = row[IDX_BIDDER];
+                final String bidder = row[IDX_PARTICIPANT_NAME];
                 final long change = amount - previousPrice;
 
                 // Cập nhật các biến lưu trữ thông tin mới nhất

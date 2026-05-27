@@ -2,16 +2,19 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.controllers.components.ProductCardController;
 import auction_system.client.models.AuctionDisplayContext;
+import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuctionService;
 import auction_system.client.utils.CategoryUtil;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
+import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -41,17 +44,26 @@ public class ItemListController {
     /** Vị trí trạng thái phiên trong response danh sách. */
     private static final int IDX_STATUS = 3;
 
+    /** Vị trí thời gian bắt đầu trong response danh sách. */
+    private static final int IDX_START_TIME = 4;
+
     /** Vị trí thời gian kết thúc trong response danh sách. */
-    private static final int IDX_END_TIME = 4;
+    private static final int IDX_END_TIME = 5;
 
     /** Vị trí danh mục sản phẩm trong response danh sách. */
-    private static final int IDX_CATEGORY = 5;
+    private static final int IDX_CATEGORY = 6;
 
     /** Vị trí giá khởi điểm trong response danh sách. */
-    private static final int IDX_OPENING_PRICE = 6;
+    private static final int IDX_OPENING_PRICE = 7;
+
+    /** Vị trí mã người bán trong response danh sách. */
+    private static final int IDX_SELLER_ID = 8;
+
+    /** Vị trí trạng thái chống đặt giá phút chót trong response danh sách. */
+    private static final int IDX_ANTI_SNIPING_ENABLED = 9;
 
     /** Số trường tối thiểu của một dòng response hợp lệ. */
-    private static final int MIN_PARTS_LENGTH = 7;
+    private static final int MIN_PARTS_LENGTH = 8;
 
     @FXML private FlowPane productsGrid;
     @FXML private Label categoryTitle;
@@ -60,6 +72,7 @@ public class ItemListController {
     private String filterCategory = AppConstants.CATEGORY_ALL;
     private PauseTransition nextExpiryRefresh;
     private boolean cleanupRegistered;
+    private final Consumer<String> auctionCreatedHandler = this::handleAuctionCreated;
 
     /**
      * Khởi tạo giao diện và lấy dữ liệu phiên đấu giá.
@@ -73,11 +86,37 @@ public class ItemListController {
             productsGrid.setVgap(12);
         }
 
+        registerRealtimeHandlers();
+        refreshAuctionList();
+    }
+
+    /**
+     * Tải lại danh sách phiên từ server và render lên dashboard.
+     */
+    private void refreshAuctionList() {
         AuctionService.getInstance().fetchAuctionList(auctionList -> Platform.runLater(() -> {
             this.allAuctions = auctionList;
             renderGrid();
             registerLifecycleCleanup();
         }));
+    }
+
+    /**
+     * Đăng ký nhận sự kiện tạo phiên mới để dashboard cập nhật realtime.
+     */
+    private void registerRealtimeHandlers() {
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_CREATED.name(),
+                auctionCreatedHandler);
+    }
+
+    /**
+     * Xử lý sự kiện có phiên đấu giá mới từ server.
+     *
+     * @param response thông điệp AUCTION_CREATED
+     */
+    private void handleAuctionCreated(final String response) {
+        refreshAuctionList();
     }
 
     /**
@@ -128,6 +167,7 @@ public class ItemListController {
         String selectedItemId = selectedParts[IDX_ID];
         String itemName = selectedParts[IDX_NAME];
         String status = selectedParts[IDX_STATUS];
+        LocalDateTime startTime;
         LocalDateTime endTime;
 
         long currentPrice;
@@ -135,6 +175,15 @@ public class ItemListController {
             currentPrice = (long) Double.parseDouble(selectedParts[IDX_PRICE]);
         } catch (NumberFormatException e) {
             LOGGER.error("Giá hiện tại không hợp lệ cho item ID: " + selectedItemId, e);
+            return;
+        }
+
+        try {
+            startTime = LocalDateTime.parse(selectedParts[IDX_START_TIME]);
+        } catch (DateTimeParseException e) {
+            LOGGER.error(
+                    "Thời gian bắt đầu không hợp lệ cho item ID: " + selectedItemId,
+                    e);
             return;
         }
 
@@ -169,7 +218,14 @@ public class ItemListController {
                             openingPrice,
                             currentPrice,
                             status,
-                            endTime
+                            startTime,
+                            endTime,
+                            selectedParts.length > IDX_SELLER_ID
+                                    ? selectedParts[IDX_SELLER_ID]
+                                    : "",
+                            selectedParts.length > IDX_ANTI_SNIPING_ENABLED
+                                    && Boolean.parseBoolean(
+                                            selectedParts[IDX_ANTI_SNIPING_ENABLED])
                     )
             );
         }
@@ -303,6 +359,9 @@ public class ItemListController {
         productsGrid.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
                 stopNextExpiryRefresh();
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_CREATED.name(),
+                        auctionCreatedHandler);
             }
         });
     }

@@ -57,9 +57,12 @@ public class ListAuctionsCommand implements Command {
                         .append(Protocol.SEPARATOR).append(item.getItemName())
                         .append(Protocol.SEPARATOR).append(currentPrice)
                         .append(Protocol.SEPARATOR).append(auction.getStatus().name())
+                        .append(Protocol.SEPARATOR).append(auction.getStartTime())
                         .append(Protocol.SEPARATOR).append(auction.getEndTime())
                         .append(Protocol.SEPARATOR).append(item.getClass().getSimpleName())
-                        .append(Protocol.SEPARATOR).append(item.getStartPrice());
+                        .append(Protocol.SEPARATOR).append(item.getStartPrice())
+                        .append(Protocol.SEPARATOR).append(resolveSellerId(auction))
+                        .append(Protocol.SEPARATOR).append(auction.isAntiSnipingEnabled());
             }
             return response.toString();
         } catch (Exception e) {
@@ -78,5 +81,23 @@ public class ListAuctionsCommand implements Command {
     private boolean isVisibleToClient(final Auction auction) {
         return auction.getStatus() != AuctionStatus.FINISHED
                 && auction.getStatus() != AuctionStatus.CANCELED;
+    }
+
+    /**
+     * Lấy mã người bán từ phiên hoặc item để client chỉ cho phép quan sát sản phẩm của mình.
+     *
+     * @param auction phiên đấu giá cần đọc thông tin người bán
+     * @return mã người bán, hoặc chuỗi rỗng nếu thiếu dữ liệu
+     */
+    private String resolveSellerId(final Auction auction) {
+        if (auction.getParticipant() != null && auction.getParticipant().getId() != null) {
+            return auction.getParticipant().getId();
+        }
+
+        if (auction.getItem() != null && auction.getItem().getSellerId() != null) {
+            return auction.getItem().getSellerId();
+        }
+
+        return "";
     }
 }

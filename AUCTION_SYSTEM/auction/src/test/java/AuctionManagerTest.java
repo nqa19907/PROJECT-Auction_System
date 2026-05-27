@@ -1,5 +1,12 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionStatus;
+import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
 import auction_system.common.models.users.Admin;
@@ -14,7 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Kiểm thử AuctionManager.
@@ -51,7 +57,7 @@ public class AuctionManagerTest {
     }
 
     private Participant makeSeller() {
-        return new Participant("seller01", "seller@test.com", "pass", 10_000.0, "SELLER");
+        return new Participant("seller01", "seller@test.com", "pass", 10_000.0, "PARTICIPANT");
     }
 
     private Auction makeAuction(Participant seller) {
@@ -238,5 +244,176 @@ public class AuctionManagerTest {
     void testIsAlreadyOnline_BeforeLogin_ReturnsFalse() {
         Participant user = new Participant("alice", "alice@test.com", "pw", 100.0);
         assertFalse(manager.isAlreadyOnline(user.getId()));
+    }
+
+    // =========================================================================
+    // deleteAuction
+    // =========================================================================
+
+    @Test
+    void testDeleteAuction_ExistingId_ReturnsTrue() {
+        Auction auction = makeAuction(makeSeller());
+
+        assertTrue(manager.deleteAuction(auction.getId()));
+    }
+
+    @Test
+    void testDeleteAuction_ExistingId_RemovedFromGetAllAuctions() {
+        Auction auction = makeAuction(makeSeller());
+        String auctionId = auction.getId();
+
+        manager.deleteAuction(auctionId);
+
+        assertTrue(manager.getAllAuctions().stream()
+                        .noneMatch(a -> a.getId().equals(auctionId)),
+                "Phien dau gia phai bien mat khoi danh sach sau khi xoa.");
+    }
+
+    @Test
+    void testDeleteAuction_NonExistingId_ReturnsFalse() {
+        assertFalse(manager.deleteAuction("non-existent-id"));
+    }
+
+    // =========================================================================
+    // deleteUser
+    // =========================================================================
+
+    @Test
+    void testDeleteUser_ExistingUser_ReturnsTrue() {
+        Participant user = new Participant("toDel", "todel@test.com", "pw", 0.0);
+        manager.registerUser(user);
+
+        assertTrue(manager.deleteUser(user.getId()));
+    }
+
+    @Test
+    void testDeleteUser_ExistingUser_NoLongerInRegistry() {
+        Participant user = new Participant("toDel2", "todel2@test.com", "pw", 0.0);
+        manager.registerUser(user);
+
+        manager.deleteUser(user.getId());
+
+        assertFalse(manager.isUsernameTaken("toDel2"),
+                "Username phai khong con trong registry sau khi xoa.");
+    }
+
+    @Test
+    void testDeleteUser_NonExistingId_ReturnsFalse() {
+        assertFalse(manager.deleteUser("non-existent-user-id"));
+    }
+
+    // =========================================================================
+    // settleFinishedAuction
+    // =========================================================================
+
+    @Test
+    void testSettleFinishedAuction_SellerReceivesWinningBidAmount() {
+        Participant seller = new Participant(
+                "seller99", "seller99@test.com", "pw", 0.0, "PARTICIPANT");
+        Participant bidder = new Participant(
+                "bidder99", "bidder99@test.com", "pw", 5000.0, "PARTICIPANT");
+
+        Item item = new ElectronicBuilder()
+                .itemName("Settle Item")
+                .description("Mo ta")
+                .startPrice(500.0)
+                .sellerId(seller.getId())
+                .build();
+
+        Auction auction = new Auction(
+                item, seller,
+                LocalDateTime.now().minusHours(2),
+                LocalDateTime.now().minusMinutes(1));
+        auction.setStatus(AuctionStatus.RUNNING);
+
+        BidTransaction bid = new BidTransaction(bidder, 1500.0, auction);
+        auction.placeBid(bid);
+        auction.setStatus(AuctionStatus.FINISHED);
+
+        database.users().save(seller);
+        database.users().save(bidder);
+        database.auctions().save(auction);
+
+        manager.settleFinishedAuction(auction);
+
+        assertEquals(1500.0, seller.getBalance(), 0.001,
+                "Nguoi ban phai nhan dung so tien cua bid cao nhat.");
+    }
+
+    @Test
+    void testSettleFinishedAuction_IdempotentWhenCalledTwice() {
+        Participant seller = new Participant(
+                "sellerIdem", "idem@test.com", "pw", 0.0, "PARTICIPANT");
+        Participant bidder = new Participant(
+                "bidderIdem", "bidIdem@test.com", "pw", 5000.0, "PARTICIPANT");
+
+        Item item = new ElectronicBuilder()
+                .itemName("Idem Item")
+                .description("Mo ta")
+                .startPrice(500.0)
+                .sellerId(seller.getId())
+                .build();
+
+        Auction auction = new Auction(
+                item, seller,
+                LocalDateTime.now().minusHours(2),
+                LocalDateTime.now().minusMinutes(1));
+        auction.setStatus(AuctionStatus.RUNNING);
+
+        BidTransaction bid = new BidTransaction(bidder, 2000.0, auction);
+        auction.placeBid(bid);
+        auction.setStatus(AuctionStatus.FINISHED);
+
+        database.users().save(seller);
+        database.users().save(bidder);
+        database.auctions().save(auction);
+
+        manager.settleFinishedAuction(auction);
+        manager.settleFinishedAuction(auction);
+
+        assertEquals(2000.0, seller.getBalance(), 0.001,
+                "Goi settle hai lan khong duoc cong tien lan thu hai (idempotent).");
+    }
+
+    @Test
+    void testSettleFinishedAuction_NoBids_SellerBalanceUnchanged() {
+        Participant seller = new Participant(
+                "sellerNoBid", "nobid@test.com", "pw", 100.0, "PARTICIPANT");
+
+        Item item = new ElectronicBuilder()
+                .itemName("No Bid Item")
+                .description("Mo ta")
+                .startPrice(500.0)
+                .sellerId(seller.getId())
+                .build();
+
+        Auction auction = new Auction(
+                item, seller,
+                LocalDateTime.now().minusHours(2),
+                LocalDateTime.now().minusMinutes(1));
+        auction.setStatus(AuctionStatus.FINISHED);
+
+        database.users().save(seller);
+        database.auctions().save(auction);
+
+        manager.settleFinishedAuction(auction);
+
+        assertEquals(100.0, seller.getBalance(), 0.001,
+                "So du nguoi ban khong doi khi khong co ai dat gia.");
+    }
+
+    // =========================================================================
+    // getAllUsers
+    // =========================================================================
+
+    @Test
+    void testGetAllUsers_AfterRegister_ContainsNewUser() {
+        Participant user = new Participant(
+                "newUserAll", "newuserall@test.com", "pw", 0.0);
+        manager.registerUser(user);
+
+        assertTrue(manager.getAllUsers().stream()
+                        .anyMatch(u -> u.getUsername().equals("newUserAll")),
+                "getAllUsers phai chua user vua dang ky.");
     }
 }

@@ -29,21 +29,22 @@ public final class Protocol {
         LIST_AUCTIONS,
         GET_AUCTION,
         GET_BID_HISTORY,
-        WATCH_AUCTION,
-        UNWATCH_AUCTION,
+        JOIN_AUCTION,
+        LEAVE_AUCTION,
         PLACE_BID,
         ENABLE_AUTO_BID,
         DISABLE_AUTO_BID,
         GET_AUTO_BID,
+        SET_ANTI_SNIPING,
 
         // Admin
         // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
-        ADMIN_LIST_USERS,
-        ADMIN_LIST_AUCTIONS,
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
         ADMIN_DELETE_USER,
-        PUBLISH_ITEM
+        PUBLISH_ITEM,
+        ADMIN_LIST_USERS,
+        ADMIN_LIST_AUCTIONS
     }
 
     /**
@@ -61,31 +62,37 @@ public final class Protocol {
         // Auction Responses
         AUCTION_LIST,
         AUCTION_DETAIL,
-        WATCH_OK, WATCH_FAIL,
+        JOIN_OK, JOIN_FAIL,
         BID_HISTORY,
-        UNWATCH_OK,
+        LEAVE_OK,
         BID_OK, BID_FAIL,
         AUTO_BID_OK, AUTO_BID_FAIL, AUTO_BID_STATUS,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,
-        BALANCE_UPDATED,
+        AUCTION_CREATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
+        AUCTION_EXTENDED,
+        ANTI_SNIPING_UPDATED,
+        ANTI_SNIPING_UPDATE_FAIL,
+        AUCTION_WINNER,
+        AUCTION_LOST,
+        BALANCE_UPDATED,
 
         // Admin responses
         // Response dạng header|count~record1~record2 để truyền bảng quản trị qua một dòng socket.
-        ADMIN_USER_LIST,
-        ADMIN_USER_LIST_FAIL,
-        ADMIN_AUCTION_LIST,
-        ADMIN_AUCTION_LIST_FAIL,
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,
         ADMIN_DELETE_AUCTION_FAIL,
         ADMIN_DELETE_USER_OK,
-        ADMIN_DELETE_USER_FAIL
+        ADMIN_DELETE_USER_FAIL,
+        ADMIN_USER_LIST,
+        ADMIN_AUCTION_LIST,
+        ADMIN_AUCTION_LIST_FAIL,
+        ADMIN_USER_LIST_FAIL
 
     }
 }

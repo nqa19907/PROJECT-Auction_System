@@ -5,17 +5,15 @@ import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * Command trả danh sách user cho màn hình quản trị.
+ * Command cho phép ADMIN lấy danh sách người dùng qua socket.
  */
 public class AdminListUsersCommand implements Command {
-
     private final AuctionManager auctionManager;
 
     public AdminListUsersCommand(final AuctionManager auctionManager) {
-        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
+        this.auctionManager = auctionManager;
     }
 
     @Override
@@ -29,27 +27,20 @@ public class AdminListUsersCommand implements Command {
                     + Protocol.SEPARATOR + "Bạn không có quyền quản trị.";
         }
 
-        /*
-         * Lấy toàn bộ user từ registry runtime, sau đó ghép thêm trạng thái online
-         * từ OnlineUserRegistry thông qua AuctionManager facade.
-         */
         final List<User> users = auctionManager.getAllUsers();
         final StringBuilder response = new StringBuilder()
                 .append(Protocol.Response.ADMIN_USER_LIST.name())
                 .append(Protocol.SEPARATOR)
                 .append(users.size());
 
-        // Status online là runtime state từ socket registry, không lưu cố định trong database.
-        for (User user : users) {
-            final String status = auctionManager.isAlreadyOnline(user.getId())
-                    ? "ONLINE"
-                    : "OFFLINE";
 
+        for (User u : users) {
             response.append(Protocol.RECORD_SEPARATOR)
-                    .append(user.getId())
-                    .append(Protocol.SEPARATOR).append(user.getUsername())
-                    .append(Protocol.SEPARATOR).append(user.getEmail())
-                    .append(Protocol.SEPARATOR).append(status);
+                    .append(u.getId()).append(Protocol.SEPARATOR)
+                    .append(u.getUsername()).append(Protocol.SEPARATOR)
+                    .append(u.getEmail()).append(Protocol.SEPARATOR)
+                    .append(u.isOnline() ? "ONLINE" : "OFFLINE").append(Protocol.SEPARATOR)
+                    .append(u.getRoleName());
         }
 
         return response.toString();
