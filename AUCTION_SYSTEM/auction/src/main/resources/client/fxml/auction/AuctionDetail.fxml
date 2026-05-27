@@ -28,6 +28,8 @@
             <Label styleClass="page-title" text="Chi tiết sản phẩm" />
 
             <Region HBox.hgrow="ALWAYS" />
+            <!-- Nút làm mới dữ liệu phiên đấu giá (chỉ thêm giao diện, chưa gắn logic). -->
+            <Button fx:id="btnRefreshAuction" mnemonicParsing="false" styleClass="refresh-top-btn" text="Làm mới" />
 
             <HBox alignment="CENTER" spacing="6" styleClass="live-badge">
                 <Circle fx:id="liveDot" radius="5" styleClass="live-dot" />
