@@ -11,7 +11,8 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Participant;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.ParticipantItemService;
+import auction_system.server.services.auction.ParticipantItemService;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;

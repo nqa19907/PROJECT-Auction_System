@@ -107,6 +107,13 @@
     -fx-text-fill: #3D2800;
 }
 
+.root-pane .product-detail-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-orange-800;
+    -fx-wrap-text: true;
+}
+
 .root-pane .auction-subtitle {
     -fx-font-size: 12px;
     -fx-font-weight: normal;
@@ -114,7 +121,7 @@
 }
 
 .root-pane .timer-value {
-    -fx-font-size: 22px;
+    -fx-font-size: 40px;
     -fx-font-weight: bold;
     -fx-text-fill: #D4860B;
 }
@@ -420,6 +427,35 @@
     -fx-background-color: #9A5C08;
     -fx-scale-x: 0.98;
     -fx-scale-y: 0.98;
+}
+
+.root-pane .auto-bid-toggle {
+    -fx-font-size: 14px;
+    -fx-text-fill: -color-orange-800;
+    -fx-cursor: hand;
+}
+
+.root-pane .auto-bid-toggle .box {
+    -fx-background-color: #FFF8EE;
+    -fx-background-radius: 6;
+    -fx-border-color: #D4860B;
+    -fx-border-radius: 6;
+    -fx-border-width: 1.5;
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+}
+
+.root-pane .auto-bid-toggle:selected .box {
+    -fx-background-color: #2E7D52;
+    -fx-border-color: #2E7D52;
+}
+
+.root-pane .auto-bid-toggle:selected .mark {
+    -fx-background-color: white;
+}
+
+.root-pane .auto-bid-toggle:hover .box {
+    -fx-border-color: #A8640A;
 }
 
 /* ── Ẩn column-header gốc của TableView (đã có custom HBox header) ── */

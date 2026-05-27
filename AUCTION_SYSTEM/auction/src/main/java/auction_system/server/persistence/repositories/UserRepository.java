@@ -139,7 +139,7 @@ public class UserRepository extends SerializedRepository<User> {
         if (existingUser.isPresent()
             && !existingUser.get().getId().equals(user.getId())) {
             throw new DatabaseException(
-            "Tên đăng nhập đã tồn tại: " + user.getUsername());
+            "Tên người dùng đã tồn tại: " + user.getUsername());
         }
     }
 

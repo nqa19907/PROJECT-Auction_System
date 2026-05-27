@@ -5,9 +5,10 @@ import auction_system.server.core.AuctionManager;
 import auction_system.server.network.SocketServer;
 import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.AuctionBidService;
-import auction_system.server.services.AuthService;
-import auction_system.server.services.ParticipantItemService;
+import auction_system.server.services.auction.ParticipantItemService;
+import auction_system.server.services.auth.AuthService;
+import auction_system.server.services.autobid.AutoBidService;
+import auction_system.server.services.bidding.AuctionBidService;
 import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,9 @@ public class ServerApp {
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
+        final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
+        final AuctionBidService auctionBidService =
+                new AuctionBidService(database, auctionManager, autoBidService);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         if (!authService.isEmailTaken("qa@gmail.com")) {
@@ -60,7 +63,12 @@ public class ServerApp {
         }
 
         final SocketServer socketServer = SocketServer.getInstance(
-                port, authService, auctionManager, auctionBidService, participantItemService);
+                port,
+                authService,
+                auctionManager,
+                autoBidService,
+                auctionBidService,
+                participantItemService);
 
 
 

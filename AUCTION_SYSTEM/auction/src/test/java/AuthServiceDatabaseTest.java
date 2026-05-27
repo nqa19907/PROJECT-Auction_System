@@ -9,7 +9,8 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.AuthService;
+import auction_system.server.services.auth.AuthService;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;

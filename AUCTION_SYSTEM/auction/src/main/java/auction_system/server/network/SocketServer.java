@@ -4,9 +4,10 @@ import auction_system.common.network.NetworkConfig;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.AuctionBidService;
-import auction_system.server.services.AuthService;
-import auction_system.server.services.ParticipantItemService;
+import auction_system.server.services.auction.ParticipantItemService;
+import auction_system.server.services.auth.AuthService;
+import auction_system.server.services.autobid.AutoBidService;
+import auction_system.server.services.bidding.AuctionBidService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -87,6 +88,7 @@ public class SocketServer {
      * @param port              cổng lắng nghe kết nối
      * @param authService       service xác thực dùng chung của server
      * @param auctionManager    manager đấu giá dùng chung của server
+     * @param autoBidService    service auto-bid dùng chung của server
      * @param auctionBidService service đặt giá dùng chung của server
      * @param participantItemService service xử lý item người dùng
      * @return instance duy nhất của {@link SocketServer}
@@ -95,6 +97,7 @@ public class SocketServer {
             final int port,
             final AuthService authService,
             final AuctionManager auctionManager,
+            final AutoBidService autoBidService,
             final AuctionBidService auctionBidService,
             final ParticipantItemService participantItemService) {
         if (instance == null) {
@@ -104,6 +107,7 @@ public class SocketServer {
                             port,
                             auctionManager,
                             authService,
+                            autoBidService,
                             auctionBidService,
                             participantItemService);
                 }
@@ -120,16 +124,19 @@ public class SocketServer {
     final ParticipantItemService participantItemService;
     private final ExecutorService threadPool;
     private final AuctionBidService auctionBidService;
+    private final AutoBidService autoBidService;
 
     private SocketServer(
             final int port,
             final AuctionManager auctionManager,
             final AuthService authService,
+            final AutoBidService autoBidService,
             final AuctionBidService auctionBidService,
             final ParticipantItemService participantItemService) {
         this.port = port;
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
         this.authService = Objects.requireNonNull(authService, "authService");
+        this.autoBidService = Objects.requireNonNull(autoBidService, "autoBidService");
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         this.participantItemService = participantItemService;
@@ -171,6 +178,7 @@ public class SocketServer {
                         clientSocket,
                         auctionManager,
                         authService,
+                        autoBidService,
                         auctionBidService,
                         participantItemService));
 
@@ -248,7 +256,9 @@ public class SocketServer {
         final SerializedDatabase database = new SerializedDatabase(
                 DatabasePathProvider.defaultDataDirectory());
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
-        final AuctionBidService auctionBidService = new AuctionBidService(database, auctionManager);
+        final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
+        final AuctionBidService auctionBidService =
+                new AuctionBidService(database, auctionManager, autoBidService);
         final AuthService authService = new AuthService(database);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
@@ -256,6 +266,7 @@ public class SocketServer {
                 port,
                 authService,
                 auctionManager,
+                autoBidService,
                 auctionBidService,
                 participantItemService);
 
