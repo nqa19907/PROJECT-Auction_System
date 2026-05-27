@@ -4,7 +4,7 @@ import auction_system.common.models.auctions.AutoBidSetting;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedFileStorage;
 import auction_system.server.persistence.serialization.SerializedRepository;
-import auction_system.server.services.AutoBidSettingStore;
+import auction_system.server.services.autobid.AutoBidSettingStore;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
