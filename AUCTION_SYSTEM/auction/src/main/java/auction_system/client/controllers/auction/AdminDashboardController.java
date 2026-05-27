@@ -8,6 +8,7 @@ import auction_system.common.models.users.User;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -79,6 +80,15 @@ public class AdminDashboardController {
     private final AdminDashboardService dashboardService = new AdminDashboardService();
     private final ObservableList<AdminUserRow> userRows = FXCollections.observableArrayList();
     private final ObservableList<AdminAuctionRow> auctionRows = FXCollections.observableArrayList();
+    /** Cờ đảm bảo chỉ đăng ký cleanup lifecycle một lần. */
+    private boolean cleanupRegistered;
+    /**
+     * Handler realtime cho các sự kiện đấu giá.
+     * Khi có thay đổi từ server, dashboard sẽ kéo lại snapshot mới nhất.
+     */
+    private final Consumer<String> auctionRealtimeHandler = response -> refreshAuctions();
+    /** Handler realtime cho thay đổi danh sách người dùng. */
+    private final Consumer<String> userRealtimeHandler = response -> refreshUsers();
 
     /**
      * Khởi tạo controller sau khi FXML inject xong.
@@ -91,6 +101,8 @@ public class AdminDashboardController {
         bindServiceCallbacks();
         refreshUsers();
         refreshAuctions();
+        registerRealtimeHandlers();
+        registerLifecycleCleanup();
     }
 
     /**
@@ -177,6 +189,73 @@ public class AdminDashboardController {
         if (!dashboardService.fetchAuctions()) {
             showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách phiên đấu giá.");
         }
+    }
+
+    /**
+     * Đăng ký các sự kiện realtime liên quan đến thay đổi đấu giá.
+     *
+     * <p>Tận dụng luồng socket sẵn có: khi có tín hiệu thay đổi,
+     * dashboard gọi refresh để lấy dữ liệu chuẩn mới nhất từ server.
+     */
+    private void registerRealtimeHandlers() {
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_CREATED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_PRICE.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_STARTED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_ENDED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_EXTENDED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.USER_LIST_CHANGED.name(),
+                userRealtimeHandler);
+    }
+
+    /**
+     * Gỡ đăng ký handler khi màn hình admin bị loại khỏi scene.
+     * Tránh giữ listener cũ gây refresh lặp nhiều lần.
+     */
+    private void registerLifecycleCleanup() {
+        if (cleanupRegistered || root == null) {
+            return;
+        }
+
+        cleanupRegistered = true;
+        root.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_CREATED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.UPDATE_PRICE.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_STARTED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_ENDED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_EXTENDED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.USER_LIST_CHANGED.name(),
+                        userRealtimeHandler);
+            }
+        });
     }
 
     /**

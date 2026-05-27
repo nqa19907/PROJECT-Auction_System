@@ -80,6 +80,7 @@ public final class Protocol {
         AUCTION_WINNER,
         AUCTION_LOST,
         BALANCE_UPDATED,
+        USER_LIST_CHANGED,
 
         // Admin responses
         // Response dạng header|count~record1~record2 để truyền bảng quản trị qua một dòng socket.
