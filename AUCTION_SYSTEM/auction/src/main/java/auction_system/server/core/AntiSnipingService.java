@@ -6,7 +6,7 @@ import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.util.Objects;
 
 /**
- * Cập nhật cấu hình chống đặt giá phút chót cho phiên đấu giá.
+ * Cập nhật cấu hình tự động gia hạn khi có bid phút chót cho phiên đấu giá.
  */
 final class AntiSnipingService {
 
@@ -38,10 +38,10 @@ final class AntiSnipingService {
                 throw new IllegalArgumentException("Không tìm thấy phiên đấu giá.");
             }
 
-            // Chỉ seller của phiên mới được bật/tắt anti-sniping.
+            // Chỉ seller của phiên mới được bật/tắt tự động gia hạn phút chót.
             if (!isAuctionSeller(auction, currentUser)) {
                 throw new IllegalArgumentException(
-                        "Chỉ người đăng bán mới được bật/tắt chống đặt giá phút chót.");
+                        "Chỉ người đăng bán mới được bật/tắt tự động gia hạn phút chót.");
             }
 
             // Persist cấu hình mới rồi báo cho các client đang xem phiên.

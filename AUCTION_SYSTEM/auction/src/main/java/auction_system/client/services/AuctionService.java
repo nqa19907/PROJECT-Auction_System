@@ -146,10 +146,10 @@ public class AuctionService {
     }
 
     /**
-     * Gửi yêu cầu bật/tắt chống đặt giá phút chót cho một phiên đấu giá.
+     * Gửi yêu cầu bật/tắt tự động gia hạn khi có bid phút chót cho một phiên đấu giá.
      *
      * @param auctionId mã phiên đấu giá cần cập nhật
-     * @param enabled true nếu bật chống đặt giá phút chót
+     * @param enabled true nếu bật tự động gia hạn phút chót
      */
     public void setAntiSniping(final String auctionId, final boolean enabled) {
         if (auctionId == null || auctionId.isBlank()) {

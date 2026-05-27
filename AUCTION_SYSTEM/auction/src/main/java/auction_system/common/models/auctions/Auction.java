@@ -96,7 +96,7 @@ public class Auction extends Entity {
     }
 
     /**
-     * Gia hạn phiên nếu bid hợp lệ xuất hiện trong cửa sổ chống đặt giá phút chót.
+     * Gia hạn phiên nếu bid hợp lệ xuất hiện trong cửa sổ phút chót.
      *
      * @param now thời điểm server ghi nhận bid hợp lệ
      */
