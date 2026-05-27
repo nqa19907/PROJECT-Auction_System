@@ -75,4 +75,13 @@ public class SerializedDatabaseConfig {
     public Path bidTransactionsFile() {
         return dataDirectory.resolve("bid_transactions.ser");
     }
+
+    /**
+     * Trả về đường dẫn file lưu cấu hình auto-bid.
+     *
+     * @return đường dẫn file auto_bid_settings.ser
+     */
+    public Path autoBidSettingsFile() {
+        return dataDirectory.resolve("auto_bid_settings.ser");
+    }
 }

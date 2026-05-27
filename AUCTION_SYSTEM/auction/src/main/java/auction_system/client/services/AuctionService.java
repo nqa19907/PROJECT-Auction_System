@@ -24,6 +24,7 @@ public class AuctionService {
     private FetchAuctionDetailCallback currentDetailCallback;
     private PlaceBidCallback currentBidCallback;
     private AutoBidCallback currentAutoBidCallback;
+    private AutoBidStatusCallback currentAutoBidStatusCallback;
     private FetchBidHistoryCallback currentBidHistoryCallback;
 
     // =========================================================================
@@ -52,6 +53,9 @@ public class AuctionService {
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.AUTO_BID_FAIL.name(), this::handleAutoBidFailure
+        );
+        NetworkClient.getInstance().registerHandler(
+            Protocol.Response.AUTO_BID_STATUS.name(), this::handleAutoBidStatus
         );
         NetworkClient.getInstance().registerHandler(
             Protocol.Response.BID_HISTORY.name(), this::handleBidHistoryResponse
@@ -99,6 +103,14 @@ public class AuctionService {
     @FunctionalInterface
     public interface AutoBidCallback {
         void onResult(boolean isSuccess, String message);
+    }
+
+    /**
+     * Callback nhận trạng thái auto-bid hiện tại của user trong một phiên.
+     */
+    @FunctionalInterface
+    public interface AutoBidStatusCallback {
+        void onResult(boolean enabled, long maxAmount, long stepAmount);
     }
 
     /**
@@ -224,6 +236,42 @@ public class AuctionService {
     }
 
     /**
+     * Gửi yêu cầu tắt auto-bid cho một phiên đấu giá.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param callback callback nhận kết quả từ server
+     */
+    public void disableAutoBid(
+            final String auctionId,
+            final AutoBidCallback callback) {
+
+        this.currentAutoBidCallback = callback;
+
+        final String request = Protocol.Command.DISABLE_AUTO_BID.name()
+                + Protocol.SEPARATOR + auctionId;
+
+        NetworkClient.getInstance().sendCommand(request);
+    }
+
+    /**
+     * Gửi yêu cầu lấy trạng thái auto-bid hiện tại của user trong phiên.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param callback callback nhận enabled/maxAmount/stepAmount
+     */
+    public void fetchAutoBidStatus(
+            final String auctionId,
+            final AutoBidStatusCallback callback) {
+
+        this.currentAutoBidStatusCallback = callback;
+
+        final String request = Protocol.Command.GET_AUTO_BID.name()
+                + Protocol.SEPARATOR + auctionId;
+
+        NetworkClient.getInstance().sendCommand(request);
+    }
+
+    /**
      * Xử lý khi đặt giá thành công.
      *
      * @param response Chuỗi phản hồi từ mạng do Server trả về.
@@ -274,7 +322,7 @@ public class AuctionService {
         }
 
         LOGGER.info("AuctionService bật auto-bid thành công: " + response);
-        currentAutoBidCallback.onResult(true, "Đã bật đấu giá tự động.");
+        currentAutoBidCallback.onResult(true, parseSimpleSuccessMessage(response));
         currentAutoBidCallback = null;
     }
 
@@ -294,6 +342,40 @@ public class AuctionService {
     }
 
     /**
+     * Xử lý phản hồi trạng thái auto-bid hiện tại.
+     *
+     * @param response phản hồi AUTO_BID_STATUS từ server
+     */
+    private void handleAutoBidStatus(final String response) {
+        if (currentAutoBidStatusCallback == null) {
+            return;
+        }
+
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
+        if (parts.length >= 4 && "ENABLED".equals(parts[1])) {
+            currentAutoBidStatusCallback.onResult(
+                    true,
+                    parseLongOrZero(parts[2]),
+                    parseLongOrZero(parts[3]));
+        } else {
+            currentAutoBidStatusCallback.onResult(false, 0L, 0L);
+        }
+
+        currentAutoBidStatusCallback = null;
+    }
+
+    /**
+     * Lấy message từ response thành công dạng {@code RESPONSE|message}.
+     *
+     * @param response phản hồi từ server
+     * @return message thành công nếu có, hoặc thông báo mặc định
+     */
+    private String parseSimpleSuccessMessage(final String response) {
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, 2);
+        return parts.length >= 2 ? parts[1] : "Yêu cầu thành công.";
+    }
+
+    /**
      * Lấy message từ response dạng {@code RESPONSE|message}.
      *
      * @param response phản hồi từ server
@@ -302,6 +384,14 @@ public class AuctionService {
     private String parseSimpleFailureMessage(final String response) {
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, 2);
         return parts.length >= 2 ? parts[1] : "Yêu cầu không thành công.";
+    }
+
+    private long parseLongOrZero(final String rawValue) {
+        try {
+            return Long.parseLong(rawValue);
+        } catch (NumberFormatException exception) {
+            return 0L;
+        }
     }
 
     // =========================================================================

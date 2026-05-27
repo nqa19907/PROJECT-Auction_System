@@ -98,7 +98,7 @@ class BidServiceTest {
     @BeforeEach
     void setUp() {
         database   = new SerializedDatabase(tempDir);
-        autoBidService = new AutoBidService();
+        autoBidService = new AutoBidService(database.autoBidSettings());
         bidService = new AuctionBidService(
                 database,
                 AuctionManager.getInstance(database),
@@ -339,6 +339,304 @@ class BidServiceTest {
     }
 
     /**
+     * Khi bật auto-bid cho phiên chưa có bid nào, service phải tạo bid mở đầu
+     * bằng đúng giá khởi điểm nếu setting đủ maxAmount và user đủ số dư.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_NoExistingBid_CreatesOpeningBidAtStartPrice() {
+        Participant autoBidder = new Participant(
+                "auto_open", "auto_open@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        database.users().save(autoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                10_000L,
+                500L);
+
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), autoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(autoBidder, highestBid.getParticipant());
+        assertEquals(START_PRICE, highestBid.getAmount(), 0.001);
+        assertEquals(100_000.0 - START_PRICE, autoBidder.getBalance(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(1L, bidCount);
+    }
+
+    /**
+     * Khi bật auto-bid trong phiên đã có người khác dẫn đầu, service phải thử
+     * phản ứng ngay và đưa auto-bidder lên dẫn đầu nếu setting đủ điều kiện.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_ExistingHighestBid_OutbidsImmediately() {
+        Participant autoBidder = new Participant(
+                "auto_react", "auto_react@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        database.users().save(bidder);
+        database.users().save(autoBidder);
+
+        double manualBid = START_PRICE + 1000.0;
+        double bidderBalanceBefore = bidder.getBalance();
+        bidService.placeBid(runningAuction.getId(), bidder, manualBid);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                10_000L,
+                500L);
+
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), autoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(autoBidder, highestBid.getParticipant());
+        assertEquals(manualBid + 500L, highestBid.getAmount(), 0.001);
+        assertEquals(bidderBalanceBefore, bidder.getBalance(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(2L, bidCount);
+    }
+
+    /**
+     * Khi người đang dẫn đầu cũng có auto-bid active, người mới có maxAmount
+     * cao hơn phải vượt mức tối đa của leader cũ, không chỉ vượt giá hiện tại.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_HigherMaxAutoBidder_OutbidsCurrentLeaderMax() {
+        Participant firstAutoBidder = new Participant(
+                "auto_first", "auto_first@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        Participant secondAutoBidder = new Participant(
+                "auto_second", "auto_second@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        database.users().save(firstAutoBidder);
+        database.users().save(secondAutoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                firstAutoBidder,
+                10_000L,
+                500L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), firstAutoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                secondAutoBidder,
+                12_000L,
+                250L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), secondAutoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(secondAutoBidder, highestBid.getParticipant());
+        assertEquals(10_000L + 250L, highestBid.getAmount(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(2L, bidCount);
+    }
+
+    /**
+     * Khi người dẫn đầu cũ có auto-bid max cao hơn người mới bật auto-bid, hệ
+     * thống phải chạy chuỗi phản ứng để người dẫn đầu cũ tự đặt lại tới max của mình.
+     *
+     * <p>Kịch bản này khóa edge case maxAmount sát nhau: B max 20 000 000,
+     * A max 19 999 990. A được thử đặt tới max của A, sau đó B phải phản ứng
+     * lại và dẫn đầu ở đúng 20 000 000.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_NewBidderNearLeaderMax_LeaderAutoBidsBackToOwnMax() {
+        Participant leaderAutoBidder = new Participant(
+                "auto_leader_20m", "auto_leader_20m@mail.com", "pass",
+                20_000_000.0, "PARTICIPANT");
+        Participant challengerAutoBidder = new Participant(
+                "auto_challenger_near", "auto_challenger_near@mail.com", "pass",
+                20_000_000.0, "PARTICIPANT");
+        database.users().save(leaderAutoBidder);
+        database.users().save(challengerAutoBidder);
+
+        // B bật auto-bid trước và mở đầu phiên bằng giá khởi điểm.
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                leaderAutoBidder,
+                20_000_000L,
+                100_000L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), leaderAutoBidder);
+
+        // A bật auto-bid thấp hơn max của B một khoảng rất nhỏ.
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                challengerAutoBidder,
+                19_999_990L,
+                100_000L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), challengerAutoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(leaderAutoBidder, highestBid.getParticipant());
+        assertEquals(20_000_000L, highestBid.getAmount(), 0.001);
+
+        assertEquals(0.0, leaderAutoBidder.getBalance(), 0.001);
+        assertEquals(20_000_000.0, challengerAutoBidder.getBalance(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(3L, bidCount);
+    }
+
+    /**
+     * Khi người đang dẫn đầu chỉnh maxAmount cao hơn đối thủ auto-bid, chính
+     * người đó phải tự nâng giá lên max của đối thủ cộng step của mình.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_CurrentLeaderRaisesMax_OutbidsCompetitorMax() {
+        Participant firstAutoBidder = new Participant(
+                "auto_raise_first", "auto_raise_first@mail.com", "pass",
+                100_000.0, "PARTICIPANT");
+        Participant secondAutoBidder = new Participant(
+                "auto_raise_second", "auto_raise_second@mail.com", "pass",
+                100_000.0, "PARTICIPANT");
+        database.users().save(firstAutoBidder);
+        database.users().save(secondAutoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                firstAutoBidder,
+                10_000L,
+                500L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), firstAutoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                secondAutoBidder,
+                20_000L,
+                250L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), secondAutoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                firstAutoBidder,
+                25_000L,
+                500L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), firstAutoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(firstAutoBidder, highestBid.getParticipant());
+        assertEquals(20_000L + 500L, highestBid.getAmount(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(3L, bidCount);
+    }
+
+    /**
+     * Khi người đang dẫn đầu chỉ chỉnh lại auto-bid của chính mình và không có
+     * đối thủ auto-bid nào đang cạnh tranh, service không được tự nâng giá thêm.
+     */
+    @Test
+    void triggerAutoBidAfterEnable_CurrentLeaderUpdatesSettingWithoutCompetitor_DoesNotSelfBid() {
+        Participant autoBidder = new Participant(
+                "auto_self_update", "auto_self_update@mail.com", "pass",
+                100_000.0, "PARTICIPANT");
+        database.users().save(autoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                10_000L,
+                500L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), autoBidder);
+
+        BidTransaction openingBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(openingBid);
+        assertSame(autoBidder, openingBid.getParticipant());
+        assertEquals(START_PRICE, openingBid.getAmount(), 0.001);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                25_000L,
+                1_000L);
+        bidService.triggerAutoBidAfterEnable(runningAuction.getId(), autoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertSame(openingBid, highestBid);
+        assertEquals(START_PRICE, highestBid.getAmount(), 0.001);
+
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(1L, bidCount);
+    }
+
+    /**
+     * Cấu hình auto-bid phải được lưu xuống database để service mới khởi tạo
+     * lại vẫn đọc được setting đã bật trước đó.
+     */
+    @Test
+    void enableAutoBid_PersistsSettingAcrossServiceRestart() {
+        Participant autoBidder = new Participant(
+                "auto_saved", "auto_saved@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        database.users().save(autoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                10_000L,
+                500L);
+
+        AutoBidService reloadedAutoBidService = new AutoBidService(database.autoBidSettings());
+
+        assertTrue(reloadedAutoBidService
+                .findSetting(runningAuction.getId(), autoBidder.getId())
+                .isPresent());
+        assertEquals(1L, reloadedAutoBidService
+                .findActiveSettings(runningAuction.getId())
+                .size());
+    }
+
+    /**
+     * Tắt auto-bid phải chuyển setting sang inactive và trạng thái này vẫn còn
+     * sau khi service được khởi tạo lại từ database.
+     */
+    @Test
+    void disableAutoBid_PersistsInactiveSettingAcrossServiceRestart() {
+        Participant autoBidder = new Participant(
+                "auto_disabled", "auto_disabled@mail.com", "pass", 100_000.0, "PARTICIPANT");
+        database.users().save(autoBidder);
+
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                autoBidder,
+                10_000L,
+                500L);
+
+        autoBidService.disableAutoBid(runningAuction.getId(), autoBidder);
+
+        assertTrue(autoBidService.findActiveSettings(runningAuction.getId()).isEmpty());
+        assertFalse(autoBidService
+                .findSetting(runningAuction.getId(), autoBidder.getId())
+                .orElseThrow()
+                .isActive());
+
+        AutoBidService reloadedAutoBidService = new AutoBidService(database.autoBidSettings());
+
+        assertTrue(reloadedAutoBidService.findActiveSettings(runningAuction.getId()).isEmpty());
+        assertFalse(reloadedAutoBidService
+                .findSetting(runningAuction.getId(), autoBidder.getId())
+                .orElseThrow()
+                .isActive());
+    }
+
+    /**
      * Khi có cấu hình auto-bid đủ điều kiện, một bid thủ công phải kích hoạt
      * đúng một bid tự động và đưa auto-bidder lên dẫn đầu.
      *
@@ -430,6 +728,51 @@ class BidServiceTest {
         assertEquals(manualBid + 500L, highestBid.getAmount(), 0.001);
 
         // Vẫn chỉ có một bid tự động thành công, không ghi bid rác từ candidate lỗi.
+        long bidCount = database.bidTransactions()
+                .findByAuctionId(runningAuction.getId())
+                .size();
+        assertEquals(2L, bidCount);
+    }
+
+    /**
+     * Khi auto-bid bị bỏ qua vì thiếu số dư, nạp thêm tiền phải retry setting
+     * active của user đó và tạo bid nếu phiên vẫn đang chạy.
+     */
+    @Test
+    void triggerAutoBidsAfterBalanceChange_PreviouslyInsufficientBalance_RetriesAutoBid() {
+        Participant lowBalanceAutoBidder = new Participant(
+                "auto_deposit", "auto_deposit@mail.com", "pass", 1_000.0, "PARTICIPANT");
+        database.users().save(bidder);
+        database.users().save(lowBalanceAutoBidder);
+
+        // Auto-bidder có max đủ cao nhưng ví chưa đủ để giữ bid khi bị kích hoạt.
+        autoBidService.enableAutoBid(
+                runningAuction.getId(),
+                lowBalanceAutoBidder,
+                10_000L,
+                500L);
+
+        // Bid thủ công làm auto-bid được thử nhưng bị bỏ qua do thiếu số dư.
+        double manualBid = START_PRICE + 1000.0;
+        double bidderBalanceBefore = bidder.getBalance();
+        bidService.placeBid(runningAuction.getId(), bidder, manualBid);
+
+        assertSame(bidder, runningAuction.getCurrentHighestBid().getParticipant());
+        assertEquals(1_000.0, lowBalanceAutoBidder.getBalance(), 0.001);
+
+        // Mô phỏng nạp tiền thành công trước khi trigger retry auto-bid.
+        lowBalanceAutoBidder.setBalance(lowBalanceAutoBidder.getBalance() + 20_000.0);
+        database.users().save(lowBalanceAutoBidder);
+
+        bidService.triggerAutoBidsAfterBalanceChange(lowBalanceAutoBidder);
+
+        BidTransaction highestBid = runningAuction.getCurrentHighestBid();
+        assertNotNull(highestBid);
+        assertSame(lowBalanceAutoBidder, highestBid.getParticipant());
+        assertEquals(manualBid + 500L, highestBid.getAmount(), 0.001);
+        assertEquals(bidderBalanceBefore, bidder.getBalance(), 0.001);
+        assertEquals(21_000.0 - highestBid.getAmount(), lowBalanceAutoBidder.getBalance(), 0.001);
+
         long bidCount = database.bidTransactions()
                 .findByAuctionId(runningAuction.getId())
                 .size();

@@ -1,6 +1,7 @@
 package auction_system.server.network.command;
 
 import auction_system.common.network.Protocol;
+import auction_system.server.services.AuctionBidService;
 import auction_system.server.services.AutoBidService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
@@ -8,16 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command tạm thời nhận yêu cầu bật đấu giá tự động.
+ * Command nhận yêu cầu bật hoặc cập nhật đấu giá tự động.
  *
- * <p>Ở bước này command chỉ validate format request và trả phản hồi OK/FAIL
- * để hoàn thiện luồng client-server. Nghiệp vụ lưu cấu hình auto-bid và xử lý
- * tự động trả giá sẽ được nối sau trong service riêng.
+ * <p>Command chỉ đọc request và trả response. Nghiệp vụ lưu cấu hình thuộc
+ * {@link AutoBidService}; phần tạo bid ngay sau enable thuộc
+ * {@link AuctionBidService}.
  */
-public final class AuctionAutoBidCommand implements Command {
+public final class AutoBidCommand implements Command {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(AuctionAutoBidCommand.class);
+            LoggerFactory.getLogger(AutoBidCommand.class);
 
     private static final int MIN_ENABLE_AUTO_BID_PARTS = 4;
     private static final int IDX_AUCTION_ID = 1;
@@ -25,14 +26,20 @@ public final class AuctionAutoBidCommand implements Command {
     private static final int IDX_STEP_AMOUNT = 3;
     
     private final AutoBidService autoBidService;
+    private final AuctionBidService auctionBidService;
 
     /**
      * Khởi tạo command bật auto-bid.
      *
      * @param autoBidService service quản lý cấu hình auto-bid
+     * @param auctionBidService service xử lý đặt giá và trigger auto-bid ngay
      */
-    public AuctionAutoBidCommand(final AutoBidService autoBidService) {
+    public AutoBidCommand(
+            final AutoBidService autoBidService,
+            final AuctionBidService auctionBidService) {
+
         this.autoBidService = Objects.requireNonNull(autoBidService, "autoBidService");
+        this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
     }
 
     @Override
@@ -56,6 +63,11 @@ public final class AuctionAutoBidCommand implements Command {
                     maxAmount,
                     stepAmount
             );
+
+            // Sau khi lưu setting, thử tạo auto-bid ngay nếu phiên hiện tại đã đủ điều kiện.
+            auctionBidService.triggerAutoBidAfterEnable(
+                    auctionId,
+                    session.getCurrentUser());
 
             LOGGER.info(
                     "Đã lưu auto-bid. user={}, auctionId={}, maxAmount={}, stepAmount={}",

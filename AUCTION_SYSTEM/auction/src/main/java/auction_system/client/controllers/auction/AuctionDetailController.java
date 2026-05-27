@@ -105,6 +105,7 @@ public class AuctionDetailController implements Initializable {
         );
         startCountdownTimer(context.endTime(), context.status());
         loadBidHistory(context.auctionId());
+        autoBidForm.loadStatus(context.auctionId());
 
         // Sau khi có auctionId, bắt đầu nhận broadcast realtime của phiên này.
         realtimeSubscription.watch(context.auctionId());

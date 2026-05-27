@@ -5,15 +5,18 @@ import auction_system.common.models.auctions.AutoBidSetting;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service quản lý cấu hình đấu giá tự động ở phía server.
  *
- * <p>Ở bước đầu, service chỉ lưu cấu hình trong RAM theo từng phiên đấu giá.
- * Sau này có thể chuyển sang repository nếu cần persist qua file.
+ * <p>Service giữ cache trong RAM để xử lý nhanh và có thể gắn repository để
+ * lưu cấu hình xuống file serialization.
  */
 public final class AutoBidService {
     /**
@@ -22,6 +25,28 @@ public final class AutoBidService {
      */
     private final Map<String, Map<String, AutoBidSetting>> settingsByAuction =
             new ConcurrentHashMap<>();
+
+    /** Repository lưu cấu hình auto-bid, null nếu chạy in-memory. */
+    private final AutoBidSettingStore autoBidSettingRepository;
+
+    /**
+     * Khởi tạo service auto-bid chỉ lưu trong RAM.
+     */
+    public AutoBidService() {
+        this.autoBidSettingRepository = null;
+    }
+
+    /**
+     * Khởi tạo service auto-bid có lưu cấu hình xuống database.
+     *
+     * @param autoBidSettingRepository repository lưu cấu hình auto-bid
+     */
+    public AutoBidService(final AutoBidSettingStore autoBidSettingRepository) {
+        this.autoBidSettingRepository = Objects.requireNonNull(
+                autoBidSettingRepository,
+                "autoBidSettingRepository");
+        loadPersistedSettings();
+    }
 
     /**
      * Bật hoặc cập nhật cấu hình auto-bid của một participant trong một phiên.
@@ -48,9 +73,37 @@ public final class AutoBidService {
                 stepAmount
         );
 
+        // Cập nhật cache runtime để các bid sau có thể phản ứng ngay.
         settingsByAuction
                 .computeIfAbsent(auctionId, key -> new ConcurrentHashMap<>())
                 .put(participant.getId(), setting);
+
+        saveSetting(setting);
+
+        return setting;
+    }
+
+    /**
+     * Tắt cấu hình auto-bid của một participant trong một phiên.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param currentUser user đang đăng nhập
+     * @return cấu hình auto-bid sau khi đã tắt
+     */
+    public AutoBidSetting disableAutoBid(
+            final String auctionId,
+            final User currentUser) {
+
+        validateParticipantRequest(auctionId, currentUser);
+
+        final Participant participant = (Participant) currentUser;
+        final AutoBidSetting setting = findSetting(auctionId, participant.getId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Bạn chưa bật auto-bid cho phiên này."));
+
+        // Giữ lại setting nhưng chuyển inactive để restart không tự bật lại.
+        setting.deactivate();
+        saveSetting(setting);
 
         return setting;
     }
@@ -72,6 +125,64 @@ public final class AutoBidService {
                 .stream()
                 .filter(AutoBidSetting::isActive)
                 .toList();
+    }
+
+    /**
+     * Lấy toàn bộ cấu hình auto-bid đang active của một participant.
+     *
+     * <p>Luồng nạp tiền dùng method này để retry những auto-bid từng bị bỏ qua
+     * vì thiếu số dư. Service chỉ trả setting, còn việc đọc auction, kiểm tra
+     * trạng thái và ghi bid vẫn thuộc về {@link AuctionBidService}.
+     *
+     * @param participantId mã participant cần tìm cấu hình
+     * @return danh sách setting active của participant, sắp xếp ổn định theo thời điểm tạo
+     */
+    public List<AutoBidSetting> findActiveSettingsForParticipant(final String participantId) {
+        // Không có participantId hợp lệ thì không có khóa nghiệp vụ để tìm setting.
+        if (participantId == null || participantId.isBlank()) {
+            return List.of();
+        }
+
+        // Quét cache theo tất cả auction vì một user có thể bật auto-bid ở nhiều phiên.
+        return settingsByAuction.values()
+                .stream()
+                .flatMap(settings -> settings.values().stream())
+                .filter(AutoBidSetting::isActive)
+                .filter(setting -> participantId.equals(setting.getParticipant().getId()))
+                .sorted(Comparator
+                        .comparing(AutoBidSetting::getCreatedAt)
+                        .thenComparing(AutoBidSetting::getAuctionId))
+                .toList();
+    }
+
+    /**
+     * Tìm cấu hình auto-bid của một participant trong một phiên đấu giá.
+     *
+     * <p>Method này dùng cho luồng vừa bật auto-bid: nếu phiên chưa có bid nào,
+     * tầng bid cần lấy đúng setting của user vừa bật để tạo bid mở đầu.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param participantId mã participant cần tìm setting
+     * @return setting nếu tồn tại, ngược lại là Optional rỗng
+     */
+    public Optional<AutoBidSetting> findSetting(
+            final String auctionId,
+            final String participantId) {
+
+        // Không có auctionId hoặc participantId hợp lệ thì không thể tìm setting.
+        if (auctionId == null || auctionId.isBlank()
+                || participantId == null || participantId.isBlank()) {
+            return Optional.empty();
+        }
+
+        // Lấy map setting của phiên đấu giá cần tìm.
+        final Map<String, AutoBidSetting> settings = settingsByAuction.get(auctionId);
+        if (settings == null) {
+            return Optional.empty();
+        }
+
+        // Trả về setting theo participantId nếu đã được lưu trước đó.
+        return Optional.ofNullable(settings.get(participantId));
     }
 
     /**
@@ -188,13 +299,7 @@ public final class AutoBidService {
             final long maxAmount,
             final long stepAmount) {
 
-        if (auctionId == null || auctionId.isBlank()) {
-            throw new IllegalArgumentException("Mã phiên đấu giá không được rỗng.");
-        }
-
-        if (!(currentUser instanceof Participant)) {
-            throw new IllegalArgumentException("Chỉ người tham gia mới được bật auto-bid.");
-        }
+        validateParticipantRequest(auctionId, currentUser);
 
         if (maxAmount <= 0) {
             throw new IllegalArgumentException("Giá tối đa phải là số dương.");
@@ -203,5 +308,67 @@ public final class AutoBidService {
         if (stepAmount <= 0) {
             throw new IllegalArgumentException("Bước tăng phải là số dương.");
         }
+    }
+
+    private void validateParticipantRequest(
+            final String auctionId,
+            final User currentUser) {
+
+        if (auctionId == null || auctionId.isBlank()) {
+            throw new IllegalArgumentException("Mã phiên đấu giá không được rỗng.");
+        }
+
+        if (!(currentUser instanceof Participant)) {
+            throw new IllegalArgumentException("Chỉ người tham gia mới được bật auto-bid.");
+        }
+    }
+
+    private void loadPersistedSettings() {
+        // Nạp toàn bộ setting đã lưu vào cache runtime khi server/service khởi động.
+        for (AutoBidSetting setting : autoBidSettingRepository.findAll()) {
+            settingsByAuction
+                    .computeIfAbsent(setting.getAuctionId(), key -> new ConcurrentHashMap<>())
+                    .merge(
+                            setting.getParticipant().getId(),
+                            setting,
+                            this::chooseLatestSetting);
+        }
+    }
+
+    private AutoBidSetting chooseLatestSetting(
+            final AutoBidSetting existing,
+            final AutoBidSetting loaded) {
+
+        // Nếu file có nhiều setting cùng user/auction, giữ bản được tạo mới hơn.
+        return loaded.getCreatedAt().isAfter(existing.getCreatedAt())
+                ? loaded
+                : existing;
+    }
+
+    private void saveSetting(final AutoBidSetting setting) {
+        // Constructor in-memory không có repository nên chỉ cập nhật cache.
+        if (autoBidSettingRepository == null) {
+            return;
+        }
+
+        // Repository lưu theo id, nên xóa setting cũ cùng user/auction trước khi lưu bản mới.
+        findExistingPersistedSetting(
+                setting.getAuctionId(),
+                setting.getParticipant().getId())
+                .ifPresent(existing -> autoBidSettingRepository.deleteById(existing.getId()));
+
+        // Lưu cả setting active và inactive để trạng thái disable sống qua restart.
+        autoBidSettingRepository.save(setting);
+    }
+
+    private Optional<AutoBidSetting> findExistingPersistedSetting(
+            final String auctionId,
+            final String participantId) {
+
+        // Tìm theo khóa nghiệp vụ auctionId + participantId thay vì id ngẫu nhiên.
+        return autoBidSettingRepository.findByAuctionId(auctionId)
+                .stream()
+                .filter(setting -> participantId.equals(setting.getParticipant().getId()))
+                .findFirst();
     }
 }

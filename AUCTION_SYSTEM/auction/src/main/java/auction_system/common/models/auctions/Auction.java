@@ -64,14 +64,18 @@ public class Auction extends Entity {
         }
 
         double newBidAmount = bid.getAmount();
-        double currentHighest = (currentHighestBid != null) 
-                ? currentHighestBid.getAmount()
-                : item.getStartPrice();
 
-        // 2. Giá đặt phải cao hơn giá cao nhất hiện tại (hoặc giá khởi điểm)
-        if (newBidAmount <= currentHighest) {
+        // 2. Bid đầu tiên được bằng giá khởi điểm; các bid sau phải vượt giá đang dẫn đầu.
+        if (currentHighestBid == null) {
+            if (newBidAmount < item.getStartPrice()) {
+                throw new InvalidBidException(
+                        "Giá đặt đầu tiên phải lớn hơn hoặc bằng giá khởi điểm ("
+                                + item.getStartPrice() + ")");
+            }
+        } else if (newBidAmount <= currentHighestBid.getAmount()) {
             throw new InvalidBidException(
-                    "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + currentHighest + ")");
+                    "Giá đặt phải lớn hơn giá cao nhất hiện tại ("
+                            + currentHighestBid.getAmount() + ")");
         }
 
         // 3. Cập nhật thông tin giá mới nhất

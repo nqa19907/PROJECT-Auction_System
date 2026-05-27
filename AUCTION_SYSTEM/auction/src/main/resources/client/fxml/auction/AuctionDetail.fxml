@@ -150,7 +150,6 @@
                      <VBox>
                         <children>
                             <Label fx:id="autoBidErrorLabel" managed="false" styleClass="text-error" visible="false" />
-                           <Label fx:id="autoBidErrorLabel" styleClass="text-error" visible="false" />
                         </children>
                      </VBox>
                   </children>

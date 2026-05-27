@@ -48,7 +48,7 @@ public class ServerApp {
 
         final AuctionManager auctionManager = AuctionManager.getInstance(database);
         final AuthService authService = new AuthService(database);
-        final AutoBidService autoBidService = new AutoBidService();
+        final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
         final AuctionBidService auctionBidService =
             new AuctionBidService(database, auctionManager, autoBidService);
         final ParticipantItemService participantItemService = new ParticipantItemService(database);

@@ -34,6 +34,7 @@ public final class Protocol {
         PLACE_BID,
         ENABLE_AUTO_BID,
         DISABLE_AUTO_BID,
+        GET_AUTO_BID,
 
         // Admin
         // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
@@ -64,7 +65,7 @@ public final class Protocol {
         BID_HISTORY,
         UNWATCH_OK,
         BID_OK, BID_FAIL,
-        AUTO_BID_OK, AUTO_BID_FAIL,
+        AUTO_BID_OK, AUTO_BID_FAIL, AUTO_BID_STATUS,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates

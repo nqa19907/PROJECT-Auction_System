@@ -10,10 +10,12 @@ import auction_system.server.network.command.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.AdminDeleteUserCommand;
 import auction_system.server.network.command.AdminListAuctionsCommand;
 import auction_system.server.network.command.AdminListUsersCommand;
-import auction_system.server.network.command.AuctionAutoBidCommand;
+import auction_system.server.network.command.AutoBidCommand;
 import auction_system.server.network.command.Command;
 import auction_system.server.network.command.DepositCommand;
+import auction_system.server.network.command.DisableAutoBidCommand;
 import auction_system.server.network.command.GetAuctionCommand;
+import auction_system.server.network.command.GetAutoBidStatusCommand;
 import auction_system.server.network.command.GetBidHistoryCommand;
 import auction_system.server.network.command.ListAuctionsCommand;
 import auction_system.server.network.command.LoginCommand;
@@ -123,10 +125,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(
                         Protocol.Command.ENABLE_AUTO_BID.name(),
-                        new AuctionAutoBidCommand(autoBidService)),
+                        new AutoBidCommand(autoBidService, auctionBidService)),
+                Map.entry(
+                        Protocol.Command.DISABLE_AUTO_BID.name(),
+                        new DisableAutoBidCommand(autoBidService)),
+                Map.entry(
+                        Protocol.Command.GET_AUTO_BID.name(),
+                        new GetAutoBidStatusCommand(autoBidService)),
                 Map.entry(
                         Protocol.Command.DEPOSIT.name(),
-                        new DepositCommand(authService)),
+                        new DepositCommand(authService, auctionBidService)),
                 Map.entry(
                         Protocol.Command.LOGOUT.name(),
                         new LogoutCommand(auctionManager)),

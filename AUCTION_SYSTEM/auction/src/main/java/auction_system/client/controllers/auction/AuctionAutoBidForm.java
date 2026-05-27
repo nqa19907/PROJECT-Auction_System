@@ -13,15 +13,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Điều phối trạng thái form đấu giá tự động trên màn hình chi tiết.
  *
- * <p>Lớp này chỉ xử lý hành vi UI local của auto-bid: bật/tắt form theo
- * checkbox, xoá dữ liệu khi tắt, cộng nhanh bước tăng và hiển thị lỗi nhập
- * liệu. Phần gửi cấu hình auto-bid lên server sẽ được nối sau khi protocol và
- * backend hỗ trợ.
+ * <p>Lớp này xử lý hành vi UI của auto-bid: bật/tắt form theo checkbox, tải
+ * trạng thái đã lưu từ server, gửi enable/disable và hiển thị lỗi nhập liệu.
  */
 final class AuctionAutoBidForm {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AuctionAutoBidForm.class);
+    private static final String ENABLE_BUTTON_TEXT = "Xác nhận đấu giá tự động";
+    private static final String EDIT_BUTTON_TEXT = "Xác nhận chỉnh sửa";
+    private static final String SUBMITTING_TEXT = "Đang gửi...";
 
     private final CheckBox autoBidToggle;
     private final TextField maxAmountInput;
@@ -29,6 +30,8 @@ final class AuctionAutoBidForm {
     private final Button enableAutoBidButton;
     private final Label errorLabel;
     private final AuctionViewModel viewModel;
+    private boolean confirmedEnabled;
+    private boolean loadingStatus;
 
     /**
      * Khởi tạo form đấu giá tự động bằng các control đã inject từ FXML.
@@ -64,13 +67,10 @@ final class AuctionAutoBidForm {
      * thái ban đầu.
      */
     void registerHandlers() {
-        // Lắng nghe checkbox để mở form khi bật auto-bid và khóa form khi tắt.
-        // Đồng thời clear dữ liệu nếu bỏ chọn.
         autoBidToggle.selectedProperty().addListener(
-                (obs, oldValue, selected) -> setControlsEnabled(selected)
+                (obs, oldValue, selected) -> handleToggleChanged(selected)
         );
 
-        // Ẩn lỗi cũ
         maxAmountInput.textProperty().addListener(
                 (obs, oldValue, newValue) -> hideError()
         );
@@ -78,17 +78,37 @@ final class AuctionAutoBidForm {
                 (obs, oldValue, newValue) -> hideError()
         );
 
-        // Khi bấm xác nhận, kiểm tra dữ liệu trước. Chưa gửi server ở bước này.
+        // Khi bấm xác nhận, kiểm tra dữ liệu trước rồi gửi cấu hình lên server.
         enableAutoBidButton.setOnAction(event -> submitAutoBidSettings());
-        setControlsEnabled(autoBidToggle.isSelected());
+        maxAmountInput.setOnAction(event -> {
+            submitAutoBidSettings();
+            event.consume();
+        });
+        stepAmountInput.setOnAction(event -> {
+            submitAutoBidSettings();
+            event.consume();
+        });
+        applyEnabledState(autoBidToggle.isSelected());
+    }
+
+    /**
+     * Tải trạng thái auto-bid đã lưu của user hiện tại khi mở màn hình chi tiết.
+     *
+     * @param auctionId mã phiên đấu giá đang hiển thị
+     */
+    void loadStatus(final String auctionId) {
+        loadingStatus = true;
+        AuctionService.getInstance().fetchAutoBidStatus(
+                auctionId,
+                (enabled, maxAmount, stepAmount) -> Platform.runLater(() ->
+                        applyLoadedStatus(enabled, maxAmount, stepAmount)));
     }
 
     /**
      * Kiểm tra dữ liệu auto-bid trước khi gửi cấu hình lên server.
      *
-     * <p>Hiện tại method này mới validate ở client để phản hồi nhanh cho người
-     * dùng. Sau này, nếu dữ liệu hợp lệ, phần TODO sẽ gọi service gửi command
-     * auto-bid tới server.
+     * <p>Validate ở client để phản hồi nhanh; server vẫn kiểm tra lại trước khi
+     * lưu cấu hình auto-bid.
      */
     private void submitAutoBidSettings() {
         final long maxAmount = parseAmountOrZero(maxAmountInput.getText());
@@ -143,6 +163,8 @@ final class AuctionAutoBidForm {
             return;
         }
 
+        confirmedEnabled = true;
+        updateButtonText(false);
         hideError();
         LOGGER.info(message);
     }
@@ -154,9 +176,7 @@ final class AuctionAutoBidForm {
      */
     private void setSubmitting(final boolean submitting) {
         enableAutoBidButton.setDisable(submitting);
-        enableAutoBidButton.setText(
-                submitting ? "Đang gửi..." : "Xác nhận đấu giá tự động"
-        );
+        updateButtonText(submitting);
     }
 
     /**
@@ -187,7 +207,24 @@ final class AuctionAutoBidForm {
      *
      * @param enabled true nếu checkbox auto-bid đang được chọn
      */
-    private void setControlsEnabled(final boolean enabled) {
+    private void handleToggleChanged(final boolean enabled) {
+        if (loadingStatus) {
+            applyEnabledState(enabled);
+            return;
+        }
+
+        applyEnabledState(enabled);
+
+        if (!enabled) {
+            if (confirmedEnabled) {
+                disableConfirmedAutoBid();
+            } else {
+                clearForm();
+            }
+        }
+    }
+
+    private void applyEnabledState(final boolean enabled) {
         /*
         * JavaFX dùng setDisable(true) để khoá control, nhưng tham số của method này
         * lại là enabled. Vì vậy phải đảo ngược giá trị: enabled=true thì disable=false,
@@ -196,11 +233,62 @@ final class AuctionAutoBidForm {
         maxAmountInput.setDisable(!enabled);
         stepAmountInput.setDisable(!enabled);
         enableAutoBidButton.setDisable(!enabled);
+        updateButtonText(false);
+    }
 
-        if (!enabled) {
-            // Tắt auto-bid nghĩa là huỷ cấu hình đang nhập dở và quay về form sạch.
+    private void applyLoadedStatus(
+            final boolean enabled,
+            final long maxAmount,
+            final long stepAmount) {
+
+        confirmedEnabled = enabled;
+        loadingStatus = true;
+        autoBidToggle.setSelected(enabled);
+
+        if (enabled) {
+            maxAmountInput.setText(Long.toString(maxAmount));
+            stepAmountInput.setText(Long.toString(stepAmount));
+            hideError();
+        } else {
             clearForm();
         }
+
+        applyEnabledState(enabled);
+        loadingStatus = false;
+    }
+
+    private void disableConfirmedAutoBid() {
+        applyEnabledState(false);
+        AuctionService.getInstance().disableAutoBid(
+                viewModel.auctionIdProperty().get(),
+                (success, message) -> Platform.runLater(() ->
+                        handleDisableResult(success, message)));
+    }
+
+    private void handleDisableResult(final boolean success, final String message) {
+        if (!success) {
+            confirmedEnabled = true;
+            loadingStatus = true;
+            autoBidToggle.setSelected(true);
+            applyEnabledState(true);
+            loadingStatus = false;
+            showError(message);
+            return;
+        }
+
+        confirmedEnabled = false;
+        clearForm();
+        applyEnabledState(false);
+        LOGGER.info(message);
+    }
+
+    private void updateButtonText(final boolean submitting) {
+        if (submitting) {
+            enableAutoBidButton.setText(SUBMITTING_TEXT);
+            return;
+        }
+
+        enableAutoBidButton.setText(confirmedEnabled ? EDIT_BUTTON_TEXT : ENABLE_BUTTON_TEXT);
     }
 
     /**

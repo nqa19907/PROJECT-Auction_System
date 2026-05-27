@@ -96,18 +96,16 @@ public class CoreBiddingLogicTest {
     }
 
     @Test
-    void testPlaceBid_AmountEqualsStartPrice_ThrowsInvalidBidException() {
-        // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (không hợp lệ)
-        double invalidBidAmount = 2000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount, auction);
+    void testPlaceBid_FirstBidAmountEqualsStartPrice_UpdatesHighestBid() {
+        // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (hợp lệ cho bid đầu tiên)
+        double validBidAmount = 2000;
+        BidTransaction validBid = new BidTransaction(null, validBidAmount, auction);
 
-        // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
-        String actualMessage = assertThrows(InvalidBidException.class, () -> {
-            auction.placeBid(invalidBid);
-        }).getMessage();
+        // Act: Thực hiện đặt giá
+        auction.placeBid(validBid);
 
-        String expectedMessage = "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + startPrice + ")";
-        assertEquals(expectedMessage, actualMessage);
+        // Assert: Bid đầu tiên bằng startPrice vẫn được ghi nhận
+        assertEquals(validBidAmount, auction.getCurrentHighestBid().getAmount());
     }
 
     @Test
@@ -121,7 +119,8 @@ public class CoreBiddingLogicTest {
             auction.placeBid(invalidBid);
         }).getMessage();
 
-        String expectedMessage = "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + startPrice + ")";
+        String expectedMessage =
+                "Giá đặt đầu tiên phải lớn hơn hoặc bằng giá khởi điểm (" + startPrice + ")";
         assertEquals(expectedMessage, actualMessage);
     }
 
