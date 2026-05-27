@@ -105,7 +105,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new LoginCommand(authService, auctionManager)),
                 Map.entry(
                         Protocol.Command.REGISTER.name(),
-                        new RegisterCommand(authService)),
+                        new RegisterCommand(authService, auctionManager)),
                 Map.entry(
                         Protocol.Command.LIST_AUCTIONS.name(),
                         new ListAuctionsCommand(auctionManager)),

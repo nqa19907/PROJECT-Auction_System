@@ -5,6 +5,7 @@ import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -169,6 +170,23 @@ public class AuctionManager {
         settlementService.settleFinishedAuction(auction);
     }
 
+    /**
+     * Thông báo realtime rằng danh sách người dùng đã thay đổi.
+     *
+     * <p>Client nhận được sự kiện này có thể chủ động gọi lại API danh sách user
+     * để lấy snapshot mới nhất từ server.
+     */
+    public void notifyUserListChanged() {
+        final String message = Protocol.Response.USER_LIST_CHANGED.name();
+        onlineUsers.getObservers().forEach(observer -> observer.update(message));
+    }
+
+    /**
+     * Huỷ một phiên đấu giá theo ID.
+     *
+     * @param auctionId ID phiên cần huỷ.
+     * @return true nếu huỷ thành công, false nếu không tìm thấy.
+     */
     public boolean cancelAuction(final String auctionId) {
         return administrationService.cancelAuction(auctionId);
     }
@@ -205,6 +223,7 @@ public class AuctionManager {
         onlineUsers.userLoggedIn(user, observer);
         LOGGER.debug("Online: " + user.getUsername()
                 + " (total: " + onlineUsers.getOnlineCount() + ")");
+        notifyUserListChanged();
     }
 
     /**
@@ -216,6 +235,7 @@ public class AuctionManager {
         onlineUsers.userLoggedOut(user);
         LOGGER.debug("Offline: " + user.getUsername()
                 + " (total: " + onlineUsers.getOnlineCount() + ")");
+        notifyUserListChanged();
     }
 
     public void notifyBalanceUpdated(final Participant participant) {
@@ -279,7 +299,11 @@ public class AuctionManager {
         onlineUsers.remove(target);
         userRegistry.remove(target);
 
-        return database.users().deleteById(userId);
+        final boolean deleted = database.users().deleteById(userId);
+        if (deleted) {
+            notifyUserListChanged();
+        }
+        return deleted;
     }
 
     public List<User> getAllBidders() {

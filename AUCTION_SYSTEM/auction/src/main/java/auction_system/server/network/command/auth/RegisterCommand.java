@@ -2,6 +2,7 @@ package auction_system.server.network.command.auth;
 
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.session.ClientSession;
@@ -33,14 +34,19 @@ import org.slf4j.LoggerFactory;
 public class RegisterCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterCommand.class);
     private final AuthService authService;
+    private final AuctionManager auctionManager;
 
     /**
      * Khởi tạo command đăng ký tài khoản.
      *
      * @param authService service xử lý nghiệp vụ đăng ký tài khoản
+     * @param auctionManager manager dùng để phát sự kiện realtime
      */
-    public RegisterCommand(final AuthService authService) {
+    public RegisterCommand(
+            final AuthService authService,
+            final AuctionManager auctionManager) {
         this.authService = Objects.requireNonNull(authService, "authService");
+        this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
     /**
@@ -71,6 +77,11 @@ public class RegisterCommand implements Command {
                             + " ["
                             + registeredUser.getRoleName()
                             + "]");
+            // Đồng bộ user mới vào registry của AuctionManager để các luồng quản trị
+            // (ví dụ xóa user theo ID) nhìn thấy ngay lập tức.
+            auctionManager.registerUser(registeredUser);
+            // Báo cho các màn hình quản trị đang mở biết danh sách user đã đổi.
+            auctionManager.notifyUserListChanged();
 
             return Protocol.Response.REGISTER_OK.name();
         } catch (IllegalArgumentException exception) {

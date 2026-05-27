@@ -458,6 +458,33 @@
     -fx-border-color: #A8640A;
 }
 
+/* Nút làm mới trên thanh đầu trang của màn hình đấu giá. */
+.root-pane .refresh-top-btn {
+    -fx-background-color: #FFF3DE;
+    -fx-background-radius: 999;
+    -fx-border-color: #F0D9B5;
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+    -fx-text-fill: #A8640A;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14 6 14;
+    -fx-min-height: 30px;
+    -fx-cursor: hand;
+}
+
+.root-pane .refresh-top-btn:hover {
+    -fx-background-color: #FFE8B0;
+    -fx-border-color: #D4860B;
+    -fx-text-fill: #8E5608;
+}
+
+.root-pane .refresh-top-btn:pressed {
+    -fx-background-color: #F5D080;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
 /* ── Ẩn column-header gốc của TableView (đã có custom HBox header) ── */
 .root-pane .bid-table .column-header-background {
     -fx-background-color: #FFF3DE;
