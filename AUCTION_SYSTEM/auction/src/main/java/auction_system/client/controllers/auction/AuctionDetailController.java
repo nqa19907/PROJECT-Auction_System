@@ -411,6 +411,57 @@ public class AuctionDetailController implements Initializable {
         handleCancel();
     }
 
+    /**
+     * Làm mới dữ liệu phiên đấu giá từ server theo ảnh chụp mới nhất.
+     *
+     * <p>Luồng này chỉ kéo lại snapshot bằng GET_AUCTION + BID_HISTORY,
+     * không thay thế cơ chế realtime UPDATE_PRICE đang chạy sẵn.
+     */
+    @FXML
+    private void refreshAuction() {
+        if (activeAuctionId == null || activeAuctionId.isBlank()) {
+            return;
+        }
+
+        AuctionService.getInstance().fetchAuctionDetail(activeAuctionId, parts -> {
+            if (parts == null || parts.length < 12) {
+                return;
+            }
+
+            try {
+                final AuctionDisplayContext context = new AuctionDisplayContext(
+                        parts[1],
+                        parts[2],
+                        (long) Double.parseDouble(parts[4]),
+                        (long) Double.parseDouble(parts[5]),
+                        parts[6],
+                        LocalDateTime.parse(parts[7]),
+                        LocalDateTime.parse(parts[8]),
+                        parts[10],
+                        Boolean.parseBoolean(parts[11]));
+
+                Platform.runLater(() -> {
+                    viewModel.init(context);
+                    activeAuctionId = context.auctionId();
+                    activeEndTime = context.endTime();
+                    syncAntiSnipingCheckbox(context.antiSnipingEnabled());
+                    applySellerObserveOnlyPolicy(context);
+                    AuctionPriceChartConfigurer.updateAxis(
+                            numberYaxis,
+                            viewModel.getOpeningPriceValue(),
+                            priceSeries
+                    );
+                    startCountdownTimer(context.startTime(), context.endTime(), context.status());
+                    loadBidHistory(context.auctionId());
+                });
+            } catch (RuntimeException exception) {
+                LOGGER.warn("Không thể làm mới dữ liệu phiên đấu giá: {}",
+                        activeAuctionId,
+                        exception);
+            }
+        });
+    }
+
     @FXML
     private void handleCancel() {
         LOGGER.info("Hủy bid history và quay lại ItemList");
