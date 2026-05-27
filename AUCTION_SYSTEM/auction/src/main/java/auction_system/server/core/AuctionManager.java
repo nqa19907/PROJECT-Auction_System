@@ -5,6 +5,7 @@ import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.List;

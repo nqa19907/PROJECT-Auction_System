@@ -2,9 +2,9 @@ package auction_system.server.network.command.auth;
 
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
+import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auth.AuthService;
-import auction_system.server.core.AuctionManager;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
 import org.slf4j.Logger;

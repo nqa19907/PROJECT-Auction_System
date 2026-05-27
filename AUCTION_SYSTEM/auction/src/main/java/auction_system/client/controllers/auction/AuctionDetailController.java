@@ -444,9 +444,10 @@ public class AuctionDetailController implements Initializable {
                     viewModel.init(context);
                     activeAuctionId = context.auctionId();
                     activeEndTime = context.endTime();
-                    syncAntiSnipingCheckbox(context.antiSnipingEnabled());
                     applySellerObserveOnlyPolicy(context);
-                    AuctionPriceChartConfigurer.updateAxis(
+                    syncAntiSnipingCheckbox(context.antiSnipingEnabled());
+                    AuctionPriceChartConfigurer.updateAxes(
+                            numberXaxis,
                             numberYaxis,
                             viewModel.getOpeningPriceValue(),
                             priceSeries
@@ -460,6 +461,15 @@ public class AuctionDetailController implements Initializable {
                         exception);
             }
         });
+    }
+
+    /**
+     * Đồng bộ trạng thái checkbox anti-sniping theo snapshot mới từ server.
+     *
+     * @param antiSnipingEnabled true nếu anti-sniping đang bật
+     */
+    private void syncAntiSnipingCheckbox(final boolean antiSnipingEnabled) {
+        antiSnipingControl.applyInitialState(antiSnipingEnabled, sellerObserveOnly);
     }
 
     @FXML

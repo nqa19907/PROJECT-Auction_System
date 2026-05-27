@@ -1,10 +1,12 @@
 package auction_system.client.controllers.auction;
 
+import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuthService;
 import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
