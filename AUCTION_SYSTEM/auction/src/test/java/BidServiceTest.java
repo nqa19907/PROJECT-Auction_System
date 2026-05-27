@@ -12,8 +12,8 @@ import auction_system.common.models.users.Participant;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.AutoBidService;
-import auction_system.server.services.AuctionBidService;
+import auction_system.server.services.autobid.AutoBidService;
+import auction_system.server.services.bidding.AuctionBidService;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;

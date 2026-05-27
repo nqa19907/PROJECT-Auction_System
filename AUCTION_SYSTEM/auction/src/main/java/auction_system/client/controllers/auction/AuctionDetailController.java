@@ -1,5 +1,10 @@
 package auction_system.client.controllers.auction;
 
+import auction_system.client.controllers.auction.components.AuctionAutoBidForm;
+import auction_system.client.controllers.auction.components.AuctionBidTableConfigurer;
+import auction_system.client.controllers.auction.components.AuctionCountdownTimer;
+import auction_system.client.controllers.auction.components.AuctionPriceChartConfigurer;
+import auction_system.client.controllers.auction.components.LiveIndicatorAnimation;
 import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
 import auction_system.client.network.NetworkClient;
@@ -452,7 +457,7 @@ public class AuctionDetailController implements Initializable {
                     String formattedBalance = CurrencyFormatter.formatAmount(newBalance);
                     LOGGER.info("Đặt giá thành công với số tiền: {}", formattedBidAmount);
                     LOGGER.info("Số dư mới sau khi đặt giá: {}", formattedBalance);
-                    
+
                 } else {
                     // Khi thất bại, hiển thị lỗi ngay dưới ô nhập thay vì Alert
                     lblError.setText(message);
