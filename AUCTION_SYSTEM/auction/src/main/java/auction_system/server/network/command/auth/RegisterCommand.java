@@ -77,6 +77,9 @@ public class RegisterCommand implements Command {
                             + " ["
                             + registeredUser.getRoleName()
                             + "]");
+            // Đồng bộ user mới vào registry của AuctionManager để các luồng quản trị
+            // (ví dụ xóa user theo ID) nhìn thấy ngay lập tức.
+            auctionManager.registerUser(registeredUser);
             // Báo cho các màn hình quản trị đang mở biết danh sách user đã đổi.
             auctionManager.notifyUserListChanged();
 

@@ -99,10 +99,11 @@ public class AdminDashboardController {
         initAuctionTable();
         bindActions();
         bindServiceCallbacks();
-        refreshUsers();
-        refreshAuctions();
         registerRealtimeHandlers();
         registerLifecycleCleanup();
+        // Chỉ gọi refresh sau khi đã đăng ký đầy đủ handler để tránh mất phản hồi đầu tiên.
+        refreshUsers();
+        refreshAuctions();
     }
 
     /**
