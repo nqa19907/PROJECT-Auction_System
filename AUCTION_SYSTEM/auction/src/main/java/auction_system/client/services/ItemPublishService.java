@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
- * Service phía Client dùng để gửi yêu cầu đăng bán/cập nhật phiên lên Server.
+ * Service phia Client dung de gui yeu cau dang ban/cap nhat phien len Server.
  */
 public final class ItemPublishService {
     private static final Logger LOGGER = Logger.getLogger(ItemPublishService.class.getName());
@@ -37,39 +37,39 @@ public final class ItemPublishService {
     }
 
     /**
-     * Lấy singleton của service.
+     * Lay singleton cua service.
      *
-     * @return instance dùng chung
+     * @return instance dung chung
      */
     public static ItemPublishService getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Callback nhận kết quả từ Server.
+     * Callback nhan ket qua tu Server.
      */
     @FunctionalInterface
     public interface PublishItemCallback {
         /**
-         * Trả kết quả cho controller gọi service.
+         * Tra ket qua cho controller goi service.
          *
-         * @param success trạng thái thành công
-         * @param message thông báo trả về
+         * @param success trang thai thanh cong
+         * @param message thong bao tra ve
          */
         void onResult(boolean success, String message);
     }
 
     /**
-     * Gửi yêu cầu đăng bán phiên mới.
+     * Gui yeu cau dang ban phien moi.
      *
-     * @param category danh mục sản phẩm
-     * @param itemName tên sản phẩm
-     * @param description mô tả sản phẩm
-     * @param condition tình trạng sản phẩm
-     * @param startPrice giá khởi điểm
-     * @param startTime thời gian bắt đầu
-     * @param endTime thời gian kết thúc
-     * @param callback callback nhận kết quả
+     * @param category danh muc san pham
+     * @param itemName ten san pham
+     * @param description mo ta san pham
+     * @param condition tinh trang san pham
+     * @param startPrice gia khoi diem
+     * @param startTime thoi gian bat dau
+     * @param endTime thoi gian ket thuc
+     * @param callback callback nhan ket qua
      */
     public void publishItem(
             final String category,
@@ -80,7 +80,7 @@ public final class ItemPublishService {
             final LocalDateTime startTime,
             final LocalDateTime endTime,
             final PublishItemCallback callback) {
-        Objects.requireNonNull(callback, "Callback không được null.");
+        Objects.requireNonNull(callback, "Callback khong duoc null.");
         this.publishCallback = callback;
 
         final String request = String.join(
@@ -96,21 +96,22 @@ public final class ItemPublishService {
 
         final boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
-            LOGGER.warning("Không thể gửi yêu cầu đăng bán sản phẩm tới Server.");
-            callback.onResult(false, "Không thể kết nối tới Server.");
+            LOGGER.warning("Khong the gui yeu cau dang ban san pham toi Server.");
+            callback.onResult(false, "Khong the ket noi toi Server.");
         }
     }
 
     /**
-     * Cập nhật phiên của user hiện tại.
-     * Không gửi thời gian và giá khởi điểm theo yêu cầu.
+     * Cap nhat phien cua user hien tai.
+     * Khong gui gia khoi diem; cho phep gui thoi gian ket thuc moi.
      *
-     * @param auctionId mã phiên cần cập nhật
-     * @param category danh mục mới
-     * @param itemName tên tài sản mới
-     * @param description mô tả mới
-     * @param condition tình trạng mới
-     * @param callback callback nhận kết quả
+     * @param auctionId ma phien can cap nhat
+     * @param category danh muc moi
+     * @param itemName ten tai san moi
+     * @param description mo ta moi
+     * @param condition tinh trang moi
+     * @param endTime thoi gian ket thuc moi
+     * @param callback callback nhan ket qua
      */
     public void updateMyAuction(
             final String auctionId,
@@ -118,10 +119,12 @@ public final class ItemPublishService {
             final String itemName,
             final String description,
             final String condition,
+            final LocalDateTime endTime,
             final PublishItemCallback callback) {
-        Objects.requireNonNull(callback, "Callback không được null.");
+        Objects.requireNonNull(callback, "Callback khong duoc null.");
         this.updateCallback = callback;
 
+        // Format request update: ...|condition|endTime(ISO-8601)
         final String request = String.join(
                 Protocol.SEPARATOR,
                 Protocol.Command.UPDATE_MY_AUCTION.name(),
@@ -129,37 +132,38 @@ public final class ItemPublishService {
                 clean(category),
                 clean(itemName),
                 clean(description),
-                clean(condition));
+                clean(condition),
+                FORMATTER.format(endTime));
 
         final boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
-            LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
-            callback.onResult(false, "Không thể kết nối tới Server.");
+            LOGGER.warning("Khong the gui yeu cau cap nhat phien toi Server.");
+            callback.onResult(false, "Khong the ket noi toi Server.");
         }
     }
 
     private void handlePublishSuccess(final String response) {
         notifyPublishCallback(
                 true,
-                extractMessage(response, "Đăng bán sản phẩm thành công."));
+                extractMessage(response, "Dang ban san pham thanh cong."));
     }
 
     private void handlePublishFailure(final String response) {
         notifyPublishCallback(
                 false,
-                extractMessage(response, "Đăng bán sản phẩm thất bại."));
+                extractMessage(response, "Dang ban san pham that bai."));
     }
 
     private void handleUpdateSuccess(final String response) {
         notifyUpdateCallback(
                 true,
-                extractMessage(response, "Cập nhật phiên thành công."));
+                extractMessage(response, "Cap nhat phien thanh cong."));
     }
 
     private void handleUpdateFailure(final String response) {
         notifyUpdateCallback(
                 false,
-                extractMessage(response, "Cập nhật phiên thất bại."));
+                extractMessage(response, "Cap nhat phien that bai."));
     }
 
     private void notifyPublishCallback(final boolean success, final String message) {
@@ -195,7 +199,7 @@ public final class ItemPublishService {
 
     private void handleError(final String response) {
         final String message =
-                extractMessage(response, "Server không xử lý được yêu cầu.");
+                extractMessage(response, "Server khong xu ly duoc yeu cau.");
         if (publishCallback != null) {
             notifyPublishCallback(false, message);
         }

@@ -200,16 +200,16 @@ public class AuctionManager {
     }
 
     /**
-     * Cập nhật thông tin phiên do chính người bán sở hữu.
-     * Chỉ cập nhật thông tin sản phẩm, không cập nhật giá khởi điểm và thời gian.
+     * Cap nhat thong tin phien do seller so huu.
      *
-     * @param auctionId mã phiên cần chỉnh sửa
-     * @param userId mã user đang thực hiện chỉnh sửa
-     * @param category danh mục mới
-     * @param itemName tên tài sản mới
-     * @param description mô tả mới
-     * @param condition tình trạng mới
-     * @return true nếu cập nhật thành công
+     * @param auctionId ma phien can chinh sua
+     * @param userId ma user dang thao tac
+     * @param category danh muc moi
+     * @param itemName ten tai san moi
+     * @param description mo ta moi
+     * @param condition tinh trang moi
+     * @param endTime thoi gian ket thuc moi
+     * @return true neu cap nhat thanh cong
      */
     public boolean updateMyAuctionInfo(
             final String auctionId,
@@ -217,7 +217,8 @@ public class AuctionManager {
             final String category,
             final String itemName,
             final String description,
-            final String condition) {
+            final String condition,
+            final LocalDateTime endTime) {
         final Auction auction = auctionRegistry.findById(auctionId);
         if (auction == null) {
             return false;
@@ -234,6 +235,11 @@ public class AuctionManager {
         }
 
         // Cập nhật các trường cho phép sửa theo yêu cầu.
+        // endTime má»›i pháº£i sau startTime Ä‘á»ƒ khÃ´ng phÃ¡ vá»¡ lifecycle.
+        if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
+            throw new IllegalArgumentException("Thoi gian ket thuc phai sau thoi gian bat dau.");
+        }
+
         final String normalizedCategory = category.trim().toUpperCase();
         final Item currentItem = auction.getItem();
         final String fullDescription = description + "\nTình trạng: " + condition;
@@ -267,6 +273,8 @@ public class AuctionManager {
             auction.setItem(replacementItem);
         }
 
+        // Cáº­p nháº­t má»‘c káº¿t thÃºc má»›i trÆ°á»›c khi lÆ°u.
+        auction.setEndTime(endTime);
         database.items().save(auction.getItem());
         database.auctions().save(auction);
         database.flushAll();

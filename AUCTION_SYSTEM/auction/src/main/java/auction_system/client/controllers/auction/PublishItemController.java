@@ -89,7 +89,11 @@ public class PublishItemController implements Initializable {
         fieldStartingTime.setDisable(true);
         fieldEndingTime.clear();
         fieldEndingTime.setPromptText("Không chỉnh sửa ở màn hình này");
-        fieldEndingTime.setDisable(true);
+        // Cho phÃ©p sá»­a thá»i gian káº¿t thÃºc.
+        // Hiá»ƒn thá»‹ sáºµn giÃ¡ trá»‹ cÅ© Ä‘á»ƒ user chá»‰nh.
+        fieldEndingTime.setText(formatEndTimeForInput(row.getEndTime()));
+        fieldEndingTime.setPromptText("dd/MM/yyyy HH:mm");
+        fieldEndingTime.setDisable(false);
         fieldBidStep.setDisable(true);
     }
 
@@ -171,6 +175,7 @@ public class PublishItemController implements Initializable {
                 itemName,
                 description,
                 condition,
+                parseDateTime(fieldEndingTime.getText(), "thoi gian ket thuc"),
                 (success, message) ->
                         Platform.runLater(() -> handleUpdateResult(success, message)));
     }
@@ -253,6 +258,24 @@ public class PublishItemController implements Initializable {
         lblError.setText("");
         lblError.setVisible(false);
         lblError.setManaged(false);
+    }
+
+    /**
+     * Parse chuỗi endTime từ server (ISO-8601) sang định dạng input trên form.
+     *
+     * @param rawEndTime chuỗi endTime thô từ server
+     * @return thời gian đã format theo dd/MM/yyyy HH:mm để đổ vào input
+     */
+    private String formatEndTimeForInput(final String rawEndTime) {
+        if (rawEndTime == null || rawEndTime.trim().isEmpty()) {
+            return "";
+        }
+        try {
+            return LocalDateTime.parse(rawEndTime.trim()).format(DATE_TIME_FORMATTER);
+        } catch (DateTimeParseException exception) {
+            // Giữ nguyên giá trị gốc nếu không parse được để user tự xử lý.
+            return rawEndTime;
+        }
     }
 
     private void setLoadingState(final boolean loading) {
