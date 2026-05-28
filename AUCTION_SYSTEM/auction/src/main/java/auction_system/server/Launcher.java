@@ -1,20 +1,23 @@
 package auction_system.server;
 
-import auction_system.client.ClientApp;
-
 /**
- * Lớp trung gian để khởi chạy ứng dụng JavaFX.
- * Việc tạo lớp này là bắt buộc để build Fat JAR cho JavaFX 11+ trở lên
- * nhằm tránh lỗi "JavaFX runtime components are missing".
+ * Lớp khởi chạy trung gian cho ứng dụng server.
  */
-public class Launcher {
+public final class Launcher {
 
+    /**
+     * Ngăn khởi tạo lớp tiện ích khởi chạy server.
+     */
     private Launcher() {
-        // Ngăn chặn khởi tạo lớp tiện ích từ bên ngoài
+        // Lớp chỉ chứa điểm vào tĩnh cho file JAR server.
     }
 
-    public static void main(String[] args) {
-        // Khởi chạy ClientApp để mở giao diện người dùng
-        ClientApp.main(args);
+    /**
+     * Khởi chạy tiến trình server đấu giá.
+     *
+     * @param args tham số dòng lệnh được truyền vào khi khởi động server
+     */
+    public static void main(final String[] args) {
+        ServerApp.main(args);
     }
 }
