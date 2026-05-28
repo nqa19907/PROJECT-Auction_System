@@ -7,7 +7,6 @@ public class MyAuctionRow {
     private final String id;
     private final String productName;
     private final String currentPrice;
-    private final String bidCount;
     private final String status;
     private final String endTime;
 
@@ -17,7 +16,6 @@ public class MyAuctionRow {
      * @param id mã phiên đấu giá
      * @param productName tên sản phẩm
      * @param currentPrice giá hiện tại
-     * @param bidCount số lượt đặt giá
      * @param status trạng thái phiên
      * @param endTime thời gian kết thúc
      */
@@ -25,13 +23,11 @@ public class MyAuctionRow {
             final String id,
             final String productName,
             final String currentPrice,
-            final String bidCount,
             final String status,
             final String endTime) {
         this.id = id;
         this.productName = productName;
         this.currentPrice = currentPrice;
-        this.bidCount = bidCount;
         this.status = status;
         this.endTime = endTime;
     }
@@ -46,10 +42,6 @@ public class MyAuctionRow {
 
     public String getCurrentPrice() {
         return currentPrice;
-    }
-
-    public String getBidCount() {
-        return bidCount;
     }
 
     public String getStatus() {

@@ -10,7 +10,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -22,7 +24,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
  * <p>Hiện tại chỉ xử lý:
  * - tải danh sách phiên do user hiện tại đăng
  * - hiển thị lên TableView
- * Chưa xử lý logic xóa/sửa.
+ * - gửi yêu cầu xóa phiên đã chọn
  */
 public class MyAuctionManagementController implements Initializable {
 
@@ -37,9 +39,6 @@ public class MyAuctionManagementController implements Initializable {
 
     @FXML
     private TableColumn<MyAuctionRow, String> colCurrentPrice;
-
-    @FXML
-    private TableColumn<MyAuctionRow, String> colBidCount;
 
     @FXML
     private TableColumn<MyAuctionRow, String> colAuctionStatus;
@@ -57,14 +56,11 @@ public class MyAuctionManagementController implements Initializable {
     private Button btnDeleteMyAuction;
 
     /** Nguồn dữ liệu cho bảng. */
-    private final ObservableList<MyAuctionRow> myAuctionRows = FXCollections.observableArrayList();
+    private final ObservableList<MyAuctionRow> myAuctionRows =
+            FXCollections.observableArrayList();
 
     /**
      * Khởi tạo màn hình.
-     * - map cột với field trong MyAuctionRow
-     * - bind dữ liệu bảng
-     * - gắn sự kiện refresh
-     * - tải dữ liệu lần đầu
      */
     @Override
     public void initialize(final URL url, final ResourceBundle resourceBundle) {
@@ -74,8 +70,8 @@ public class MyAuctionManagementController implements Initializable {
         // Nút làm mới danh sách phiên của tôi.
         btnRefreshMyAuctions.setOnAction(event -> loadMyAuctions());
 
-        // TODO: chưa có logic xóa thật, tạm disable để tránh bấm lỗi.
-        btnDeleteMyAuction.setDisable(true);
+        // Nút xóa phiên đang chọn.
+        btnDeleteMyAuction.setOnAction(event -> handleDeleteMyAuction());
 
         // Tải dữ liệu ngay khi mở màn.
         loadMyAuctions();
@@ -88,7 +84,6 @@ public class MyAuctionManagementController implements Initializable {
         colAuctionId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProductName.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colCurrentPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
-        colBidCount.setCellValueFactory(new PropertyValueFactory<>("bidCount"));
         colAuctionStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colEndTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
     }
@@ -113,7 +108,6 @@ public class MyAuctionManagementController implements Initializable {
             final String message,
             final List<MyAuctionRow> rows
     ) {
-        // Dù message là cảnh báo parse count lệch, vẫn ưu tiên hiển thị dữ liệu đã parse được.
         if (success) {
             myAuctionRows.setAll(rows);
             return;
@@ -121,8 +115,42 @@ public class MyAuctionManagementController implements Initializable {
 
         // Nếu fail thì xóa dữ liệu cũ để tránh hiển thị nhầm.
         myAuctionRows.clear();
+    }
 
-        // TODO: có thể thêm Alert/Label lỗi tại đây nếu bạn muốn hiển thị message ra UI.
-        // System.out.println("Load my auctions failed: " + message);
+    /**
+     * Xử lý khi user bấm nút xóa phiên.
+     */
+    private void handleDeleteMyAuction() {
+        final MyAuctionRow selected = tblMyAuctions.getSelectionModel().getSelectedItem();
+
+        if (selected == null) {
+            showInfo("Thông báo", "Vui lòng chọn phiên cần xóa.");
+            return;
+        }
+
+        MyAuctionService.getInstance().deleteMyAuction(
+                selected.getId(),
+                (success, message, deletedAuctionId) -> Platform.runLater(() -> {
+                    if (success) {
+                        // Cách an toàn nhất: tải lại danh sách từ server.
+                        loadMyAuctions();
+                        showInfo("Thành công", "Đã xóa phiên " + deletedAuctionId);
+                    } else {
+                        showInfo("Lỗi", message);
+                    }
+                }));
+    }
+
+    /**
+     * Hiển thị thông báo đơn giản.
+     *
+     * @param title tiêu đề thông báo
+     * @param content nội dung thông báo
+     */
+    private void showInfo(final String title, final String content) {
+        final Alert alert = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.showAndWait();
     }
 }

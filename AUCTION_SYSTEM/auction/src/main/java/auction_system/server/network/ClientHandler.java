@@ -19,6 +19,7 @@ import auction_system.server.network.command.auth.LoginCommand;
 import auction_system.server.network.command.auth.LogoutCommand;
 import auction_system.server.network.command.auth.RegisterCommand;
 import auction_system.server.network.command.bidding.AutoBidCommand;
+import auction_system.server.network.command.bidding.DeleteMyAuctionCommand;
 import auction_system.server.network.command.bidding.DisableAutoBidCommand;
 import auction_system.server.network.command.bidding.GetAutoBidStatusCommand;
 import auction_system.server.network.command.bidding.GetBidHistoryCommand;
@@ -163,7 +164,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new AdminListAuctionsCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.LIST_MY_AUCTIONS.name(),
-                        new ListMyAuctionsCommand(auctionManager))
+                        new ListMyAuctionsCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.DELETE_MY_AUCTION.name(),
+                        new DeleteMyAuctionCommand(auctionManager))
         );
     }
 

@@ -61,7 +61,6 @@
                                 <TableColumn fx:id="colAuctionId" prefWidth="80.0" text="ID" />
                                 <TableColumn fx:id="colProductName" prefWidth="250.0" text="Sản phẩm" />
                                 <TableColumn fx:id="colCurrentPrice" prefWidth="150.0" text="Giá hiện tại" />
-                                <TableColumn fx:id="colBidCount" prefWidth="120.0" text="Lượt bid" />
                                 <TableColumn fx:id="colAuctionStatus" prefWidth="130.0" text="Trạng thái" />
                                 <TableColumn fx:id="colEndTime" prefWidth="170.0" text="Kết thúc" />
                             </columns>
