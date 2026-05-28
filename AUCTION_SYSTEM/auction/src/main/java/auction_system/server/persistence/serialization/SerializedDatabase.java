@@ -1,6 +1,7 @@
 package auction_system.server.persistence.serialization;
 
 import auction_system.server.persistence.repositories.AuctionRepository;
+import auction_system.server.persistence.repositories.AutoBidSettingRepository;
 import auction_system.server.persistence.repositories.BidTransactionRepository;
 import auction_system.server.persistence.repositories.ItemRepository;
 import auction_system.server.persistence.repositories.UserRepository;
@@ -28,6 +29,9 @@ public class SerializedDatabase {
 
     /** Repository quản lý lịch sử giao dịch đặt giá. */
     private final BidTransactionRepository bidTransactionRepository;
+
+    /** Repository quản lý cấu hình auto-bid. */
+    private final AutoBidSettingRepository autoBidSettingRepository;
 
     /** Khóa giao dịch ở mức database để tránh nhiều client ghi chéo dữ liệu. */
     private final ReentrantLock transactionLock;
@@ -62,6 +66,9 @@ public class SerializedDatabase {
             new BidTransactionRepository(
                 config.bidTransactionsFile()
             );
+
+        this.autoBidSettingRepository =
+            new AutoBidSettingRepository(config.autoBidSettingsFile());
 
         this.transactionLock = new ReentrantLock();
     }
@@ -103,6 +110,15 @@ public class SerializedDatabase {
     }
 
     /**
+     * Trả về repository cấu hình auto-bid.
+     *
+     * @return repository cấu hình auto-bid
+     */
+    public AutoBidSettingRepository autoBidSettings() {
+        return autoBidSettingRepository;
+    }
+
+    /**
      * Chạy một khối xử lý trong khóa giao dịch của database.
      *
      * <p>Nên dùng hàm này cho các thao tác cần cập nhật nhiều repository cùng
@@ -136,6 +152,7 @@ public class SerializedDatabase {
             itemRepository.flush();
             auctionRepository.flush();
             bidTransactionRepository.flush();
+            autoBidSettingRepository.flush();
         } finally {
             transactionLock.unlock();
         }
@@ -152,6 +169,7 @@ public class SerializedDatabase {
             itemRepository.reload();
             auctionRepository.reload();
             bidTransactionRepository.reload();
+            autoBidSettingRepository.reload();
         } finally {
             transactionLock.unlock();
         }

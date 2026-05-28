@@ -2,10 +2,10 @@
 
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.CategoryAxis?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -18,16 +18,18 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
 
-<BorderPane styleClass="root-pane" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.AuctionDetailController">
+<BorderPane styleClass="root-pane" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.AuctionDetailController">
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="16" styleClass="top-bar">
             <padding><Insets bottom="12" left="24" right="24" top="12" /></padding>
 
             <Label onMouseClicked="#goBack" styleClass="back-btn" text="⬅" />
-            <Label styleClass="page-title" text="Lịch sử đấu giá" />
+            <Label styleClass="page-title" text="Chi tiết sản phẩm" />
 
             <Region HBox.hgrow="ALWAYS" />
+            <!-- Nút làm mới dữ liệu phiên đấu giá (chỉ thêm giao diện, chưa gắn logic). -->
+            <Button fx:id="btnRefreshAuction" mnemonicParsing="false" onAction="#refreshAuction" styleClass="refresh-top-btn" text="Làm mới" />
 
             <HBox alignment="CENTER" spacing="6" styleClass="live-badge">
                 <Circle fx:id="liveDot" radius="5" styleClass="live-dot" />
@@ -44,8 +46,8 @@
                 <HBox alignment="CENTER_LEFT" spacing="16" styleClass="info-card">
                     <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
                     <VBox spacing="4" HBox.hgrow="ALWAYS">
-                        <Label fx:id="auctionTitle" styleClass="auction-title" text="Đồng hồ Rolex Submariner Date" />
-                        <Label fx:id="auctionId" styleClass="auction-subtitle" text="Phiên #AUC-2024-0518" />
+                        <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
+                        <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />
                     </VBox>
                     <VBox alignment="CENTER_RIGHT" spacing="4">
                         <Label styleClass="metric-label" text="Thời gian còn lại" />
@@ -99,7 +101,7 @@
 
                     <LineChart fx:id="bidLineChart" animated="true" createSymbols="true" prefHeight="280" styleClass="bid-chart" title="">
                         <xAxis>
-                            <CategoryAxis fx:id="categoryXaxis" label="Thời gian" styleClass="chart-axis" />
+                            <NumberAxis fx:id="numberXaxis" autoRanging="false" label="Thời gian" lowerBound="0" styleClass="chart-axis" tickUnit="1" upperBound="2" />
                         </xAxis>
                         <yAxis>
                             <NumberAxis fx:id="numberYaxis" autoRanging="false" label="Giá (VNĐ)" lowerBound="3000000" styleClass="chart-axis" tickUnit="2000000" upperBound="17000000" />
@@ -123,6 +125,42 @@
                             <Label styleClass="table-placeholder" text="Chưa có lần trả giá nào." />
                         </placeholder>
                     </TableView>
+                </VBox>
+                <VBox spacing="14" styleClass="place-bid-card">
+                    <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
+                    <Label styleClass="section-title" text="Đấu giá tự động" />
+                     <CheckBox fx:id="autoBidToggle" styleClass="auto-bid-toggle" text="Tự động trả giá khi có người vượt bạn" />
+
+                    <VBox spacing="10">
+                        <Label styleClass="metric-label" text="Giá tối đa bạn sẵn sàng trả" />
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label styleClass="currency-symbol" text="VNĐ" />
+                            <TextField fx:id="autoBidMaxInput" promptText="Nhập giá tối đa..." styleClass="bid-input" HBox.hgrow="ALWAYS" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="10">
+                        <Label styleClass="metric-label" text="Bước tăng mỗi lần bị vượt giá" />
+                        <HBox alignment="CENTER_LEFT" spacing="12">
+                            <Label styleClass="currency-symbol" text="VNĐ" />
+                            <TextField fx:id="autoBidStepInput" promptText="Ví dụ: 100000" styleClass="bid-input" HBox.hgrow="ALWAYS" />
+                        </HBox>
+                    </VBox>
+               <HBox spacing="12.0">
+                  <children>
+                     <Label style="-fx-text-fill: transparent;" styleClass="currency-symbol" text="VNĐ" textFill="WHITE" />
+                     <VBox>
+                        <children>
+                            <Label fx:id="autoBidErrorLabel" managed="false" styleClass="text-error" visible="false" />
+                        </children>
+                     </VBox>
+                  </children>
+               </HBox>
+
+                    <HBox alignment="CENTER_RIGHT" spacing="12">
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="enableAutoBidBtn" styleClass="primary-btn" text="Xác nhận đấu giá tự động" />
+                    </HBox>
                 </VBox>
 
                 <VBox spacing="14" styleClass="place-bid-card">
@@ -150,6 +188,11 @@
                      </HBox>
                   </children>
                </VBox>
+
+                    <!-- Ô chọn bật/tắt anti shipping ngay trong khu vực đặt giá -->
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <CheckBox fx:id="chkAntiShipping" styleClass="anti-snipping-checkbox" text="Anti Shipping" />
+                    </HBox>
 
                     <HBox alignment="CENTER_RIGHT" spacing="12">
                         <Label fx:id="minBidHint" styleClass="hint-label" text="Giá tối thiểu: 160.000 VNĐ" />

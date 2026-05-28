@@ -24,7 +24,7 @@
     -fx-font-family: 'Google Sans';
     -fx-font-weight: bold;
     -fx-font-size: 24px;                     /* Kích thước lớn, nhưng nhỏ hơn Logo một chút */
-    -fx-text-fill: -color-text-title;       /* Dùng biến chữ tiêu đề (màu tối) */
+    -fx-text-fill: -color-orange-800;       /* Dùng biến chữ tiêu đề (màu tối) */
 }
 
 /* --- TIÊU ĐỀ PHỤ (Header 2) --- */

@@ -32,8 +32,13 @@ public final class Protocol {
         JOIN_AUCTION,
         LEAVE_AUCTION,
         PLACE_BID,
+        ENABLE_AUTO_BID,
+        DISABLE_AUTO_BID,
+        GET_AUTO_BID,
+        SET_ANTI_SNIPING,
 
         // Admin
+        // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
         ADMIN_CANCEL_AUCTION,
         ADMIN_DELETE_AUCTION,
         ADMIN_DELETE_USER,
@@ -61,6 +66,7 @@ public final class Protocol {
         BID_HISTORY,
         LEAVE_OK,
         BID_OK, BID_FAIL,
+        AUTO_BID_OK, AUTO_BID_FAIL, AUTO_BID_STATUS,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
 
         // Broadcast Updates
@@ -68,11 +74,16 @@ public final class Protocol {
         AUCTION_CREATED,
         AUCTION_STARTED,
         AUCTION_ENDED,
+        AUCTION_EXTENDED,
+        ANTI_SNIPING_UPDATED,
+        ANTI_SNIPING_UPDATE_FAIL,
         AUCTION_WINNER,
         AUCTION_LOST,
         BALANCE_UPDATED,
+        USER_LIST_CHANGED,
 
         // Admin responses
+        // Response dạng header|count~record1~record2 để truyền bảng quản trị qua một dòng socket.
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,

@@ -3,20 +3,15 @@ package auction_system.client.controllers.auction;
 import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuthService;
 import auction_system.client.services.UserSessionService;
-import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
-import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
-import auction_system.server.core.AuctionManager;
-import auction_system.server.persistence.serialization.DatabasePathProvider;
-import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -38,26 +33,25 @@ import javafx.stage.Stage;
 /**
  * Controller cho màn hình Admin Dashboard.
  *
- * <p>Màn hình này nạp dữ liệu thật từ storage hiện có của dự án.
- * Dữ liệu user lấy từ SerializedDatabase, dữ liệu auction lấy từ AuctionManager.
- * Ngoài ra có refresh và tìm kiếm nhanh cho cả 2 bảng.
+ * <p>Controller chỉ giữ phần điều phối UI: cấu hình bảng, tìm kiếm, action button
+ * và chuyển màn. Socket protocol và parse response được tách sang service riêng.
  */
 public class AdminDashboardController {
 
     @FXML
     private BorderPane root;
 
-    // Bảng user
+    // Bảng user.
     @FXML
-    private TableView<UserRow> tblUsers;
+    private TableView<AdminUserRow> tblUsers;
     @FXML
-    private TableColumn<UserRow, String> colUserId;
+    private TableColumn<AdminUserRow, String> colUserId;
     @FXML
-    private TableColumn<UserRow, String> colUsername;
+    private TableColumn<AdminUserRow, String> colUsername;
     @FXML
-    private TableColumn<UserRow, String> colEmail;
+    private TableColumn<AdminUserRow, String> colEmail;
     @FXML
-    private TableColumn<UserRow, String> colUserStatus;
+    private TableColumn<AdminUserRow, String> colUserStatus;
     @FXML
     private TextField txtSearchUser;
     @FXML
@@ -65,19 +59,19 @@ public class AdminDashboardController {
     @FXML
     private Button btnDeleteUser;
 
-    // Bảng auction
+    // Bảng auction.
     @FXML
-    private TableView<AuctionRow> tblAuctions;
+    private TableView<AdminAuctionRow> tblAuctions;
     @FXML
-    private TableColumn<AuctionRow, String> colAuctionId;
+    private TableColumn<AdminAuctionRow, String> colAuctionId;
     @FXML
-    private TableColumn<AuctionRow, String> colProductName;
+    private TableColumn<AdminAuctionRow, String> colProductName;
     @FXML
-    private TableColumn<AuctionRow, String> colSeller;
+    private TableColumn<AdminAuctionRow, String> colSeller;
     @FXML
-    private TableColumn<AuctionRow, String> colCurrentPrice;
+    private TableColumn<AdminAuctionRow, String> colCurrentPrice;
     @FXML
-    private TableColumn<AuctionRow, String> colAuctionStatus;
+    private TableColumn<AdminAuctionRow, String> colAuctionStatus;
     @FXML
     private TextField txtSearchAuction;
     @FXML
@@ -85,65 +79,33 @@ public class AdminDashboardController {
     @FXML
     private Button btnDeleteAuction;
 
-    /** Truy cập kho dữ liệu .ser của app. */
-    private SerializedDatabase database;
-    /** Manager lấy danh sách auction đang được quản lý. */
-    private AuctionManager auctionManager;
-
-    /** Danh sách dòng gốc cho bảng user. */
-    private final ObservableList<UserRow> userRows = FXCollections.observableArrayList();
-    /** Danh sách dòng gốc cho bảng auction. */
-    private final ObservableList<AuctionRow> auctionRows = FXCollections.observableArrayList();
+    private final AdminDashboardService dashboardService = new AdminDashboardService();
+    private final ObservableList<AdminUserRow> userRows = FXCollections.observableArrayList();
+    private final ObservableList<AdminAuctionRow> auctionRows = FXCollections.observableArrayList();
+    /** Cờ đảm bảo chỉ đăng ký cleanup lifecycle một lần. */
+    private boolean cleanupRegistered;
+    /**
+     * Handler realtime cho các sự kiện đấu giá.
+     * Khi có thay đổi từ server, dashboard sẽ kéo lại snapshot mới nhất.
+     */
+    private final Consumer<String> auctionRealtimeHandler = response -> refreshAuctions();
+    /** Handler realtime cho thay đổi danh sách người dùng. */
+    private final Consumer<String> userRealtimeHandler = response -> refreshUsers();
 
     /**
      * Khởi tạo controller sau khi FXML inject xong.
      */
     @FXML
     private void initialize() {
-        initDataSource();
         initUserTable();
         initAuctionTable();
         bindActions();
+        bindServiceCallbacks();
+        registerRealtimeHandlers();
+        registerLifecycleCleanup();
+        // Chỉ gọi refresh sau khi đã đăng ký đầy đủ handler để tránh mất phản hồi đầu tiên.
         refreshUsers();
         refreshAuctions();
-
-        // Đăng ký handler phản hồi xóa phiên từ server
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(),
-                this::handleAdminDeleteAuctionOk);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(),
-                this::handleAdminDeleteAuctionFail);
-
-        // Đăng ký handler phản hồi xóa người dùng
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_OK.name(),
-                this::handleAdminDeleteUserOk);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
-                this::handleAdminDeleteUserFail);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_USER_LIST.name(),
-                this::handleAdminUserList);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_AUCTION_LIST.name(),
-                this::handleAdminAuctionList);
-
-        NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(),
-                this::handleAdminAuctionListFail);
-    }
-
-    /**
-     * Khởi tạo datasource dùng chung với app.
-     */
-    private void initDataSource() {
-        database = new SerializedDatabase(DatabasePathProvider.defaultDataDirectory());
-        auctionManager = AuctionManager.getInstance(database);
     }
 
     /**
@@ -155,11 +117,13 @@ public class AdminDashboardController {
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colUserStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        final FilteredList<UserRow> filtered = new FilteredList<>(userRows, row -> true);
+        // FilteredList giữ danh sách gốc nguyên vẹn và chỉ đổi predicate khi nhập tìm kiếm.
+        final FilteredList<AdminUserRow> filtered = new FilteredList<>(userRows, row -> true);
         txtSearchUser.textProperty().addListener((obs, oldValue, newValue) ->
-            filtered.setPredicate(row -> matchUser(row, newValue)));
+                filtered.setPredicate(row -> matchUser(row, newValue)));
 
-        final SortedList<UserRow> sorted = new SortedList<>(filtered);
+        // SortedList nhận comparator từ TableView để click header vẫn sắp xếp được.
+        final SortedList<AdminUserRow> sorted = new SortedList<>(filtered);
         sorted.comparatorProperty().bind(tblUsers.comparatorProperty());
         tblUsers.setItems(sorted);
     }
@@ -174,17 +138,20 @@ public class AdminDashboardController {
         colCurrentPrice.setCellValueFactory(new PropertyValueFactory<>("currentPrice"));
         colAuctionStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        final FilteredList<AuctionRow> filtered = new FilteredList<>(auctionRows, row -> true);
+        // Predicate tìm kiếm chạy trên ObservableList đang được refresh từ socket.
+        final FilteredList<AdminAuctionRow> filtered =
+                new FilteredList<>(auctionRows, row -> true);
         txtSearchAuction.textProperty().addListener((obs, oldValue, newValue) ->
-            filtered.setPredicate(row -> matchAuction(row, newValue)));
+                filtered.setPredicate(row -> matchAuction(row, newValue)));
 
-        final SortedList<AuctionRow> sorted = new SortedList<>(filtered);
+        // TableView quản lý thứ tự sort, còn source list vẫn giữ dữ liệu server trả về.
+        final SortedList<AdminAuctionRow> sorted = new SortedList<>(filtered);
         sorted.comparatorProperty().bind(tblAuctions.comparatorProperty());
         tblAuctions.setItems(sorted);
     }
 
     /**
-     * Gán action cho nút refresh của 2 bảng.
+     * Gán action cho các nút thao tác trên dashboard.
      */
     private void bindActions() {
         btnRefreshUsers.setOnAction(event -> refreshUsers());
@@ -194,25 +161,104 @@ public class AdminDashboardController {
     }
 
     /**
-     * Nạp lại dữ liệu user từ repository.
+     * Gắn callback service để mọi cập nhật bảng đều quay về JavaFX Application Thread.
+     */
+    private void bindServiceCallbacks() {
+        dashboardService.setUserListCallback(rows ->
+                Platform.runLater(() -> replaceUserRows(rows)));
+        dashboardService.setAuctionListCallback(rows ->
+                Platform.runLater(() -> replaceAuctionRows(rows)));
+        dashboardService.setDeleteUserCallback(userId ->
+                Platform.runLater(() -> removeDeletedUser(userId)));
+        dashboardService.setDeleteAuctionCallback(auctionId ->
+                Platform.runLater(() -> removeDeletedAuction(auctionId)));
+        dashboardService.setFailureCallback(message ->
+                Platform.runLater(() -> showInfo("Lỗi", message)));
+    }
+
+    /**
+     * Nạp lại dữ liệu user qua server.
      */
     private void refreshUsers() {
-        boolean sent = NetworkClient.getInstance()
-                .sendCommand(Protocol.Command.ADMIN_LIST_USERS.name());
-        if (!sent) {
+        if (!dashboardService.fetchUsers()) {
             showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách người dùng.");
         }
     }
 
     /**
-     * Nạp lại dữ liệu auction từ AuctionManager.
+     * Nạp lại dữ liệu auction qua server.
      */
     private void refreshAuctions() {
-        boolean sent = NetworkClient.getInstance()
-                .sendCommand(Protocol.Command.ADMIN_LIST_AUCTIONS.name());
-        if (!sent) {
+        if (!dashboardService.fetchAuctions()) {
             showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách phiên đấu giá.");
         }
+    }
+
+    /**
+     * Đăng ký các sự kiện realtime liên quan đến thay đổi đấu giá.
+     *
+     * <p>Tận dụng luồng socket sẵn có: khi có tín hiệu thay đổi,
+     * dashboard gọi refresh để lấy dữ liệu chuẩn mới nhất từ server.
+     */
+    private void registerRealtimeHandlers() {
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_CREATED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_PRICE.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_STARTED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_ENDED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.AUCTION_EXTENDED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                auctionRealtimeHandler);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.USER_LIST_CHANGED.name(),
+                userRealtimeHandler);
+    }
+
+    /**
+     * Gỡ đăng ký handler khi màn hình admin bị loại khỏi scene.
+     * Tránh giữ listener cũ gây refresh lặp nhiều lần.
+     */
+    private void registerLifecycleCleanup() {
+        if (cleanupRegistered || root == null) {
+            return;
+        }
+
+        cleanupRegistered = true;
+        root.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene != null && newScene == null) {
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_CREATED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.UPDATE_PRICE.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_STARTED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_ENDED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.AUCTION_EXTENDED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                        auctionRealtimeHandler);
+                NetworkClient.getInstance().unregisterHandler(
+                        Protocol.Response.USER_LIST_CHANGED.name(),
+                        userRealtimeHandler);
+            }
+        });
     }
 
     /**
@@ -222,10 +268,12 @@ public class AdminDashboardController {
      * @param keyword từ khóa tìm kiếm hiện tại
      * @return true nếu dòng khớp từ khóa, ngược lại false
      */
-    private boolean matchUser(final UserRow row, final String keyword) {
+    private boolean matchUser(final AdminUserRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }
+
+        // Chuẩn hóa keyword một lần để các phép contains không phụ thuộc chữ hoa/thường.
         final String q = keyword.toLowerCase(Locale.ROOT).trim();
         return row.getId().toLowerCase(Locale.ROOT).contains(q)
                 || row.getUsername().toLowerCase(Locale.ROOT).contains(q)
@@ -240,10 +288,12 @@ public class AdminDashboardController {
      * @param keyword từ khóa tìm kiếm hiện tại
      * @return true nếu dòng khớp từ khóa, ngược lại false
      */
-    private boolean matchAuction(final AuctionRow row, final String keyword) {
+    private boolean matchAuction(final AdminAuctionRow row, final String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }
+
+        // Tìm kiếm phủ toàn bộ cột đang hiển thị để admin lọc nhanh theo bất kỳ thông tin nào.
         final String q = keyword.toLowerCase(Locale.ROOT).trim();
         return row.getId().toLowerCase(Locale.ROOT).contains(q)
                 || row.getProductName().toLowerCase(Locale.ROOT).contains(q)
@@ -253,211 +303,78 @@ public class AdminDashboardController {
     }
 
     /**
-     * Định dạng giá hiện tại để hiển thị trong bảng.
-     *
-     * @param auction phiên đấu giá cần lấy giá hiện tại
-     * @return chuỗi giá đã được định dạng
-     */
-    private String formatPrice(final Auction auction) {
-        if (auction.getItem() == null) {
-            return "0";
-        }
-        return String.format(Locale.ROOT, "%,.0f", auction.getItem().getCurrentPrice());
-    }
-
-    /**
      * Xóa user đang chọn trên UI.
      */
     private void deleteSelectedUser() {
-        final UserRow selected = tblUsers.getSelectionModel().getSelectedItem();
+        final AdminUserRow selected = tblUsers.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showInfo("Thông báo", "Vui lòng chọn người dùng cần xóa trên bảng.");
             return;
         }
 
-        final User currentUser = UserSessionService.getInstance().getCurrentUser();
-        if (!(currentUser instanceof Admin admin)) {
+        final Admin admin = getCurrentAdmin();
+        if (admin == null) {
             showInfo("Lỗi", "Tài khoản hiện tại không phải admin.");
             return;
         }
 
-        String userId = selected.getId();
-        String request = admin.deleteUser(userId);
-
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
-        if (!sent) {
+        // Request xóa được tạo từ model Admin để giữ đúng format command hiện có.
+        if (!dashboardService.deleteUser(admin, selected.getId())) {
             showInfo("Lỗi", "Không gửi được yêu cầu xóa người dùng tới server.");
         }
     }
 
     /**
-     * Xử lý phản hồi xóa phiên thành công từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteAuctionOk(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            if (parts.length > 1) {
-                String auctionId = parts[1];
-                auctionRows.removeIf(row -> auctionId.equals(row.getId()));
-                tblAuctions.refresh();
-                showInfo("Thành công", "Đã xóa phiên " + auctionId);
-            }
-        });
-    }
-
-    /**
-     * Xử lý phản hồi xóa phiên thất bại từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteAuctionFail(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            String message = parts.length > 1 ? parts[1] : "Xóa phiên thất bại.";
-            showInfo("Lỗi", message);
-        });
-    }
-
-    /**
      * Gửi yêu cầu xóa phiên đang chọn lên server.
-     *
-     * <p>Chỉ khi server trả về thành công thì bảng mới xóa dòng tương ứng.
      */
     private void deleteSelectedAuction() {
-        final AuctionRow selected = tblAuctions.getSelectionModel().getSelectedItem();
+        final AdminAuctionRow selected = tblAuctions.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showInfo("Thông báo", "Vui lòng chọn phiên cần xóa trên bảng.");
             return;
         }
-        final User currentUser = UserSessionService.getInstance().getCurrentUser();
-        if (!(currentUser instanceof Admin admin)) {
+
+        final Admin admin = getCurrentAdmin();
+        if (admin == null) {
             showInfo("Lỗi", "Tài khoản hiện tại không phải admin.");
             return;
         }
 
-        String auctionId = selected.getId();
-        String request = admin.deleteAuction(auctionId);
-
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
-        if (!sent) {
+        // Bảng chỉ xóa dòng sau khi server xác nhận thành công qua callback.
+        if (!dashboardService.deleteAuction(admin, selected.getId())) {
             showInfo("Lỗi", "Không gửi được yêu cầu xóa phiên tới server.");
         }
     }
 
-    /**
-     * Xử lý phản hồi xóa người dùng thành công từ server.
-     *
-     * <p>Khi nhận được userId hợp lệ, hàm sẽ xóa dòng tương ứng khỏi bảng
-     * người dùng và hiển thị thông báo thành công.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteUserOk(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            if (parts.length > 1) {
-                String userId = parts[1];
-                userRows.removeIf(row -> userId.equals(row.getId()));
-                tblUsers.refresh();
-                showInfo("Thành công", "Đã xóa người dùng " + userId);
-            }
-        });
+    private Admin getCurrentAdmin() {
+        final User currentUser = UserSessionService.getInstance().getCurrentUser();
+        return currentUser instanceof Admin admin ? admin : null;
     }
 
-    /**
-     * Xử lý phản hồi xóa người dùng thất bại từ server.
-     *
-     * <p>Hàm tách thông điệp lỗi từ phản hồi và hiển thị cho quản trị viên.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
-    private void handleAdminDeleteUserFail(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            String message = parts.length > 1 ? parts[1] : "Xóa người dùng thất bại.";
-            showInfo("Lỗi", message);
-        });
+    private void replaceUserRows(final List<AdminUserRow> rows) {
+        // Thay toàn bộ danh sách để bảng phản ánh đúng snapshot mới nhất từ server.
+        userRows.setAll(rows);
+        tblUsers.refresh();
     }
 
-    /**
-     * Xử lý phản hồi danh sách người dùng dành cho admin.
-     *
-     * <p>Response kỳ vọng theo format:
-     * ADMIN_USER_LIST|count~userId|username|email|status|role~...
-     *
-     * <p>Hàm sẽ parse từng record user và cập nhật lại bảng người dùng trên UI.
-     *
-     * @param response chuỗi phản hồi từ server theo protocol
-     */
-    private void handleAdminUserList(final String response) {
-        Platform.runLater(() -> {
-            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
-            userRows.clear();
-
-            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record user đầu tiên.
-            for (int i = 1; i < lines.length; i++) {
-                String[] p = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
-                if (p.length >= 4) {
-                    userRows.add(new UserRow(p[0], p[1], p[2], p[3]));
-                }
-            }
-
-            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
-            tblUsers.refresh();
-        });
+    private void replaceAuctionRows(final List<AdminAuctionRow> rows) {
+        // Thay toàn bộ danh sách để xóa các dòng server không còn trả về.
+        auctionRows.setAll(rows);
+        tblAuctions.refresh();
     }
 
-    /**
-     * Xử lý phản hồi danh sách toàn bộ phiên đấu giá dành cho admin.
-     *
-     * <p>Response kỳ vọng theo format:
-     * ADMIN_AUCTION_LIST|count~auctionId|productName|seller|currentPrice|status~...
-     *
-     * <p>Hàm sẽ parse từng record phiên đấu giá và cập nhật lại bảng phiên trên UI.
-     *
-     * @param response chuỗi phản hồi từ server theo protocol
-     */
-    private void handleAdminAuctionList(final String response) {
-        Platform.runLater(() -> {
-            String[] lines = response.split(Protocol.RECORD_SEPARATOR);
-            auctionRows.clear();
-
-            // Bỏ qua dòng header (index 0), bắt đầu đọc từ record phiên đầu tiên.
-            for (int i = 1; i < lines.length; i++) {
-                String[] parts = lines[i].split(Protocol.SEPARATOR_REGEX, -1);
-                if (parts.length >= 5) {
-                    auctionRows.add(new AuctionRow(
-                            parts[0], // auctionId
-                            parts[1], // productName
-                            parts[2], // seller
-                            parts[3], // currentPrice
-                            parts[4]  // status
-                    ));
-                }
-            }
-
-            // Ép TableView render lại ngay sau khi dữ liệu thay đổi.
-            tblAuctions.refresh();
-        });
+    private void removeDeletedUser(final String userId) {
+        // Xóa theo id server xác nhận, không dựa vào selection hiện tại có thể đã đổi.
+        userRows.removeIf(row -> userId.equals(row.getId()));
+        tblUsers.refresh();
+        showInfo("Thành công", "Đã xóa người dùng " + userId);
     }
 
-    /**
-     * Xử lý phản hồi lỗi khi tải danh sách phiên đấu giá cho admin.
-     *
-     * <p>Hàm tách thông điệp lỗi từ response và hiển thị cho quản trị viên.
-     *
-     * @param response chuỗi phản hồi lỗi theo protocol
-     */
-    private void handleAdminAuctionListFail(final String response) {
-        Platform.runLater(() -> {
-            String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-            String message = parts.length > 1
-                    ? parts[1]
-                    : "Tải danh sách phiên đấu giá thất bại.";
-            showInfo("Lỗi", message);
-        });
+    private void removeDeletedAuction(final String auctionId) {
+        // Xóa theo id server xác nhận, không dựa vào selection hiện tại có thể đã đổi.
+        auctionRows.removeIf(row -> auctionId.equals(row.getId()));
+        tblAuctions.refresh();
+        showInfo("Thành công", "Đã xóa phiên " + auctionId);
     }
 
     /**
@@ -480,167 +397,16 @@ public class AdminDashboardController {
     private void handleBack() {
         AuthService.getInstance().logout(result -> Platform.runLater(() -> {
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource(ViewConstants.LOGIN_VIEW)
-                );
-                Parent loginRoot = loader.load();
-                Stage stage = (Stage) root.getScene().getWindow();
+                // Load lại màn đăng nhập sau khi server đã xử lý logout.
+                final FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource(ViewConstants.LOGIN_VIEW));
+                final Parent loginRoot = loader.load();
+                final Stage stage = (Stage) root.getScene().getWindow();
                 stage.setScene(new Scene(loginRoot));
                 stage.setTitle("Đăng nhập");
             } catch (IOException e) {
                 showInfo("Lỗi", "Không thể chuyển về màn đăng nhập.");
             }
         }));
-    }
-
-    /**
-     * DTO hiển thị 1 dòng user trên TableView.
-     */
-    public static class UserRow {
-        private final SimpleStringProperty id;
-        private final SimpleStringProperty username;
-        private final SimpleStringProperty email;
-        private final SimpleStringProperty status;
-
-        /**
-         * Tạo 1 dòng hiển thị user cho bảng.
-         *
-         * @param id id user
-         * @param username tên đăng nhập
-         * @param email email user
-         * @param status trạng thái online/offline
-         */
-        public UserRow(
-                final String id,
-                final String username,
-                final String email,
-                final String status) {
-            this.id = new SimpleStringProperty(id);
-            this.username = new SimpleStringProperty(username);
-            this.email = new SimpleStringProperty(email);
-            this.status = new SimpleStringProperty(status);
-        }
-
-        /**
-         * Lấy id user.
-         *
-         * @return id user
-         */
-        public String getId() {
-            return id.get();
-        }
-
-        /**
-         * Lấy tên đăng nhập.
-         *
-         * @return tên đăng nhập
-         */
-        public String getUsername() {
-            return username.get();
-        }
-
-        /**
-         * Lấy email user.
-         *
-         * @return email user
-         */
-        public String getEmail() {
-            return email.get();
-        }
-
-        /**
-         * Lấy trạng thái user.
-         *
-         * @return ONLINE hoặc OFFLINE
-         */
-        public String getStatus() {
-            return status.get();
-        }
-    }
-
-    /**
-     * DTO hiển thị 1 dòng auction trên TableView.
-     */
-    public static class AuctionRow {
-        private final SimpleStringProperty id;
-        private final SimpleStringProperty productName;
-        private final SimpleStringProperty seller;
-        private final SimpleStringProperty currentPrice;
-        private final SimpleStringProperty status;
-
-        /**
-         * Tạo 1 dòng hiển thị auction cho bảng.
-         *
-         * @param id id phiên đấu giá
-         * @param productName tên sản phẩm
-         * @param seller tên người bán
-         * @param currentPrice giá hiện tại
-         * @param status trạng thái phiên
-         */
-        public AuctionRow(
-                final String id,
-                final String productName,
-                final String seller,
-                final String currentPrice,
-                final String status) {
-            this.id = new SimpleStringProperty(id);
-            this.productName = new SimpleStringProperty(productName);
-            this.seller = new SimpleStringProperty(seller);
-            this.currentPrice = new SimpleStringProperty(currentPrice);
-            this.status = new SimpleStringProperty(status);
-        }
-
-        /**
-         * Lấy id phiên.
-         *
-         * @return id phiên
-         */
-        public String getId() {
-            return id.get();
-        }
-
-        /**
-         * Lấy tên sản phẩm.
-         *
-         * @return tên sản phẩm
-         */
-        public String getProductName() {
-            return productName.get();
-        }
-
-        /**
-         * Lấy tên người bán.
-         *
-         * @return tên người bán
-         */
-        public String getSeller() {
-            return seller.get();
-        }
-
-        /**
-         * Lấy giá hiện tại.
-         *
-         * @return giá hiện tại đã format
-         */
-        public String getCurrentPrice() {
-            return currentPrice.get();
-        }
-
-        /**
-         * Lấy trạng thái phiên.
-         *
-         * @return trạng thái phiên
-         */
-        public String getStatus() {
-            return status.get();
-        }
-
-        /**
-         * Cập nhật trạng thái phiên trên dòng hiển thị.
-         *
-         * @param newStatus trạng thái mới
-         */
-        public void setStatus(final String newStatus) {
-            status.set(newStatus);
-        }
     }
 }

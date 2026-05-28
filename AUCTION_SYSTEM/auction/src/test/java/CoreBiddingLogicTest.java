@@ -96,18 +96,42 @@ public class CoreBiddingLogicTest {
     }
 
     @Test
-    void testPlaceBid_AmountEqualsStartPrice_ThrowsInvalidBidException() {
-        // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (không hợp lệ)
-        double invalidBidAmount = 2000;
-        BidTransaction invalidBid = new BidTransaction(null, invalidBidAmount, auction);
+    void testPlaceBid_AntiSnipingEnabledAndBidInLastThirtySeconds_ExtendsEndTime() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(20);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
 
-        // Act & Assert: Thực hiện đặt giá và kỳ vọng nhận về InvalidBidException
-        String actualMessage = assertThrows(InvalidBidException.class, () -> {
-            auction.placeBid(invalidBid);
-        }).getMessage();
+        auction.placeBid(new BidTransaction(null, 3500, auction));
 
-        String expectedMessage = "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + startPrice + ")";
-        assertEquals(expectedMessage, actualMessage);
+        assertTrue(auction.getEndTime().isAfter(originalEndTime),
+                "Bid trong 30 giây cuối phải gia hạn thời gian kết thúc");
+        assertEquals(originalEndTime.plusSeconds(30), auction.getEndTime(),
+                "Anti-sniping phải cộng đúng 30 giây vào thời gian kết thúc");
+    }
+
+    @Test
+    void testPlaceBid_AntiSnipingEnabledAndBidBeforeLastThirtySeconds_DoesNotExtend() {
+        LocalDateTime originalEndTime = LocalDateTime.now().plusSeconds(45);
+        auction.setEndTime(originalEndTime);
+        auction.setAntiSnipingEnabled(true);
+
+        auction.placeBid(new BidTransaction(null, 3500, auction));
+
+        assertEquals(originalEndTime, auction.getEndTime(),
+                "Bid ngoài 30 giây cuối không được gia hạn thời gian kết thúc");
+    }
+
+    @Test
+    void testPlaceBid_FirstBidAmountEqualsStartPrice_UpdatesHighestBid() {
+        // Arrange: Tạo giao dịch với giá tiền BẰNG mức giá khởi điểm (hợp lệ cho bid đầu tiên)
+        double validBidAmount = 2000;
+        BidTransaction validBid = new BidTransaction(null, validBidAmount, auction);
+
+        // Act: Thực hiện đặt giá
+        auction.placeBid(validBid);
+
+        // Assert: Bid đầu tiên bằng startPrice vẫn được ghi nhận
+        assertEquals(validBidAmount, auction.getCurrentHighestBid().getAmount());
     }
 
     @Test
@@ -121,7 +145,8 @@ public class CoreBiddingLogicTest {
             auction.placeBid(invalidBid);
         }).getMessage();
 
-        String expectedMessage = "Giá đặt phải lớn hơn giá cao nhất hiện tại (" + startPrice + ")";
+        String expectedMessage =
+                "Giá đặt đầu tiên phải lớn hơn hoặc bằng giá khởi điểm (" + startPrice + ")";
         assertEquals(expectedMessage, actualMessage);
     }
 

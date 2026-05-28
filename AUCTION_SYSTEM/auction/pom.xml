@@ -191,12 +191,13 @@
         <version>3.2.5</version>
       </plugin>
 
-      <!-- Plugin Shade: Đóng gói tất cả thư viện (bao gồm JavaFX) vào một Fat JAR -->
+      <!-- Plugin Shade: Đóng gói thư viện vào các Fat JAR riêng cho Client và Server -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.5.2</version>
         <executions>
+          <!-- Đóng gói JAR cho Client -->
           <execution>
             <id>shade-client</id>
             <phase>package</phase>
@@ -226,6 +227,7 @@
             </configuration>
           </execution>
 
+          <!-- Đóng gói JAR cho Server -->
           <execution>
             <id>shade-server</id>
             <phase>package</phase>

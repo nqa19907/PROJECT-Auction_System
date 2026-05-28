@@ -59,6 +59,9 @@ public class ItemListController {
     /** Vị trí mã người bán trong response danh sách. */
     private static final int IDX_SELLER_ID = 8;
 
+    /** Vị trí trạng thái chống đặt giá phút chót trong response danh sách. */
+    private static final int IDX_ANTI_SNIPING_ENABLED = 9;
+
     /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 8;
 
@@ -217,7 +220,12 @@ public class ItemListController {
                             status,
                             startTime,
                             endTime,
-                            selectedParts.length > IDX_SELLER_ID ? selectedParts[IDX_SELLER_ID] : ""
+                            selectedParts.length > IDX_SELLER_ID
+                                    ? selectedParts[IDX_SELLER_ID]
+                                    : "",
+                            selectedParts.length > IDX_ANTI_SNIPING_ENABLED
+                                    && Boolean.parseBoolean(
+                                            selectedParts[IDX_ANTI_SNIPING_ENABLED])
                     )
             );
         }

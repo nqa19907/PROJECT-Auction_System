@@ -5,26 +5,31 @@ import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.AdminCancelAuctionCommand;
-import auction_system.server.network.command.AdminDeleteAuctionCommand;
-import auction_system.server.network.command.AdminDeleteUserCommand;
-import auction_system.server.network.command.AdminListAuctionsCommand;
-import auction_system.server.network.command.AdminListUsersCommand;
 import auction_system.server.network.command.Command;
-import auction_system.server.network.command.DepositCommand;
-import auction_system.server.network.command.GetAuctionCommand;
-import auction_system.server.network.command.GetBidHistoryCommand;
-import auction_system.server.network.command.JoinAuctionCommand;
-import auction_system.server.network.command.LeaveAuctionCommand;
-import auction_system.server.network.command.ListAuctionsCommand;
-import auction_system.server.network.command.LoginCommand;
-import auction_system.server.network.command.LogoutCommand;
-import auction_system.server.network.command.PlaceBidCommand;
-import auction_system.server.network.command.PublishItemCommand;
-import auction_system.server.network.command.RegisterCommand;
-import auction_system.server.services.AuctionBidService;
-import auction_system.server.services.AuthService;
-import auction_system.server.services.ParticipantItemService;
+import auction_system.server.network.command.admin.AdminCancelAuctionCommand;
+import auction_system.server.network.command.admin.AdminDeleteAuctionCommand;
+import auction_system.server.network.command.admin.AdminDeleteUserCommand;
+import auction_system.server.network.command.admin.AdminListAuctionsCommand;
+import auction_system.server.network.command.admin.AdminListUsersCommand;
+import auction_system.server.network.command.auction.GetAuctionCommand;
+import auction_system.server.network.command.auction.JoinAuctionCommand;
+import auction_system.server.network.command.auction.LeaveAuctionCommand;
+import auction_system.server.network.command.auction.ListAuctionsCommand;
+import auction_system.server.network.command.auth.LoginCommand;
+import auction_system.server.network.command.auth.LogoutCommand;
+import auction_system.server.network.command.auth.RegisterCommand;
+import auction_system.server.network.command.bidding.AutoBidCommand;
+import auction_system.server.network.command.bidding.DisableAutoBidCommand;
+import auction_system.server.network.command.bidding.GetAutoBidStatusCommand;
+import auction_system.server.network.command.bidding.GetBidHistoryCommand;
+import auction_system.server.network.command.bidding.PlaceBidCommand;
+import auction_system.server.network.command.bidding.PublishItemCommand;
+import auction_system.server.network.command.bidding.SetAntiSnipingCommand;
+import auction_system.server.network.command.wallet.DepositCommand;
+import auction_system.server.services.auction.ParticipantItemService;
+import auction_system.server.services.auth.AuthService;
+import auction_system.server.services.autobid.AutoBidService;
+import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -51,6 +56,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final Socket socket;
     private final AuctionManager auctionManager;
     private final AuthService authService;
+    private final AutoBidService autoBidService;
     private final AuctionBidService auctionBidService;
     private final ParticipantItemService participantItemService;
     private final Map<String, Command> commandMap;
@@ -65,6 +71,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param socket socket kết nối từ client
      * @param auctionManager manager quản lý phiên đấu giá và trạng thái online
      * @param authService service xác thực tài khoản bằng database
+     * @param autoBidService service quản lý cấu hình auto-bid
      * @param auctionBidService service xử lý đặt giá
      * @param participantItemService service xử lý item người dùng
      */
@@ -72,12 +79,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
             final Socket socket,
             final AuctionManager auctionManager,
             final AuthService authService,
+            final AutoBidService autoBidService,
             final AuctionBidService auctionBidService,
             final ParticipantItemService participantItemService) {
         this.socket = Objects.requireNonNull(socket, "socket");
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
         this.authService = Objects.requireNonNull(authService, "authService");
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
+        this.autoBidService = autoBidService;
         this.participantItemService =
                 Objects.requireNonNull(participantItemService, "participantItemService");
         this.session = new ClientSession(this, auctionManager);
@@ -96,7 +105,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new LoginCommand(authService, auctionManager)),
                 Map.entry(
                         Protocol.Command.REGISTER.name(),
-                        new RegisterCommand(authService)),
+                        new RegisterCommand(authService, auctionManager)),
                 Map.entry(
                         Protocol.Command.LIST_AUCTIONS.name(),
                         new ListAuctionsCommand(auctionManager)),
@@ -116,8 +125,20 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         Protocol.Command.PLACE_BID.name(),
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(
+                        Protocol.Command.ENABLE_AUTO_BID.name(),
+                        new AutoBidCommand(autoBidService, auctionBidService)),
+                Map.entry(
+                        Protocol.Command.DISABLE_AUTO_BID.name(),
+                        new DisableAutoBidCommand(autoBidService)),
+                Map.entry(
+                        Protocol.Command.GET_AUTO_BID.name(),
+                        new GetAutoBidStatusCommand(autoBidService)),
+                Map.entry(
+                        Protocol.Command.SET_ANTI_SNIPING.name(),
+                        new SetAntiSnipingCommand(auctionManager)),
+                Map.entry(
                         Protocol.Command.DEPOSIT.name(),
-                        new DepositCommand(authService)),
+                        new DepositCommand(authService, auctionBidService)),
                 Map.entry(
                         Protocol.Command.LOGOUT.name(),
                         new LogoutCommand(auctionManager)),
