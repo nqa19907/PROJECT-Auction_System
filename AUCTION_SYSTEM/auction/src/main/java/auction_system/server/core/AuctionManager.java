@@ -200,16 +200,16 @@ public class AuctionManager {
     }
 
     /**
-     * Cap nhat thong tin phien do seller so huu.
+     * Cập nhật thông tin phiên do seller sở hữu.
      *
-     * @param auctionId ma phien can chinh sua
-     * @param userId ma user dang thao tac
-     * @param category danh muc moi
-     * @param itemName ten tai san moi
-     * @param description mo ta moi
-     * @param condition tinh trang moi
-     * @param endTime thoi gian ket thuc moi
-     * @return true neu cap nhat thanh cong
+     * @param auctionId mã phiên cần chỉnh sửa
+     * @param userId mã user đang thao tác
+     * @param category danh mục mới
+     * @param itemName tên tài sản mới
+     * @param description mô tả mới
+     * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
+     * @return true nếu cập nhật thành công
      */
     public boolean updateMyAuctionInfo(
             final String auctionId,
@@ -237,7 +237,7 @@ public class AuctionManager {
         // Cập nhật các trường cho phép sửa theo yêu cầu.
         // endTime má»›i pháº£i sau startTime Ä‘á»ƒ khÃ´ng phÃ¡ vá»¡ lifecycle.
         if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
-            throw new IllegalArgumentException("Thoi gian ket thuc phai sau thoi gian bat dau.");
+            throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
 
         final String normalizedCategory = category.trim().toUpperCase();

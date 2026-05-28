@@ -80,18 +80,21 @@ public class PublishItemController implements Initializable {
         comboCondition.setValue(row.getCondition());
         fieldDescription.setText(row.getDescription());
 
-        // Theo yêu cầu: không cho sửa giá khởi điểm và thời gian.
+        // Theo yêu cầu: không cho sửa giá khởi điểm và thời gian bắt đầu.
         fieldStartingPrice.clear();
         fieldStartingPrice.setPromptText("Không chỉnh sửa ở màn hình này");
         fieldStartingPrice.setDisable(true);
-        fieldStartingTime.clear();
-        fieldStartingTime.setPromptText("Không chỉnh sửa ở màn hình này");
+
+        // Giữ ô thời gian bắt đầu bị khóa, nhưng hiển thị đúng thời gian ban đầu đã nhập.
+        fieldStartingTime.setText(formatDateTimeForInput(row.getStartTime()));
+        fieldStartingTime.setPromptText("dd/MM/yyyy HH:mm");
         fieldStartingTime.setDisable(true);
+
         fieldEndingTime.clear();
         fieldEndingTime.setPromptText("Không chỉnh sửa ở màn hình này");
-        // Cho phÃ©p sá»­a thá»i gian káº¿t thÃºc.
-        // Hiá»ƒn thá»‹ sáºµn giÃ¡ trá»‹ cÅ© Ä‘á»ƒ user chá»‰nh.
-        fieldEndingTime.setText(formatEndTimeForInput(row.getEndTime()));
+        // Cho phép sửa thời gian kết thúc.
+        // Hiển thị sẵn giá trị cũ để user chỉnh.
+        fieldEndingTime.setText(formatDateTimeForInput(row.getEndTime()));
         fieldEndingTime.setPromptText("dd/MM/yyyy HH:mm");
         fieldEndingTime.setDisable(false);
         fieldBidStep.setDisable(true);
@@ -158,7 +161,7 @@ public class PublishItemController implements Initializable {
     }
 
     /**
-     * Gửi request cập nhật phiên. Chỉ cập nhật thông tin sản phẩm.
+     * Gửi request cập nhật phiên.
      */
     private void submitEditAuction() {
         final String itemName =
@@ -175,7 +178,7 @@ public class PublishItemController implements Initializable {
                 itemName,
                 description,
                 condition,
-                parseDateTime(fieldEndingTime.getText(), "thoi gian ket thuc"),
+                parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc"),
                 (success, message) ->
                         Platform.runLater(() -> handleUpdateResult(success, message)));
     }
@@ -261,20 +264,20 @@ public class PublishItemController implements Initializable {
     }
 
     /**
-     * Parse chuỗi endTime từ server (ISO-8601) sang định dạng input trên form.
+     * Parse chuỗi thời gian từ server (ISO-8601) sang định dạng input trên form.
      *
-     * @param rawEndTime chuỗi endTime thô từ server
+     * @param rawDateTime chuỗi thời gian thô từ server
      * @return thời gian đã format theo dd/MM/yyyy HH:mm để đổ vào input
      */
-    private String formatEndTimeForInput(final String rawEndTime) {
-        if (rawEndTime == null || rawEndTime.trim().isEmpty()) {
+    private String formatDateTimeForInput(final String rawDateTime) {
+        if (rawDateTime == null || rawDateTime.trim().isEmpty()) {
             return "";
         }
         try {
-            return LocalDateTime.parse(rawEndTime.trim()).format(DATE_TIME_FORMATTER);
+            return LocalDateTime.parse(rawDateTime.trim()).format(DATE_TIME_FORMATTER);
         } catch (DateTimeParseException exception) {
             // Giữ nguyên giá trị gốc nếu không parse được để user tự xử lý.
-            return rawEndTime;
+            return rawDateTime;
         }
     }
 
