@@ -127,6 +127,7 @@ public class AuctionDetailController implements Initializable {
 
         // Đồng bộ các control phụ thuộc quyền người bán trước khi bật timer và tải dữ liệu.
         applySellerObserveOnlyPolicy(context);
+        autoBidForm.applySellerPolicy(sellerObserveOnly);
         antiSnipingControl.applyInitialState(context.antiSnipingEnabled(), sellerObserveOnly);
 
         // Khởi tạo lại biểu đồ, đồng hồ, lịch sử bid và trạng thái auto-bid theo phiên mới.
@@ -445,6 +446,7 @@ public class AuctionDetailController implements Initializable {
                     activeAuctionId = context.auctionId();
                     activeEndTime = context.endTime();
                     applySellerObserveOnlyPolicy(context);
+                    autoBidForm.applySellerPolicy(sellerObserveOnly);
                     syncAntiSnipingCheckbox(context.antiSnipingEnabled());
                     AuctionPriceChartConfigurer.updateAxes(
                             numberXaxis,

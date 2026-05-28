@@ -126,7 +126,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(
                         Protocol.Command.ENABLE_AUTO_BID.name(),
-                        new AutoBidCommand(autoBidService, auctionBidService)),
+                        new AutoBidCommand(auctionBidService)),
                 Map.entry(
                         Protocol.Command.DISABLE_AUTO_BID.name(),
                         new DisableAutoBidCommand(autoBidService)),

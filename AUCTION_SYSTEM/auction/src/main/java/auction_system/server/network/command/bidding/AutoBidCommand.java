@@ -1,8 +1,8 @@
 package auction_system.server.network.command.bidding;
 
+import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
-import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import java.util.Objects;
@@ -12,9 +12,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Command nhận yêu cầu bật hoặc cập nhật đấu giá tự động.
  *
- * <p>Command chỉ đọc request và trả response. Nghiệp vụ lưu cấu hình thuộc
- * {@link AutoBidService}; phần tạo bid ngay sau enable thuộc
- * {@link AuctionBidService}.
+ * <p>Command chỉ đọc request và trả response. Nghiệp vụ kiểm tra quyền, lưu cấu hình và kích
+ * hoạt auto-bid ngay sau enable thuộc {@link AuctionBidService}.
  */
 public final class AutoBidCommand implements Command {
 
@@ -25,21 +24,15 @@ public final class AutoBidCommand implements Command {
     private static final int IDX_AUCTION_ID = 1;
     private static final int IDX_MAX_AMOUNT = 2;
     private static final int IDX_STEP_AMOUNT = 3;
-    
-    private final AutoBidService autoBidService;
+
     private final AuctionBidService auctionBidService;
 
     /**
      * Khởi tạo command bật auto-bid.
      *
-     * @param autoBidService service quản lý cấu hình auto-bid
-     * @param auctionBidService service xử lý đặt giá và trigger auto-bid ngay
+     * @param auctionBidService service xử lý kiểm tra và bật auto-bid
      */
-    public AutoBidCommand(
-            final AutoBidService autoBidService,
-            final AuctionBidService auctionBidService) {
-
-        this.autoBidService = Objects.requireNonNull(autoBidService, "autoBidService");
+    public AutoBidCommand(final AuctionBidService auctionBidService) {
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
     }
 
@@ -57,30 +50,25 @@ public final class AutoBidCommand implements Command {
             final String auctionId = parts[IDX_AUCTION_ID];
             final long maxAmount = parsePositiveAmount(parts[IDX_MAX_AMOUNT], "Giá tối đa");
             final long stepAmount = parsePositiveAmount(parts[IDX_STEP_AMOUNT], "Bước tăng");
-            
-            autoBidService.enableAutoBid(
+
+            auctionBidService.enableAutoBid(
                     auctionId,
                     session.getCurrentUser(),
                     maxAmount,
-                    stepAmount
-            );
-
-            // Sau khi lưu setting, thử tạo auto-bid ngay nếu phiên hiện tại đã đủ điều kiện.
-            auctionBidService.triggerAutoBidAfterEnable(
-                    auctionId,
-                    session.getCurrentUser());
+                    stepAmount);
 
             LOGGER.info(
                     "Đã lưu auto-bid. user={}, auctionId={}, maxAmount={}, stepAmount={}",
                     session.getCurrentUser().getUsername(),
                     auctionId,
                     maxAmount,
-                    stepAmount
-            );
+                    stepAmount);
 
             return Protocol.Response.AUTO_BID_OK.name()
                     + Protocol.SEPARATOR
                     + "Đã bật đấu giá tự động.";
+        } catch (InvalidBidException e) {
+            return fail(e.getMessage());
         } catch (IllegalArgumentException e) {
             return fail(e.getMessage());
         } catch (Exception e) {
