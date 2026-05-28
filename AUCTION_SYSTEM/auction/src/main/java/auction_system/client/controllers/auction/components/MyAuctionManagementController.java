@@ -21,10 +21,11 @@ import javafx.scene.control.cell.PropertyValueFactory;
 /**
  * Controller cho màn hình "Quản lý phiên của tôi".
  *
- * <p>Hiện tại chỉ xử lý:
+ * <p>Hiện tại xử lý:
  * - tải danh sách phiên do user hiện tại đăng
  * - hiển thị lên TableView
  * - gửi yêu cầu xóa phiên đã chọn
+ * - tạo sẵn nút chỉnh sửa (chưa gắn logic cập nhật)
  */
 public class MyAuctionManagementController implements Initializable {
 
@@ -53,15 +54,15 @@ public class MyAuctionManagementController implements Initializable {
     private Button btnRefreshMyAuctions;
 
     @FXML
+    private Button btnEditMyAuction;
+
+    @FXML
     private Button btnDeleteMyAuction;
 
     /** Nguồn dữ liệu cho bảng. */
     private final ObservableList<MyAuctionRow> myAuctionRows =
             FXCollections.observableArrayList();
 
-    /**
-     * Khởi tạo màn hình.
-     */
     @Override
     public void initialize(final URL url, final ResourceBundle resourceBundle) {
         initTableColumns();
@@ -69,6 +70,9 @@ public class MyAuctionManagementController implements Initializable {
 
         // Nút làm mới danh sách phiên của tôi.
         btnRefreshMyAuctions.setOnAction(event -> loadMyAuctions());
+
+        // Nút chỉnh sửa phiên: hiện tại mới có thông báo placeholder.
+        btnEditMyAuction.setOnAction(event -> handleEditMyAuction());
 
         // Nút xóa phiên đang chọn.
         btnDeleteMyAuction.setOnAction(event -> handleDeleteMyAuction());
@@ -115,6 +119,20 @@ public class MyAuctionManagementController implements Initializable {
 
         // Nếu fail thì xóa dữ liệu cũ để tránh hiển thị nhầm.
         myAuctionRows.clear();
+    }
+
+    /**
+     * Xử lý khi user bấm nút chỉnh sửa phiên.
+     */
+    private void handleEditMyAuction() {
+        final MyAuctionRow selected = tblMyAuctions.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showInfo("Thông báo", "Vui lòng chọn phiên cần chỉnh sửa.");
+            return;
+        }
+
+        // Placeholder: sẽ nối qua màn hình/sự kiện chỉnh sửa ở bước sau.
+        showInfo("Thông báo", "Đã chọn phiên " + selected.getId() + " để chỉnh sửa.");
     }
 
     /**
