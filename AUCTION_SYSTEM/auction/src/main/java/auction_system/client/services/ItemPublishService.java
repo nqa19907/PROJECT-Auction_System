@@ -8,17 +8,15 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
- * Service phía Client dùng để gửi yêu cầu đăng bán sản phẩm lên Server.
- *
- * <p>Lớp này giúp Controller không phụ thuộc trực tiếp vào tầng network,
- * giữ đúng nguyên tắc SRP: Controller chỉ xử lý UI, Service xử lý request.</p>
+ * Service phía Client dùng để gửi yêu cầu đăng bán/cập nhật phiên lên Server.
  */
 public final class ItemPublishService {
     private static final Logger LOGGER = Logger.getLogger(ItemPublishService.class.getName());
     private static final ItemPublishService INSTANCE = new ItemPublishService();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    private PublishItemCallback currentCallback;
+    private PublishItemCallback publishCallback;
+    private PublishItemCallback updateCallback;
 
     private ItemPublishService() {
         NetworkClient.getInstance().registerHandler(
@@ -28,59 +26,64 @@ public final class ItemPublishService {
                 Protocol.Response.PUBLISH_ITEM_FAIL.name(),
                 this::handlePublishFailure);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ERROR.name(), 
-                this::handlePublishError);
+                Protocol.Response.UPDATE_MY_AUCTION_OK.name(),
+                this::handleUpdateSuccess);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_MY_AUCTION_FAIL.name(),
+                this::handleUpdateFailure);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.ERROR.name(),
+                this::handleError);
     }
 
     /**
-     * Lấy instance duy nhất của service đăng bán sản phẩm.
+     * Lấy singleton của service.
      *
-     * @return Instance dùng chung của {@code ItemPublishService}.
+     * @return instance dùng chung
      */
     public static ItemPublishService getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Callback nhận kết quả đăng bán từ Server.
+     * Callback nhận kết quả từ Server.
      */
     @FunctionalInterface
     public interface PublishItemCallback {
         /**
-         * Xử lý kết quả đăng bán sản phẩm.
+         * Trả kết quả cho controller gọi service.
          *
-         * @param success {@code true} nếu đăng bán thành công.
-         * @param message Thông báo trả về từ Server.
+         * @param success trạng thái thành công
+         * @param message thông báo trả về
          */
         void onResult(boolean success, String message);
     }
 
     /**
-     * Gửi yêu cầu đăng bán sản phẩm lên Server.
+     * Gửi yêu cầu đăng bán phiên mới.
      *
-     * @param category Loại sản phẩm.
-     * @param itemName Tên sản phẩm.
-     * @param description Mô tả sản phẩm.
-     * @param condition Tình trạng sản phẩm.
-     * @param startPrice Giá khởi điểm.
-     * @param startTime Thời điểm bắt đầu đấu giá.
-     * @param endTime Thời điểm kết thúc đấu giá.
-     * @param callback Callback nhận kết quả.
+     * @param category danh mục sản phẩm
+     * @param itemName tên sản phẩm
+     * @param description mô tả sản phẩm
+     * @param condition tình trạng sản phẩm
+     * @param startPrice giá khởi điểm
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @param callback callback nhận kết quả
      */
     public void publishItem(
-            String category,
-            String itemName,
-            String description,
-            String condition,
-            double startPrice,
-            LocalDateTime startTime,
-            LocalDateTime endTime,
-            PublishItemCallback callback) {
-
+            final String category,
+            final String itemName,
+            final String description,
+            final String condition,
+            final double startPrice,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime,
+            final PublishItemCallback callback) {
         Objects.requireNonNull(callback, "Callback không được null.");
-        this.currentCallback = callback;
+        this.publishCallback = callback;
 
-        String request = String.join(
+        final String request = String.join(
                 Protocol.SEPARATOR,
                 Protocol.Command.PUBLISH_ITEM.name(),
                 clean(category),
@@ -91,7 +94,7 @@ public final class ItemPublishService {
                 FORMATTER.format(startTime),
                 FORMATTER.format(endTime));
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        final boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
             LOGGER.warning("Không thể gửi yêu cầu đăng bán sản phẩm tới Server.");
             callback.onResult(false, "Không thể kết nối tới Server.");
@@ -99,80 +102,105 @@ public final class ItemPublishService {
     }
 
     /**
-     * Xử lý phản hồi đăng bán thành công từ Server.
+     * Cập nhật phiên của user hiện tại.
+     * Không gửi thời gian và giá khởi điểm theo yêu cầu.
      *
-     * @param response Phản hồi dạng text protocol từ Server.
+     * @param auctionId mã phiên cần cập nhật
+     * @param category danh mục mới
+     * @param itemName tên tài sản mới
+     * @param description mô tả mới
+     * @param condition tình trạng mới
+     * @param callback callback nhận kết quả
      */
-    private void handlePublishSuccess(String response) {
-        notifyCallback(true, extractMessage(response, "Đăng bán sản phẩm thành công."));
+    public void updateMyAuction(
+            final String auctionId,
+            final String category,
+            final String itemName,
+            final String description,
+            final String condition,
+            final PublishItemCallback callback) {
+        Objects.requireNonNull(callback, "Callback không được null.");
+        this.updateCallback = callback;
+
+        final String request = String.join(
+                Protocol.SEPARATOR,
+                Protocol.Command.UPDATE_MY_AUCTION.name(),
+                clean(auctionId),
+                clean(category),
+                clean(itemName),
+                clean(description),
+                clean(condition));
+
+        final boolean sent = NetworkClient.getInstance().sendCommand(request);
+        if (!sent) {
+            LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
+            callback.onResult(false, "Không thể kết nối tới Server.");
+        }
     }
 
-    /**
-     * Xử lý phản hồi đăng bán thất bại từ Server.
-     *
-     * @param response Phản hồi dạng text protocol từ Server.
-     */
-    private void handlePublishFailure(String response) {
-        notifyCallback(false, extractMessage(response, "Đăng bán sản phẩm thất bại."));
+    private void handlePublishSuccess(final String response) {
+        notifyPublishCallback(
+                true,
+                extractMessage(response, "Đăng bán sản phẩm thành công."));
     }
 
-    /**
-     * Gọi callback hiện tại nếu tồn tại.
-     *
-     * @param success Trạng thái xử lý.
-     * @param message Thông báo kết quả.
-     */
-    private void notifyCallback(boolean success, String message) {
-        PublishItemCallback callback = currentCallback;
-        currentCallback = null;
+    private void handlePublishFailure(final String response) {
+        notifyPublishCallback(
+                false,
+                extractMessage(response, "Đăng bán sản phẩm thất bại."));
+    }
 
+    private void handleUpdateSuccess(final String response) {
+        notifyUpdateCallback(
+                true,
+                extractMessage(response, "Cập nhật phiên thành công."));
+    }
+
+    private void handleUpdateFailure(final String response) {
+        notifyUpdateCallback(
+                false,
+                extractMessage(response, "Cập nhật phiên thất bại."));
+    }
+
+    private void notifyPublishCallback(final boolean success, final String message) {
+        final PublishItemCallback callback = publishCallback;
+        publishCallback = null;
         if (callback != null) {
             callback.onResult(success, message);
         }
     }
 
-    /**
-     * Lấy thông báo từ response của Server.
-     *
-     * @param response Chuỗi phản hồi từ Server.
-     * @param fallback Thông báo mặc định.
-     * @return Thông báo đã tách được.
-     */
-    private String extractMessage(String response, String fallback) {
-        String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
+    private void notifyUpdateCallback(final boolean success, final String message) {
+        final PublishItemCallback callback = updateCallback;
+        updateCallback = null;
+        if (callback != null) {
+            callback.onResult(success, message);
+        }
+    }
+
+    private String extractMessage(final String response, final String fallback) {
+        final String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
         if (parts.length < 2 || parts[1].isBlank()) {
             return fallback;
         }
         return parts[1];
     }
 
-    /**
-     * Làm sạch dữ liệu text trước khi đưa vào text protocol.
-     *
-     * @param value Giá trị đầu vào.
-     * @return Giá trị đã loại bỏ ký tự phân tách protocol.
-     */
-    private String clean(String value) {
+    private String clean(final String value) {
         if (value == null) {
             return "";
         }
-        return value
-                .replace(Protocol.SEPARATOR, " ")
-                .trim();
+        return value.replace(Protocol.SEPARATOR, " ").trim();
     }
 
-    /**
-     * Xử lý lỗi chung từ server trong lúc đang chờ kết quả đăng bán.
-     *
-     * @param response phản hồi lỗi từ server
-     */
-    private void handlePublishError(final String response) {
-        if (currentCallback == null) {
-            return;
+    private void handleError(final String response) {
+        final String message =
+                extractMessage(response, "Server không xử lý được yêu cầu.");
+        if (publishCallback != null) {
+            notifyPublishCallback(false, message);
         }
-
-        notifyCallback(
-                false,
-                extractMessage(response, "Server không xử lý được yêu cầu đăng bán."));
+        if (updateCallback != null) {
+            notifyUpdateCallback(false, message);
+        }
     }
 }

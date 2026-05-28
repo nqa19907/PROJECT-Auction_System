@@ -50,6 +50,14 @@
             </children>
         </HBox>
 
+        <!-- Mục mới cho user quản lý các phiên đấu giá đã đăng -->
+        <HBox id="myAuctionManagement" fx:id="myAuctionManagement" alignment="CENTER_LEFT" onMouseClicked="#handleMyAuctionManagement" spacing="15.0" styleClass="category-option">
+            <children>
+                <Region styleClass="icon-add" />
+                <Label styleClass="text-body" text="Quản lý phiên của tôi" />
+            </children>
+        </HBox>
+
         <HBox id="testAdminView" fx:id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
             <children>
                 <Region styleClass="icon-add" />

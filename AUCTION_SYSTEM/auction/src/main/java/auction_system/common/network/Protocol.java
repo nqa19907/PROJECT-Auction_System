@@ -36,6 +36,9 @@ public final class Protocol {
         DISABLE_AUTO_BID,
         GET_AUTO_BID,
         SET_ANTI_SNIPING,
+        LIST_MY_AUCTIONS,
+        DELETE_MY_AUCTION,
+        UPDATE_MY_AUCTION,
 
         // Admin
         // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
@@ -68,6 +71,11 @@ public final class Protocol {
         BID_OK, BID_FAIL,
         AUTO_BID_OK, AUTO_BID_FAIL, AUTO_BID_STATUS,
         PUBLISH_ITEM_OK, PUBLISH_ITEM_FAIL,
+        MY_AUCTION_LIST,
+        DELETE_MY_AUCTION_OK,
+        DELETE_MY_AUCTION_FAIL,
+        UPDATE_MY_AUCTION_OK,
+        UPDATE_MY_AUCTION_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,

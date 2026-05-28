@@ -19,12 +19,15 @@ import auction_system.server.network.command.auth.LoginCommand;
 import auction_system.server.network.command.auth.LogoutCommand;
 import auction_system.server.network.command.auth.RegisterCommand;
 import auction_system.server.network.command.bidding.AutoBidCommand;
+import auction_system.server.network.command.bidding.DeleteMyAuctionCommand;
 import auction_system.server.network.command.bidding.DisableAutoBidCommand;
 import auction_system.server.network.command.bidding.GetAutoBidStatusCommand;
 import auction_system.server.network.command.bidding.GetBidHistoryCommand;
+import auction_system.server.network.command.bidding.ListMyAuctionsCommand;
 import auction_system.server.network.command.bidding.PlaceBidCommand;
 import auction_system.server.network.command.bidding.PublishItemCommand;
 import auction_system.server.network.command.bidding.SetAntiSnipingCommand;
+import auction_system.server.network.command.bidding.UpdateMyAuctionCommand;
 import auction_system.server.network.command.wallet.DepositCommand;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.services.auth.AuthService;
@@ -159,7 +162,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new AdminListUsersCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.ADMIN_LIST_AUCTIONS.name(),
-                        new AdminListAuctionsCommand(auctionManager))
+                        new AdminListAuctionsCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.LIST_MY_AUCTIONS.name(),
+                        new ListMyAuctionsCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.DELETE_MY_AUCTION.name(),
+                        new DeleteMyAuctionCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.UPDATE_MY_AUCTION.name(),
+                        new UpdateMyAuctionCommand(auctionManager))
         );
     }
 
