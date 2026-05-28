@@ -167,8 +167,9 @@ public class DashboardController {
         Router.navigateContent(contentArea, ViewConstants.ADMIN_DEMO_VIEW);
     }
 
-    // Mục mới: hiện tại chỉ để hoàn thiện UI, chưa chuyển màn hình.
+    // Mục mới: điều hướng tới màn hình FXML quản lý phiên của tôi (chưa có logic dữ liệu).
     private void loadMyAuctionManagementView() {
-        LOGGER.info("Đã bấm mục 'Quản lý phiên của tôi' (chưa có chức năng).");
+        LOGGER.info("Chuyển sang màn hình quản lý phiên của tôi.");
+        Router.navigateContent(contentArea, ViewConstants.MY_AUCTION_MANAGEMENT_VIEW);
     }
 }

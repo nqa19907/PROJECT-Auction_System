@@ -24,6 +24,8 @@ public final class ViewConstants {
     public static final String ITEM_LIST_VIEW = BASE_PATH + "auction/ItemList.fxml";
     public static final String PUBLISH_ITEM_VIEW = BASE_PATH + "auction/PublishItem.fxml";
     public static final String AUCTION_DETAIL_VIEW = BASE_PATH + "auction/AuctionDetail.fxml";
+    public static final String MY_AUCTION_MANAGEMENT_VIEW =
+            BASE_PATH + "auction/MyAuctionManagement.fxml";
 
     // Profile Views
     public static final String HISTORY_VIEW = BASE_PATH + "profile/History.fxml";

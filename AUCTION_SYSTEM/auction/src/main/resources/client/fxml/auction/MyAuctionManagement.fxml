@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            styleClass="admin-root">
+
+    <top>
+        <!-- Header giống style admin -->
+        <VBox spacing="12.0" styleClass="admin-header">
+            <padding>
+                <Insets top="16.0" right="34.0" bottom="16.0" left="34.0" />
+            </padding>
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="header-main-row">
+                    <children>
+                        <VBox spacing="2.0">
+                            <children>
+                                <Label styleClass="brand-title" text="AuctionHub" />
+                                <Label styleClass="brand-subtitle" text="Quản lý phiên đấu giá của tôi" />
+                            </children>
+                        </VBox>
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label styleClass="admin-badge" text="User" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <HBox spacing="24.0" styleClass="content-wrap">
+            <padding>
+                <Insets top="28.0" right="34.0" bottom="30.0" left="34.0" />
+            </padding>
+            <children>
+                <!-- Panel bảng theo cùng kiểu admin -->
+                <VBox spacing="16.0" styleClass="panel" HBox.hgrow="ALWAYS">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="14.0">
+                            <children>
+                                <Label styleClass="panel-icon" text="🔨" />
+                                <Label styleClass="panel-title" text="Phiên đã đăng" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtSearchMyAuction" promptText="Tìm phiên..." styleClass="search-field" />
+                                <Button fx:id="btnRefreshMyAuctions" styleClass="circle-button" text="↻" />
+                            </children>
+                        </HBox>
+
+                        <TableView fx:id="tblMyAuctions" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colAuctionId" prefWidth="80.0" text="ID" />
+                                <TableColumn fx:id="colProductName" prefWidth="250.0" text="Sản phẩm" />
+                                <TableColumn fx:id="colCurrentPrice" prefWidth="150.0" text="Giá hiện tại" />
+                                <TableColumn fx:id="colBidCount" prefWidth="120.0" text="Lượt bid" />
+                                <TableColumn fx:id="colAuctionStatus" prefWidth="130.0" text="Trạng thái" />
+                                <TableColumn fx:id="colEndTime" prefWidth="170.0" text="Kết thúc" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+
+                        <HBox alignment="CENTER_RIGHT">
+                            <children>
+                                <!-- Nút xóa phiên: mới là UI, chưa gắn xử lý -->
+                                <Button fx:id="btnDeleteMyAuction" styleClass="danger-button" text="🗑  Xoá phiên" />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </center>
+
+    <stylesheets>
+        <URL value="@../../css/global.css" />
+        <URL value="@../../css/admin-dashboard.css" />
+    </stylesheets>
+</BorderPane>
