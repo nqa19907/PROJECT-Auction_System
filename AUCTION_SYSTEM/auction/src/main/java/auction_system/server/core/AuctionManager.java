@@ -3,7 +3,10 @@ package auction_system.server.core;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.auctions.AuctionStatus;
+import auction_system.common.models.items.Art;
+import auction_system.common.models.items.Electronic;
 import auction_system.common.models.items.Item;
+import auction_system.common.models.items.Vehicle;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
@@ -231,9 +234,38 @@ public class AuctionManager {
         }
 
         // Cập nhật các trường cho phép sửa theo yêu cầu.
-        auction.getItem().setCategory(category);
-        auction.getItem().setItemName(itemName);
-        auction.getItem().setDescription(description + "\nTình trạng: " + condition);
+        final String normalizedCategory = category.trim().toUpperCase();
+        final Item currentItem = auction.getItem();
+        final String fullDescription = description + "\nTình trạng: " + condition;
+
+        if (normalizedCategory.equals(currentItem.getCategory())) {
+            // Cùng danh mục: giữ nguyên class item cũ, chỉ cập nhật nội dung.
+            currentItem.setItemName(itemName);
+            currentItem.setDescription(fullDescription);
+            currentItem.setCategory(normalizedCategory);
+        } else {
+            // Khác danh mục: phải tạo item mới đúng class để category hoạt động đúng theo model.
+            final Item replacementItem = switch (normalizedCategory) {
+                case "ART" -> new Art(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                case "ELECTRONIC" -> new Electronic(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                case "VEHICLE" -> new Vehicle(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                default -> throw new IllegalArgumentException("Danh mục không hợp lệ.");
+            };
+            replacementItem.setCurrentPrice(currentItem.getCurrentPrice());
+            auction.setItem(replacementItem);
+        }
 
         database.items().save(auction.getItem());
         database.auctions().save(auction);
