@@ -38,6 +38,7 @@ public final class Protocol {
         SET_ANTI_SNIPING,
         LIST_MY_AUCTIONS,
         DELETE_MY_AUCTION,
+        UPDATE_MY_AUCTION,
 
         // Admin
         // Lấy danh sách qua server thay vì để client đọc trực tiếp file .ser.
@@ -73,6 +74,8 @@ public final class Protocol {
         MY_AUCTION_LIST,
         DELETE_MY_AUCTION_OK,
         DELETE_MY_AUCTION_FAIL,
+        UPDATE_MY_AUCTION_OK,
+        UPDATE_MY_AUCTION_FAIL,
 
         // Broadcast Updates
         UPDATE_PRICE,

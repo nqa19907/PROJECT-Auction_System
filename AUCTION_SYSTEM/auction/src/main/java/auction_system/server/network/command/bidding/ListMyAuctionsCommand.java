@@ -13,38 +13,20 @@ import java.util.Objects;
  */
 public final class ListMyAuctionsCommand implements Command {
 
-    /** Thành phần quản lý auction trung tâm của server. */
+    private static final String CONDITION_PREFIX = "\nTình trạng: ";
     private final AuctionManager auctionManager;
 
-    /**
-     * Khởi tạo command.
-     *
-     * @param auctionManager manager dùng để lấy danh sách auction hiện tại
-     */
     public ListMyAuctionsCommand(final AuctionManager auctionManager) {
         this.auctionManager = Objects.requireNonNull(auctionManager, "auctionManager");
     }
 
-    /**
-     * Xử lý lệnh LIST_MY_AUCTIONS từ client.
-     *
-     * @param parts mảng request đã tách theo protocol
-     * @param session phiên làm việc của client đang gọi lệnh
-     * @return response dạng text theo protocol MY_AUCTION_LIST
-     */
     @Override
     public String execute(final String[] parts, final ClientSession session) {
-        // Chặn sớm nếu client chưa đăng nhập.
         if (session == null || session.getCurrentUser() == null) {
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + "Chua dang nhap.";
+            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Chưa đăng nhập.";
         }
 
-        // Lấy id user hiện tại để lọc các phiên "của tôi".
         final String currentUserId = session.getCurrentUser().getId();
-
-        // Tái sử dụng nguồn dữ liệu auction sẵn có, thêm điều kiện lọc theo người bán.
         final List<Auction> myAuctions = auctionManager.getAllAuctions().stream()
                 .filter(auction -> auction.getParticipant() != null)
                 .filter(auction -> currentUserId.equals(auction.getParticipant().getId()))
@@ -55,20 +37,57 @@ public final class ListMyAuctionsCommand implements Command {
                 .append(Protocol.SEPARATOR)
                 .append(myAuctions.size());
 
-        // Mỗi record là 1 phiên, nối bằng RECORD_SEPARATOR để client parse trong 1 message.
         for (Auction auction : myAuctions) {
             final double currentPrice = (auction.getCurrentHighestBid() != null)
                     ? auction.getCurrentHighestBid().getAmount()
                     : auction.getItem().getCurrentPrice();
 
+            final String rawDescription = safe(auction.getItem().getDescription());
+            final String[] extracted = extractDescriptionAndCondition(rawDescription);
+            final String category = safe(auction.getItem().getCategory());
+
             response.append(Protocol.RECORD_SEPARATOR)
                     .append(auction.getId()).append(Protocol.SEPARATOR)
-                    .append(auction.getItem().getItemName()).append(Protocol.SEPARATOR)
+                    .append(safe(auction.getItem().getItemName())).append(Protocol.SEPARATOR)
                     .append(currentPrice).append(Protocol.SEPARATOR)
                     .append(auction.getStatus()).append(Protocol.SEPARATOR)
-                    .append(auction.getEndTime());
+                    .append(auction.getEndTime()).append(Protocol.SEPARATOR)
+                    .append(category).append(Protocol.SEPARATOR)
+                    .append(extracted[0]).append(Protocol.SEPARATOR)
+                    .append(extracted[1]);
         }
-
         return response.toString();
+    }
+
+    /**
+     * Tách mô tả thuần và tình trạng từ format đang lưu ở server.
+     *
+     * @param fullDescription mô tả đang lưu trong item
+     * @return mảng gồm mô tả thuần và tình trạng
+     */
+    private String[] extractDescriptionAndCondition(final String fullDescription) {
+        final int index = fullDescription.lastIndexOf(CONDITION_PREFIX);
+        if (index < 0) {
+            return new String[]{fullDescription, ""};
+        }
+        final String description = fullDescription.substring(0, index);
+        final String condition = fullDescription.substring(index + CONDITION_PREFIX.length());
+        return new String[]{description, condition};
+    }
+
+    /**
+     * Làm sạch dữ liệu để tránh phá vỡ protocol khi tách chuỗi.
+     *
+     * @param value chuỗi đầu vào
+     * @return chuỗi đã làm sạch
+     */
+    private String safe(final String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace(Protocol.SEPARATOR, " ")
+                .replace(Protocol.RECORD_SEPARATOR, " ")
+                .trim();
     }
 }

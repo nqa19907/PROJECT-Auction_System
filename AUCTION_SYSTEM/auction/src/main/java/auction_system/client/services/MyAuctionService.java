@@ -22,7 +22,6 @@ public final class MyAuctionService {
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ERROR.name(),
                 this::handleError);
-        // Đăng ký handler cho phản hồi xóa phiên của user.
         NetworkClient.getInstance().registerHandler(
                 Protocol.Response.DELETE_MY_AUCTION_OK.name(),
                 this::handleDeleteMyAuctionOk);
@@ -40,13 +39,6 @@ public final class MyAuctionService {
      */
     @FunctionalInterface
     public interface FetchMyAuctionsCallback {
-        /**
-         * Trả kết quả xử lý về controller.
-         *
-         * @param success true nếu lấy dữ liệu thành công
-         * @param message thông báo từ server
-         * @param rows dữ liệu đã parse để đổ vào bảng
-         */
         void onResult(boolean success, String message, List<MyAuctionRow> rows);
     }
 
@@ -66,9 +58,9 @@ public final class MyAuctionService {
     }
 
     /**
-     * Gửi lệnh lấy danh sách phiên của user hiện tại.
+     * Gửi yêu cầu lấy danh sách phiên của user hiện tại.
      *
-     * @param callback hàm xử lý kết quả
+     * @param callback callback nhận kết quả
      */
     public void fetchMyAuctions(final FetchMyAuctionsCallback callback) {
         Objects.requireNonNull(callback, "callback");
@@ -76,24 +68,18 @@ public final class MyAuctionService {
 
         final String request = Protocol.Command.LIST_MY_AUCTIONS.name();
         final boolean sent = NetworkClient.getInstance().sendCommand(request);
-
         if (!sent) {
-            notifyCallback(
-                    false,
-                    "Không gửi được yêu cầu lấy phiên của tôi.",
-                    List.of());
+            notifyCallback(false, "Không gửi được yêu cầu lấy phiên của tôi.", List.of());
         }
     }
 
     /**
-     * Gửi lệnh xóa phiên đấu giá của chính user hiện tại.
+     * Gửi yêu cầu xóa phiên do user hiện tại sở hữu.
      *
      * @param auctionId mã phiên cần xóa
-     * @param callback callback nhận kết quả xóa
+     * @param callback callback nhận kết quả
      */
-    public void deleteMyAuction(
-            final String auctionId,
-            final DeleteAuctionCallback callback) {
+    public void deleteMyAuction(final String auctionId, final DeleteAuctionCallback callback) {
         Objects.requireNonNull(callback, "callback");
         this.deleteAuctionCallback = callback;
 
@@ -125,9 +111,9 @@ public final class MyAuctionService {
 
             final List<MyAuctionRow> rows = new ArrayList<>();
             for (int i = 1; i < records.length; i++) {
-                // row: auctionId|itemName|currentPrice|status|endTime
+                // row: id|itemName|currentPrice|status|endTime|category|description|condition
                 final String[] parts = records[i].split("\\" + Protocol.SEPARATOR, -1);
-                if (parts.length < 5) {
+                if (parts.length < 8) {
                     continue;
                 }
 
@@ -136,7 +122,10 @@ public final class MyAuctionService {
                         parts[1],
                         parts[2],
                         parts[3],
-                        parts[4]));
+                        parts[4],
+                        parts[5],
+                        parts[6],
+                        parts[7]));
             }
 
             if (rows.size() != count) {
@@ -149,10 +138,7 @@ public final class MyAuctionService {
 
             notifyCallback(true, "OK", rows);
         } catch (Exception ex) {
-            notifyCallback(
-                    false,
-                    "Lỗi parse MY_AUCTION_LIST: " + ex.getMessage(),
-                    List.of());
+            notifyCallback(false, "Lỗi parse MY_AUCTION_LIST: " + ex.getMessage(), List.of());
         }
     }
 
@@ -160,28 +146,17 @@ public final class MyAuctionService {
         if (currentCallback == null) {
             return;
         }
-
         final String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
         final String message = parts.length > 1 ? parts[1] : "Server trả lỗi.";
         notifyCallback(false, message, List.of());
     }
 
-    /**
-     * Xử lý phản hồi xóa phiên thành công từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
     private void handleDeleteMyAuctionOk(final String response) {
         final String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
         final String deletedId = parts.length > 1 ? parts[1] : "";
         notifyDeleteCallback(true, "OK", deletedId);
     }
 
-    /**
-     * Xử lý phản hồi xóa phiên thất bại từ server.
-     *
-     * @param response chuỗi phản hồi theo protocol
-     */
     private void handleDeleteMyAuctionFail(final String response) {
         final String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
         final String message = parts.length > 1 ? parts[1] : "Xóa phiên thất bại.";
@@ -194,26 +169,17 @@ public final class MyAuctionService {
             final List<MyAuctionRow> rows) {
         final FetchMyAuctionsCallback callback = currentCallback;
         currentCallback = null;
-
         if (callback != null) {
             callback.onResult(success, message, rows);
         }
     }
 
-    /**
-     * Trả kết quả thao tác xóa phiên về controller.
-     *
-     * @param success trạng thái thành công/thất bại
-     * @param message thông báo từ service/server
-     * @param deletedAuctionId mã phiên đã xóa (nếu thành công)
-     */
     private void notifyDeleteCallback(
             final boolean success,
             final String message,
             final String deletedAuctionId) {
         final DeleteAuctionCallback callback = deleteAuctionCallback;
         deleteAuctionCallback = null;
-
         if (callback != null) {
             callback.onResult(success, message, deletedAuctionId);
         }

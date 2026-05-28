@@ -27,6 +27,7 @@ import auction_system.server.network.command.bidding.ListMyAuctionsCommand;
 import auction_system.server.network.command.bidding.PlaceBidCommand;
 import auction_system.server.network.command.bidding.PublishItemCommand;
 import auction_system.server.network.command.bidding.SetAntiSnipingCommand;
+import auction_system.server.network.command.bidding.UpdateMyAuctionCommand;
 import auction_system.server.network.command.wallet.DepositCommand;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.services.auth.AuthService;
@@ -167,7 +168,10 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new ListMyAuctionsCommand(auctionManager)),
                 Map.entry(
                         Protocol.Command.DELETE_MY_AUCTION.name(),
-                        new DeleteMyAuctionCommand(auctionManager))
+                        new DeleteMyAuctionCommand(auctionManager)),
+                Map.entry(
+                        Protocol.Command.UPDATE_MY_AUCTION.name(),
+                        new UpdateMyAuctionCommand(auctionManager))
         );
     }
 

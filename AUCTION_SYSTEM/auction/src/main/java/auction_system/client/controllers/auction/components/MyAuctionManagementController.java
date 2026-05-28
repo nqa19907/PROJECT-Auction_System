@@ -1,7 +1,10 @@
 package auction_system.client.controllers.auction.components;
 
+import auction_system.client.controllers.auction.PublishItemController;
 import auction_system.client.services.MyAuctionRow;
 import auction_system.client.services.MyAuctionService;
+import auction_system.client.utils.Router;
+import auction_system.client.utils.ViewConstants;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -20,70 +23,43 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 /**
  * Controller cho màn hình "Quản lý phiên của tôi".
- *
- * <p>Hiện tại xử lý:
- * - tải danh sách phiên do user hiện tại đăng
- * - hiển thị lên TableView
- * - gửi yêu cầu xóa phiên đã chọn
- * - tạo sẵn nút chỉnh sửa (chưa gắn logic cập nhật)
  */
 public class MyAuctionManagementController implements Initializable {
 
     @FXML
     private TableView<MyAuctionRow> tblMyAuctions;
-
     @FXML
     private TableColumn<MyAuctionRow, String> colAuctionId;
-
     @FXML
     private TableColumn<MyAuctionRow, String> colProductName;
-
     @FXML
     private TableColumn<MyAuctionRow, String> colCurrentPrice;
-
     @FXML
     private TableColumn<MyAuctionRow, String> colAuctionStatus;
-
     @FXML
     private TableColumn<MyAuctionRow, String> colEndTime;
-
     @FXML
     private TextField txtSearchMyAuction;
-
     @FXML
     private Button btnRefreshMyAuctions;
-
     @FXML
     private Button btnEditMyAuction;
-
     @FXML
     private Button btnDeleteMyAuction;
 
     /** Nguồn dữ liệu cho bảng. */
-    private final ObservableList<MyAuctionRow> myAuctionRows =
-            FXCollections.observableArrayList();
+    private final ObservableList<MyAuctionRow> myAuctionRows = FXCollections.observableArrayList();
 
     @Override
     public void initialize(final URL url, final ResourceBundle resourceBundle) {
         initTableColumns();
         tblMyAuctions.setItems(myAuctionRows);
-
-        // Nút làm mới danh sách phiên của tôi.
         btnRefreshMyAuctions.setOnAction(event -> loadMyAuctions());
-
-        // Nút chỉnh sửa phiên: hiện tại mới có thông báo placeholder.
         btnEditMyAuction.setOnAction(event -> handleEditMyAuction());
-
-        // Nút xóa phiên đang chọn.
         btnDeleteMyAuction.setOnAction(event -> handleDeleteMyAuction());
-
-        // Tải dữ liệu ngay khi mở màn.
         loadMyAuctions();
     }
 
-    /**
-     * Cấu hình mapping dữ liệu từ MyAuctionRow lên từng cột.
-     */
     private void initTableColumns() {
         colAuctionId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProductName.setCellValueFactory(new PropertyValueFactory<>("productName"));
@@ -92,37 +68,24 @@ public class MyAuctionManagementController implements Initializable {
         colEndTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
     }
 
-    /**
-     * Gọi service lấy danh sách phiên của user hiện tại và đổ lên bảng.
-     */
     private void loadMyAuctions() {
         MyAuctionService.getInstance().fetchMyAuctions((success, message, rows) ->
                 Platform.runLater(() -> handleFetchResult(success, message, rows)));
     }
 
-    /**
-     * Xử lý kết quả trả về từ service.
-     *
-     * @param success true nếu lấy dữ liệu thành công
-     * @param message thông báo từ service/server
-     * @param rows danh sách dòng để hiển thị
-     */
     private void handleFetchResult(
             final boolean success,
             final String message,
-            final List<MyAuctionRow> rows
-    ) {
+            final List<MyAuctionRow> rows) {
         if (success) {
             myAuctionRows.setAll(rows);
             return;
         }
-
-        // Nếu fail thì xóa dữ liệu cũ để tránh hiển thị nhầm.
         myAuctionRows.clear();
     }
 
     /**
-     * Xử lý khi user bấm nút chỉnh sửa phiên.
+     * Mở form đăng bán ở chế độ chỉnh sửa và nạp dữ liệu phiên đã chọn.
      */
     private void handleEditMyAuction() {
         final MyAuctionRow selected = tblMyAuctions.getSelectionModel().getSelectedItem();
@@ -131,16 +94,20 @@ public class MyAuctionManagementController implements Initializable {
             return;
         }
 
-        // Placeholder: sẽ nối qua màn hình/sự kiện chỉnh sửa ở bước sau.
-        showInfo("Thông báo", "Đã chọn phiên " + selected.getId() + " để chỉnh sửa.");
+        final PublishItemController controller = Router.navigateContentAndGetController(
+                btnEditMyAuction,
+                ViewConstants.PUBLISH_ITEM_VIEW);
+        if (controller == null) {
+            showInfo("Lỗi", "Không mở được màn hình chỉnh sửa phiên.");
+            return;
+        }
+
+        // Truyền dữ liệu phiên hiện tại sang form để nạp sẵn.
+        controller.startEditMode(selected);
     }
 
-    /**
-     * Xử lý khi user bấm nút xóa phiên.
-     */
     private void handleDeleteMyAuction() {
         final MyAuctionRow selected = tblMyAuctions.getSelectionModel().getSelectedItem();
-
         if (selected == null) {
             showInfo("Thông báo", "Vui lòng chọn phiên cần xóa.");
             return;
@@ -150,7 +117,6 @@ public class MyAuctionManagementController implements Initializable {
                 selected.getId(),
                 (success, message, deletedAuctionId) -> Platform.runLater(() -> {
                     if (success) {
-                        // Cách an toàn nhất: tải lại danh sách từ server.
                         loadMyAuctions();
                         showInfo("Thành công", "Đã xóa phiên " + deletedAuctionId);
                     } else {
@@ -159,12 +125,6 @@ public class MyAuctionManagementController implements Initializable {
                 }));
     }
 
-    /**
-     * Hiển thị thông báo đơn giản.
-     *
-     * @param title tiêu đề thông báo
-     * @param content nội dung thông báo
-     */
     private void showInfo(final String title, final String content) {
         final Alert alert = new Alert(Alert.AlertType.INFORMATION, content, ButtonType.OK);
         alert.setTitle(title);
