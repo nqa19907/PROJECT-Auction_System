@@ -12,15 +12,13 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/26"
-            xmlns:fx="http://javafx.com/fxml/1"
-            styleClass="admin-root">
+<BorderPane styleClass="admin-root" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.components.MyAuctionManagementController">
 
     <top>
         <!-- Header giống style admin -->
         <VBox spacing="12.0" styleClass="admin-header">
             <padding>
-                <Insets top="16.0" right="34.0" bottom="16.0" left="34.0" />
+                <Insets bottom="16.0" left="34.0" right="34.0" top="16.0" />
             </padding>
             <children>
                 <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="header-main-row">
@@ -42,7 +40,7 @@
     <center>
         <HBox spacing="24.0" styleClass="content-wrap">
             <padding>
-                <Insets top="28.0" right="34.0" bottom="30.0" left="34.0" />
+                <Insets bottom="30.0" left="34.0" right="34.0" top="28.0" />
             </padding>
             <children>
                 <!-- Panel bảng theo cùng kiểu admin -->
