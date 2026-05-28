@@ -235,7 +235,6 @@ public class AuctionManager {
         }
 
         // Cập nhật các trường cho phép sửa theo yêu cầu.
-        // endTime má»›i pháº£i sau startTime Ä‘á»ƒ khÃ´ng phÃ¡ vá»¡ lifecycle.
         if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
@@ -273,7 +272,6 @@ public class AuctionManager {
             auction.setItem(replacementItem);
         }
 
-        // Cáº­p nháº­t má»‘c káº¿t thÃºc má»›i trÆ°á»›c khi lÆ°u.
         auction.setEndTime(endTime);
         database.items().save(auction.getItem());
         database.auctions().save(auction);
