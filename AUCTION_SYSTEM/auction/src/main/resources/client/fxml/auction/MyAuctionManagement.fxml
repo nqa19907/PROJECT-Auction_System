@@ -72,6 +72,11 @@
 
                         <HBox alignment="CENTER_RIGHT" spacing="10.0">
                             <children>
+                                <!-- Nút hủy: quay về màn danh sách đấu giá như màn đăng bán -->
+                                <Button fx:id="btnCancelMyAuctionManagement"
+                                        onAction="#handleCancelManagement"
+                                        styleClass="btn-secondary"
+                                        text="Hủy" />
                                 <!-- Nút chỉnh sửa phiên: mới là UI, chưa gắn xử lý cập nhật -->
                                 <Button fx:id="btnEditMyAuction" styleClass="secondary-button" text="✏  Chỉnh sửa phiên" />
                                 <!-- Nút xóa phiên: mới là UI, chưa gắn xử lý -->
@@ -85,6 +90,7 @@
     </center>
 
     <stylesheets>
+        <URL value="@../../css/buttons.css" />
         <URL value="@../../css/global.css" />
         <URL value="@../../css/admin-dashboard.css" />
     </stylesheets>
