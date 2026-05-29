@@ -2,13 +2,19 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.common.models.users.Admin;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service socket cho các thao tác của màn hình Admin Dashboard.
  */
 final class AdminDashboardService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminDashboardService.class);
     private final AdminDashboardResponseParser parser = new AdminDashboardResponseParser();
 
     private UserListCallback userListCallback;
@@ -63,12 +69,12 @@ final class AdminDashboardService {
 
     boolean fetchUsers() {
         return NetworkClient.getInstance()
-                .sendCommand(Protocol.Command.ADMIN_LIST_USERS.name());
+                .sendCommand(buildAdminListRequest(Protocol.Command.ADMIN_LIST_USERS));
     }
 
     boolean fetchAuctions() {
         return NetworkClient.getInstance()
-                .sendCommand(Protocol.Command.ADMIN_LIST_AUCTIONS.name());
+                .sendCommand(buildAdminListRequest(Protocol.Command.ADMIN_LIST_AUCTIONS));
     }
 
     boolean deleteUser(final Admin admin, final String userId) {
@@ -163,6 +169,21 @@ final class AdminDashboardService {
     private void notifyFailure(final String message) {
         if (failureCallback != null) {
             failureCallback.onFailure(message);
+        }
+    }
+
+    private String buildAdminListRequest(final Protocol.Command command) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            command.name(),
+                            null,
+                            null,
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request admin list: {}", exception.getMessage());
+            return command.name();
         }
     }
 }
