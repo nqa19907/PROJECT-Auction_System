@@ -66,6 +66,7 @@ public class AdminDeleteUserCommand implements Command {
     }
 
     private String buildSuccessResponse(final String userId) {
+        // OK response JSON mang id đã xóa để client xóa đúng dòng user.
         return buildJsonResponse(
                 Protocol.Response.ADMIN_DELETE_USER_OK,
                 "OK",
@@ -75,6 +76,7 @@ public class AdminDeleteUserCommand implements Command {
     }
 
     private String buildFailureResponse(final String message) {
+        // FAIL response JSON mang message để dashboard hiển thị lỗi rõ ràng.
         return buildJsonResponse(
                 Protocol.Response.ADMIN_DELETE_USER_FAIL,
                 "FAIL",
@@ -89,6 +91,7 @@ public class AdminDeleteUserCommand implements Command {
             final com.fasterxml.jackson.databind.JsonNode payload,
             final String message,
             final String fallbackValue) {
+        // Dùng một helper chung để giữ fallback string cũ khi JSON serialize lỗi.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     type.name(),

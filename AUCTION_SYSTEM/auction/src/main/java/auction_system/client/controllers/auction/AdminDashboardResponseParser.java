@@ -28,6 +28,7 @@ final class AdminDashboardResponseParser {
      * @return danh sách row user hợp lệ
      */
     List<AdminUserRow> parseUsers(final String response) {
+        // Ưu tiên đọc ADMIN_USER_LIST JSON, fallback xuống record string cũ.
         if (JsonProtocol.isJsonObject(response)) {
             return parseJsonUsers(response);
         }
@@ -55,6 +56,7 @@ final class AdminDashboardResponseParser {
      * @return danh sách row auction hợp lệ
      */
     List<AdminAuctionRow> parseAuctions(final String response) {
+        // Ưu tiên đọc ADMIN_AUCTION_LIST JSON, fallback xuống record string cũ.
         if (JsonProtocol.isJsonObject(response)) {
             return parseJsonAuctions(response);
         }
@@ -86,6 +88,7 @@ final class AdminDashboardResponseParser {
      * @return id nếu response có đủ field
      */
     String parseDeletedId(final String response) {
+        // Response delete JSON đặt id đã xóa trong payload để UI loại đúng dòng.
         if (JsonProtocol.isJsonObject(response)) {
             try {
                 final JsonMessage message = JsonProtocol.parse(response);
@@ -113,6 +116,7 @@ final class AdminDashboardResponseParser {
      * @return message lỗi để hiển thị
      */
     String parseFailureMessage(final String response, final String fallback) {
+        // Failure JSON lấy message trực tiếp từ wrapper, fallback nếu server trả string cũ.
         if (JsonProtocol.isJsonObject(response)) {
             try {
                 final JsonMessage message = JsonProtocol.parse(response);
@@ -136,6 +140,7 @@ final class AdminDashboardResponseParser {
         final List<AdminUserRow> rows = new ArrayList<>();
 
         try {
+            // Payload users giữ mỗi user là array theo thứ tự cột dashboard hiện tại.
             final JsonMessage message = JsonProtocol.parse(response);
             final JsonNode users = resolveArrayPayload(message.payload(), "users");
             if (users == null) {
@@ -165,6 +170,7 @@ final class AdminDashboardResponseParser {
         final List<AdminAuctionRow> rows = new ArrayList<>();
 
         try {
+            // Payload auctions giữ mỗi phiên là array theo thứ tự cột dashboard hiện tại.
             final JsonMessage message = JsonProtocol.parse(response);
             final JsonNode auctions = resolveArrayPayload(message.payload(), "auctions");
             if (auctions == null) {

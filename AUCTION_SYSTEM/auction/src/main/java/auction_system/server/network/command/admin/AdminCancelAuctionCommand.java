@@ -55,6 +55,7 @@ public class AdminCancelAuctionCommand implements Command {
     }
 
     private String buildSuccessResponse(final String auctionId) {
+        // OK response JSON mang id phiên đã dừng để client có thể đồng bộ UI.
         return buildJsonResponse(
                 Protocol.Response.ADMIN_CANCEL_AUCTION_OK,
                 "OK",
@@ -64,6 +65,7 @@ public class AdminCancelAuctionCommand implements Command {
     }
 
     private String buildFailureResponse(final String message) {
+        // FAIL response JSON mang message để dashboard hiển thị lỗi rõ ràng.
         return buildJsonResponse(
                 Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL,
                 "FAIL",
@@ -78,6 +80,7 @@ public class AdminCancelAuctionCommand implements Command {
             final com.fasterxml.jackson.databind.JsonNode payload,
             final String message,
             final String fallbackValue) {
+        // Dùng một helper chung để giữ fallback string cũ khi JSON serialize lỗi.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     type.name(),

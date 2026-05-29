@@ -173,6 +173,7 @@ final class AdminDashboardService {
     }
 
     private String buildAdminListRequest(final Protocol.Command command) {
+        // Gửi request admin list bằng JSON không payload, fallback về command string cũ.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

@@ -213,6 +213,7 @@ public class AuctionService {
     }
 
     private String buildListAuctionsRequest() {
+        // Gửi LIST_AUCTIONS bằng JSON, fallback về command string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -229,6 +230,7 @@ public class AuctionService {
     }
 
     private String buildGetAuctionRequest(final String auctionId) {
+        // Gửi GET_AUCTION với auctionId dạng payload scalar để adapter server map parts.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -247,6 +249,7 @@ public class AuctionService {
     }
 
     private String buildGetBidHistoryRequest(final String auctionId) {
+        // Gửi GET_BID_HISTORY với auctionId dạng payload scalar để giữ request đơn giản.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

@@ -45,6 +45,7 @@ public class AdminListUsersCommand implements Command {
             userRecords.add(toUserRecord(user));
         }
 
+        // Trả danh sách user admin bằng JSON, fallback về record string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -63,6 +64,7 @@ public class AdminListUsersCommand implements Command {
     }
 
     private List<String> toUserRecord(final User user) {
+        // Giữ thứ tự field user giống protocol cũ để parser dashboard không đổi contract.
         return List.of(
                 String.valueOf(user.getId()),
                 String.valueOf(user.getUsername()),
@@ -86,6 +88,7 @@ public class AdminListUsersCommand implements Command {
     }
 
     private String buildFailureResponse(final String message) {
+        // Trả lỗi quyền/tải user bằng JSON để client đọc message thống nhất.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

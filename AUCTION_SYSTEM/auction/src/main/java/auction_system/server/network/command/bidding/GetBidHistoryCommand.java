@@ -66,6 +66,7 @@ public class GetBidHistoryCommand implements Command {
             bidRecords.add(toBidRecord(bid));
         }
 
+        // Trả lịch sử bid bằng JSON, fallback về record string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -85,6 +86,7 @@ public class GetBidHistoryCommand implements Command {
     }
 
     private List<String> toBidRecord(final BidTransaction bid) {
+        // Giữ mỗi dòng bid theo thứ tự time/bidder/amount mà ViewModel đang dùng.
         return List.of(
                 TIME_FORMATTER.format(bid.getTimestamp()),
                 String.valueOf(bid.getParticipant().getUsername()),
@@ -110,6 +112,7 @@ public class GetBidHistoryCommand implements Command {
     }
 
     private String buildErrorResponse(final String message) {
+        // Trả lỗi dạng JSON để client route theo type ERROR.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

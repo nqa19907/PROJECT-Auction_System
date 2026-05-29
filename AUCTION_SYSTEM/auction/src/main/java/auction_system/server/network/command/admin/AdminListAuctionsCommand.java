@@ -50,6 +50,7 @@ public class AdminListAuctionsCommand implements Command {
             auctionRecords.add(toAuctionRecord(auction));
         }
 
+        // Trả danh sách phiên admin bằng JSON, fallback về record string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -81,6 +82,7 @@ public class AdminListAuctionsCommand implements Command {
                 ? auction.getStatus().name()
                 : "UNKNOWN";
 
+        // Giữ thứ tự field phiên giống protocol cũ để parser dashboard không đổi contract.
         return List.of(
                 String.valueOf(auction.getId()),
                 itemName,
@@ -103,6 +105,7 @@ public class AdminListAuctionsCommand implements Command {
     }
 
     private String buildFailureResponse(final String message) {
+        // Trả lỗi quyền/tải phiên bằng JSON để client đọc message thống nhất.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

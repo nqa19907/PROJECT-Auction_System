@@ -62,6 +62,7 @@ public class GetAuctionCommand implements Command {
     private String buildSuccessResponse(final Auction auction) {
         List<String> auctionRecord = toAuctionRecord(auction);
 
+        // Trả chi tiết phiên bằng JSON, fallback về response string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -83,6 +84,7 @@ public class GetAuctionCommand implements Command {
                 ? auction.getCurrentHighestBid().getAmount()
                 : item.getStartPrice();
 
+        // Giữ thứ tự field detail giống protocol cũ để callback String[] không đổi.
         return List.of(
                 String.valueOf(auction.getId()),
                 String.valueOf(item.getItemName()),
@@ -104,6 +106,7 @@ public class GetAuctionCommand implements Command {
     }
 
     private String buildErrorResponse(final String message) {
+        // Trả lỗi dạng JSON để client nhận cùng luồng ERROR hiện có.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(

@@ -47,6 +47,7 @@ final class AuctionResponseParser {
      * @return danh sách record phiên đấu giá đủ field
      */
     List<String[]> parseAuctionList(final String response) {
+        // Ưu tiên đọc AUCTION_LIST JSON, fallback xuống protocol record string cũ.
         if (JsonProtocol.isJsonObject(response)) {
             return parseJsonAuctionList(response);
         }
@@ -70,6 +71,7 @@ final class AuctionResponseParser {
         List<String[]> auctionList = new ArrayList<>();
 
         try {
+            // Payload JSON giữ mỗi phiên là một array theo đúng thứ tự field cũ.
             final JsonMessage message = JsonProtocol.parse(response);
             final JsonNode payload = message.payload();
             final JsonNode auctions = payload != null && payload.has("auctions")
@@ -106,6 +108,7 @@ final class AuctionResponseParser {
      * @return các field chi tiết theo thứ tự protocol
      */
     String[] parseAuctionDetail(final String response) {
+        // Ưu tiên đọc AUCTION_DETAIL JSON, fallback xuống chuỗi phân tách cũ.
         if (JsonProtocol.isJsonObject(response)) {
             return parseJsonAuctionDetail(response);
         }
@@ -115,6 +118,7 @@ final class AuctionResponseParser {
 
     private String[] parseJsonAuctionDetail(final String response) {
         try {
+            // Thêm header AUCTION_DETAIL vào đầu để giữ contract String[] cũ cho caller.
             final JsonMessage message = JsonProtocol.parse(response);
             final JsonNode payload = message.payload();
             final JsonNode auction = payload != null && payload.has("auction")
@@ -290,6 +294,7 @@ final class AuctionResponseParser {
      * @return danh sách dòng lịch sử bid đủ field
      */
     List<String[]> parseBidHistory(final String response) {
+        // Ưu tiên đọc BID_HISTORY JSON, fallback xuống protocol nhiều record cũ.
         if (JsonProtocol.isJsonObject(response)) {
             return parseJsonBidHistory(response);
         }
@@ -313,6 +318,7 @@ final class AuctionResponseParser {
         List<String[]> bidHistoryRows = new ArrayList<>();
 
         try {
+            // Payload JSON giữ mỗi bid là một array time/bidder/amount cho ViewModel cũ.
             final JsonMessage message = JsonProtocol.parse(response);
             final JsonNode payload = message.payload();
             final JsonNode bids = payload != null && payload.has("bids")

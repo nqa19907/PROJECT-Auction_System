@@ -59,6 +59,7 @@ public class ListAuctionsCommand implements Command {
             auctionRecords.add(toAuctionRecord(auction));
         }
 
+        // Trả danh sách phiên bằng JSON, fallback về record string nếu serialize lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -82,6 +83,7 @@ public class ListAuctionsCommand implements Command {
                 ? auction.getCurrentHighestBid().getAmount()
                 : item.getStartPrice();
 
+        // Giữ thứ tự field giống protocol cũ để client render bảng không đổi.
         return List.of(
                 String.valueOf(auction.getId()),
                 String.valueOf(item.getItemName()),
@@ -109,6 +111,7 @@ public class ListAuctionsCommand implements Command {
     }
 
     private String buildErrorResponse(final String message) {
+        // Trả lỗi dạng JSON để NetworkClient route theo type ERROR.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
