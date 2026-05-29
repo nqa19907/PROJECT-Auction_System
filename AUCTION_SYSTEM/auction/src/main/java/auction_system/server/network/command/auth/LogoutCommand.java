@@ -51,12 +51,12 @@ public class LogoutCommand implements Command {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
-            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
-                    + "Lỗi máy chủ nội bộ khi đăng xuất.";
+            return buildErrorResponse("Lỗi máy chủ nội bộ khi đăng xuất.");
         }
     }
 
     private String buildSuccessResponse() {
+        // Trả kết quả đăng xuất bằng JSON, fallback về LOGOUT_OK string nếu lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -68,6 +68,24 @@ public class LogoutCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response đăng xuất: {}", exception.getMessage());
             return Protocol.Response.LOGOUT_OK.name();
+        }
+    }
+
+    private String buildErrorResponse(final String message) {
+        // Trả lỗi đăng xuất bằng JSON, fallback về ERROR|message nếu lỗi.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.ERROR.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi đăng xuất: {}", exception.getMessage());
+            return Protocol.Response.ERROR.name()
+                    + Protocol.SEPARATOR
+                    + message;
         }
     }
 }

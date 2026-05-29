@@ -1,6 +1,9 @@
 package auction_system.common.models.users;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +39,7 @@ public class Admin extends User {
                 getUsername(),
                 auctionId
         );
-        return Protocol.Command.ADMIN_DELETE_AUCTION.name()
-                + Protocol.SEPARATOR + auctionId;
+        return buildAdminActionRequest(Protocol.Command.ADMIN_DELETE_AUCTION, auctionId);
     }
 
     /**
@@ -52,8 +54,27 @@ public class Admin extends User {
                 getUsername(),
                 userId
         );
-        return Protocol.Command.ADMIN_DELETE_USER.name()
-                + Protocol.SEPARATOR + userId;
+        return buildAdminActionRequest(Protocol.Command.ADMIN_DELETE_USER, userId);
+    }
+
+    private String buildAdminActionRequest(
+            final Protocol.Command command,
+            final String entityId) {
+        // Gửi request admin action bằng JSON scalar id, fallback về command string cũ.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            command.name(),
+                            null,
+                            JsonProtocol.payloadOf(entityId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request admin action: {}", exception.getMessage());
+            return command.name()
+                    + Protocol.SEPARATOR
+                    + entityId;
+        }
     }
 
     @Override

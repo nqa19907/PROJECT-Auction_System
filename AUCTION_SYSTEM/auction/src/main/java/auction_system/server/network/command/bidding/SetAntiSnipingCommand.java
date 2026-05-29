@@ -76,6 +76,7 @@ public class SetAntiSnipingCommand implements Command {
      * @return response lỗi theo protocol
      */
     private String buildFailResponse(final String message) {
+        // Trả lỗi anti-sniping bằng JSON, fallback về response string cũ nếu lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -94,6 +95,7 @@ public class SetAntiSnipingCommand implements Command {
     }
 
     private String buildSuccessResponse(final Auction auction) {
+        // Trả trạng thái anti-sniping bằng JSON, fallback về response string cũ nếu lỗi.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
