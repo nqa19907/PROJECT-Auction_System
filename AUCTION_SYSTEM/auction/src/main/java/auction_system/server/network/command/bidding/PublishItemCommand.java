@@ -6,13 +6,17 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.items.factory.ItemCreatorFactory;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,23 +79,17 @@ public final class PublishItemCommand implements Command {
             LOGGER.info("Đăng bán thành công item " + savedItem.getId()
                     + " với auction " + auction.getId());
 
-            return Protocol.Response.PUBLISH_ITEM_OK.name()
-                    + Protocol.SEPARATOR
-                    + "Đăng bán sản phẩm thành công.";
+            return buildSuccessResponse(savedItem.getId(), auction.getId());
         } catch (IllegalArgumentException
             | DateTimeParseException
             | InvalidItemException exception) {
             LOGGER.warning("Đăng bán sản phẩm thất bại: " + exception.getMessage());
 
-            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + exception.getMessage();
+            return buildFailResponse(exception.getMessage());
         } catch (RuntimeException exception) {
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng bán sản phẩm.", exception);
 
-            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + "Lỗi hệ thống khi đăng bán sản phẩm. Vui lòng thử lại sau.";
+            return buildFailResponse("Lỗi hệ thống khi đăng bán sản phẩm. Vui lòng thử lại sau.");
         }
     }
 
@@ -173,5 +171,44 @@ public final class PublishItemCommand implements Command {
             throw new IllegalArgumentException("Giá khởi điểm phải lớn hơn 0.");
         }
         return price;
+    }
+
+    private String buildSuccessResponse(final String itemId, final String auctionId) {
+        final String message = "Đăng bán sản phẩm thành công.";
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.PUBLISH_ITEM_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "itemId", itemId,
+                                    "auctionId", auctionId)),
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warning("Không tạo được JSON response đăng bán sản phẩm: "
+                    + exception.getMessage());
+            return Protocol.Response.PUBLISH_ITEM_OK.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
+    }
+
+    private String buildFailResponse(final String message) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.PUBLISH_ITEM_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warning("Không tạo được JSON lỗi đăng bán sản phẩm: "
+                    + exception.getMessage());
+            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }
