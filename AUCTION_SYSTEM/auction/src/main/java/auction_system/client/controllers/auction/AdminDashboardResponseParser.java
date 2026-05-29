@@ -86,6 +86,21 @@ final class AdminDashboardResponseParser {
      * @return id nếu response có đủ field
      */
     String parseDeletedId(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                final JsonNode payload = message.payload();
+                if (payload == null || payload.isNull()) {
+                    return "";
+                }
+
+                return payload.path("id").asText("");
+            } catch (IOException exception) {
+                LOGGER.warn("Không thể đọc JSON id đã xóa: {}", exception.getMessage());
+                return "";
+            }
+        }
+
         final String[] parts = splitRecord(response);
         return parts.length > IDX_MESSAGE ? parts[IDX_MESSAGE] : "";
     }
