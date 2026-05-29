@@ -4,18 +4,25 @@ import auction_system.common.exceptions.AuctionClosedException;
 import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Lớp đại diện cho một phiên đấu giá trong hệ thống.
  */
 public class Auction extends Entity {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Auction.class);
     private static final long ANTI_SNIPING_WINDOW_SECONDS = 30L;
     private static final long ANTI_SNIPING_EXTENSION_SECONDS = 30L;
 
@@ -121,9 +128,22 @@ public class Auction extends Entity {
      * @return thông báo theo protocol socket
      */
     private String buildAuctionExtendedMessage() {
-        return Protocol.Response.AUCTION_EXTENDED.name()
-                + Protocol.SEPARATOR + getId()
-                + Protocol.SEPARATOR + endTime;
+        // Gửi thông báo gia hạn bằng JSON, fallback về protocol string cũ nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_EXTENDED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", String.valueOf(getId()),
+                            "endTime", String.valueOf(endTime))),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_EXTENDED: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_EXTENDED.name()
+                    + Protocol.SEPARATOR + getId()
+                    + Protocol.SEPARATOR + endTime;
+        }
     }
 
     /**
@@ -182,12 +202,7 @@ public class Auction extends Entity {
             bidTime = currentHighestBid.getTimestamp().toString();
         }
 
-        String message = Protocol.Response.UPDATE_PRICE.name()
-                + Protocol.SEPARATOR + this.getId()
-                + Protocol.SEPARATOR + currentPrice
-                + Protocol.SEPARATOR + bidderName
-                + Protocol.SEPARATOR + bidTime
-                + Protocol.SEPARATOR + this.endTime;
+        String message = buildUpdatePriceMessage(currentPrice, bidderName, bidTime);
 
         for (AuctionObserver observer : observers) {
             observer.update(message);
@@ -202,6 +217,34 @@ public class Auction extends Entity {
     public void notifyObservers(String message) {
         for (AuctionObserver observer : observers) {
             observer.update(message);
+        }
+    }
+
+    private String buildUpdatePriceMessage(
+            final double currentPrice,
+            final String bidderName,
+            final String bidTime) {
+        // Gửi cập nhật giá bằng JSON, fallback về protocol string cũ nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.UPDATE_PRICE.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", String.valueOf(getId()),
+                            "currentPrice", currentPrice,
+                            "bidderName", bidderName == null ? "" : bidderName,
+                            "bidTime", bidTime == null ? "" : bidTime,
+                            "endTime", String.valueOf(endTime))),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON UPDATE_PRICE: {}", exception.getMessage());
+            return Protocol.Response.UPDATE_PRICE.name()
+                    + Protocol.SEPARATOR + getId()
+                    + Protocol.SEPARATOR + currentPrice
+                    + Protocol.SEPARATOR + bidderName
+                    + Protocol.SEPARATOR + bidTime
+                    + Protocol.SEPARATOR + endTime;
         }
     }
 

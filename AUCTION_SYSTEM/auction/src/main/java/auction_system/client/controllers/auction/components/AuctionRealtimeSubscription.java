@@ -5,7 +5,11 @@ import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuctionService;
 import auction_system.client.services.UserSessionService;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
@@ -112,6 +116,12 @@ public final class AuctionRealtimeSubscription {
     }
 
     private void handleRealtimePriceUpdate(final String response) {
+        // Ưu tiên đọc UPDATE_PRICE JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleRealtimePriceJsonUpdate(response);
+            return;
+        }
+
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
         if (parts.length < MIN_UPDATE_PRICE_PARTS
                 || activeAuctionId == null
@@ -152,6 +162,12 @@ public final class AuctionRealtimeSubscription {
     }
 
     private void handleAuctionExtended(final String response) {
+        // Ưu tiên đọc AUCTION_EXTENDED JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleAuctionExtendedJson(response);
+            return;
+        }
+
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
         if (parts.length < MIN_AUCTION_EXTENDED_PARTS
                 || activeAuctionId == null
@@ -161,6 +177,78 @@ public final class AuctionRealtimeSubscription {
         }
 
         endTimeUpdateHandler.accept(parts[IDX_EXTENDED_END_TIME]);
+    }
+
+    private void handleRealtimePriceJsonUpdate(final String response) {
+        try {
+            // Payload UPDATE_PRICE chứa dữ liệu bid mới theo tên field thay vì index string.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null
+                    || activeAuctionId == null
+                    || !activeAuctionId.equals(payload.path("auctionId").asText())) {
+                return;
+            }
+
+            processRealtimePriceUpdate(
+                    payload.path("currentPrice").asDouble(),
+                    payload.path("bidderName").asText(""),
+                    payload.path("bidTime").asText(""),
+                    payload.path("endTime").asText(""),
+                    response);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON UPDATE_PRICE: {}", exception.getMessage());
+        }
+    }
+
+    private void handleAuctionExtendedJson(final String response) {
+        try {
+            // Payload AUCTION_EXTENDED chứa auctionId và endTime mới cho phiên đang mở.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null
+                    || activeAuctionId == null
+                    || !activeAuctionId.equals(payload.path("auctionId").asText())) {
+                return;
+            }
+
+            final String endTime = payload.path("endTime").asText("");
+            if (!endTime.isBlank()) {
+                endTimeUpdateHandler.accept(endTime);
+            }
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_EXTENDED: {}", exception.getMessage());
+        }
+    }
+
+    private void processRealtimePriceUpdate(
+            final double rawAmount,
+            final String bidderName,
+            final String rawBidTime,
+            final String endTime,
+            final String originalResponse) {
+        try {
+            final long amount = (long) rawAmount;
+            final String bidTime = rawBidTime.isBlank()
+                    ? DateTimeFormatter.ofPattern("HH:mm:ss").format(java.time.LocalTime.now())
+                    : formatBidTime(rawBidTime);
+            final User currentUser = UserSessionService.getInstance().getCurrentUser();
+            final boolean isCurrentUser = currentUser != null
+                    && bidderName.equals(currentUser.getUsername());
+
+            viewModel.processRealtimeBid(amount, bidderName, bidTime, isCurrentUser);
+            if (!endTime.isBlank()) {
+                endTimeUpdateHandler.accept(endTime);
+            }
+
+            AuctionPriceChartConfigurer.updateAxes(
+                    numberXaxis,
+                    numberYaxis,
+                    viewModel.getOpeningPriceValue(),
+                    priceSeries);
+        } catch (RuntimeException exception) {
+            LOGGER.warn("Không thể xử lý giá realtime: {}", originalResponse);
+        }
     }
 
     private String formatBidTime(final String rawTime) {
