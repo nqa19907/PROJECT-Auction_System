@@ -1,12 +1,17 @@
 package auction_system.server.network.command.bidding;
 
 import auction_system.common.models.auctions.BidTransaction;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,28 +51,79 @@ public class GetBidHistoryCommand implements Command {
 
             final List<BidTransaction> bids = auctionBidService.getBidHistory(auctionId);
 
-            final StringBuilder response = new StringBuilder();
-            response.append(Protocol.Response.BID_HISTORY.name())
-                    .append(Protocol.SEPARATOR)
-                    .append(auctionId)
-                    .append(Protocol.SEPARATOR)
-                    .append(bids.size());
-
-            for (BidTransaction bid : bids) {
-                response.append(Protocol.RECORD_SEPARATOR)
-                        .append(TIME_FORMATTER.format(bid.getTimestamp()))
-                        .append(Protocol.SEPARATOR)
-                        .append(bid.getParticipant().getUsername())
-                        .append(Protocol.SEPARATOR)
-                        .append(bid.getAmount());
-            }
-
-            return response.toString();
+            return buildSuccessResponse(auctionId, bids);
         } catch (Exception e) {
             LOGGER.error("Lỗi khi lấy lịch sử bid.", e);
+            return buildErrorResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
+        }
+    }
+
+    private String buildSuccessResponse(
+            final String auctionId,
+            final List<BidTransaction> bids) {
+        final List<List<String>> bidRecords = new ArrayList<>();
+        for (BidTransaction bid : bids) {
+            bidRecords.add(toBidRecord(bid));
+        }
+
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.BID_HISTORY.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "auctionId", auctionId,
+                                    "count", bidRecords.size(),
+                                    "bids", bidRecords)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response lịch sử bid: {}",
+                    exception.getMessage());
+            return buildStringSuccessResponse(auctionId, bidRecords);
+        }
+    }
+
+    private List<String> toBidRecord(final BidTransaction bid) {
+        return List.of(
+                TIME_FORMATTER.format(bid.getTimestamp()),
+                String.valueOf(bid.getParticipant().getUsername()),
+                String.valueOf(bid.getAmount()));
+    }
+
+    private String buildStringSuccessResponse(
+            final String auctionId,
+            final List<List<String>> bidRecords) {
+        final StringBuilder response = new StringBuilder();
+        response.append(Protocol.Response.BID_HISTORY.name())
+                .append(Protocol.SEPARATOR)
+                .append(auctionId)
+                .append(Protocol.SEPARATOR)
+                .append(bidRecords.size());
+
+        for (List<String> bidRecord : bidRecords) {
+            response.append(Protocol.RECORD_SEPARATOR)
+                    .append(String.join(Protocol.SEPARATOR, bidRecord));
+        }
+
+        return response.toString();
+    }
+
+    private String buildErrorResponse(final String message) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.ERROR.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi lấy lịch sử bid: {}",
+                    exception.getMessage());
             return Protocol.Response.ERROR.name()
                     + Protocol.SEPARATOR
-                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+                    + message;
         }
     }
 }

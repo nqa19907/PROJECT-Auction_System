@@ -246,6 +246,24 @@ public class AuctionService {
         }
     }
 
+    private String buildGetBidHistoryRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.GET_BID_HISTORY.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy lịch sử bid: {}",
+                    exception.getMessage());
+            return Protocol.Command.GET_BID_HISTORY.name()
+                    + Protocol.SEPARATOR
+                    + auctionId;
+        }
+    }
+
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
      */
@@ -401,10 +419,7 @@ public class AuctionService {
             final FetchBidHistoryCallback callback) {
 
         this.currentBidHistoryCallback = callback;
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.GET_BID_HISTORY.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildGetBidHistoryRequest(auctionId));
     }
 
     /**

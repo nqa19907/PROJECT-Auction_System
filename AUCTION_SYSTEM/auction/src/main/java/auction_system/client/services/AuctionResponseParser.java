@@ -290,6 +290,10 @@ final class AuctionResponseParser {
      * @return danh sách dòng lịch sử bid đủ field
      */
     List<String[]> parseBidHistory(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            return parseJsonBidHistory(response);
+        }
+
         List<String[]> bidHistoryRows = new ArrayList<>();
         String[] records = response.split(Protocol.RECORD_SEPARATOR);
 
@@ -300,6 +304,39 @@ final class AuctionResponseParser {
             if (parts.length >= MIN_BID_HISTORY_PARTS) {
                 bidHistoryRows.add(parts);
             }
+        }
+
+        return bidHistoryRows;
+    }
+
+    private List<String[]> parseJsonBidHistory(final String response) {
+        List<String[]> bidHistoryRows = new ArrayList<>();
+
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final JsonNode bids = payload != null && payload.has("bids")
+                    ? payload.path("bids")
+                    : payload;
+
+            if (bids == null || !bids.isArray()) {
+                LOGGER.warn("Phản hồi BID_HISTORY JSON thiếu danh sách bid.");
+                return bidHistoryRows;
+            }
+
+            for (JsonNode bid : bids) {
+                if (!bid.isArray() || bid.size() < MIN_BID_HISTORY_PARTS) {
+                    continue;
+                }
+
+                String[] parts = new String[bid.size()];
+                for (int i = 0; i < bid.size(); i++) {
+                    parts[i] = bid.get(i).asText();
+                }
+                bidHistoryRows.add(parts);
+            }
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON BID_HISTORY: {}", exception.getMessage());
         }
 
         return bidHistoryRows;
