@@ -2,10 +2,8 @@ package auction_system.server.network.command.bidding;
 
 import auction_system.common.exceptions.InvalidItemException;
 import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.items.Art;
-import auction_system.common.models.items.Electronic;
 import auction_system.common.models.items.Item;
-import auction_system.common.models.items.Vehicle;
+import auction_system.common.models.items.factory.ItemCreatorFactory;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
@@ -15,7 +13,6 @@ import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.session.ClientSession;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -142,14 +139,12 @@ public final class PublishItemCommand implements Command {
         double startPrice = parsePositivePrice(parts[START_PRICE_INDEX]);
 
         String fullDescription = description + "\nTình trạng: " + condition;
-        String normalizedCategory = category.toUpperCase(Locale.ROOT);
-
-        return switch (normalizedCategory) {
-            case "ART" -> new Art(itemName, fullDescription, startPrice, sellerId);
-            case "ELECTRONIC" -> new Electronic(itemName, fullDescription, startPrice, sellerId);
-            case "VEHICLE" -> new Vehicle(itemName, fullDescription, startPrice, sellerId);
-            default -> throw new IllegalArgumentException("Danh mục sản phẩm không hợp lệ.");
-        };
+        return ItemCreatorFactory.createItem(
+                category,
+                itemName,
+                fullDescription,
+                startPrice,
+                sellerId);
     }
 
     /**

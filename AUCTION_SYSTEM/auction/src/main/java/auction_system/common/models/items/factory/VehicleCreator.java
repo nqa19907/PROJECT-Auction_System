@@ -11,10 +11,14 @@ public class VehicleCreator implements ItemCreator {
     @Override
     public Item createItem(Map<String, Object> properties) {
         return new VehicleBuilder()
-            .itemName((String) properties.getOrDefault("itemName", "New Vehicle"))
-            .description((String) properties.getOrDefault("description", "Description here"))
-            .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())
-            .sellerId((String) properties.getOrDefault("sellerId", "SYSTEM"))
+            .itemName((String) properties.getOrDefault(
+                    PROPERTY_ITEM_NAME,
+                    DEFAULT_VEHICLE_ITEM_NAME))
+            .description((String) properties.getOrDefault(
+                    PROPERTY_DESCRIPTION,
+                    DEFAULT_DESCRIPTION))
+            .startPrice(((Number) properties.getOrDefault(PROPERTY_START_PRICE, 0.0)).doubleValue())
+            .sellerId((String) properties.getOrDefault(PROPERTY_SELLER_ID, DEFAULT_SELLER_ID))
             .build();
     }
 }
