@@ -1,7 +1,10 @@
 package auction_system.client.services;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.OptionalDouble;
 import org.slf4j.Logger;
@@ -50,10 +53,7 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.JOIN_AUCTION.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildJoinAuctionRequest(auctionId));
     }
 
     /**
@@ -66,10 +66,7 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.LEAVE_AUCTION.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildLeaveAuctionRequest(auctionId));
     }
 
     /**
@@ -89,6 +86,42 @@ public class AuctionService {
                         + auctionId
                         + Protocol.SEPARATOR
                         + enabled);
+    }
+
+    private String buildJoinAuctionRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.JOIN_AUCTION.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request tham gia phiên: {}",
+                    exception.getMessage());
+            return Protocol.Command.JOIN_AUCTION.name()
+                    + Protocol.SEPARATOR
+                    + auctionId;
+        }
+    }
+
+    private String buildLeaveAuctionRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LEAVE_AUCTION.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request rời phiên: {}",
+                    exception.getMessage());
+            return Protocol.Command.LEAVE_AUCTION.name()
+                    + Protocol.SEPARATOR
+                    + auctionId;
+        }
     }
 
     /**
