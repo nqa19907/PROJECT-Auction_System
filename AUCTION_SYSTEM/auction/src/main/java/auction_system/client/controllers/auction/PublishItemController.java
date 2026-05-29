@@ -1,5 +1,6 @@
 package auction_system.client.controllers.auction;
 
+import auction_system.client.network.NetworkClient;
 import auction_system.client.services.ItemPublishService;
 import auction_system.client.services.ItemPublishService.PublishItemCallback;
 import auction_system.client.services.ProductImageStorage;
@@ -148,11 +149,15 @@ public class PublishItemController implements Initializable {
         try {
             clearError();
 
-            String itemName = readRequired(fieldTenTaiSan, "Tên tài sản không được để trống.");
-            String category = readRequired(comboCategory, "Vui lòng chọn danh mục.");
-            String condition = readRequired(comboCondition, "Vui lòng chọn tình trạng.");
-            String description = readRequired(fieldDescription, "Mô tả không được để trống.");
-            double startPrice = parsePositiveMoney(fieldStartingPrice.getText(), "giá khởi điểm");
+            final String itemName = readRequired(
+                    fieldTenTaiSan,
+                    "Tên tài sản không được để trống.");
+            final String category = readRequired(comboCategory, "Vui lòng chọn danh mục.");
+            final String condition = readRequired(comboCondition, "Vui lòng chọn tình trạng.");
+            final String description = readRequired(fieldDescription, "Mô tả không được để trống.");
+            final double startPrice = parsePositiveMoney(
+                    fieldStartingPrice.getText(),
+                    "giá khởi điểm");
 
             LocalDateTime startTime = parseDateTime(
                     fieldStartingTime.getText(),
@@ -163,6 +168,12 @@ public class PublishItemController implements Initializable {
 
             if (!endTime.isAfter(startTime)) {
                 showError("Thời gian kết thúc phải sau thời gian bắt đầu.");
+                return;
+            }
+
+            // Đảm bảo còn kết nối trước khi copy ảnh và gửi request đăng bán.
+            if (!NetworkClient.getInstance().ensureConnected()) {
+                showError("Đã mất kết nối tới Server. Vui lòng khởi động Server và thử lại.");
                 return;
             }
 
