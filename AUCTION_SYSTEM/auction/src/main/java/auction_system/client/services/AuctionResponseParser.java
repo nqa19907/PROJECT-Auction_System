@@ -1,6 +1,10 @@
 package auction_system.client.services;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
@@ -75,6 +79,22 @@ final class AuctionResponseParser {
      * @return số dư mới nếu parse được
      */
     OptionalDouble parseBidBalance(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                final JsonNode payload = message.payload();
+                if (payload == null || payload.isNull() || !payload.has("newBalance")) {
+                    LOGGER.warn("Phản hồi BID_OK JSON thiếu số dư mới.");
+                    return OptionalDouble.empty();
+                }
+
+                return OptionalDouble.of(payload.path("newBalance").asDouble());
+            } catch (IOException exception) {
+                LOGGER.warn("Không thể đọc JSON BID_OK: {}", exception.getMessage());
+                return OptionalDouble.empty();
+            }
+        }
+
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
 
         // Trả về rỗng khi thiếu field để tránh cập nhật sai số dư user hiện tại.
@@ -100,6 +120,17 @@ final class AuctionResponseParser {
      * @return message lỗi hoặc fallback mặc định
      */
     String parseBidFailureMessage(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                return message.message() == null || message.message().isBlank()
+                        ? "Lỗi đặt giá không xác định."
+                        : message.message();
+            } catch (IOException exception) {
+                return "Lỗi đặt giá không xác định.";
+            }
+        }
+
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
         return parts.length >= MIN_BID_FAIL_PARTS
                 ? parts[IDX_BID_FAIL_MESSAGE]

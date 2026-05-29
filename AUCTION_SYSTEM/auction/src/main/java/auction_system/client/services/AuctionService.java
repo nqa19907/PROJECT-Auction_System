@@ -139,6 +139,23 @@ public class AuctionService {
         }
     }
 
+    private String buildPlaceBidRequest(final String auctionId, final double amount) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.PLACE_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, amount)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request đặt giá: {}", exception.getMessage());
+            return Protocol.Command.PLACE_BID.name()
+                    + Protocol.SEPARATOR + auctionId
+                    + Protocol.SEPARATOR + amount;
+        }
+    }
+
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
      */
@@ -231,11 +248,7 @@ public class AuctionService {
 
         this.currentBidCallback = callback;
 
-        // Giữ format request đúng protocol server: PLACE_BID|auctionId|amount.
-        String request = Protocol.Command.PLACE_BID.name()
-                + Protocol.SEPARATOR + auctionId
-                + Protocol.SEPARATOR + amount;
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(buildPlaceBidRequest(auctionId, amount));
     }
 
     /**
