@@ -6,11 +6,14 @@ import auction_system.common.models.auctions.Entity;
  * Lớp trừu tượng đại diện cho một sản phẩm đấu giá.
  */
 public abstract class Item extends Entity {
+    private static final long serialVersionUID = 1L;
+
     private String itemName;
     private String description;
     private double startPrice;
     private double currentPrice;
     private String sellerId;
+    private String imagePath;
     protected String category;
 
     /**
@@ -78,6 +81,15 @@ public abstract class Item extends Entity {
         this.sellerId = sellerId;
     }
 
+    // Xử lý đường dẫn ảnh sản phẩm để client có thể hiển thị ảnh động.
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(final String imagePath) {
+        this.imagePath = imagePath == null ? "" : imagePath.trim();
+    }
+
     @Override
     public String toString() {
         return super.toString() + " -> Item{"
@@ -86,6 +98,7 @@ public abstract class Item extends Entity {
                 + ", startPrice=" + startPrice
                 + ", currentPrice=" + currentPrice
                 + ", sellerId='" + sellerId + '\''
+                + ", imagePath='" + imagePath + '\''
                 + '}';
     }
 }

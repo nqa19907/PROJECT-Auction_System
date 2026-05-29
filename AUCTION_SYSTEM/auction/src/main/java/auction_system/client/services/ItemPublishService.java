@@ -81,10 +81,47 @@ public final class ItemPublishService {
             LocalDateTime startTime,
             LocalDateTime endTime,
             PublishItemCallback callback) {
+        // Giữ luồng đăng sản phẩm cũ hoạt động khi chưa chọn ảnh.
+        publishItem(
+                category,
+                itemName,
+                description,
+                condition,
+                startPrice,
+                startTime,
+                endTime,
+                "",
+                callback);
+    }
+
+    /**
+     * Gửi yêu cầu đăng bán sản phẩm kèm đường dẫn ảnh lên Server.
+     *
+     * @param category Loại sản phẩm.
+     * @param itemName Tên sản phẩm.
+     * @param description Mô tả sản phẩm.
+     * @param condition Tình trạng sản phẩm.
+     * @param startPrice Giá khởi điểm.
+     * @param startTime Thời điểm bắt đầu đấu giá.
+     * @param endTime Thời điểm kết thúc đấu giá.
+     * @param imagePath Đường dẫn ảnh sản phẩm đã được lưu.
+     * @param callback Callback nhận kết quả.
+     */
+    public void publishItem(
+            String category,
+            String itemName,
+            String description,
+            String condition,
+            double startPrice,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String imagePath,
+            PublishItemCallback callback) {
 
         Objects.requireNonNull(callback, "Callback không được null.");
         this.currentCallback = callback;
 
+        // Đóng gói request đăng sản phẩm cùng metadata ảnh.
         String request = buildPublishItemRequest(
                 category,
                 itemName,
@@ -92,7 +129,8 @@ public final class ItemPublishService {
                 condition,
                 startPrice,
                 startTime,
-                endTime);
+                endTime,
+                imagePath);
 
         boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
@@ -182,7 +220,8 @@ public final class ItemPublishService {
             final String condition,
             final double startPrice,
             final LocalDateTime startTime,
-            final LocalDateTime endTime) {
+            final LocalDateTime endTime,
+            final String imagePath) {
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -196,7 +235,8 @@ public final class ItemPublishService {
                                     nullToEmpty(condition),
                                     startPrice,
                                     FORMATTER.format(startTime),
-                                    FORMATTER.format(endTime))),
+                                    FORMATTER.format(endTime),
+                                    nullToEmpty(imagePath))),
                             null));
         } catch (JsonProcessingException exception) {
             LOGGER.warning("Không tạo được JSON request đăng bán sản phẩm: "
@@ -210,7 +250,8 @@ public final class ItemPublishService {
                     clean(condition),
                     String.valueOf(startPrice),
                     FORMATTER.format(startTime),
-                    FORMATTER.format(endTime));
+                    FORMATTER.format(endTime),
+                    clean(imagePath));
         }
     }
 

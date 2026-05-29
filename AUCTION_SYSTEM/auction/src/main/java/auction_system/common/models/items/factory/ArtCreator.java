@@ -21,6 +21,10 @@ public class ArtCreator implements ItemCreator {
                         PROPERTY_START_PRICE,
                         0.0)).doubleValue())
                 .sellerId((String) properties.getOrDefault(PROPERTY_SELLER_ID, DEFAULT_SELLER_ID))
+                // Truyền metadata ảnh từ factory sang domain item.
+                .imagePath((String) properties.getOrDefault(
+                        PROPERTY_IMAGE_PATH,
+                        DEFAULT_IMAGE_PATH))
                 .build();
     }
 }

@@ -39,6 +39,7 @@ public final class PublishItemCommand implements Command {
     private static final int START_PRICE_INDEX = 5;
     private static final int START_TIME_INDEX = 6;
     private static final int END_TIME_INDEX = 7;
+    private static final int IMAGE_PATH_INDEX = 8;
 
     private final ParticipantItemService participantItemService;
     private final AuctionManager auctionManager;
@@ -135,6 +136,8 @@ public final class PublishItemCommand implements Command {
         String description = required(parts[DESCRIPTION_INDEX], "Mô tả không được để trống.");
         String condition = required(parts[CONDITION_INDEX], "Tình trạng không được để trống.");
         double startPrice = parsePositivePrice(parts[START_PRICE_INDEX]);
+        // Đọc metadata ảnh nếu client mới có gửi kèm.
+        String imagePath = optional(parts, IMAGE_PATH_INDEX);
 
         String fullDescription = description + "\nTình trạng: " + condition;
         return ItemCreatorFactory.createItem(
@@ -142,7 +145,8 @@ public final class PublishItemCommand implements Command {
                 itemName,
                 fullDescription,
                 startPrice,
-                sellerId);
+                sellerId,
+                imagePath);
     }
 
     /**
@@ -157,6 +161,20 @@ public final class PublishItemCommand implements Command {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    /**
+     * Đọc chuỗi tùy chọn từ request.
+     *
+     * @param parts Các phần request đã tách.
+     * @param index Vị trí dữ liệu cần đọc.
+     * @return Giá trị đã trim hoặc chuỗi rỗng.
+     */
+    private String optional(final String[] parts, final int index) {
+        if (parts.length <= index || parts[index] == null) {
+            return "";
+        }
+        return parts[index].trim();
     }
 
     /**

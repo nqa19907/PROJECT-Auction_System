@@ -36,12 +36,36 @@ public final class ItemCreatorFactory {
             String description,
             double startPrice,
             String sellerId) {
+        // Giữ API cũ hoạt động khi item chưa có ảnh.
+        return createItem(category, itemName, description, startPrice, sellerId, "");
+    }
+
+    /**
+     * Tạo Item theo danh mục và thông tin sản phẩm kèm ảnh.
+     *
+     * @param category danh mục sản phẩm
+     * @param itemName tên sản phẩm
+     * @param description mô tả sản phẩm
+     * @param startPrice giá khởi điểm
+     * @param sellerId mã người bán
+     * @param imagePath đường dẫn ảnh sản phẩm
+     * @return item đã được tạo
+     */
+    public static Item createItem(
+            String category,
+            String itemName,
+            String description,
+            double startPrice,
+            String sellerId,
+            String imagePath) {
         ItemCreator creator = getCreator(category);
+        // Gom dữ liệu đầu vào để creator cụ thể build đúng loại sản phẩm.
         Map<String, Object> properties = Map.of(
                 ItemCreator.PROPERTY_ITEM_NAME, itemName,
                 ItemCreator.PROPERTY_DESCRIPTION, description,
                 ItemCreator.PROPERTY_START_PRICE, startPrice,
-                ItemCreator.PROPERTY_SELLER_ID, sellerId);
+                ItemCreator.PROPERTY_SELLER_ID, sellerId,
+                ItemCreator.PROPERTY_IMAGE_PATH, imagePath == null ? "" : imagePath);
         return creator.createItem(properties);
     }
 
