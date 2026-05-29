@@ -173,7 +173,7 @@ final class AdminDashboardService {
     }
 
     private String buildAdminListRequest(final Protocol.Command command) {
-        // Gửi request admin list bằng JSON không payload, fallback về command string cũ.
+        // Gửi request admin list bằng JSON không payload cho ClientHandler.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -184,7 +184,7 @@ final class AdminDashboardService {
                             null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request admin list: {}", exception.getMessage());
-            return command.name();
+            throw new IllegalStateException("Không tạo được JSON " + command.name(), exception);
         }
     }
 }

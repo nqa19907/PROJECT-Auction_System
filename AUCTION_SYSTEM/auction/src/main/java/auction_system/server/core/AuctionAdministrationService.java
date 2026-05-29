@@ -60,7 +60,7 @@ final class AuctionAdministrationService {
     }
 
     private String buildAuctionCanceledMessage(final String auctionId) {
-        // Gửi thông báo hủy phiên bằng JSON AUCTION_ENDED, fallback về string cũ nếu lỗi.
+        // Gửi thông báo hủy phiên bằng JSON AUCTION_ENDED cho observer hiện tại.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.AUCTION_ENDED.name(),
@@ -74,9 +74,7 @@ final class AuctionAdministrationService {
         } catch (JsonProcessingException exception) {
             logger.warn("Không tạo được JSON AUCTION_ENDED khi hủy phiên: {}",
                     exception.getMessage());
-            return Protocol.Response.AUCTION_ENDED.name()
-                    + Protocol.SEPARATOR + auctionId
-                    + Protocol.SEPARATOR + "NONE";
+            throw new IllegalStateException("Không tạo được JSON AUCTION_ENDED.", exception);
         }
     }
 }

@@ -18,12 +18,6 @@ import javafx.scene.control.Label;
  */
 public final class AuctionAntiSnipingControl {
 
-    private static final int MIN_UPDATE_PARTS = 3;
-    private static final int IDX_UPDATE_AUCTION_ID = 1;
-    private static final int IDX_UPDATE_ENABLED = 2;
-    private static final int MIN_FAIL_PARTS = 2;
-    private static final int IDX_FAIL_MESSAGE = 1;
-
     private final CheckBox checkbox;
     private final Label errorLabel;
     private final Supplier<String> activeAuctionIdSupplier;
@@ -154,49 +148,33 @@ public final class AuctionAntiSnipingControl {
     }
 
     private Optional<AntiSnipingUpdate> parseUpdate(final String response) {
-        // Ưu tiên đọc ANTI_SNIPING_UPDATED JSON, fallback xuống protocol string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                final JsonNode payload = message.payload();
-                if (payload == null || payload.isNull()) {
-                    return Optional.empty();
-                }
-
-                return Optional.of(new AntiSnipingUpdate(
-                        payload.path("auctionId").asText(null),
-                        payload.path("enabled").asBoolean()));
-            } catch (IOException exception) {
+        try {
+            // Đọc trạng thái anti-sniping từ payload JSON của server.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null || payload.isNull()) {
                 return Optional.empty();
             }
-        }
 
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-        if (parts.length < MIN_UPDATE_PARTS) {
+            return Optional.of(new AntiSnipingUpdate(
+                    payload.path("auctionId").asText(null),
+                    payload.path("enabled").asBoolean()));
+        } catch (IOException exception) {
             return Optional.empty();
         }
-
-        return Optional.of(new AntiSnipingUpdate(
-                parts[IDX_UPDATE_AUCTION_ID],
-                Boolean.parseBoolean(parts[IDX_UPDATE_ENABLED])));
     }
 
     private String parseFailureMessage(final String response) {
         final String defaultMessage = "Không thể cập nhật tự động gia hạn phút chót.";
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                return message.message() == null || message.message().isBlank()
-                        ? defaultMessage
-                        : message.message();
-            } catch (IOException exception) {
-                return defaultMessage;
-            }
+        try {
+            // Đọc message lỗi anti-sniping trực tiếp từ wrapper JSON.
+            final JsonMessage message = JsonProtocol.parse(response);
+            return message.message() == null || message.message().isBlank()
+                    ? defaultMessage
+                    : message.message();
+        } catch (IOException exception) {
+            return defaultMessage;
         }
-
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-        // Response lỗi có thể thiếu message, nên dùng thông báo mặc định khi cần.
-        return parts.length >= MIN_FAIL_PARTS ? parts[IDX_FAIL_MESSAGE] : defaultMessage;
     }
 
     private record AntiSnipingUpdate(String auctionId, boolean enabled) {

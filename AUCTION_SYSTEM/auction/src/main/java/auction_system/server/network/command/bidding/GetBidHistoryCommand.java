@@ -42,9 +42,7 @@ public class GetBidHistoryCommand implements Command {
     public String execute(final String[] parts, final ClientSession session) {
         try {
             if (parts.length < MIN_PARTS || parts[IDX_AUCTION_ID].isBlank()) {
-                return Protocol.Response.ERROR.name()
-                        + Protocol.SEPARATOR
-                        + "Thiếu auctionId";
+                return buildErrorResponse("Thiếu auctionId");
             }
 
             final String auctionId = parts[IDX_AUCTION_ID];
@@ -66,7 +64,7 @@ public class GetBidHistoryCommand implements Command {
             bidRecords.add(toBidRecord(bid));
         }
 
-        // Trả lịch sử bid bằng JSON, fallback về record string nếu serialize lỗi.
+        // Trả lịch sử bid bằng JSON cho bảng lịch sử trong màn chi tiết.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -81,7 +79,7 @@ public class GetBidHistoryCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response lịch sử bid: {}",
                     exception.getMessage());
-            return buildStringSuccessResponse(auctionId, bidRecords);
+            throw new IllegalStateException("Không tạo được JSON BID_HISTORY.", exception);
         }
     }
 
@@ -91,24 +89,6 @@ public class GetBidHistoryCommand implements Command {
                 TIME_FORMATTER.format(bid.getTimestamp()),
                 String.valueOf(bid.getParticipant().getUsername()),
                 String.valueOf(bid.getAmount()));
-    }
-
-    private String buildStringSuccessResponse(
-            final String auctionId,
-            final List<List<String>> bidRecords) {
-        final StringBuilder response = new StringBuilder();
-        response.append(Protocol.Response.BID_HISTORY.name())
-                .append(Protocol.SEPARATOR)
-                .append(auctionId)
-                .append(Protocol.SEPARATOR)
-                .append(bidRecords.size());
-
-        for (List<String> bidRecord : bidRecords) {
-            response.append(Protocol.RECORD_SEPARATOR)
-                    .append(String.join(Protocol.SEPARATOR, bidRecord));
-        }
-
-        return response.toString();
     }
 
     private String buildErrorResponse(final String message) {
@@ -124,9 +104,7 @@ public class GetBidHistoryCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi lấy lịch sử bid: {}",
                     exception.getMessage());
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 }

@@ -2,7 +2,6 @@ package auction_system.client.controllers.auction;
 
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
-import auction_system.common.network.Protocol;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,10 +15,8 @@ import org.slf4j.LoggerFactory;
 final class AdminDashboardResponseParser {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AdminDashboardResponseParser.class);
-    private static final int FIRST_DATA_RECORD_INDEX = 1;
     private static final int MIN_USER_FIELDS = 4;
     private static final int MIN_AUCTION_FIELDS = 5;
-    private static final int IDX_MESSAGE = 1;
 
     /**
      * Parse danh sách user từ response ADMIN_USER_LIST.
@@ -28,24 +25,7 @@ final class AdminDashboardResponseParser {
      * @return danh sách row user hợp lệ
      */
     List<AdminUserRow> parseUsers(final String response) {
-        // Ưu tiên đọc ADMIN_USER_LIST JSON, fallback xuống record string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            return parseJsonUsers(response);
-        }
-
-        final List<AdminUserRow> rows = new ArrayList<>();
-        final String[] records = response.split(Protocol.RECORD_SEPARATOR);
-
-        for (int i = FIRST_DATA_RECORD_INDEX; i < records.length; i++) {
-            final String[] parts = splitRecord(records[i]);
-
-            // Chỉ nhận record đủ các cột bảng đang hiển thị để tránh lệch dữ liệu.
-            if (parts.length >= MIN_USER_FIELDS) {
-                rows.add(new AdminUserRow(parts[0], parts[1], parts[2], parts[3]));
-            }
-        }
-
-        return rows;
+        return parseJsonUsers(response);
     }
 
     /**
@@ -56,84 +36,50 @@ final class AdminDashboardResponseParser {
      * @return danh sách row auction hợp lệ
      */
     List<AdminAuctionRow> parseAuctions(final String response) {
-        // Ưu tiên đọc ADMIN_AUCTION_LIST JSON, fallback xuống record string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            return parseJsonAuctions(response);
-        }
-
-        final List<AdminAuctionRow> rows = new ArrayList<>();
-        final String[] records = response.split(Protocol.RECORD_SEPARATOR);
-
-        for (int i = FIRST_DATA_RECORD_INDEX; i < records.length; i++) {
-            final String[] parts = splitRecord(records[i]);
-
-            // Các field sau status nếu có không thuộc bảng dashboard nên được bỏ qua.
-            if (parts.length >= MIN_AUCTION_FIELDS) {
-                rows.add(new AdminAuctionRow(
-                        parts[0],
-                        parts[1],
-                        parts[2],
-                        parts[3],
-                        parts[4]));
-            }
-        }
-
-        return rows;
+        return parseJsonAuctions(response);
     }
 
     /**
      * Lấy id entity vừa bị xóa từ response OK.
      *
-     * @param response response dạng RESPONSE|id
+     * @param response response JSON chứa payload.id
      * @return id nếu response có đủ field
      */
     String parseDeletedId(final String response) {
-        // Response delete JSON đặt id đã xóa trong payload để UI loại đúng dòng.
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                final JsonNode payload = message.payload();
-                if (payload == null || payload.isNull()) {
-                    return "";
-                }
-
-                return payload.path("id").asText("");
-            } catch (IOException exception) {
-                LOGGER.warn("Không thể đọc JSON id đã xóa: {}", exception.getMessage());
+        try {
+            // Response delete JSON đặt id đã xóa trong payload để UI loại đúng dòng.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null || payload.isNull()) {
                 return "";
             }
-        }
 
-        final String[] parts = splitRecord(response);
-        return parts.length > IDX_MESSAGE ? parts[IDX_MESSAGE] : "";
+            return payload.path("id").asText("");
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON id đã xóa: {}", exception.getMessage());
+            return "";
+        }
     }
 
     /**
      * Lấy message lỗi từ response FAIL.
      *
-     * @param response response dạng RESPONSE|message
+     * @param response response JSON chứa message
      * @param fallback message dùng khi server trả thiếu field
      * @return message lỗi để hiển thị
      */
     String parseFailureMessage(final String response, final String fallback) {
-        // Failure JSON lấy message trực tiếp từ wrapper, fallback nếu server trả string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                return message.message() == null || message.message().isBlank()
-                        ? fallback
-                        : message.message();
-            } catch (IOException exception) {
-                LOGGER.warn("Không thể đọc JSON lỗi admin dashboard: {}",
-                        exception.getMessage());
-                return fallback;
-            }
+        try {
+            // Failure JSON lấy message trực tiếp từ wrapper.
+            final JsonMessage message = JsonProtocol.parse(response);
+            return message.message() == null || message.message().isBlank()
+                    ? fallback
+                    : message.message();
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON lỗi admin dashboard: {}",
+                    exception.getMessage());
+            return fallback;
         }
-
-        final String[] parts = splitRecord(response);
-        return parts.length > IDX_MESSAGE && !parts[IDX_MESSAGE].isBlank()
-                ? parts[IDX_MESSAGE]
-                : fallback;
     }
 
     private List<AdminUserRow> parseJsonUsers(final String response) {
@@ -204,9 +150,5 @@ final class AdminDashboardResponseParser {
 
         final JsonNode records = payload.has(fieldName) ? payload.path(fieldName) : payload;
         return records.isArray() ? records : null;
-    }
-
-    private String[] splitRecord(final String record) {
-        return record.split(Protocol.SEPARATOR_REGEX, -1);
     }
 }

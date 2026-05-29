@@ -95,9 +95,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request tham gia phiên: {}",
                     exception.getMessage());
-            return Protocol.Command.JOIN_AUCTION.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON JOIN_AUCTION.", exception);
         }
     }
 
@@ -113,9 +111,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request rời phiên: {}",
                     exception.getMessage());
-            return Protocol.Command.LEAVE_AUCTION.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON LEAVE_AUCTION.", exception);
         }
     }
 
@@ -131,11 +127,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request chống đặt giá phút chót: {}",
                     exception.getMessage());
-            return Protocol.Command.SET_ANTI_SNIPING.name()
-                    + Protocol.SEPARATOR
-                    + auctionId
-                    + Protocol.SEPARATOR
-                    + enabled;
+            throw new IllegalStateException("Không tạo được JSON SET_ANTI_SNIPING.", exception);
         }
     }
 
@@ -150,9 +142,7 @@ public class AuctionService {
                             null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request đặt giá: {}", exception.getMessage());
-            return Protocol.Command.PLACE_BID.name()
-                    + Protocol.SEPARATOR + auctionId
-                    + Protocol.SEPARATOR + amount;
+            throw new IllegalStateException("Không tạo được JSON PLACE_BID.", exception);
         }
     }
 
@@ -171,10 +161,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request bật auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Command.ENABLE_AUTO_BID.name()
-                    + Protocol.SEPARATOR + auctionId
-                    + Protocol.SEPARATOR + maxAmount
-                    + Protocol.SEPARATOR + stepAmount;
+            throw new IllegalStateException("Không tạo được JSON ENABLE_AUTO_BID.", exception);
         }
     }
 
@@ -190,8 +177,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request tắt auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Command.DISABLE_AUTO_BID.name()
-                    + Protocol.SEPARATOR + auctionId;
+            throw new IllegalStateException("Không tạo được JSON DISABLE_AUTO_BID.", exception);
         }
     }
 
@@ -207,13 +193,12 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request lấy trạng thái auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Command.GET_AUTO_BID.name()
-                    + Protocol.SEPARATOR + auctionId;
+            throw new IllegalStateException("Không tạo được JSON GET_AUTO_BID.", exception);
         }
     }
 
     private String buildListAuctionsRequest() {
-        // Gửi LIST_AUCTIONS bằng JSON, fallback về command string nếu serialize lỗi.
+        // Gửi LIST_AUCTIONS bằng JSON không payload cho ClientHandler.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -225,7 +210,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request lấy danh sách phiên: {}",
                     exception.getMessage());
-            return Protocol.Command.LIST_AUCTIONS.name();
+            throw new IllegalStateException("Không tạo được JSON LIST_AUCTIONS.", exception);
         }
     }
 
@@ -242,9 +227,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request lấy chi tiết phiên: {}",
                     exception.getMessage());
-            return Protocol.Command.GET_AUCTION.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON GET_AUCTION.", exception);
         }
     }
 
@@ -261,9 +244,7 @@ public class AuctionService {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request lấy lịch sử bid: {}",
                     exception.getMessage());
-            return Protocol.Command.GET_BID_HISTORY.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON GET_BID_HISTORY.", exception);
         }
     }
 
@@ -545,7 +526,6 @@ public class AuctionService {
 
         LOGGER.warn("AuctionService đặt giá thất bại: " + response);
 
-        // Server cũ hoặc lỗi mạng có thể trả thiếu message, nên fallback message vẫn cần có.
         String message = responseParser.parseBidFailureMessage(response);
         currentBidCallback.onResult(false, message, 0);
         currentBidCallback = null;

@@ -76,7 +76,7 @@ public class SetAntiSnipingCommand implements Command {
      * @return response lỗi theo protocol
      */
     private String buildFailResponse(final String message) {
-        // Trả lỗi anti-sniping bằng JSON, fallback về response string cũ nếu lỗi.
+        // Trả lỗi anti-sniping bằng JSON cho control checkbox phía client.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -88,14 +88,14 @@ public class SetAntiSnipingCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi chống đặt giá phút chót: {}",
                     exception.getMessage());
-            return Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException(
+                    "Không tạo được JSON ANTI_SNIPING_UPDATE_FAIL.",
+                    exception);
         }
     }
 
     private String buildSuccessResponse(final Auction auction) {
-        // Trả trạng thái anti-sniping bằng JSON, fallback về response string cũ nếu lỗi.
+        // Trả trạng thái anti-sniping bằng JSON cho control checkbox phía client.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -109,9 +109,9 @@ public class SetAntiSnipingCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response chống đặt giá phút chót: {}",
                     exception.getMessage());
-            return Protocol.Response.ANTI_SNIPING_UPDATED.name()
-                    + Protocol.SEPARATOR + auction.getId()
-                    + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+            throw new IllegalStateException(
+                    "Không tạo được JSON ANTI_SNIPING_UPDATED.",
+                    exception);
         }
     }
 }

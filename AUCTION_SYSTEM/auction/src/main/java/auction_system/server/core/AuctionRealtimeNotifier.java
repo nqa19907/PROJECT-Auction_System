@@ -126,7 +126,7 @@ final class AuctionRealtimeNotifier {
     }
 
     private String buildAuctionCreatedMessage(final String auctionId) {
-        // Gửi thông báo tạo phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo tạo phiên bằng JSON cho dashboard đang mở.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.AUCTION_CREATED.name(),
@@ -136,16 +136,14 @@ final class AuctionRealtimeNotifier {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_CREATED: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_CREATED.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON AUCTION_CREATED.", exception);
         }
     }
 
     private String buildAntiSnipingUpdatedMessage(
             final String auctionId,
             final boolean enabled) {
-        // Gửi trạng thái anti-sniping bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi trạng thái anti-sniping bằng JSON cho các observer của phiên.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.ANTI_SNIPING_UPDATED.name(),
@@ -158,14 +156,14 @@ final class AuctionRealtimeNotifier {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON ANTI_SNIPING_UPDATED: {}",
                     exception.getMessage());
-            return Protocol.Response.ANTI_SNIPING_UPDATED.name()
-                    + Protocol.SEPARATOR + auctionId
-                    + Protocol.SEPARATOR + enabled;
+            throw new IllegalStateException(
+                    "Không tạo được JSON ANTI_SNIPING_UPDATED.",
+                    exception);
         }
     }
 
     private String buildBalanceUpdatedMessage(final double balance) {
-        // Gửi số dư realtime bằng JSON, fallback về BALANCE_UPDATED|balance nếu lỗi.
+        // Gửi số dư realtime bằng JSON cho client đang online.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.BALANCE_UPDATED.name(),
@@ -175,14 +173,12 @@ final class AuctionRealtimeNotifier {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON BALANCE_UPDATED: {}", exception.getMessage());
-            return Protocol.Response.BALANCE_UPDATED.name()
-                    + Protocol.SEPARATOR
-                    + balance;
+            throw new IllegalStateException("Không tạo được JSON BALANCE_UPDATED.", exception);
         }
     }
 
     private String buildAuctionWinnerMessage(final String auctionId, final String itemName) {
-        // Gửi thông báo winner bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo winner bằng JSON cho popup của người thắng.
         final String safeItemName = itemName == null ? "" : itemName;
         try {
             return JsonProtocol.stringify(new JsonMessage(
@@ -195,11 +191,7 @@ final class AuctionRealtimeNotifier {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_WINNER: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_WINNER.name()
-                    + Protocol.SEPARATOR
-                    + auctionId
-                    + Protocol.SEPARATOR
-                    + safeItemName;
+            throw new IllegalStateException("Không tạo được JSON AUCTION_WINNER.", exception);
         }
     }
 
@@ -207,7 +199,7 @@ final class AuctionRealtimeNotifier {
             final String auctionId,
             final String itemName,
             final String winnerUsername) {
-        // Gửi thông báo loser bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo loser bằng JSON cho popup của người thua.
         final String safeItemName = itemName == null ? "" : itemName;
         final String safeWinnerUsername = winnerUsername == null ? "NONE" : winnerUsername;
         try {
@@ -222,13 +214,7 @@ final class AuctionRealtimeNotifier {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_LOST: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_LOST.name()
-                    + Protocol.SEPARATOR
-                    + auctionId
-                    + Protocol.SEPARATOR
-                    + safeItemName
-                    + Protocol.SEPARATOR
-                    + safeWinnerUsername;
+            throw new IllegalStateException("Không tạo được JSON AUCTION_LOST.", exception);
         }
     }
 }

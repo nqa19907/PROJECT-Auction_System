@@ -15,10 +15,6 @@ import org.slf4j.LoggerFactory;
 public final class WalletService {
     private static final Logger LOGGER = LoggerFactory.getLogger(WalletService.class);
     private static final WalletService INSTANCE = new WalletService();
-    private static final int MIN_DEPOSIT_OK_PARTS = 2;
-    private static final int IDX_DEPOSIT_BALANCE = 1;
-    private static final int MIN_DEPOSIT_FAIL_PARTS = 2;
-    private static final int IDX_DEPOSIT_FAIL_MESSAGE = 1;
 
     private WalletCallback currentDepositCallback;
 
@@ -68,7 +64,7 @@ public final class WalletService {
      * Tạo request JSON cho lệnh nạp tiền.
      *
      * @param amount số tiền cần nạp
-     * @return request JSON, hoặc protocol string cũ nếu serialize thất bại
+     * @return request JSON
      */
     private String buildDepositRequest(final double amount) {
         try {
@@ -81,16 +77,14 @@ public final class WalletService {
                             null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request nạp tiền: {}", exception.getMessage());
-            return Protocol.Command.DEPOSIT.name()
-                    + Protocol.SEPARATOR
-                    + amount;
+            throw new IllegalStateException("Không tạo được JSON DEPOSIT.", exception);
         }
     }
 
     /**
      * Xử lý phản hồi nạp tiền thành công.
      *
-     * @param response chuỗi phản hồi từ server theo format DEPOSIT_OK|balance
+     * @param response phản hồi JSON từ server
      */
     private void handleDepositSuccess(final String response) {
         if (currentDepositCallback == null) {
@@ -108,7 +102,7 @@ public final class WalletService {
     /**
      * Xử lý phản hồi nạp tiền thất bại.
      *
-     * @param response chuỗi phản hồi từ server theo format DEPOSIT_FAIL|message
+     * @param response phản hồi JSON từ server
      */
     private void handleDepositFailure(final String response) {
         if (currentDepositCallback == null) {
@@ -129,27 +123,11 @@ public final class WalletService {
      * @return số dư mới, hoặc 0 nếu response không hợp lệ
      */
     private double parseBalance(final String response) {
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                return message.payload().path("balance").asDouble(0);
-            } catch (IOException exception) {
-                LOGGER.warn("Không thể đọc JSON phản hồi nạp tiền: {}", exception.getMessage());
-                return 0;
-            }
-        }
-
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        if (parts.length < MIN_DEPOSIT_OK_PARTS) {
-            return 0;
-        }
-
         try {
-            return Double.parseDouble(parts[IDX_DEPOSIT_BALANCE]);
-        } catch (NumberFormatException e) {
-            LOGGER.warn(
-                    "Không thể đọc số dư từ phản hồi nạp tiền: {}",
-                    parts[IDX_DEPOSIT_BALANCE]);
+            final JsonMessage message = JsonProtocol.parse(response);
+            return message.payload().path("balance").asDouble(0);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON phản hồi nạp tiền: {}", exception.getMessage());
             return 0;
         }
     }
@@ -161,21 +139,15 @@ public final class WalletService {
      * @return thông báo lỗi
      */
     private String parseFailureMessage(final String response) {
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                if (message.message() == null || message.message().isBlank()) {
-                    return "Nạp tiền thất bại.";
-                }
-                return message.message();
-            } catch (IOException exception) {
-                LOGGER.warn("Không thể đọc JSON lỗi nạp tiền: {}", exception.getMessage());
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            if (message.message() == null || message.message().isBlank()) {
                 return "Nạp tiền thất bại.";
             }
+            return message.message();
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON lỗi nạp tiền: {}", exception.getMessage());
+            return "Nạp tiền thất bại.";
         }
-
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX);
-        return parts.length >= MIN_DEPOSIT_FAIL_PARTS
-                ? parts[IDX_DEPOSIT_FAIL_MESSAGE] : "Nạp tiền thất bại.";
     }
 }

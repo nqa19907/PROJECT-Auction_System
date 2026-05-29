@@ -62,7 +62,7 @@ public class GetAuctionCommand implements Command {
     private String buildSuccessResponse(final Auction auction) {
         List<String> auctionRecord = toAuctionRecord(auction);
 
-        // Trả chi tiết phiên bằng JSON, fallback về response string nếu serialize lỗi.
+        // Trả chi tiết phiên bằng JSON cho callback String[] phía client.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -74,7 +74,7 @@ public class GetAuctionCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response chi tiết phiên: {}",
                     exception.getMessage());
-            return buildStringSuccessResponse(auctionRecord);
+            throw new IllegalStateException("Không tạo được JSON AUCTION_DETAIL.", exception);
         }
     }
 
@@ -99,12 +99,6 @@ public class GetAuctionCommand implements Command {
                 String.valueOf(auction.isAntiSnipingEnabled()));
     }
 
-    private String buildStringSuccessResponse(final List<String> auctionRecord) {
-        return Protocol.Response.AUCTION_DETAIL.name()
-                + Protocol.SEPARATOR
-                + String.join(Protocol.SEPARATOR, auctionRecord);
-    }
-
     private String buildErrorResponse(final String message) {
         // Trả lỗi dạng JSON để client nhận cùng luồng ERROR hiện có.
         try {
@@ -118,9 +112,7 @@ public class GetAuctionCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi lấy chi tiết phiên: {}",
                     exception.getMessage());
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 

@@ -58,8 +58,7 @@ public class AdminDeleteAuctionCommand implements Command {
                 Protocol.Response.ADMIN_DELETE_AUCTION_OK,
                 "OK",
                 JsonProtocol.payloadOf(Map.of("id", auctionId, "auctionId", auctionId)),
-                "Xóa phiên đấu giá thành công.",
-                auctionId);
+                "Xóa phiên đấu giá thành công.");
     }
 
     private String buildFailureResponse(final String message) {
@@ -68,7 +67,6 @@ public class AdminDeleteAuctionCommand implements Command {
                 Protocol.Response.ADMIN_DELETE_AUCTION_FAIL,
                 "FAIL",
                 null,
-                message,
                 message);
     }
 
@@ -76,9 +74,8 @@ public class AdminDeleteAuctionCommand implements Command {
             final Protocol.Response type,
             final String status,
             final com.fasterxml.jackson.databind.JsonNode payload,
-            final String message,
-            final String fallbackValue) {
-        // Dùng một helper chung để giữ fallback string cũ khi JSON serialize lỗi.
+            final String message) {
+        // Dùng một helper chung để đóng gói response xóa phiên bằng JSON.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     type.name(),
@@ -89,9 +86,7 @@ public class AdminDeleteAuctionCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response xóa phiên admin: {}",
                     exception.getMessage());
-            return type.name()
-                    + Protocol.SEPARATOR
-                    + fallbackValue;
+            throw new IllegalStateException("Không tạo được JSON " + type.name(), exception);
         }
     }
 }

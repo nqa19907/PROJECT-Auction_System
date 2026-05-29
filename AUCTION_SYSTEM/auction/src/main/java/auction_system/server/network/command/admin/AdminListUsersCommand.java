@@ -45,7 +45,7 @@ public class AdminListUsersCommand implements Command {
             userRecords.add(toUserRecord(user));
         }
 
-        // Trả danh sách user admin bằng JSON, fallback về record string nếu serialize lỗi.
+        // Trả danh sách user admin bằng JSON cho dashboard quản trị.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -59,7 +59,7 @@ public class AdminListUsersCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response danh sách user admin: {}",
                     exception.getMessage());
-            return buildStringSuccessResponse(userRecords);
+            throw new IllegalStateException("Không tạo được JSON ADMIN_USER_LIST.", exception);
         }
     }
 
@@ -71,20 +71,6 @@ public class AdminListUsersCommand implements Command {
                 String.valueOf(user.getEmail()),
                 user.isOnline() ? "ONLINE" : "OFFLINE",
                 String.valueOf(user.getRoleName()));
-    }
-
-    private String buildStringSuccessResponse(final List<List<String>> userRecords) {
-        final StringBuilder response = new StringBuilder()
-                .append(Protocol.Response.ADMIN_USER_LIST.name())
-                .append(Protocol.SEPARATOR)
-                .append(userRecords.size());
-
-        for (List<String> userRecord : userRecords) {
-            response.append(Protocol.RECORD_SEPARATOR)
-                    .append(String.join(Protocol.SEPARATOR, userRecord));
-        }
-
-        return response.toString();
     }
 
     private String buildFailureResponse(final String message) {
@@ -100,9 +86,9 @@ public class AdminListUsersCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi danh sách user admin: {}",
                     exception.getMessage());
-            return Protocol.Response.ADMIN_USER_LIST_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException(
+                    "Không tạo được JSON ADMIN_USER_LIST_FAIL.",
+                    exception);
         }
     }
 

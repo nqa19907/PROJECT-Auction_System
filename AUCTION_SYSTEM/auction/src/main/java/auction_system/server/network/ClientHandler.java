@@ -200,10 +200,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private void handleCommand(final String rawCommand) {
         final String[] parts = parseCommandParts(rawCommand);
         if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
-            send(
-                    Protocol.Response.ERROR.name()
-                            + Protocol.SEPARATOR
-                            + "Lệnh JSON không hợp lệ.");
+            send(buildErrorResponse("Lệnh JSON không hợp lệ."));
             return;
         }
 
@@ -211,11 +208,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
         final Command command = commandMap.get(commandName);
 
         if (command == null) {
-            send(
-                    Protocol.Response.ERROR.name()
-                            + Protocol.SEPARATOR
-                            + "Lệnh không hợp lệ: "
-                            + commandName);
+            send(buildErrorResponse("Lệnh không hợp lệ: " + commandName));
             return;
         }
 
@@ -226,16 +219,12 @@ public class ClientHandler implements Runnable, AuctionObserver {
     }
 
     /**
-     * Chuyển request JSON hoặc protocol string cũ thành mảng parts cho command hiện tại.
+     * Chuyển request JSON thành mảng parts cho command hiện tại.
      *
      * @param rawCommand dòng request nhận từ client
      * @return parts tương thích với command layer hiện tại
      */
     private String[] parseCommandParts(final String rawCommand) {
-        if (!JsonProtocol.isJsonObject(rawCommand)) {
-            return rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
-        }
-
         try {
             final JsonMessage message = JsonProtocol.parse(rawCommand);
             final List<String> parts = new ArrayList<>();
@@ -255,6 +244,21 @@ public class ClientHandler implements Runnable, AuctionObserver {
         } catch (IOException exception) {
             LOGGER.warn("Không parse được JSON request: {}", exception.getMessage());
             return new String[0];
+        }
+    }
+
+    private String buildErrorResponse(final String message) {
+        try {
+            // Đóng gói lỗi dispatch bằng JSON để client route qua ERROR.
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.ERROR.name(),
+                    null,
+                    "FAIL",
+                    null,
+                    message));
+        } catch (IOException exception) {
+            LOGGER.warn("Không tạo được JSON ERROR: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 

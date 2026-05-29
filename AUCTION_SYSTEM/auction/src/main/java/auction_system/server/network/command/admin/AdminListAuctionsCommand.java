@@ -50,7 +50,7 @@ public class AdminListAuctionsCommand implements Command {
             auctionRecords.add(toAuctionRecord(auction));
         }
 
-        // Trả danh sách phiên admin bằng JSON, fallback về record string nếu serialize lỗi.
+        // Trả danh sách phiên admin bằng JSON cho dashboard quản trị.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -64,7 +64,9 @@ public class AdminListAuctionsCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response danh sách phiên admin: {}",
                     exception.getMessage());
-            return buildStringSuccessResponse(auctionRecords);
+            throw new IllegalStateException(
+                    "Không tạo được JSON ADMIN_AUCTION_LIST.",
+                    exception);
         }
     }
 
@@ -91,19 +93,6 @@ public class AdminListAuctionsCommand implements Command {
                 status);
     }
 
-    private String buildStringSuccessResponse(final List<List<String>> auctionRecords) {
-        final StringBuilder response = new StringBuilder();
-        response.append(Protocol.Response.ADMIN_AUCTION_LIST.name())
-                .append(Protocol.SEPARATOR).append(auctionRecords.size());
-
-        for (List<String> auctionRecord : auctionRecords) {
-            response.append(Protocol.RECORD_SEPARATOR)
-                    .append(String.join(Protocol.SEPARATOR, auctionRecord));
-        }
-
-        return response.toString();
-    }
-
     private String buildFailureResponse(final String message) {
         // Trả lỗi quyền/tải phiên bằng JSON để client đọc message thống nhất.
         try {
@@ -117,9 +106,9 @@ public class AdminListAuctionsCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi danh sách phiên admin: {}",
                     exception.getMessage());
-            return Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException(
+                    "Không tạo được JSON ADMIN_AUCTION_LIST_FAIL.",
+                    exception);
         }
     }
 

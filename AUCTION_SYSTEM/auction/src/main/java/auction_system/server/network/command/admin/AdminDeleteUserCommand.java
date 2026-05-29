@@ -71,8 +71,7 @@ public class AdminDeleteUserCommand implements Command {
                 Protocol.Response.ADMIN_DELETE_USER_OK,
                 "OK",
                 JsonProtocol.payloadOf(Map.of("id", userId, "userId", userId)),
-                "Xóa người dùng thành công.",
-                userId);
+                "Xóa người dùng thành công.");
     }
 
     private String buildFailureResponse(final String message) {
@@ -81,7 +80,6 @@ public class AdminDeleteUserCommand implements Command {
                 Protocol.Response.ADMIN_DELETE_USER_FAIL,
                 "FAIL",
                 null,
-                message,
                 message);
     }
 
@@ -89,9 +87,8 @@ public class AdminDeleteUserCommand implements Command {
             final Protocol.Response type,
             final String status,
             final com.fasterxml.jackson.databind.JsonNode payload,
-            final String message,
-            final String fallbackValue) {
-        // Dùng một helper chung để giữ fallback string cũ khi JSON serialize lỗi.
+            final String message) {
+        // Dùng một helper chung để đóng gói response xóa user bằng JSON.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     type.name(),
@@ -102,9 +99,7 @@ public class AdminDeleteUserCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response xóa user admin: {}",
                     exception.getMessage());
-            return type.name()
-                    + Protocol.SEPARATOR
-                    + fallbackValue;
+            throw new IllegalStateException("Không tạo được JSON " + type.name(), exception);
         }
     }
 }

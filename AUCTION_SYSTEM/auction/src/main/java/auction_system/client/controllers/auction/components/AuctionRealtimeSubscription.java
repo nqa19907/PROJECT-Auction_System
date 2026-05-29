@@ -25,15 +25,6 @@ public final class AuctionRealtimeSubscription {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AuctionRealtimeSubscription.class);
-    private static final int MIN_UPDATE_PRICE_PARTS = 3;
-    private static final int IDX_UPDATE_AUCTION_ID = 1;
-    private static final int IDX_UPDATE_AMOUNT = 2;
-    private static final int IDX_UPDATE_BIDDER = 3;
-    private static final int IDX_UPDATE_TIME = 4;
-    private static final int IDX_UPDATE_END_TIME = 5;
-    private static final int MIN_AUCTION_EXTENDED_PARTS = 3;
-    private static final int IDX_EXTENDED_AUCTION_ID = 1;
-    private static final int IDX_EXTENDED_END_TIME = 2;
 
     private final AuctionViewModel viewModel;
     private final NumberAxis numberXaxis;
@@ -116,67 +107,11 @@ public final class AuctionRealtimeSubscription {
     }
 
     private void handleRealtimePriceUpdate(final String response) {
-        // Ưu tiên đọc UPDATE_PRICE JSON, fallback xuống protocol string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            handleRealtimePriceJsonUpdate(response);
-            return;
-        }
-
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-        if (parts.length < MIN_UPDATE_PRICE_PARTS
-                || activeAuctionId == null
-                || !activeAuctionId.equals(parts[IDX_UPDATE_AUCTION_ID])) {
-            // Bỏ qua response sai format hoặc không thuộc phiên đang mở.
-            return;
-        }
-
-        try {
-            // UPDATE_PRICE chứa bidder, thời gian bid và endTime hiện tại của phiên.
-            final long amount = (long) Double.parseDouble(parts[IDX_UPDATE_AMOUNT]);
-            final String bidderName = parts.length > IDX_UPDATE_BIDDER
-                    ? parts[IDX_UPDATE_BIDDER]
-                    : "";
-            final String bidTime = parts.length > IDX_UPDATE_TIME
-                    ? formatBidTime(parts[IDX_UPDATE_TIME])
-                    : DateTimeFormatter.ofPattern("HH:mm:ss").format(java.time.LocalTime.now());
-            final User currentUser = UserSessionService.getInstance().getCurrentUser();
-            final boolean isCurrentUser = currentUser != null
-                    && bidderName.equals(currentUser.getUsername());
-
-            // ViewModel thêm dòng bid mới, cập nhật giá hiện tại, thống kê và dữ liệu chart.
-            viewModel.processRealtimeBid(amount, bidderName, bidTime, isCurrentUser);
-            if (parts.length > IDX_UPDATE_END_TIME) {
-                // Nếu bid phút chót vừa gia hạn phiên, endTime đi kèm chính là mốc mới.
-                endTimeUpdateHandler.accept(parts[IDX_UPDATE_END_TIME]);
-            }
-
-            // Sau khi thêm điểm mới, scale lại trục Y để chart không bị cắt đỉnh giá.
-            AuctionPriceChartConfigurer.updateAxes(
-                    numberXaxis,
-                    numberYaxis,
-                    viewModel.getOpeningPriceValue(),
-                    priceSeries);
-        } catch (NumberFormatException exception) {
-            LOGGER.warn("Không thể đọc giá realtime: {}", response);
-        }
+        handleRealtimePriceJsonUpdate(response);
     }
 
     private void handleAuctionExtended(final String response) {
-        // Ưu tiên đọc AUCTION_EXTENDED JSON, fallback xuống protocol string cũ.
-        if (JsonProtocol.isJsonObject(response)) {
-            handleAuctionExtendedJson(response);
-            return;
-        }
-
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-        if (parts.length < MIN_AUCTION_EXTENDED_PARTS
-                || activeAuctionId == null
-                || !activeAuctionId.equals(parts[IDX_EXTENDED_AUCTION_ID])) {
-            // Chỉ đồng bộ gia hạn cho đúng phiên đang được người dùng xem.
-            return;
-        }
-
-        endTimeUpdateHandler.accept(parts[IDX_EXTENDED_END_TIME]);
+        handleAuctionExtendedJson(response);
     }
 
     private void handleRealtimePriceJsonUpdate(final String response) {
@@ -253,7 +188,7 @@ public final class AuctionRealtimeSubscription {
 
     private String formatBidTime(final String rawTime) {
         if (rawTime == null || rawTime.isBlank()) {
-            // Server cũ có thể không gửi timestamp, khi đó dùng giờ client làm fallback hiển thị.
+            // Nếu server không gửi timestamp, dùng giờ client làm thời điểm hiển thị.
             return DateTimeFormatter.ofPattern("HH:mm:ss").format(java.time.LocalTime.now());
         }
 

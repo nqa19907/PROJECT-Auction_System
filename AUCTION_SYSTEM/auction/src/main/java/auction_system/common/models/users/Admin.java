@@ -60,7 +60,7 @@ public class Admin extends User {
     private String buildAdminActionRequest(
             final Protocol.Command command,
             final String entityId) {
-        // Gửi request admin action bằng JSON scalar id, fallback về command string cũ.
+        // Gửi request admin action bằng JSON scalar id cho ClientHandler.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -71,9 +71,7 @@ public class Admin extends User {
                             null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON request admin action: {}", exception.getMessage());
-            return command.name()
-                    + Protocol.SEPARATOR
-                    + entityId;
+            throw new IllegalStateException("Không tạo được JSON " + command.name(), exception);
         }
     }
 

@@ -2,7 +2,6 @@ package auction_system.client.network;
 
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
-import auction_system.common.network.Protocol;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -220,24 +219,19 @@ public class NetworkClient {
     }
 
     /**
-     * Lấy route key từ response JSON hoặc protocol string cũ.
+     * Lấy route key từ response JSON.
      *
      * @param message dòng phản hồi từ server
      * @return tên response dùng để tìm handler
      */
     private String extractRouteKey(final String message) {
-        if (JsonProtocol.isJsonObject(message)) {
-            try {
-                final JsonMessage jsonMessage = JsonProtocol.parse(message);
-                return jsonMessage.type();
-            } catch (IOException exception) {
-                LOGGER.warn("Không parse được JSON response: {}", exception.getMessage());
-                return null;
-            }
+        try {
+            final JsonMessage jsonMessage = JsonProtocol.parse(message);
+            return jsonMessage.type();
+        } catch (IOException exception) {
+            LOGGER.warn("Không parse được JSON response: {}", exception.getMessage());
+            return null;
         }
-
-        final String[] parts = message.split(Protocol.SEPARATOR_REGEX);
-        return parts[0];
     }
 
     /**

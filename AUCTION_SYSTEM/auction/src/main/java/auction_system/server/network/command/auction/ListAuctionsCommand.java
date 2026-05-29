@@ -59,7 +59,7 @@ public class ListAuctionsCommand implements Command {
             auctionRecords.add(toAuctionRecord(auction));
         }
 
-        // Trả danh sách phiên bằng JSON, fallback về record string nếu serialize lỗi.
+        // Trả danh sách phiên bằng JSON cho client render bảng đấu giá.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -73,7 +73,7 @@ public class ListAuctionsCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response danh sách phiên: {}",
                     exception.getMessage());
-            return buildStringSuccessResponse(auctions);
+            throw new IllegalStateException("Không tạo được JSON AUCTION_LIST.", exception);
         }
     }
 
@@ -97,19 +97,6 @@ public class ListAuctionsCommand implements Command {
                 String.valueOf(auction.isAntiSnipingEnabled()));
     }
 
-    private String buildStringSuccessResponse(final List<Auction> auctions) {
-        StringBuilder response = new StringBuilder();
-        response.append(Protocol.Response.AUCTION_LIST.name())
-                .append(Protocol.SEPARATOR).append(auctions.size());
-
-        for (Auction auction : auctions) {
-            response.append(Protocol.RECORD_SEPARATOR)
-                    .append(String.join(Protocol.SEPARATOR, toAuctionRecord(auction)));
-        }
-
-        return response.toString();
-    }
-
     private String buildErrorResponse(final String message) {
         // Trả lỗi dạng JSON để NetworkClient route theo type ERROR.
         try {
@@ -123,9 +110,7 @@ public class ListAuctionsCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi lấy danh sách phiên: {}",
                     exception.getMessage());
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 

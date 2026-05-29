@@ -56,7 +56,7 @@ public class LogoutCommand implements Command {
     }
 
     private String buildSuccessResponse() {
-        // Trả kết quả đăng xuất bằng JSON, fallback về LOGOUT_OK string nếu lỗi.
+        // Trả kết quả đăng xuất bằng JSON cho AuthService.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -67,12 +67,12 @@ public class LogoutCommand implements Command {
                             "Đăng xuất thành công."));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response đăng xuất: {}", exception.getMessage());
-            return Protocol.Response.LOGOUT_OK.name();
+            throw new IllegalStateException("Không tạo được JSON LOGOUT_OK.", exception);
         }
     }
 
     private String buildErrorResponse(final String message) {
-        // Trả lỗi đăng xuất bằng JSON, fallback về ERROR|message nếu lỗi.
+        // Trả lỗi đăng xuất bằng JSON cho AuthService.
         try {
             return JsonProtocol.stringify(
                     new JsonMessage(
@@ -83,9 +83,7 @@ public class LogoutCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi đăng xuất: {}", exception.getMessage());
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 }

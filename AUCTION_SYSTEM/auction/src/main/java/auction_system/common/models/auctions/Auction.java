@@ -128,7 +128,7 @@ public class Auction extends Entity {
      * @return thông báo theo protocol socket
      */
     private String buildAuctionExtendedMessage() {
-        // Gửi thông báo gia hạn bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo gia hạn bằng JSON cho các client đang theo dõi phiên.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.AUCTION_EXTENDED.name(),
@@ -140,9 +140,7 @@ public class Auction extends Entity {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_EXTENDED: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_EXTENDED.name()
-                    + Protocol.SEPARATOR + getId()
-                    + Protocol.SEPARATOR + endTime;
+            throw new IllegalStateException("Không tạo được JSON AUCTION_EXTENDED.", exception);
         }
     }
 
@@ -224,7 +222,7 @@ public class Auction extends Entity {
             final double currentPrice,
             final String bidderName,
             final String bidTime) {
-        // Gửi cập nhật giá bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi cập nhật giá bằng JSON cho bảng bid và chart realtime.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.UPDATE_PRICE.name(),
@@ -239,12 +237,7 @@ public class Auction extends Entity {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON UPDATE_PRICE: {}", exception.getMessage());
-            return Protocol.Response.UPDATE_PRICE.name()
-                    + Protocol.SEPARATOR + getId()
-                    + Protocol.SEPARATOR + currentPrice
-                    + Protocol.SEPARATOR + bidderName
-                    + Protocol.SEPARATOR + bidTime
-                    + Protocol.SEPARATOR + endTime;
+            throw new IllegalStateException("Không tạo được JSON UPDATE_PRICE.", exception);
         }
     }
 
@@ -274,7 +267,7 @@ public class Auction extends Entity {
     }
 
     private String buildAuctionStartedMessage() {
-        // Gửi thông báo bắt đầu phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo bắt đầu phiên bằng JSON cho các observer trong room.
         try {
             return JsonProtocol.stringify(new JsonMessage(
                     Protocol.Response.AUCTION_STARTED.name(),
@@ -284,16 +277,14 @@ public class Auction extends Entity {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_STARTED: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_STARTED.name()
-                    + Protocol.SEPARATOR
-                    + getId();
+            throw new IllegalStateException("Không tạo được JSON AUCTION_STARTED.", exception);
         }
     }
 
     private String buildAuctionEndedMessage(
             final String winnerUsername,
             final String itemName) {
-        // Gửi thông báo kết thúc phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        // Gửi thông báo kết thúc phiên bằng JSON cho popup kết quả đấu giá.
         final String safeWinnerUsername = winnerUsername == null ? "NONE" : winnerUsername;
         final String safeItemName = itemName == null ? "" : itemName;
         try {
@@ -308,10 +299,7 @@ public class Auction extends Entity {
                     null));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON AUCTION_ENDED: {}", exception.getMessage());
-            return Protocol.Response.AUCTION_ENDED.name()
-                    + Protocol.SEPARATOR + getId()
-                    + Protocol.SEPARATOR + safeWinnerUsername
-                    + Protocol.SEPARATOR + safeItemName;
+            throw new IllegalStateException("Không tạo được JSON AUCTION_ENDED.", exception);
         }
     }
 
