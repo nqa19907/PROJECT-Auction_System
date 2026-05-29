@@ -2,11 +2,15 @@ package auction_system.client.controllers.auction;
 
 import auction_system.client.services.ItemPublishService;
 import auction_system.client.services.ItemPublishService.PublishItemCallback;
+import auction_system.client.services.ProductImageStorage;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.constants.AppConstants;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -21,6 +25,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,9 +57,15 @@ public class PublishItemController implements Initializable {
     @FXML
     private Label lblError;
     @FXML
+    private Label lblSelectedImage;
+    @FXML
+    private Button btnChooseImage;
+    @FXML
     private Button btnCancel;
     @FXML
     private Button btnConfirm;
+
+    private Path selectedImageSource;
 
     /**
      * Khởi tạo dữ liệu mặc định cho màn hình đăng bán.
@@ -75,6 +87,7 @@ public class PublishItemController implements Initializable {
                 "Trung bình");
 
         clearError();
+        updateSelectedImageLabel();
     }
 
     /**
@@ -96,6 +109,33 @@ public class PublishItemController implements Initializable {
     @FXML
     private void handleCancel(final ActionEvent event) {
         handleGoDashboard(event);
+    }
+
+    /**
+     * Chọn ảnh sản phẩm từ máy người dùng.
+     *
+     * @param event sự kiện bấm nút
+     */
+    @FXML
+    private void handleChooseImage(final ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Chọn ảnh sản phẩm");
+        fileChooser.getExtensionFilters().setAll(
+                new FileChooser.ExtensionFilter("Ảnh sản phẩm", "*.jpg", "*.jpeg", "*.png",
+                        "*.gif"));
+
+        // Mở hộp thoại chọn ảnh và lưu lại file nguồn để copy khi xác nhận.
+        Window owner = btnChooseImage.getScene() == null
+                ? null
+                : btnChooseImage.getScene().getWindow();
+        File selectedFile = fileChooser.showOpenDialog(owner);
+        if (selectedFile == null) {
+            return;
+        }
+
+        selectedImageSource = selectedFile.toPath();
+        updateSelectedImageLabel();
+        clearError();
     }
 
     /**
@@ -126,6 +166,9 @@ public class PublishItemController implements Initializable {
                 return;
             }
 
+            // Copy ảnh đã chọn vào thư mục dữ liệu app trước khi gửi request.
+            String imagePath = storeSelectedImage();
+
             setLoadingState(true);
             ItemPublishService.getInstance().publishItem(
                 category,
@@ -135,14 +178,35 @@ public class PublishItemController implements Initializable {
                 startPrice,
                 startTime,
                 endTime,
+                imagePath,
                 (success, message) -> Platform.runLater(
                     () -> handlePublishResult(success, message)));
     
                 
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể lưu ảnh sản phẩm đã chọn.", exception);
+            showError("Không thể lưu ảnh sản phẩm. Vui lòng chọn ảnh khác.");
         }
 
+    }
+
+    /**
+     * Lưu ảnh đã chọn vào thư mục dữ liệu ứng dụng.
+     *
+     * @return đường dẫn ảnh đã lưu hoặc chuỗi rỗng nếu chưa chọn ảnh
+     * @throws IOException nếu không copy được ảnh
+     */
+    private String storeSelectedImage() throws IOException {
+        if (selectedImageSource == null) {
+            return "";
+        }
+
+        // Lưu ảnh ổn định để card sản phẩm không phụ thuộc file gốc.
+        return ProductImageStorage.getInstance()
+                .storeImage(selectedImageSource)
+                .toString();
     }
 
     /**
@@ -262,6 +326,21 @@ public class PublishItemController implements Initializable {
     }
 
     /**
+     * Cập nhật nhãn tên ảnh đã chọn.
+     */
+    private void updateSelectedImageLabel() {
+        if (lblSelectedImage == null) {
+            return;
+        }
+
+        // Hiển thị tên file ảnh để người dùng biết ảnh nào đang được chọn.
+        String imageName = selectedImageSource == null
+                ? "Chưa chọn ảnh"
+                : selectedImageSource.getFileName().toString();
+        lblSelectedImage.setText(imageName);
+    }
+
+    /**
      * Bật hoặc tắt trạng thái đang gửi request.
      *
      * @param loading true nếu đang gửi request
@@ -269,5 +348,6 @@ public class PublishItemController implements Initializable {
     private void setLoadingState(final boolean loading) {
         btnConfirm.setDisable(loading);
         btnCancel.setDisable(loading);
+        btnChooseImage.setDisable(loading);
     }
 }

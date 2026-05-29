@@ -75,6 +75,15 @@
                      </HBox>
                      <TextArea fx:id="fieldDescription" prefHeight="100" promptText="Mô tả nguồn gốc, tình trạng, đặc điểm nổi bật của tài sản..." wrapText="true" />
                  </VBox>
+
+                 <!-- Ảnh sản phẩm -->
+                 <VBox spacing="6">
+                     <Label styleClass="field-title" text="Ảnh sản phẩm" />
+                     <HBox alignment="CENTER_LEFT" spacing="12">
+                         <Button fx:id="btnChooseImage" onAction="#handleChooseImage" styleClass="btn-secondary" text="Chọn ảnh" />
+                         <Label fx:id="lblSelectedImage" styleClass="field-title" text="Chưa chọn ảnh" />
+                     </HBox>
+                 </VBox>
              </VBox>
 
              <!-- ===== CARD 2: Thời gian & Giá ===== -->
