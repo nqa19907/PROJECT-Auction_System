@@ -106,7 +106,37 @@ final class AuctionResponseParser {
      * @return các field chi tiết theo thứ tự protocol
      */
     String[] parseAuctionDetail(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            return parseJsonAuctionDetail(response);
+        }
+
         return response.split(Protocol.SEPARATOR_REGEX);
+    }
+
+    private String[] parseJsonAuctionDetail(final String response) {
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final JsonNode auction = payload != null && payload.has("auction")
+                    ? payload.path("auction")
+                    : payload;
+
+            if (auction == null || !auction.isArray()) {
+                LOGGER.warn("Phản hồi AUCTION_DETAIL JSON thiếu dữ liệu phiên.");
+                return new String[0];
+            }
+
+            String[] parts = new String[auction.size() + 1];
+            parts[0] = Protocol.Response.AUCTION_DETAIL.name();
+            for (int i = 0; i < auction.size(); i++) {
+                parts[i + 1] = auction.get(i).asText();
+            }
+
+            return parts;
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_DETAIL: {}", exception.getMessage());
+            return new String[0];
+        }
     }
 
     /**
