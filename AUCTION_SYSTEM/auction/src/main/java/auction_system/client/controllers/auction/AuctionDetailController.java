@@ -12,11 +12,11 @@ import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
 import auction_system.client.services.AuctionService;
 import auction_system.client.services.UserSessionService;
+import auction_system.client.utils.ProductImageStyleUtil;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
 import auction_system.common.models.users.User;
-import java.io.File;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
@@ -178,49 +178,8 @@ public class AuctionDetailController implements Initializable {
      * @param imagePath đường dẫn ảnh sản phẩm
      */
     private void applyProductImage(final String imagePath) {
-        String imageUrl = resolveImageUrl(imagePath);
-        if (imageUrl.isBlank()) {
-            productImage.setStyle("");
-            return;
-        }
-
         // Ghi đè ảnh fallback bằng ảnh sản phẩm thật.
-        productImage.setStyle("-fx-background-image: url('" + escapeCssUrl(imageUrl) + "');");
-    }
-
-    /**
-     * Chuẩn hóa đường dẫn ảnh thành URL JavaFX CSS dùng được.
-     *
-     * @param imagePath đường dẫn ảnh sản phẩm
-     * @return URL ảnh hoặc chuỗi rỗng nếu không hợp lệ
-     */
-    private String resolveImageUrl(final String imagePath) {
-        if (imagePath == null || imagePath.trim().isEmpty()) {
-            return "";
-        }
-
-        String trimmedPath = imagePath.trim();
-        if (trimmedPath.startsWith("file:")
-                || trimmedPath.startsWith("http:")
-                || trimmedPath.startsWith("https:")) {
-            return trimmedPath;
-        }
-
-        File imageFile = new File(trimmedPath);
-        if (!imageFile.exists()) {
-            return "";
-        }
-        return imageFile.toURI().toString();
-    }
-
-    /**
-     * Escape ký tự đặc biệt trước khi đưa URL vào CSS inline.
-     *
-     * @param value URL ảnh cần escape
-     * @return URL đã escape
-     */
-    private String escapeCssUrl(final String value) {
-        return value.replace("\\", "\\\\").replace("'", "\\'");
+        productImage.setStyle(ProductImageStyleUtil.toBackgroundImageStyle(imagePath));
     }
 
     /**

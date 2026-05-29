@@ -1,6 +1,6 @@
 package auction_system.client.controllers.components;
 
-import java.io.File;
+import auction_system.client.utils.ProductImageStyleUtil;
 import java.util.function.Consumer;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -85,47 +85,7 @@ public class ProductCardController {
      * @param imagePath đường dẫn ảnh sản phẩm
      */
     private void applyProductImage(final String imagePath) {
-        String imageUrl = resolveImageUrl(imagePath);
-        if (imageUrl.isBlank()) {
-            imageRegion.setStyle("");
-            return;
-        }
         // Ghi đè background mặc định bằng ảnh sản phẩm thật.
-        imageRegion.setStyle("-fx-background-image: url('" + escapeCssUrl(imageUrl) + "');");
-    }
-
-    /**
-     * Chuẩn hóa đường dẫn ảnh thành URL JavaFX CSS dùng được.
-     *
-     * @param imagePath đường dẫn ảnh sản phẩm
-     * @return URL ảnh hoặc chuỗi rỗng nếu không hợp lệ
-     */
-    private String resolveImageUrl(final String imagePath) {
-        if (imagePath == null || imagePath.trim().isEmpty()) {
-            return "";
-        }
-
-        String trimmedPath = imagePath.trim();
-        if (trimmedPath.startsWith("file:")
-                || trimmedPath.startsWith("http:")
-                || trimmedPath.startsWith("https:")) {
-            return trimmedPath;
-        }
-
-        File imageFile = new File(trimmedPath);
-        if (!imageFile.exists()) {
-            return "";
-        }
-        return imageFile.toURI().toString();
-    }
-
-    /**
-     * Escape ký tự đặc biệt trước khi đưa URL vào CSS inline.
-     *
-     * @param value URL ảnh cần escape
-     * @return URL đã escape
-     */
-    private String escapeCssUrl(final String value) {
-        return value.replace("\\", "\\\\").replace("'", "\\'");
+        imageRegion.setStyle(ProductImageStyleUtil.toBackgroundImageStyle(imagePath));
     }
 }
