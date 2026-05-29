@@ -5,7 +5,7 @@
 /* --- ẢNH SẢN PHẨM (BACKGROUND IMAGE TRÊN REGION) --- */
 /* Dùng thẻ <Region> kết hợp style này để ảnh có thể tự động bo góc và thu phóng đẹp mắt */
 
-.img-product-rolex {
+.product-image {
     /* Bạn nhớ tạo thư mục "images" ngang hàng với thư mục "css", sau đó bỏ file ảnh thật vào nhé */
     /* Bỏ comment dòng dưới để hiển thị ảnh: */
     -fx-background-image: url("../images/rolex.jpg");

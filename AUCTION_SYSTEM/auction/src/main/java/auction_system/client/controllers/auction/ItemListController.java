@@ -62,6 +62,9 @@ public class ItemListController {
     /** Vị trí trạng thái chống đặt giá phút chót trong response danh sách. */
     private static final int IDX_ANTI_SNIPING_ENABLED = 9;
 
+    /** Vị trí đường dẫn ảnh sản phẩm trong response danh sách. */
+    private static final int IDX_IMAGE_PATH = 10;
+
     /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 8;
 
@@ -139,11 +142,14 @@ public class ItemListController {
             String auctionId = parts[IDX_ID];
             String itemName = parts[IDX_NAME];
             double currentPrice = Double.parseDouble(parts[IDX_PRICE]);
+            // Lấy metadata ảnh nếu server đã trả kèm.
+            String imagePath = parts.length > IDX_IMAGE_PATH ? parts[IDX_IMAGE_PATH] : "";
 
             controller.setCardDetails(
                     auctionId,
                     itemName,
                     currentPrice,
+                    imagePath,
                     selectedItemId -> navigateToAuctionDetail(parts)
             );
 
