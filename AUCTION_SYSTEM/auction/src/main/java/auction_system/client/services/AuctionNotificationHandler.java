@@ -33,6 +33,12 @@ final class AuctionNotificationHandler {
      * @param response thông báo AUCTION_ENDED từ server
      */
     void handleAuctionEndedResponse(final String response) {
+        // Ưu tiên đọc AUCTION_ENDED JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleAuctionEndedJsonResponse(response);
+            return;
+        }
+
         final String[] parts = splitKeepingEmptyFields(response);
 
         // Một số phiên có thể không có winner, nên fallback NONE vẫn được hiển thị rõ.
@@ -47,6 +53,23 @@ final class AuctionNotificationHandler {
         showInfo(
                 "Kết thúc đấu giá",
                 "người chiến thắng vật phẩm " + itemName + " là " + winnerName);
+    }
+
+    private void handleAuctionEndedJsonResponse(final String response) {
+        try {
+            // Payload kết thúc phiên chứa itemName và winnerUsername để hiển thị popup.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final String winnerName = payload == null
+                    ? "NONE"
+                    : payload.path("winnerUsername").asText("NONE");
+            final String itemName = payload == null ? "" : payload.path("itemName").asText("");
+            showInfo(
+                    "Kết thúc đấu giá",
+                    "người chiến thắng vật phẩm " + itemName + " là " + winnerName);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_ENDED: {}", exception.getMessage());
+        }
     }
 
     /**

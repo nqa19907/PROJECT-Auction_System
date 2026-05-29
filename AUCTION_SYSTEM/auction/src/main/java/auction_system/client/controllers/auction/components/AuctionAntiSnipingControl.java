@@ -154,6 +154,7 @@ public final class AuctionAntiSnipingControl {
     }
 
     private Optional<AntiSnipingUpdate> parseUpdate(final String response) {
+        // Ưu tiên đọc ANTI_SNIPING_UPDATED JSON, fallback xuống protocol string cũ.
         if (JsonProtocol.isJsonObject(response)) {
             try {
                 final JsonMessage message = JsonProtocol.parse(response);

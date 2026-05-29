@@ -255,9 +255,7 @@ public class Auction extends Entity {
         // Chỉ bắt đầu khi đang OPEN và đã tới giờ bắt đầu
         if (this.status == AuctionStatus.OPEN && !LocalDateTime.now().isBefore(startTime)) {
             setStatus(AuctionStatus.RUNNING);
-            String message = Protocol.Response.AUCTION_STARTED.name() 
-                    + Protocol.SEPARATOR + this.getId();
-            notifyObservers(message);
+            notifyObservers(buildAuctionStartedMessage());
         }
     }
 
@@ -271,11 +269,49 @@ public class Auction extends Entity {
             Participant winner = calculateWinner();
             String winnerUsername = (winner != null) ? winner.getUsername() : "Không có ai";
             String itemName = (item != null) ? item.getItemName() : "";
-            String message = Protocol.Response.AUCTION_ENDED.name()
-                    + Protocol.SEPARATOR + this.getId()
-                    + Protocol.SEPARATOR + winnerUsername
-                    + Protocol.SEPARATOR + itemName;
-            notifyObservers(message);
+            notifyObservers(buildAuctionEndedMessage(winnerUsername, itemName));
+        }
+    }
+
+    private String buildAuctionStartedMessage() {
+        // Gửi thông báo bắt đầu phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_STARTED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of("auctionId", String.valueOf(getId()))),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_STARTED: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_STARTED.name()
+                    + Protocol.SEPARATOR
+                    + getId();
+        }
+    }
+
+    private String buildAuctionEndedMessage(
+            final String winnerUsername,
+            final String itemName) {
+        // Gửi thông báo kết thúc phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        final String safeWinnerUsername = winnerUsername == null ? "NONE" : winnerUsername;
+        final String safeItemName = itemName == null ? "" : itemName;
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_ENDED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", String.valueOf(getId()),
+                            "winnerUsername", safeWinnerUsername,
+                            "itemName", safeItemName)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_ENDED: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_ENDED.name()
+                    + Protocol.SEPARATOR + getId()
+                    + Protocol.SEPARATOR + safeWinnerUsername
+                    + Protocol.SEPARATOR + safeItemName;
         }
     }
 

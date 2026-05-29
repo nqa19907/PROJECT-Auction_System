@@ -33,17 +33,14 @@ final class AuctionRealtimeNotifier {
     }
 
     void notifyAuctionCreated(final Auction auction) {
-        // Gói thông báo tối giản: client sẽ dùng auctionId để tự tải chi tiết.
-        final String message = Protocol.Response.AUCTION_CREATED.name()
-                + Protocol.SEPARATOR
-                + auction.getId();
+        final String message = buildAuctionCreatedMessage(auction.getId());
         onlineUsers.getObservers().forEach(observer -> observer.update(message));
     }
 
     void notifyAntiSnipingUpdated(final Auction auction) {
-        final String message = Protocol.Response.ANTI_SNIPING_UPDATED.name()
-                + Protocol.SEPARATOR + auction.getId()
-                + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+        final String message = buildAntiSnipingUpdatedMessage(
+                auction.getId(),
+                auction.isAntiSnipingEnabled());
         auction.notifyObservers(message);
     }
 
@@ -126,6 +123,45 @@ final class AuctionRealtimeNotifier {
 
         final String message = buildAuctionLostMessage(auctionId, itemName, winnerUsername);
         loserObserver.update(message);
+    }
+
+    private String buildAuctionCreatedMessage(final String auctionId) {
+        // Gửi thông báo tạo phiên bằng JSON, fallback về protocol string cũ nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_CREATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of("auctionId", String.valueOf(auctionId))),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_CREATED: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_CREATED.name()
+                    + Protocol.SEPARATOR
+                    + auctionId;
+        }
+    }
+
+    private String buildAntiSnipingUpdatedMessage(
+            final String auctionId,
+            final boolean enabled) {
+        // Gửi trạng thái anti-sniping bằng JSON, fallback về protocol string cũ nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", String.valueOf(auctionId),
+                            "enabled", enabled)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON ANTI_SNIPING_UPDATED: {}",
+                    exception.getMessage());
+            return Protocol.Response.ANTI_SNIPING_UPDATED.name()
+                    + Protocol.SEPARATOR + auctionId
+                    + Protocol.SEPARATOR + enabled;
+        }
     }
 
     private String buildBalanceUpdatedMessage(final double balance) {
