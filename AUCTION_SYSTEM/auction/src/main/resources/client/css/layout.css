@@ -107,6 +107,8 @@
     -fx-background-radius: 24;                 /* Radius lg: 24 */
     -fx-padding: 16;                           /* Đẩy nội dung vào trong 16px (Spacing md: 16) */
     -fx-cursor: hand;
+    -fx-min-width: 300;
+    -fx-max-width: 300;
 }
 
 .product-card:hover {

@@ -127,9 +127,9 @@
     -fx-background-size: cover;
     -fx-background-position: center center;
     -fx-background-repeat: no-repeat;
-    -fx-background-radius: 10;
+    -fx-background-radius: 14;
     -fx-border-color: #F0D9B5;
-    -fx-border-radius: 10;
+    -fx-border-radius: 14;
     -fx-border-width: 1;
 }
 
