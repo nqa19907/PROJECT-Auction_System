@@ -43,6 +43,7 @@
 
                 <HBox alignment="CENTER_LEFT" spacing="16" styleClass="info-card">
                     <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
+                    <Region fx:id="productImage" prefHeight="120" prefWidth="160" styleClass="product-detail-image" />
                     <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
                         <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />

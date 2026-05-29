@@ -16,6 +16,7 @@ import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
 import auction_system.common.models.auctions.BidRow;
 import auction_system.common.models.users.User;
+import java.io.File;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ResourceBundle;
@@ -32,6 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
 import javafx.scene.shape.Circle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,7 @@ public class AuctionDetailController implements Initializable {
     @FXML private Label minBidHint;
     @FXML private Label auctionTitle;
     @FXML private Label auctionId;
+    @FXML private Region productImage;
     @FXML private Circle liveDot;
     @FXML private LineChart<Number, Number> bidLineChart;
     @FXML private NumberAxis numberXaxis;
@@ -121,6 +124,8 @@ public class AuctionDetailController implements Initializable {
         viewModel.init(context);
         activeAuctionId = context.auctionId();
         activeEndTime = context.endTime();
+        // Áp dụng ảnh sản phẩm cho phần đầu màn chi tiết.
+        applyProductImage(context.imagePath());
 
         // Đăng ký socket room của phiên để chỉ nhận realtime update liên quan.
         realtimeSubscription.start(activeAuctionId);
@@ -165,6 +170,57 @@ public class AuctionDetailController implements Initializable {
                 );
             });
         });
+    }
+
+    /**
+     * Áp dụng ảnh sản phẩm vào vùng ảnh chi tiết.
+     *
+     * @param imagePath đường dẫn ảnh sản phẩm
+     */
+    private void applyProductImage(final String imagePath) {
+        String imageUrl = resolveImageUrl(imagePath);
+        if (imageUrl.isBlank()) {
+            productImage.setStyle("");
+            return;
+        }
+
+        // Ghi đè ảnh fallback bằng ảnh sản phẩm thật.
+        productImage.setStyle("-fx-background-image: url('" + escapeCssUrl(imageUrl) + "');");
+    }
+
+    /**
+     * Chuẩn hóa đường dẫn ảnh thành URL JavaFX CSS dùng được.
+     *
+     * @param imagePath đường dẫn ảnh sản phẩm
+     * @return URL ảnh hoặc chuỗi rỗng nếu không hợp lệ
+     */
+    private String resolveImageUrl(final String imagePath) {
+        if (imagePath == null || imagePath.trim().isEmpty()) {
+            return "";
+        }
+
+        String trimmedPath = imagePath.trim();
+        if (trimmedPath.startsWith("file:")
+                || trimmedPath.startsWith("http:")
+                || trimmedPath.startsWith("https:")) {
+            return trimmedPath;
+        }
+
+        File imageFile = new File(trimmedPath);
+        if (!imageFile.exists()) {
+            return "";
+        }
+        return imageFile.toURI().toString();
+    }
+
+    /**
+     * Escape ký tự đặc biệt trước khi đưa URL vào CSS inline.
+     *
+     * @param value URL ảnh cần escape
+     * @return URL đã escape
+     */
+    private String escapeCssUrl(final String value) {
+        return value.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     /**
