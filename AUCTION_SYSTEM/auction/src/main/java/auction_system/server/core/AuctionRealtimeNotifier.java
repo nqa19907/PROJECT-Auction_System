@@ -4,16 +4,23 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Gom toàn bộ realtime notification liên quan tới auction/user online.
  */
 final class AuctionRealtimeNotifier {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionRealtimeNotifier.class);
 
     private final SerializedDatabase database;
     private final OnlineUserRegistry onlineUsers;
@@ -51,10 +58,7 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Client chỉ cần số dư mới để cập nhật UI ví.
-        final String message = Protocol.Response.BALANCE_UPDATED.name()
-                + Protocol.SEPARATOR
-                + participant.getBalance();
+        final String message = buildBalanceUpdatedMessage(participant.getBalance());
         observer.update(message);
     }
 
@@ -84,12 +88,7 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Thông báo winner chứa itemName để UI hiển thị popup ngay.
-        final String message = Protocol.Response.AUCTION_WINNER.name()
-                + Protocol.SEPARATOR
-                + auctionId
-                + Protocol.SEPARATOR
-                + itemName;
+        final String message = buildAuctionWinnerMessage(auctionId, itemName);
         winnerObserver.update(message);
     }
 
@@ -125,14 +124,75 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Gửi đủ ngữ cảnh để client hiển thị tên vật phẩm và người thắng.
-        final String message = Protocol.Response.AUCTION_LOST.name()
-                + Protocol.SEPARATOR
-                + auctionId
-                + Protocol.SEPARATOR
-                + itemName
-                + Protocol.SEPARATOR
-                + winnerUsername;
+        final String message = buildAuctionLostMessage(auctionId, itemName, winnerUsername);
         loserObserver.update(message);
+    }
+
+    private String buildBalanceUpdatedMessage(final double balance) {
+        // Gửi số dư realtime bằng JSON, fallback về BALANCE_UPDATED|balance nếu lỗi.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.BALANCE_UPDATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of("balance", balance)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON BALANCE_UPDATED: {}", exception.getMessage());
+            return Protocol.Response.BALANCE_UPDATED.name()
+                    + Protocol.SEPARATOR
+                    + balance;
+        }
+    }
+
+    private String buildAuctionWinnerMessage(final String auctionId, final String itemName) {
+        // Gửi thông báo winner bằng JSON, fallback về protocol string cũ nếu lỗi.
+        final String safeItemName = itemName == null ? "" : itemName;
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_WINNER.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", auctionId,
+                            "itemName", safeItemName)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_WINNER: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_WINNER.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+                    + Protocol.SEPARATOR
+                    + safeItemName;
+        }
+    }
+
+    private String buildAuctionLostMessage(
+            final String auctionId,
+            final String itemName,
+            final String winnerUsername) {
+        // Gửi thông báo loser bằng JSON, fallback về protocol string cũ nếu lỗi.
+        final String safeItemName = itemName == null ? "" : itemName;
+        final String safeWinnerUsername = winnerUsername == null ? "NONE" : winnerUsername;
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_LOST.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", auctionId,
+                            "itemName", safeItemName,
+                            "winnerUsername", safeWinnerUsername)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_LOST: {}", exception.getMessage());
+            return Protocol.Response.AUCTION_LOST.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+                    + Protocol.SEPARATOR
+                    + safeItemName
+                    + Protocol.SEPARATOR
+                    + safeWinnerUsername;
+        }
     }
 }

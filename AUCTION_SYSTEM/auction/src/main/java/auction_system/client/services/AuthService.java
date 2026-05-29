@@ -404,6 +404,12 @@ public final class AuthService {
      * @param response phản hồi BALANCE_UPDATED từ server
      */
     private void handleBalanceUpdatedResponse(final String response) {
+        // Ưu tiên đọc BALANCE_UPDATED JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleBalanceUpdatedJsonResponse(response);
+            return;
+        }
+
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
         if (parts.length < minBalanceUpdatedPartCount) {
             return;
@@ -411,6 +417,22 @@ public final class AuthService {
 
         UserSessionService.getInstance().updateCurrentUserBalance(
                 parseDouble(parts[balanceUpdatedValueIndex]));
+    }
+
+    private void handleBalanceUpdatedJsonResponse(final String response) {
+        try {
+            // Payload số dư realtime chứa balance để cập nhật session ở mọi màn hình.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null || !payload.has("balance")) {
+                return;
+            }
+
+            UserSessionService.getInstance().updateCurrentUserBalance(
+                    payload.path("balance").asDouble());
+        } catch (IOException exception) {
+            logger.warning("Không thể đọc JSON BALANCE_UPDATED: " + exception.getMessage());
+        }
     }
 
     /**

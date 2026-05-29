@@ -1,6 +1,10 @@
 package auction_system.client.services;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import org.slf4j.Logger;
@@ -51,6 +55,12 @@ final class AuctionNotificationHandler {
      * @param response thông báo AUCTION_WINNER từ server
      */
     void handleAuctionWinnerResponse(final String response) {
+        // Ưu tiên đọc AUCTION_WINNER JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleAuctionWinnerJsonResponse(response);
+            return;
+        }
+
         final String[] parts = splitKeepingEmptyFields(response);
 
         // Tên vật phẩm nằm sau auctionId trong response riêng cho người thắng.
@@ -67,6 +77,12 @@ final class AuctionNotificationHandler {
      * @param response thông báo AUCTION_LOST từ server
      */
     void handleAuctionLostResponse(final String response) {
+        // Ưu tiên đọc AUCTION_LOST JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleAuctionLostJsonResponse(response);
+            return;
+        }
+
         final String[] parts = splitKeepingEmptyFields(response);
 
         // Response thua phiên cần cả tên vật phẩm và tên người thắng để hiển thị popup.
@@ -88,6 +104,12 @@ final class AuctionNotificationHandler {
      * @param response phản hồi BALANCE_UPDATED từ server
      */
     void handleBalanceUpdatedResponse(final String response) {
+        // Ưu tiên đọc BALANCE_UPDATED JSON, fallback xuống protocol string cũ.
+        if (JsonProtocol.isJsonObject(response)) {
+            handleBalanceUpdatedJsonResponse(response);
+            return;
+        }
+
         final String[] parts = splitKeepingEmptyFields(response);
         if (parts.length < MIN_BALANCE_UPDATED_PARTS) {
             return;
@@ -99,6 +121,51 @@ final class AuctionNotificationHandler {
                     Double.parseDouble(parts[IDX_BALANCE_UPDATED_VALUE]));
         } catch (NumberFormatException exception) {
             LOGGER.warn("Không thể đọc số dư realtime: {}", parts[IDX_BALANCE_UPDATED_VALUE]);
+        }
+    }
+
+    private void handleAuctionWinnerJsonResponse(final String response) {
+        try {
+            // Payload winner chứa itemName để popup không phụ thuộc thứ tự field string.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final String itemName = payload == null ? "" : payload.path("itemName").asText("");
+            showInfo("Thông báo", "bạn đã thắng vật phẩm " + itemName);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_WINNER: {}", exception.getMessage());
+        }
+    }
+
+    private void handleAuctionLostJsonResponse(final String response) {
+        try {
+            // Payload loser chứa itemName và winnerUsername để popup hiển thị đủ ngữ cảnh.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final String itemName = payload == null ? "" : payload.path("itemName").asText("");
+            final String winnerName = payload == null
+                    ? "NONE"
+                    : payload.path("winnerUsername").asText("NONE");
+            showInfo(
+                    "Kết thúc đấu giá",
+                    "người chiến thắng vật phẩm " + itemName + " là " + winnerName);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_LOST: {}", exception.getMessage());
+        }
+    }
+
+    private void handleBalanceUpdatedJsonResponse(final String response) {
+        try {
+            // Payload số dư realtime chứa balance là nguồn đúng sau khi hoàn/trừ tiền bid.
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            if (payload == null || !payload.has("balance")) {
+                return;
+            }
+
+            UserSessionService.getInstance().updateCurrentUserBalance(
+                    payload.path("balance").asDouble());
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON BALANCE_UPDATED: {}", exception.getMessage());
         }
     }
 
