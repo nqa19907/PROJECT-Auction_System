@@ -173,6 +173,10 @@ public class ItemListController {
         String selectedItemId = selectedParts[IDX_ID];
         String itemName = selectedParts[IDX_NAME];
         String status = selectedParts[IDX_STATUS];
+        // Lấy metadata ảnh để truyền sang màn chi tiết.
+        String imagePath = selectedParts.length > IDX_IMAGE_PATH
+                ? selectedParts[IDX_IMAGE_PATH]
+                : "";
         LocalDateTime startTime;
         LocalDateTime endTime;
 
@@ -231,7 +235,8 @@ public class ItemListController {
                                     : "",
                             selectedParts.length > IDX_ANTI_SNIPING_ENABLED
                                     && Boolean.parseBoolean(
-                                            selectedParts[IDX_ANTI_SNIPING_ENABLED])
+                                            selectedParts[IDX_ANTI_SNIPING_ENABLED]),
+                            imagePath
                     )
             );
         }
