@@ -1,10 +1,13 @@
 package auction_system.server.network.command.auth;
 
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +75,7 @@ public class RegisterCommand implements Command {
                             + registeredUser.getRoleName()
                             + "]");
 
-            return Protocol.Response.REGISTER_OK.name();
+            return buildSuccessResponse();
         } catch (IllegalArgumentException exception) {
             return buildFailResponse(exception.getMessage());
         } catch (RuntimeException exception) {
@@ -84,6 +87,21 @@ public class RegisterCommand implements Command {
         }
     }
 
+    private String buildSuccessResponse() {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.REGISTER_OK.name(),
+                            null,
+                            "OK",
+                            null,
+                            "Đăng ký tài khoản thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response đăng ký: {}", exception.getMessage());
+            return Protocol.Response.REGISTER_OK.name();
+        }
+    }
+
     /**
      * Tạo phản hồi đăng ký thất bại theo đúng giao thức.
      *
@@ -91,8 +109,19 @@ public class RegisterCommand implements Command {
      * @return chuỗi phản hồi thất bại
      */
     private String buildFailResponse(final String message) {
-        return Protocol.Response.REGISTER_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.REGISTER_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi đăng ký: {}", exception.getMessage());
+            return Protocol.Response.REGISTER_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }

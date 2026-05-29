@@ -1,5 +1,7 @@
 package auction_system.client.network;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -188,9 +190,12 @@ public class NetworkClient {
 
                 // --- BẮT ĐẦU BỘ ĐỊNH TUYẾN (ROUTER) ---
 
-                // Bước 1: Tách chuỗi lấy tên lệnh (Chìa khóa)
-                String[] parts = msg.split(Protocol.SEPARATOR_REGEX);
-                String command = parts[0];
+                // Bước 1: Lấy tên phản hồi làm chìa khóa route handler.
+                String command = extractRouteKey(msg);
+                if (command == null || command.isBlank()) {
+                    LOGGER.warn("Không xác định được loại phản hồi từ Server: " + msg);
+                    continue;
+                }
 
                 // Bước 2: Tra cứu danh bạ
                 CopyOnWriteArrayList<Consumer<String>> handlers = messageHandlers.get(command);
@@ -212,6 +217,27 @@ public class NetworkClient {
         } finally {
             cleanupConnection();
         }
+    }
+
+    /**
+     * Lấy route key từ response JSON hoặc protocol string cũ.
+     *
+     * @param message dòng phản hồi từ server
+     * @return tên response dùng để tìm handler
+     */
+    private String extractRouteKey(final String message) {
+        if (JsonProtocol.isJsonObject(message)) {
+            try {
+                final JsonMessage jsonMessage = JsonProtocol.parse(message);
+                return jsonMessage.type();
+            } catch (IOException exception) {
+                LOGGER.warn("Không parse được JSON response: {}", exception.getMessage());
+                return null;
+            }
+        }
+
+        final String[] parts = message.split(Protocol.SEPARATOR_REGEX);
+        return parts[0];
     }
 
     /**

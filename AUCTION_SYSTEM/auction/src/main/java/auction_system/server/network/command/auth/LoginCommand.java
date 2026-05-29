@@ -2,11 +2,15 @@ package auction_system.server.network.command.auth;
 
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -86,17 +90,33 @@ public class LoginCommand implements Command {
      * @return chuỗi phản hồi thành công
      */
     private String buildSuccessResponse(final User user) {
-        return Protocol.Response.LOGIN_OK.name()
-                + Protocol.SEPARATOR
-                + user.getId()
-                + Protocol.SEPARATOR
-                + user.getUsername()
-                + Protocol.SEPARATOR
-                + user.getEmail()
-                + Protocol.SEPARATOR
-                + user.getRoleName()
-                + Protocol.SEPARATOR
-                + getBalance(user);
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.LOGIN_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "userId", user.getId(),
+                                    "username", user.getUsername(),
+                                    "email", user.getEmail(),
+                                    "roleName", user.getRoleName(),
+                                    "balance", getBalance(user))),
+                            "Đăng nhập thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response đăng nhập: {}", exception.getMessage());
+            return Protocol.Response.LOGIN_OK.name()
+                    + Protocol.SEPARATOR
+                    + user.getId()
+                    + Protocol.SEPARATOR
+                    + user.getUsername()
+                    + Protocol.SEPARATOR
+                    + user.getEmail()
+                    + Protocol.SEPARATOR
+                    + user.getRoleName()
+                    + Protocol.SEPARATOR
+                    + getBalance(user);
+        }
     }
 
     /**
@@ -120,8 +140,19 @@ public class LoginCommand implements Command {
      * @return chuỗi phản hồi thất bại
      */
     private String buildFailResponse(final String message) {
-        return Protocol.Response.LOGIN_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.LOGIN_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi đăng nhập: {}", exception.getMessage());
+            return Protocol.Response.LOGIN_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }

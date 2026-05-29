@@ -2,11 +2,15 @@ package auction_system.server.network.command.wallet;
 
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,9 +74,7 @@ public class DepositCommand implements Command {
             final double finalBalance = ((Participant) currentUser).getBalance();
 
             // Trả về kết quả thành công cùng số dư mới
-            return Protocol.Response.DEPOSIT_OK.name()
-                    + Protocol.SEPARATOR
-                    + finalBalance;
+            return buildSuccessResponse(finalBalance);
         } catch (NumberFormatException e) {
             return buildFailResponse("Số tiền không hợp lệ.");
         } catch (IllegalArgumentException e) {
@@ -80,6 +82,23 @@ public class DepositCommand implements Command {
         } catch (RuntimeException e) {
             LOGGER.error("Lỗi hệ thống khi xử lý nạp tiền.", e);
             return buildFailResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
+        }
+    }
+
+    private String buildSuccessResponse(final double balance) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.DEPOSIT_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of("balance", balance)),
+                            "Nạp tiền thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response nạp tiền: {}", exception.getMessage());
+            return Protocol.Response.DEPOSIT_OK.name()
+                    + Protocol.SEPARATOR
+                    + balance;
         }
     }
 
@@ -105,8 +124,19 @@ public class DepositCommand implements Command {
     }
 
     private String buildFailResponse(final String message) {
-        return Protocol.Response.DEPOSIT_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.DEPOSIT_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi nạp tiền: {}", exception.getMessage());
+            return Protocol.Response.DEPOSIT_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }

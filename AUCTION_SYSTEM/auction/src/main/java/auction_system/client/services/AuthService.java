@@ -3,7 +3,13 @@ package auction_system.client.services;
 import auction_system.client.network.NetworkClient;
 import auction_system.client.network.dto.AuthResult;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -90,11 +96,7 @@ public final class AuthService {
             return;
         }
 
-        final String request = Protocol.Command.LOGIN.name()
-                + Protocol.SEPARATOR
-                + email
-                + Protocol.SEPARATOR
-                + password;
+        final String request = buildLoginRequest(email, password);
 
         final NetworkClient networkClient = NetworkClient.getInstance();
         if (!networkClient.ensureConnected()) {
@@ -133,15 +135,7 @@ public final class AuthService {
             return;
         }
 
-        final String request = Protocol.Command.REGISTER.name()
-                + Protocol.SEPARATOR
-                + username
-                + Protocol.SEPARATOR
-                + email
-                + Protocol.SEPARATOR
-                + password
-                + Protocol.SEPARATOR
-                + roleName;
+        final String request = buildRegisterRequest(username, email, password, roleName);
 
         final NetworkClient networkClient = NetworkClient.getInstance();
         if (!networkClient.ensureConnected()) {
@@ -177,9 +171,91 @@ public final class AuthService {
             return;
         }
 
-        final boolean sent = networkClient.sendCommand(Protocol.Command.LOGOUT.name());
+        final boolean sent = networkClient.sendCommand(buildLogoutRequest());
         if (!sent) {
             notifyLogoutAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
+        }
+    }
+
+    /**
+     * Tạo request JSON cho lệnh đăng xuất.
+     *
+     * @return request JSON, hoặc protocol string cũ nếu serialize thất bại
+     */
+    private String buildLogoutRequest() {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LOGOUT.name(),
+                            null,
+                            null,
+                            null));
+        } catch (JsonProcessingException exception) {
+            logger.warning("Không tạo được JSON request đăng xuất: " + exception.getMessage());
+            return Protocol.Command.LOGOUT.name();
+        }
+    }
+
+    /**
+     * Tạo request JSON cho lệnh đăng nhập.
+     *
+     * @param email email người dùng nhập
+     * @param password mật khẩu gốc
+     * @return request JSON, hoặc protocol string cũ nếu serialize thất bại
+     */
+    private String buildLoginRequest(final String email, final String password) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LOGIN.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(email, password)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            logger.warning("Không tạo được JSON request đăng nhập: " + exception.getMessage());
+            return Protocol.Command.LOGIN.name()
+                    + Protocol.SEPARATOR
+                    + email
+                    + Protocol.SEPARATOR
+                    + password;
+        }
+    }
+
+    /**
+     * Tạo request JSON cho lệnh đăng ký.
+     *
+     * @param username tên đăng nhập
+     * @param email email đăng ký
+     * @param password mật khẩu gốc
+     * @param roleName vai trò người dùng
+     * @return request JSON, hoặc protocol string cũ nếu serialize thất bại
+     */
+    private String buildRegisterRequest(
+            final String username,
+            final String email,
+            final String password,
+            final String roleName) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.REGISTER.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(username, email, password, roleName)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            logger.warning("Không tạo được JSON request đăng ký: " + exception.getMessage());
+            return Protocol.Command.REGISTER.name()
+                    + Protocol.SEPARATOR
+                    + username
+                    + Protocol.SEPARATOR
+                    + email
+                    + Protocol.SEPARATOR
+                    + password
+                    + Protocol.SEPARATOR
+                    + roleName;
         }
     }
 
@@ -199,6 +275,11 @@ public final class AuthService {
      */
     private void handleLoginResponse(final String response) {
         logger.info("Xử lý phản hồi đăng nhập: " + response);
+
+        if (JsonProtocol.isJsonObject(response)) {
+            handleLoginJsonResponse(response);
+            return;
+        }
 
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
         final String command = parts[0];
@@ -222,12 +303,50 @@ public final class AuthService {
     }
 
     /**
+     * Xử lý phản hồi đăng nhập dạng JSON.
+     *
+     * @param response phản hồi JSON từ server
+     */
+    private void handleLoginJsonResponse(final String response) {
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            if (Protocol.Response.LOGIN_OK.name().equals(message.type())) {
+                final JsonNode payload = message.payload();
+                final AuthResult result = new AuthResult(
+                        true,
+                        null,
+                        textValue(payload, "userId"),
+                        textValue(payload, "username"),
+                        textValue(payload, "email"),
+                        textValue(payload, "roleName"),
+                        numberValue(payload, "balance"));
+                storeCurrentUser(result);
+                notifyLoginAndClear(result);
+                return;
+            }
+
+            final String errorMessage = message.message() == null || message.message().isBlank()
+                    ? "Email hoặc mật khẩu không đúng."
+                    : message.message();
+            notifyLoginAndClear(new AuthResult(false, errorMessage));
+        } catch (IOException exception) {
+            logger.warning("Không thể đọc JSON phản hồi đăng nhập: " + exception.getMessage());
+            notifyLoginAndClear(new AuthResult(false, "Email hoặc mật khẩu không đúng."));
+        }
+    }
+
+    /**
      * Xử lý phản hồi đăng ký từ server.
      *
      * @param response phản hồi dạng chuỗi từ server
      */
     private void handleRegisterResponse(final String response) {
         logger.info("Xử lý phản hồi đăng ký: " + response);
+
+        if (JsonProtocol.isJsonObject(response)) {
+            handleRegisterJsonResponse(response);
+            return;
+        }
 
         final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
         final String command = parts[0];
@@ -239,6 +358,29 @@ public final class AuthService {
 
         final String message = extractMessage(parts, "Đăng ký tài khoản thất bại.");
         notifyRegisterAndClear(new AuthResult(false, message));
+    }
+
+    /**
+     * Xử lý phản hồi đăng ký dạng JSON.
+     *
+     * @param response phản hồi JSON từ server
+     */
+    private void handleRegisterJsonResponse(final String response) {
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            if (Protocol.Response.REGISTER_OK.name().equals(message.type())) {
+                notifyRegisterAndClear(new AuthResult(true, "Đăng ký tài khoản thành công."));
+                return;
+            }
+
+            final String errorMessage = message.message() == null || message.message().isBlank()
+                    ? "Đăng ký tài khoản thất bại."
+                    : message.message();
+            notifyRegisterAndClear(new AuthResult(false, errorMessage));
+        } catch (IOException exception) {
+            logger.warning("Không thể đọc JSON phản hồi đăng ký: " + exception.getMessage());
+            notifyRegisterAndClear(new AuthResult(false, "Đăng ký tài khoản thất bại."));
+        }
     }
 
     /**
@@ -314,6 +456,36 @@ public final class AuthService {
         }
 
         return null;
+    }
+
+    /**
+     * Lấy chuỗi từ payload JSON nếu tồn tại.
+     *
+     * @param payload payload JSON
+     * @param fieldName tên field cần đọc
+     * @return giá trị text hoặc null nếu không có
+     */
+    private String textValue(final JsonNode payload, final String fieldName) {
+        if (payload == null || payload.path(fieldName).isMissingNode()) {
+            return null;
+        }
+
+        return payload.path(fieldName).asText(null);
+    }
+
+    /**
+     * Lấy số từ payload JSON nếu tồn tại.
+     *
+     * @param payload payload JSON
+     * @param fieldName tên field cần đọc
+     * @return giá trị số hoặc 0 nếu không có
+     */
+    private double numberValue(final JsonNode payload, final String fieldName) {
+        if (payload == null || payload.path(fieldName).isMissingNode()) {
+            return 0;
+        }
+
+        return payload.path(fieldName).asDouble(0);
     }
 
     /**

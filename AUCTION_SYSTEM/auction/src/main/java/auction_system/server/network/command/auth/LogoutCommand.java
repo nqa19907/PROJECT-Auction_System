@@ -1,10 +1,13 @@
 package auction_system.server.network.command.auth;
 
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +46,28 @@ public class LogoutCommand implements Command {
             }
             // Đảm bảo client hủy theo dõi tất cả các phiên đấu giá đang tham gia
             session.leaveAllAuctions();
-            return Protocol.Response.LOGOUT_OK.name();
+            return buildSuccessResponse();
         } catch (Exception e) {
             String username = session.isLoggedIn() 
                     ? session.getCurrentUser().getUsername() : "guest";
             LOGGER.error("Lỗi hệ thống khi xử lý lệnh đăng xuất cho " + username, e);
             return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
                     + "Lỗi máy chủ nội bộ khi đăng xuất.";
+        }
+    }
+
+    private String buildSuccessResponse() {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.LOGOUT_OK.name(),
+                            null,
+                            "OK",
+                            null,
+                            "Đăng xuất thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response đăng xuất: {}", exception.getMessage());
+            return Protocol.Response.LOGOUT_OK.name();
         }
     }
 }

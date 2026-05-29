@@ -3,6 +3,8 @@ package auction_system.server.network;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
@@ -37,6 +39,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -194,7 +198,15 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param rawCommand dòng lệnh thô nhận từ client
      */
     private void handleCommand(final String rawCommand) {
-        final String[] parts = rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
+        final String[] parts = parseCommandParts(rawCommand);
+        if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
+            send(
+                    Protocol.Response.ERROR.name()
+                            + Protocol.SEPARATOR
+                            + "Lệnh JSON không hợp lệ.");
+            return;
+        }
+
         final String commandName = parts[0].toUpperCase();
         final Command command = commandMap.get(commandName);
 
@@ -210,6 +222,39 @@ public class ClientHandler implements Runnable, AuctionObserver {
         final String response = command.execute(parts, session);
         if (response != null) {
             sendResponseLines(response);
+        }
+    }
+
+    /**
+     * Chuyển request JSON hoặc protocol string cũ thành mảng parts cho command hiện tại.
+     *
+     * @param rawCommand dòng request nhận từ client
+     * @return parts tương thích với command layer hiện tại
+     */
+    private String[] parseCommandParts(final String rawCommand) {
+        if (!JsonProtocol.isJsonObject(rawCommand)) {
+            return rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
+        }
+
+        try {
+            final JsonMessage message = JsonProtocol.parse(rawCommand);
+            final List<String> parts = new ArrayList<>();
+            parts.add(message.command());
+
+            if (message.payload() == null || message.payload().isNull()) {
+                return parts.toArray(String[]::new);
+            }
+
+            if (message.payload().isArray()) {
+                message.payload().forEach(value -> parts.add(value.asText()));
+            } else if (message.payload().isValueNode()) {
+                parts.add(message.payload().asText());
+            }
+
+            return parts.toArray(String[]::new);
+        } catch (IOException exception) {
+            LOGGER.warn("Không parse được JSON request: {}", exception.getMessage());
+            return new String[0];
         }
     }
 
