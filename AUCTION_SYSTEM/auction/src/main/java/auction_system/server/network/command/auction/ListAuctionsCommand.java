@@ -94,7 +94,9 @@ public class ListAuctionsCommand implements Command {
                 item.getClass().getSimpleName(),
                 String.valueOf(item.getStartPrice()),
                 resolveSellerId(auction),
-                String.valueOf(auction.isAntiSnipingEnabled()));
+                String.valueOf(auction.isAntiSnipingEnabled()),
+                // Trả metadata ảnh để client render card sản phẩm ở bước sau.
+                resolveImagePath(item));
     }
 
     private String buildErrorResponse(final String message) {
@@ -141,5 +143,18 @@ public class ListAuctionsCommand implements Command {
         }
 
         return "";
+    }
+
+    /**
+     * Lấy đường dẫn ảnh sản phẩm từ item.
+     *
+     * @param item sản phẩm của phiên đấu giá
+     * @return đường dẫn ảnh hoặc chuỗi rỗng nếu chưa có
+     */
+    private String resolveImagePath(final Item item) {
+        if (item == null || item.getImagePath() == null) {
+            return "";
+        }
+        return item.getImagePath();
     }
 }
