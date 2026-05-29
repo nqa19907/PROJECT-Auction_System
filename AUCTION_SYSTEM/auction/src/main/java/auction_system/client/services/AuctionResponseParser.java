@@ -47,6 +47,10 @@ final class AuctionResponseParser {
      * @return danh sách record phiên đấu giá đủ field
      */
     List<String[]> parseAuctionList(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            return parseJsonAuctionList(response);
+        }
+
         List<String[]> auctionList = new ArrayList<>();
         String[] lines = response.split(Protocol.RECORD_SEPARATOR);
 
@@ -57,6 +61,39 @@ final class AuctionResponseParser {
             if (parts.length >= MIN_AUCTION_LIST_PARTS) {
                 auctionList.add(parts);
             }
+        }
+
+        return auctionList;
+    }
+
+    private List<String[]> parseJsonAuctionList(final String response) {
+        List<String[]> auctionList = new ArrayList<>();
+
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            final JsonNode payload = message.payload();
+            final JsonNode auctions = payload != null && payload.has("auctions")
+                    ? payload.path("auctions")
+                    : payload;
+
+            if (auctions == null || !auctions.isArray()) {
+                LOGGER.warn("Phản hồi AUCTION_LIST JSON thiếu danh sách phiên.");
+                return auctionList;
+            }
+
+            for (JsonNode auction : auctions) {
+                if (!auction.isArray() || auction.size() < MIN_AUCTION_LIST_PARTS) {
+                    continue;
+                }
+
+                String[] parts = new String[auction.size()];
+                for (int i = 0; i < auction.size(); i++) {
+                    parts[i] = auction.get(i).asText();
+                }
+                auctionList.add(parts);
+            }
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể đọc JSON AUCTION_LIST: {}", exception.getMessage());
         }
 
         return auctionList;

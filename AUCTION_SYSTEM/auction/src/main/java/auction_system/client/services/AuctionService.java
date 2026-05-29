@@ -212,6 +212,22 @@ public class AuctionService {
         }
     }
 
+    private String buildListAuctionsRequest() {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LIST_AUCTIONS.name(),
+                            null,
+                            null,
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy danh sách phiên: {}",
+                    exception.getMessage());
+            return Protocol.Command.LIST_AUCTIONS.name();
+        }
+    }
+
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
      */
@@ -270,7 +286,7 @@ public class AuctionService {
      */
     public void fetchAuctionList(final FetchAuctionsCallback callback) {
         this.currentListCallback = callback;
-        NetworkClient.getInstance().sendCommand(Protocol.Command.LIST_AUCTIONS.name());
+        NetworkClient.getInstance().sendCommand(buildListAuctionsRequest());
     }
 
     /**
