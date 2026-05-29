@@ -139,6 +139,16 @@
     -fx-text-fill: #D4860B;
 }
 
+.root-pane .auction-time-panel {
+    -fx-min-width: 190px;
+}
+
+.root-pane .auction-time-text {
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #8A5A17;
+}
+
 .root-pane .metric-label {
     -fx-font-size: 11px;
     -fx-font-weight: normal;

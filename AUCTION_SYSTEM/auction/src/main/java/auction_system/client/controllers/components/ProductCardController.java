@@ -32,6 +32,7 @@ public class ProductCardController {
     public void initialize() {
         // Tạm thời vô hiệu hóa nút bấm khi chưa có dữ liệu thật
         bidButton.setDisable(true);
+        ProductImageStyleUtil.applyRoundedClip(imageRegion, 16);
 
         // Gán sự kiện bằng code. Khi bấm, ném ID sản phẩm cho Handler
         bidButton.setOnAction(event -> {

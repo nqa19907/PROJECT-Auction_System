@@ -70,6 +70,7 @@ public class ItemListController {
 
     @FXML private FlowPane productsGrid;
     @FXML private Label categoryTitle;
+    @FXML private VBox scrollContentWrapper;
 
     private List<String[]> allAuctions = new ArrayList<>();
     private String filterCategory = AppConstants.CATEGORY_ALL;
@@ -85,8 +86,15 @@ public class ItemListController {
         LOGGER.info("Đang khởi tạo màn hình danh sách đấu giá...");
 
         if (productsGrid != null) {
-            productsGrid.setHgap(12);
-            productsGrid.setVgap(12);
+            productsGrid.setHgap(16);
+            productsGrid.setVgap(16);
+            productsGrid.setMaxWidth(Double.MAX_VALUE);
+        }
+
+        if (productsGrid != null && scrollContentWrapper != null) {
+            scrollContentWrapper.setMaxWidth(Double.MAX_VALUE);
+            productsGrid.prefWrapLengthProperty().bind(
+                    scrollContentWrapper.widthProperty());
         }
 
         registerRealtimeHandlers();

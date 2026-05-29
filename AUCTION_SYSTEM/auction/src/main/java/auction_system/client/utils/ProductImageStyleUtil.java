@@ -1,6 +1,8 @@
 package auction_system.client.utils;
 
 import java.io.File;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 
 /**
  * Tiện ích chuyển đường dẫn ảnh sản phẩm thành CSS background cho JavaFX.
@@ -24,6 +26,25 @@ public final class ProductImageStyleUtil {
 
         // Escape URL trước khi đưa vào CSS inline của JavaFX.
         return "-fx-background-image: url('" + escapeCssUrl(imageUrl) + "');";
+    }
+
+    /**
+     * Cắt vùng ảnh theo bo góc thật, bao gồm cả bitmap background.
+     *
+     * @param imageRegion vùng hiển thị ảnh sản phẩm
+     * @param radius bán kính bo góc
+     */
+    public static void applyRoundedClip(final Region imageRegion, final double radius) {
+        if (imageRegion == null) {
+            return;
+        }
+
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(imageRegion.widthProperty());
+        clip.heightProperty().bind(imageRegion.heightProperty());
+        clip.setArcWidth(radius * 2);
+        clip.setArcHeight(radius * 2);
+        imageRegion.setClip(clip);
     }
 
     /**

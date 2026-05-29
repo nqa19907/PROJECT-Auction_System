@@ -104,11 +104,11 @@
 /* --- THẺ SẢN PHẨM (PRODUCT CARD) --- */
 .product-card {
     -fx-background-color: -color-surface;
-    -fx-background-radius: 24;                 /* Radius lg: 24 */
-    -fx-padding: 16;                           /* Đẩy nội dung vào trong 16px (Spacing md: 16) */
+    -fx-background-radius: 20;
+    -fx-padding: 14;
     -fx-cursor: hand;
-    -fx-min-width: 300;
-    -fx-max-width: 300;
+    -fx-min-width: 260;
+    -fx-max-width: 260;
 }
 
 .product-card:hover {
@@ -327,4 +327,35 @@
     -fx-background-color: -color-grey-200;
     -fx-pref-height: 1;
     -fx-max-height: 1;
+}
+
+.products-grid {
+    -fx-alignment: TOP_LEFT;
+}
+
+.transparent-scroll > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.transparent-scroll > .scroll-bar:vertical .track {
+    -fx-background-color: #F0D9B5;
+    -fx-background-radius: 4;
+}
+
+.transparent-scroll > .scroll-bar:vertical .thumb {
+    -fx-background-color: #D4860B;
+    -fx-background-radius: 4;
+    -fx-opacity: 0.6;
+}
+
+.transparent-scroll > .scroll-bar:vertical .thumb:hover {
+    -fx-opacity: 1.0;
+}
+
+.transparent-scroll > .scroll-bar:vertical .increment-button,
+.transparent-scroll > .scroll-bar:vertical .decrement-button {
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-padding: 0;
 }

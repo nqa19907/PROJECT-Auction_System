@@ -48,9 +48,11 @@
                         <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
                         <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />
                     </VBox>
-                    <VBox alignment="CENTER_RIGHT" spacing="4">
-                        <Label styleClass="metric-label" text="Thời gian còn lại" />
+                    <VBox alignment="CENTER_RIGHT" spacing="4" styleClass="auction-time-panel">
+                        <Label fx:id="timerCaption" styleClass="metric-label" text="Thời gian còn lại" />
                         <Label fx:id="timerLabel" styleClass="timer-value" text="14:32" />
+                        <Label fx:id="auctionStartTime" styleClass="auction-time-text" text="Bắt đầu: --/--/---- --:--" />
+                        <Label fx:id="auctionEndTime" styleClass="auction-time-text" text="Kết thúc: --/--/---- --:--" />
                     </VBox>
                 </HBox>
 

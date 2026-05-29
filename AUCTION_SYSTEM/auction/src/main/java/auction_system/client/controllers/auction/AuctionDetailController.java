@@ -19,6 +19,7 @@ import auction_system.common.models.auctions.BidRow;
 import auction_system.common.models.users.User;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -51,6 +52,8 @@ public class AuctionDetailController implements Initializable {
     /** Logger của controller. */
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AuctionDetailController.class);
+    private static final DateTimeFormatter AUCTION_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     // ── fx:id fields ─────────────────────────────────────────
 
@@ -59,7 +62,10 @@ public class AuctionDetailController implements Initializable {
     @FXML private Label startPrice;
     @FXML private Label bidCount;
     @FXML private Label participantCount;
+    @FXML private Label timerCaption;
     @FXML private Label timerLabel;
+    @FXML private Label auctionStartTime;
+    @FXML private Label auctionEndTime;
     @FXML private Label minBidHint;
     @FXML private Label auctionTitle;
     @FXML private Label auctionId;
@@ -124,6 +130,7 @@ public class AuctionDetailController implements Initializable {
         viewModel.init(context);
         activeAuctionId = context.auctionId();
         activeEndTime = context.endTime();
+        updateAuctionTimeLabels(context.startTime(), context.endTime());
         // Áp dụng ảnh sản phẩm cho phần đầu màn chi tiết.
         applyProductImage(context.imagePath());
 
@@ -244,6 +251,7 @@ public class AuctionDetailController implements Initializable {
 
         setupTable();
         setupChart();
+        ProductImageStyleUtil.applyRoundedClip(productImage, 14);
         bindViewModel();
         bidForm.registerHandlers();
         autoBidForm.registerHandlers();
@@ -321,20 +329,26 @@ public class AuctionDetailController implements Initializable {
             countdownTimer.stop();
         }
 
+        final LocalDateTime now = LocalDateTime.now();
         if ("FINISHED".equals(status) || "CANCELED".equals(status)) {
             // Phiên đã đóng từ server thì không tạo timeline mới.
             markAuctionFinishedOnUi();
             return;
         }
 
-        if ("OPEN".equals(status) && LocalDateTime.now().isBefore(startTime)) {
-            // Phiên đã mở đăng ký nhưng chưa tới giờ chạy, timer đếm đến giờ bắt đầu trước.
+        if (startTime != null && now.isBefore(startTime)) {
+            // Chưa tới giờ chạy, timer phải đếm tới thời điểm bắt đầu.
             markAuctionWaitingOnUi();
             countdownTimer = new AuctionCountdownTimer(
                     timerLabel,
                     startTime,
                     () -> markAuctionRunningOnUi(endTime));
             countdownTimer.start();
+            return;
+        }
+
+        if (endTime == null || !now.isBefore(endTime)) {
+            markAuctionFinishedOnUi();
             return;
         }
 
@@ -345,6 +359,7 @@ public class AuctionDetailController implements Initializable {
      * Cập nhật giao diện khi phiên chưa tới thời điểm bắt đầu.
      */
     private void markAuctionWaitingOnUi() {
+        timerCaption.setText("Bắt đầu sau");
         placeBidBtn.setDisable(true);
         minBidHint.textProperty().unbind();
         minBidHint.setText("Phiên đấu giá chưa bắt đầu.");
@@ -361,6 +376,7 @@ public class AuctionDetailController implements Initializable {
             countdownTimer.stop();
         }
 
+        timerCaption.setText("Thời gian còn lại");
         // Khi phiên bắt đầu, chỉ bidder được mở lại nút đặt giá; người bán vẫn quan sát.
         placeBidBtn.setDisable(sellerObserveOnly);
         minBidHint.textProperty().unbind();
@@ -389,6 +405,7 @@ public class AuctionDetailController implements Initializable {
             countdownTimer.stop();
         }
 
+        timerCaption.setText("Trạng thái");
         timerLabel.setText("Kết thúc");
         placeBidBtn.setDisable(true);
         minBidHint.textProperty().unbind();
@@ -476,10 +493,38 @@ public class AuctionDetailController implements Initializable {
 
             // Lưu mốc kết thúc mới và dựng lại timer theo thời gian server vừa gửi.
             activeEndTime = serverEndTime;
+            auctionEndTime.setText("Kết thúc: " + formatAuctionTime(serverEndTime));
             markAuctionRunningOnUi(serverEndTime);
         } catch (RuntimeException exception) {
             LOGGER.warn("Không thể đọc thời gian kết thúc mới: {}", rawEndTime);
         }
+    }
+
+    /**
+     * Hiển thị mốc bắt đầu và kết thúc của phiên đấu giá.
+     *
+     * @param startTime thời điểm bắt đầu
+     * @param endTime thời điểm kết thúc
+     */
+    private void updateAuctionTimeLabels(
+            final LocalDateTime startTime,
+            final LocalDateTime endTime) {
+        auctionStartTime.setText("Bắt đầu: " + formatAuctionTime(startTime));
+        auctionEndTime.setText("Kết thúc: " + formatAuctionTime(endTime));
+    }
+
+    /**
+     * Format thời gian đấu giá cho UI.
+     *
+     * @param time thời gian cần format
+     * @return chuỗi hiển thị
+     */
+    private String formatAuctionTime(final LocalDateTime time) {
+        if (time == null) {
+            return "--/--/---- --:--";
+        }
+
+        return time.format(AUCTION_TIME_FORMATTER);
     }
 
 }
