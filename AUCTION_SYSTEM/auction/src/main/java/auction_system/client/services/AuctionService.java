@@ -195,6 +195,23 @@ public class AuctionService {
         }
     }
 
+    private String buildGetAutoBidRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.GET_AUTO_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy trạng thái auto-bid: {}",
+                    exception.getMessage());
+            return Protocol.Command.GET_AUTO_BID.name()
+                    + Protocol.SEPARATOR + auctionId;
+        }
+    }
+
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
      */
@@ -339,10 +356,7 @@ public class AuctionService {
 
         this.currentAutoBidStatusCallback = callback;
 
-        final String request = Protocol.Command.GET_AUTO_BID.name()
-                + Protocol.SEPARATOR + auctionId;
-
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(buildGetAutoBidRequest(auctionId));
     }
 
     /**

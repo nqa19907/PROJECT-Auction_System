@@ -185,6 +185,23 @@ final class AuctionResponseParser {
      * @return trạng thái auto-bid đã chuẩn hóa cho callback
      */
     AutoBidStatus parseAutoBidStatus(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                final JsonNode payload = message.payload();
+                if (payload == null || payload.isNull() || !payload.path("enabled").asBoolean()) {
+                    return new AutoBidStatus(false, 0L, 0L);
+                }
+
+                return new AutoBidStatus(
+                        true,
+                        payload.path("maxAmount").asLong(),
+                        payload.path("stepAmount").asLong());
+            } catch (IOException exception) {
+                return new AutoBidStatus(false, 0L, 0L);
+            }
+        }
+
         String[] parts = response.split(Protocol.SEPARATOR_REGEX);
 
         // Chỉ trạng thái ENABLED đủ field mới có maxAmount và stepAmount hợp lệ.
