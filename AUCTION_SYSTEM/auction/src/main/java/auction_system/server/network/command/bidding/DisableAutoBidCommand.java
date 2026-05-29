@@ -1,9 +1,13 @@
 package auction_system.server.network.command.bidding;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +53,7 @@ public final class DisableAutoBidCommand implements Command {
                     session.getCurrentUser().getUsername(),
                     auctionId);
 
-            return Protocol.Response.AUTO_BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + "Đã tắt đấu giá tự động.";
+            return success(auctionId);
         } catch (IllegalArgumentException exception) {
             return fail(exception.getMessage());
         } catch (Exception exception) {
@@ -61,8 +63,38 @@ public final class DisableAutoBidCommand implements Command {
     }
 
     private String fail(final String message) {
-        return Protocol.Response.AUTO_BID_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi tắt auto-bid: {}", exception.getMessage());
+            return Protocol.Response.AUTO_BID_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
+    }
+
+    private String success(final String auctionId) {
+        final String message = "Đã tắt đấu giá tự động.";
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of("auctionId", auctionId)),
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response tắt auto-bid: {}",
+                    exception.getMessage());
+            return Protocol.Response.AUTO_BID_OK.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }
