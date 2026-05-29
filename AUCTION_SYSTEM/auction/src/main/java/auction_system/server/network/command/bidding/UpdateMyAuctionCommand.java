@@ -4,6 +4,7 @@ import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.session.ClientSession;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -11,12 +12,13 @@ import java.util.Objects;
  */
 public final class UpdateMyAuctionCommand implements Command {
 
-    private static final int REQUIRED_PART_COUNT = 6;
+    private static final int REQUIRED_PART_COUNT = 7;
     private static final int AUCTION_ID_INDEX = 1;
     private static final int CATEGORY_INDEX = 2;
     private static final int ITEM_NAME_INDEX = 3;
     private static final int DESCRIPTION_INDEX = 4;
     private static final int CONDITION_INDEX = 5;
+    private static final int END_TIME_INDEX = 6;
 
     private final AuctionManager auctionManager;
 
@@ -42,7 +44,10 @@ public final class UpdateMyAuctionCommand implements Command {
                     required(parts[CATEGORY_INDEX], "Thiếu danh mục."),
                     required(parts[ITEM_NAME_INDEX], "Thiếu tên tài sản."),
                     required(parts[DESCRIPTION_INDEX], "Thiếu mô tả."),
-                    required(parts[CONDITION_INDEX], "Thiếu tình trạng.")
+                    required(parts[CONDITION_INDEX], "Thiếu tình trạng."),
+                    // endTime client gửi lên theo định dạng ISO-8601.
+                    LocalDateTime.parse(
+                            required(parts[END_TIME_INDEX], "Thiếu thời gian kết thúc."))
             );
 
             if (!updated) {
@@ -52,7 +57,7 @@ public final class UpdateMyAuctionCommand implements Command {
 
             return Protocol.Response.UPDATE_MY_AUCTION_OK.name()
                     + Protocol.SEPARATOR + "Cập nhật phiên thành công.";
-        } catch (IllegalArgumentException exception) {
+        } catch (RuntimeException exception) {
             return Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()
                     + Protocol.SEPARATOR + exception.getMessage();
         }

@@ -200,15 +200,15 @@ public class AuctionManager {
     }
 
     /**
-     * Cập nhật thông tin phiên do chính người bán sở hữu.
-     * Chỉ cập nhật thông tin sản phẩm, không cập nhật giá khởi điểm và thời gian.
+     * Cập nhật thông tin phiên do seller sở hữu.
      *
      * @param auctionId mã phiên cần chỉnh sửa
-     * @param userId mã user đang thực hiện chỉnh sửa
+     * @param userId mã user đang thao tác
      * @param category danh mục mới
      * @param itemName tên tài sản mới
      * @param description mô tả mới
      * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
      * @return true nếu cập nhật thành công
      */
     public boolean updateMyAuctionInfo(
@@ -217,7 +217,8 @@ public class AuctionManager {
             final String category,
             final String itemName,
             final String description,
-            final String condition) {
+            final String condition,
+            final LocalDateTime endTime) {
         final Auction auction = auctionRegistry.findById(auctionId);
         if (auction == null) {
             return false;
@@ -234,6 +235,10 @@ public class AuctionManager {
         }
 
         // Cập nhật các trường cho phép sửa theo yêu cầu.
+        if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
+            throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+        }
+
         final String normalizedCategory = category.trim().toUpperCase();
         final Item currentItem = auction.getItem();
         final String fullDescription = description + "\nTình trạng: " + condition;
@@ -267,6 +272,7 @@ public class AuctionManager {
             auction.setItem(replacementItem);
         }
 
+        auction.setEndTime(endTime);
         database.items().save(auction.getItem());
         database.auctions().save(auction);
         database.flushAll();

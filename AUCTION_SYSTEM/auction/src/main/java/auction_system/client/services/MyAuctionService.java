@@ -111,9 +111,10 @@ public final class MyAuctionService {
 
             final List<MyAuctionRow> rows = new ArrayList<>();
             for (int i = 1; i < records.length; i++) {
-                // row: id|itemName|currentPrice|status|endTime|category|description|condition
+                // row:
+                // id|itemName|currentPrice|status|startTime|endTime|category|description|condition
                 final String[] parts = records[i].split("\\" + Protocol.SEPARATOR, -1);
-                if (parts.length < 8) {
+                if (parts.length < 9) {
                     continue;
                 }
 
@@ -125,7 +126,8 @@ public final class MyAuctionService {
                         parts[4],
                         parts[5],
                         parts[6],
-                        parts[7]));
+                        parts[7],
+                        parts[8]));
             }
 
             if (rows.size() != count) {

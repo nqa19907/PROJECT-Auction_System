@@ -51,6 +51,8 @@ public final class ListMyAuctionsCommand implements Command {
                     .append(safe(auction.getItem().getItemName())).append(Protocol.SEPARATOR)
                     .append(currentPrice).append(Protocol.SEPARATOR)
                     .append(auction.getStatus()).append(Protocol.SEPARATOR)
+                    // Trả thêm startTime để client đổ đúng thời gian bắt đầu khi vào chế độ sửa.
+                    .append(auction.getStartTime()).append(Protocol.SEPARATOR)
                     .append(auction.getEndTime()).append(Protocol.SEPARATOR)
                     .append(category).append(Protocol.SEPARATOR)
                     .append(extracted[0]).append(Protocol.SEPARATOR)

@@ -103,13 +103,14 @@ public final class ItemPublishService {
 
     /**
      * Cập nhật phiên của user hiện tại.
-     * Không gửi thời gian và giá khởi điểm theo yêu cầu.
+     * Không gửi giá khởi điểm; cho phép gửi thời gian kết thúc mới.
      *
      * @param auctionId mã phiên cần cập nhật
      * @param category danh mục mới
      * @param itemName tên tài sản mới
      * @param description mô tả mới
      * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
      * @param callback callback nhận kết quả
      */
     public void updateMyAuction(
@@ -118,10 +119,12 @@ public final class ItemPublishService {
             final String itemName,
             final String description,
             final String condition,
+            final LocalDateTime endTime,
             final PublishItemCallback callback) {
         Objects.requireNonNull(callback, "Callback không được null.");
         this.updateCallback = callback;
 
+        // Format request update: ...|condition|endTime(ISO-8601)
         final String request = String.join(
                 Protocol.SEPARATOR,
                 Protocol.Command.UPDATE_MY_AUCTION.name(),
@@ -129,7 +132,8 @@ public final class ItemPublishService {
                 clean(category),
                 clean(itemName),
                 clean(description),
-                clean(condition));
+                clean(condition),
+                FORMATTER.format(endTime));
 
         final boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
