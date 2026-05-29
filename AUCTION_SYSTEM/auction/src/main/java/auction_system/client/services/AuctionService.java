@@ -80,12 +80,7 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.SET_ANTI_SNIPING.name()
-                        + Protocol.SEPARATOR
-                        + auctionId
-                        + Protocol.SEPARATOR
-                        + enabled);
+        NetworkClient.getInstance().sendCommand(buildSetAntiSnipingRequest(auctionId, enabled));
     }
 
     private String buildJoinAuctionRequest(final String auctionId) {
@@ -121,6 +116,26 @@ public class AuctionService {
             return Protocol.Command.LEAVE_AUCTION.name()
                     + Protocol.SEPARATOR
                     + auctionId;
+        }
+    }
+
+    private String buildSetAntiSnipingRequest(final String auctionId, final boolean enabled) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.SET_ANTI_SNIPING.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, enabled)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request chống đặt giá phút chót: {}",
+                    exception.getMessage());
+            return Protocol.Command.SET_ANTI_SNIPING.name()
+                    + Protocol.SEPARATOR
+                    + auctionId
+                    + Protocol.SEPARATOR
+                    + enabled;
         }
     }
 

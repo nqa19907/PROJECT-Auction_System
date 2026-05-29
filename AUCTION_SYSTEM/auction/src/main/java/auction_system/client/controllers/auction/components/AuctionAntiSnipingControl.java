@@ -2,7 +2,12 @@ package auction_system.client.controllers.auction.components;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuctionService;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.databind.JsonNode;
+import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javafx.scene.control.CheckBox;
@@ -98,17 +103,17 @@ public final class AuctionAntiSnipingControl {
      * @param response thông báo ANTI_SNIPING_UPDATED
      */
     public void handleUpdated(final String response) {
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        final Optional<AntiSnipingUpdate> update = parseUpdate(response);
         final String activeAuctionId = activeAuctionIdSupplier.get();
-        if (parts.length < MIN_UPDATE_PARTS
+        if (update.isEmpty()
                 || activeAuctionId == null
-                || !activeAuctionId.equals(parts[IDX_UPDATE_AUCTION_ID])) {
+                || !activeAuctionId.equals(update.get().auctionId())) {
             // Bỏ qua broadcast sai format hoặc không thuộc phiên đang mở.
             return;
         }
 
         // Server là nguồn sự thật cuối cùng cho trạng thái checkbox.
-        syncCheckbox(Boolean.parseBoolean(parts[IDX_UPDATE_ENABLED]));
+        syncCheckbox(update.get().enabled());
         checkbox.setDisable(!sellerObserveOnly);
     }
 
@@ -118,11 +123,7 @@ public final class AuctionAntiSnipingControl {
      * @param response thông báo ANTI_SNIPING_UPDATE_FAIL
      */
     public void handleUpdateFail(final String response) {
-        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
-        // Response lỗi có thể thiếu message, nên dùng thông báo mặc định khi cần.
-        final String message = parts.length >= MIN_FAIL_PARTS
-                ? parts[IDX_FAIL_MESSAGE]
-                : "Không thể cập nhật tự động gia hạn phút chót.";
+        final String message = parseFailureMessage(response);
 
         errorLabel.setText(message);
         errorLabel.setVisible(true);
@@ -150,5 +151,53 @@ public final class AuctionAntiSnipingControl {
         syncing = true;
         checkbox.setSelected(enabled);
         syncing = false;
+    }
+
+    private Optional<AntiSnipingUpdate> parseUpdate(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                final JsonNode payload = message.payload();
+                if (payload == null || payload.isNull()) {
+                    return Optional.empty();
+                }
+
+                return Optional.of(new AntiSnipingUpdate(
+                        payload.path("auctionId").asText(null),
+                        payload.path("enabled").asBoolean()));
+            } catch (IOException exception) {
+                return Optional.empty();
+            }
+        }
+
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        if (parts.length < MIN_UPDATE_PARTS) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new AntiSnipingUpdate(
+                parts[IDX_UPDATE_AUCTION_ID],
+                Boolean.parseBoolean(parts[IDX_UPDATE_ENABLED])));
+    }
+
+    private String parseFailureMessage(final String response) {
+        final String defaultMessage = "Không thể cập nhật tự động gia hạn phút chót.";
+        if (JsonProtocol.isJsonObject(response)) {
+            try {
+                final JsonMessage message = JsonProtocol.parse(response);
+                return message.message() == null || message.message().isBlank()
+                        ? defaultMessage
+                        : message.message();
+            } catch (IOException exception) {
+                return defaultMessage;
+            }
+        }
+
+        final String[] parts = response.split(Protocol.SEPARATOR_REGEX, -1);
+        // Response lỗi có thể thiếu message, nên dùng thông báo mặc định khi cần.
+        return parts.length >= MIN_FAIL_PARTS ? parts[IDX_FAIL_MESSAGE] : defaultMessage;
+    }
+
+    private record AntiSnipingUpdate(String auctionId, boolean enabled) {
     }
 }

@@ -1,10 +1,14 @@
 package auction_system.server.network.command.bidding;
 
 import auction_system.common.models.auctions.Auction;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +60,7 @@ public class SetAntiSnipingCommand implements Command {
                     session.getCurrentUser(),
                     enabled);
 
-            return Protocol.Response.ANTI_SNIPING_UPDATED.name()
-                    + Protocol.SEPARATOR + auction.getId()
-                    + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+            return buildSuccessResponse(auction);
         } catch (IllegalArgumentException exception) {
             return buildFailResponse(exception.getMessage());
         } catch (RuntimeException exception) {
@@ -74,8 +76,40 @@ public class SetAntiSnipingCommand implements Command {
      * @return response lỗi theo protocol
      */
     private String buildFailResponse(final String message) {
-        return Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi chống đặt giá phút chót: {}",
+                    exception.getMessage());
+            return Protocol.Response.ANTI_SNIPING_UPDATE_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
+    }
+
+    private String buildSuccessResponse(final Auction auction) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "auctionId", auction.getId(),
+                                    "enabled", auction.isAntiSnipingEnabled())),
+                            "Cập nhật chống đặt giá phút chót thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response chống đặt giá phút chót: {}",
+                    exception.getMessage());
+            return Protocol.Response.ANTI_SNIPING_UPDATED.name()
+                    + Protocol.SEPARATOR + auction.getId()
+                    + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+        }
     }
 }
