@@ -1,10 +1,14 @@
 package auction_system.server.network.command.bidding;
 
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,9 +82,7 @@ public final class AutoBidCommand implements Command {
                     stepAmount
             );
 
-            return Protocol.Response.AUTO_BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + "Đã bật đấu giá tự động.";
+            return success(auctionId, maxAmount, stepAmount);
         } catch (IllegalArgumentException e) {
             return fail(e.getMessage());
         } catch (Exception e) {
@@ -102,8 +104,44 @@ public final class AutoBidCommand implements Command {
     }
 
     private String fail(final String message) {
-        return Protocol.Response.AUTO_BID_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi bật auto-bid: {}", exception.getMessage());
+            return Protocol.Response.AUTO_BID_FAIL.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
+    }
+
+    private String success(
+            final String auctionId,
+            final long maxAmount,
+            final long stepAmount) {
+        final String message = "Đã bật đấu giá tự động.";
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "auctionId", auctionId,
+                                    "maxAmount", maxAmount,
+                                    "stepAmount", stepAmount)),
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response bật auto-bid: {}",
+                    exception.getMessage());
+            return Protocol.Response.AUTO_BID_OK.name()
+                    + Protocol.SEPARATOR
+                    + message;
+        }
     }
 }

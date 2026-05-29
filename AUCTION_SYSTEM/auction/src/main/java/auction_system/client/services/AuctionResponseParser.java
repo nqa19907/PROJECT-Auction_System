@@ -144,6 +144,10 @@ final class AuctionResponseParser {
      * @return message thành công nếu có, hoặc thông báo mặc định
      */
     String parseSimpleSuccessMessage(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            return parseJsonMessage(response, "Yêu cầu thành công.");
+        }
+
         String[] parts = response.split(Protocol.SEPARATOR_REGEX, 2);
         return parts.length >= 2 ? parts[1] : "Yêu cầu thành công.";
     }
@@ -155,8 +159,23 @@ final class AuctionResponseParser {
      * @return message lỗi nếu có, hoặc thông báo mặc định
      */
     String parseSimpleFailureMessage(final String response) {
+        if (JsonProtocol.isJsonObject(response)) {
+            return parseJsonMessage(response, "Yêu cầu không thành công.");
+        }
+
         String[] parts = response.split(Protocol.SEPARATOR_REGEX, 2);
         return parts.length >= 2 ? parts[1] : "Yêu cầu không thành công.";
+    }
+
+    private String parseJsonMessage(final String response, final String fallback) {
+        try {
+            final JsonMessage message = JsonProtocol.parse(response);
+            return message.message() == null || message.message().isBlank()
+                    ? fallback
+                    : message.message();
+        } catch (IOException exception) {
+            return fallback;
+        }
     }
 
     /**

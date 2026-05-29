@@ -156,6 +156,28 @@ public class AuctionService {
         }
     }
 
+    private String buildEnableAutoBidRequest(
+            final String auctionId,
+            final long maxAmount,
+            final long stepAmount) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.ENABLE_AUTO_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, maxAmount, stepAmount)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request bật auto-bid: {}",
+                    exception.getMessage());
+            return Protocol.Command.ENABLE_AUTO_BID.name()
+                    + Protocol.SEPARATOR + auctionId
+                    + Protocol.SEPARATOR + maxAmount
+                    + Protocol.SEPARATOR + stepAmount;
+        }
+    }
+
     /**
      * Định nghĩa giao diện Callback trả dữ liệu về Controller.
      */
@@ -269,12 +291,8 @@ public class AuctionService {
 
         this.currentAutoBidCallback = callback;
 
-        final String request = Protocol.Command.ENABLE_AUTO_BID.name()
-                + Protocol.SEPARATOR + auctionId
-                + Protocol.SEPARATOR + maxAmount
-                + Protocol.SEPARATOR + stepAmount;
-
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(
+                buildEnableAutoBidRequest(auctionId, maxAmount, stepAmount));
     }
 
     /**
