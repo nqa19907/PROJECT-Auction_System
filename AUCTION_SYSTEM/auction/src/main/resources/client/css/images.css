@@ -6,10 +6,7 @@
 /* Dùng thẻ <Region> kết hợp style này để ảnh có thể tự động bo góc và thu phóng đẹp mắt */
 
 .product-image {
-    /* Bạn nhớ tạo thư mục "images" ngang hàng với thư mục "css", sau đó bỏ file ảnh thật vào nhé */
-    /* Bỏ comment dòng dưới để hiển thị ảnh: */
-    -fx-background-image: url("../images/rolex.jpg");
-    -fx-background-color: -color-grey-200; /* Nền xám chờ hiển thị khi chưa load được ảnh */
+    -fx-background-color: -color-orange-150;
     -fx-background-size: cover; /* Dùng cover để ảnh lấp đầy khung, phần thừa tự động cắt (crop) từ tâm */
     -fx-background-position: center center;
     -fx-background-repeat: no-repeat;

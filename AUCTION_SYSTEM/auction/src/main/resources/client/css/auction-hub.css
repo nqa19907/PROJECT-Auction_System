@@ -122,7 +122,6 @@
 
 /* ── Ảnh sản phẩm chi tiết ───────────────── */
 .root-pane .product-detail-image {
-    -fx-background-image: url("../images/rolex.jpg");
     -fx-background-color: #F4E4CB;
     -fx-background-size: cover;
     -fx-background-position: center center;

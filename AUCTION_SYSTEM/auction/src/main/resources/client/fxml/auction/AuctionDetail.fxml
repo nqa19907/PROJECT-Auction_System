@@ -14,6 +14,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
@@ -45,7 +46,10 @@
 
                 <HBox alignment="CENTER_LEFT" spacing="16" styleClass="info-card">
                     <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
-                    <Region fx:id="productImage" maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220" styleClass="product-detail-image" />
+                    <StackPane maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220">
+                        <Region fx:id="productImage" maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220" styleClass="product-detail-image" />
+                        <Region fx:id="productImagePlaceholderIcon" styleClass="product-detail-placeholder" />
+                    </StackPane>
                     <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
                         <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />

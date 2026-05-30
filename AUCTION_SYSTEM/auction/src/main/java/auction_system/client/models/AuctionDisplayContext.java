@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  * @param openingPrice giá khởi điểm
  * @param currentPrice giá hiện tại
  * @param imagePath đường dẫn ảnh sản phẩm
+ * @param category danh mục sản phẩm
  */
 public record AuctionDisplayContext(
         String auctionId,
@@ -21,6 +22,7 @@ public record AuctionDisplayContext(
         LocalDateTime endTime,
         String sellerId,
         boolean antiSnipingEnabled,
-        String imagePath
+        String imagePath,
+        String category
 ) {
 }

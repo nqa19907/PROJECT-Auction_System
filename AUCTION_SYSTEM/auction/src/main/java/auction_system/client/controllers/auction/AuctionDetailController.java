@@ -70,6 +70,7 @@ public class AuctionDetailController implements Initializable {
     @FXML private Label auctionTitle;
     @FXML private Label auctionId;
     @FXML private Region productImage;
+    @FXML private Region productImagePlaceholderIcon;
     @FXML private Circle liveDot;
     @FXML private LineChart<Number, Number> bidLineChart;
     @FXML private NumberAxis numberXaxis;
@@ -132,7 +133,7 @@ public class AuctionDetailController implements Initializable {
         activeEndTime = context.endTime();
         updateAuctionTimeLabels(context.startTime(), context.endTime());
         // Áp dụng ảnh sản phẩm cho phần đầu màn chi tiết.
-        applyProductImage(context.imagePath());
+        applyProductImage(context.imagePath(), context.category());
 
         // Đăng ký socket room của phiên để chỉ nhận realtime update liên quan.
         realtimeSubscription.start(activeAuctionId);
@@ -184,10 +185,14 @@ public class AuctionDetailController implements Initializable {
      * Áp dụng ảnh sản phẩm vào vùng ảnh chi tiết.
      *
      * @param imagePath đường dẫn ảnh sản phẩm
+     * @param category danh mục sản phẩm
      */
-    private void applyProductImage(final String imagePath) {
-        // Ghi đè ảnh fallback bằng ảnh sản phẩm thật.
-        productImage.setStyle(ProductImageStyleUtil.toBackgroundImageStyle(imagePath));
+    private void applyProductImage(final String imagePath, final String category) {
+        ProductImageStyleUtil.applyImageOrPlaceholder(
+                productImage,
+                productImagePlaceholderIcon,
+                imagePath,
+                category);
     }
 
     /**
@@ -472,12 +477,14 @@ public class AuctionDetailController implements Initializable {
                         LocalDateTime.parse(parts[8]),
                         parts[10],
                         Boolean.parseBoolean(parts[11]),
-                        parts.length > 12 ? parts[12] : "");
+                        parts.length > 12 ? parts[12] : "",
+                        parts.length > 13 ? parts[13] : "");
 
                 Platform.runLater(() -> {
                     viewModel.init(context);
                     activeAuctionId = context.auctionId();
                     activeEndTime = context.endTime();
+                    applyProductImage(context.imagePath(), context.category());
                     applySellerObserveOnlyPolicy(context);
                     autoBidForm.applySellerPolicy(sellerObserveOnly);
                     syncAntiSnipingCheckbox(context.antiSnipingEnabled());
