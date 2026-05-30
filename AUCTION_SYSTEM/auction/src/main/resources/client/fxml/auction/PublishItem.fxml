@@ -20,7 +20,7 @@
          <VBox spacing="16" styleClass="dashboard-background">
 
              <!-- Page title -->
-             <Label styleClass="page-title" text="Tạo phiên đấu giá mới" />
+             <Label fx:id="lblPageTitle" styleClass="page-title" text="Tạo phiên đấu giá mới" />
 
              <!-- Step indicator -->
              <HBox alignment="CENTER_LEFT" spacing="0">

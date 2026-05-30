@@ -202,6 +202,29 @@ class BidServiceTest {
     }
 
     /**
+     * Người bán không được bật auto-bid cho chính phiên đấu giá của sản phẩm mình đăng.
+     *
+     * <p>Rule này phải nằm ở server vì client có thể bị bypass qua socket request thủ công.
+     * Khi bị từ chối, hệ thống không được lưu setting auto-bid vào cache hoặc database.
+     */
+    @Test
+    void enableAutoBid_SellerOfOwnAuction_ThrowsInvalidBidExceptionAndDoesNotPersistSetting() {
+        database.users().save(seller);
+
+        InvalidBidException exception = assertThrows(
+                InvalidBidException.class,
+                () -> bidService.enableAutoBid(
+                        runningAuction.getId(),
+                        seller,
+                        10_000L,
+                        500L));
+
+        assertTrue(exception.getMessage().contains("Người bán"));
+        assertTrue(autoBidService.findSetting(runningAuction.getId(), seller.getId()).isEmpty());
+        assertTrue(database.autoBidSettings().findByAuctionId(runningAuction.getId()).isEmpty());
+    }
+
+    /**
      * Số tiền đặt giá bằng 0 phải bị từ chối.
      *
      * <p>Điều kiện {@code amount <= 0} trong {@code validateRequest()} ngăn các

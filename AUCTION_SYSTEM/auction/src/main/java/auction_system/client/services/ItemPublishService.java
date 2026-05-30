@@ -23,7 +23,8 @@ public final class ItemPublishService {
     private static final ItemPublishService INSTANCE = new ItemPublishService();
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    private PublishItemCallback currentCallback;
+    private PublishItemCallback publishCallback;
+    private PublishItemCallback updateCallback;
 
     private ItemPublishService() {
         NetworkClient.getInstance().registerHandler(
@@ -33,8 +34,14 @@ public final class ItemPublishService {
                 Protocol.Response.PUBLISH_ITEM_FAIL.name(),
                 this::handlePublishFailure);
         NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_MY_AUCTION_OK.name(),
+                this::handleUpdateSuccess);
+        NetworkClient.getInstance().registerHandler(
+                Protocol.Response.UPDATE_MY_AUCTION_FAIL.name(),
+                this::handleUpdateFailure);
+        NetworkClient.getInstance().registerHandler(
                 Protocol.Response.ERROR.name(), 
-                this::handlePublishError);
+                this::handleError);
     }
 
     /**
@@ -119,7 +126,7 @@ public final class ItemPublishService {
             PublishItemCallback callback) {
 
         Objects.requireNonNull(callback, "Callback không được null.");
-        this.currentCallback = callback;
+        this.publishCallback = callback;
 
         // Đóng gói request đăng sản phẩm cùng metadata ảnh.
         String request = buildPublishItemRequest(
@@ -136,6 +143,44 @@ public final class ItemPublishService {
         if (!sent) {
             LOGGER.warning("Không thể gửi yêu cầu đăng bán sản phẩm tới Server.");
             callback.onResult(false, "Không thể kết nối tới Server.");
+        }
+    }
+
+    /**
+     * Cập nhật thông tin phiên do user hiện tại đăng.
+     *
+     * @param auctionId mã phiên cần cập nhật
+     * @param category danh mục mới
+     * @param itemName tên tài sản mới
+     * @param description mô tả mới
+     * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
+     * @param callback callback nhận kết quả
+     */
+    public void updateMyAuction(
+            final String auctionId,
+            final String category,
+            final String itemName,
+            final String description,
+            final String condition,
+            final LocalDateTime endTime,
+            final PublishItemCallback callback) {
+        Objects.requireNonNull(callback, "Callback không được null.");
+        updateCallback = callback;
+
+        final String request = String.join(
+                Protocol.SEPARATOR,
+                Protocol.Command.UPDATE_MY_AUCTION.name(),
+                clean(auctionId),
+                clean(category),
+                clean(itemName),
+                clean(description),
+                clean(condition),
+                FORMATTER.format(endTime));
+
+        if (!NetworkClient.getInstance().sendCommand(request)) {
+            LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
+            notifyUpdateCallback(false, "Không thể kết nối tới Server.");
         }
     }
 
@@ -164,9 +209,25 @@ public final class ItemPublishService {
      * @param message Thông báo kết quả.
      */
     private void notifyCallback(boolean success, String message) {
-        PublishItemCallback callback = currentCallback;
-        currentCallback = null;
+        PublishItemCallback callback = publishCallback;
+        publishCallback = null;
 
+        if (callback != null) {
+            callback.onResult(success, message);
+        }
+    }
+
+    private void handleUpdateSuccess(final String response) {
+        notifyUpdateCallback(true, extractMessage(response, "Cập nhật phiên thành công."));
+    }
+
+    private void handleUpdateFailure(final String response) {
+        notifyUpdateCallback(false, extractMessage(response, "Cập nhật phiên thất bại."));
+    }
+
+    private void notifyUpdateCallback(final boolean success, final String message) {
+        final PublishItemCallback callback = updateCallback;
+        updateCallback = null;
         if (callback != null) {
             callback.onResult(success, message);
         }
@@ -264,13 +325,13 @@ public final class ItemPublishService {
      *
      * @param response phản hồi lỗi từ server
      */
-    private void handlePublishError(final String response) {
-        if (currentCallback == null) {
-            return;
+    private void handleError(final String response) {
+        final String message = extractMessage(response, "Server không xử lý được yêu cầu.");
+        if (publishCallback != null) {
+            notifyCallback(false, message);
         }
-
-        notifyCallback(
-                false,
-                extractMessage(response, "Server không xử lý được yêu cầu đăng bán."));
+        if (updateCallback != null) {
+            notifyUpdateCallback(false, message);
+        }
     }
 }

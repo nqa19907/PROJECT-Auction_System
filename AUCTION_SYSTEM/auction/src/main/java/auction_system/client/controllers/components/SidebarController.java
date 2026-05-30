@@ -24,6 +24,8 @@ public class SidebarController {
     private static final String STYLE_CLASS_CATEGORY_OPTION = "category-option";
     private static final String STYLE_CLASS_ACTIVE = "active";
     private static final String UI_ID_PUBLISH_ITEM = "publishItem";
+    // ID mục mới "Quản lý phiên của tôi" trong Sidebar.
+    private static final String UI_ID_MY_AUCTION_MANAGEMENT = "myAuctionManagement";
     /** ID của mục điều hướng admin demo trong Sidebar. */
     public static final String ADMIN_DEMO_VIEW = "testAdminView";
 
@@ -31,6 +33,8 @@ public class SidebarController {
     private VBox categorySidebar;
     @FXML
     private HBox publishItem;
+    @FXML
+    private HBox myAuctionManagement;
     @FXML
     private HBox testAdminView;
 
@@ -40,6 +44,8 @@ public class SidebarController {
     private Runnable onPublishItemSelected = () -> { };
     /** Callback mở màn hình admin demo. */
     private Runnable onAdminSelected = () -> { };
+    // Callback cho mục "Quản lý phiên của tôi".
+    private Runnable onMyAuctionManagementSelected = () -> { };
 
     /**
      * Đăng ký callback khi người dùng chọn danh mục.
@@ -66,6 +72,11 @@ public class SidebarController {
      */
     public void setOnAdminSelected(final Runnable callback) {
         this.onAdminSelected = callback;
+    }
+
+    // Đăng ký callback khi người dùng bấm "Quản lý phiên của tôi".
+    public void setOnMyAuctionManagementSelected(final Runnable callback) {
+        this.onMyAuctionManagementSelected = callback;
     }
 
     /**
@@ -137,6 +148,13 @@ public class SidebarController {
     private void loadAdminView() {
         setActiveSidebarItem(ADMIN_DEMO_VIEW);
         onAdminSelected.run();
+    }
+
+    // Xử lý click vào mục "Quản lý phiên của tôi".
+    @FXML
+    private void handleMyAuctionManagement() {
+        setActiveSidebarItem(UI_ID_MY_AUCTION_MANAGEMENT);
+        onMyAuctionManagementSelected.run();
     }
 
     /**

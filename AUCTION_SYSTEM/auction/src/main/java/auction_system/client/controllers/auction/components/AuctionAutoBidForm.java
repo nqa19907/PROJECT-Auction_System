@@ -32,6 +32,7 @@ public final class AuctionAutoBidForm {
     private final AuctionViewModel viewModel;
     private boolean confirmedEnabled;
     private boolean loadingStatus;
+    private boolean sellerLocked;
 
     /**
      * Khởi tạo form đấu giá tự động bằng các control đã inject từ FXML.
@@ -97,11 +98,32 @@ public final class AuctionAutoBidForm {
      * @param auctionId mã phiên đấu giá đang hiển thị
      */
     public void loadStatus(final String auctionId) {
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
         loadingStatus = true;
         AuctionService.getInstance().fetchAutoBidStatus(
                 auctionId,
                 (enabled, maxAmount, stepAmount) -> Platform.runLater(() ->
                         applyLoadedStatus(enabled, maxAmount, stepAmount)));
+    }
+
+    /**
+     * Áp dụng quyền thao tác auto-bid theo vai trò của user trong phiên hiện tại.
+     *
+     * @param sellerObserveOnly true nếu user hiện tại là người bán của phiên
+     */
+    public void applySellerPolicy(final boolean sellerObserveOnly) {
+        sellerLocked = sellerObserveOnly;
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
+        autoBidToggle.setDisable(false);
+        applyEnabledState(autoBidToggle.isSelected());
     }
 
     /**
@@ -111,6 +133,11 @@ public final class AuctionAutoBidForm {
      * lưu cấu hình auto-bid.
      */
     private void submitAutoBidSettings() {
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
         final long maxAmount = parseAmountOrZero(maxAmountInput.getText());
         final long stepAmount = parseAmountOrZero(stepAmountInput.getText());
 
@@ -208,6 +235,11 @@ public final class AuctionAutoBidForm {
      * @param enabled true nếu checkbox auto-bid đang được chọn
      */
     private void handleToggleChanged(final boolean enabled) {
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
         if (loadingStatus) {
             applyEnabledState(enabled);
             return;
@@ -241,6 +273,11 @@ public final class AuctionAutoBidForm {
             final long maxAmount,
             final long stepAmount) {
 
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
         confirmedEnabled = enabled;
         loadingStatus = true;
         autoBidToggle.setSelected(enabled);
@@ -258,6 +295,11 @@ public final class AuctionAutoBidForm {
     }
 
     private void disableConfirmedAutoBid() {
+        if (sellerLocked) {
+            applySellerLockedState();
+            return;
+        }
+
         applyEnabledState(false);
         AuctionService.getInstance().disableAutoBid(
                 viewModel.auctionIdProperty().get(),
@@ -289,6 +331,19 @@ public final class AuctionAutoBidForm {
         }
 
         enableAutoBidButton.setText(confirmedEnabled ? EDIT_BUTTON_TEXT : ENABLE_BUTTON_TEXT);
+    }
+
+    private void applySellerLockedState() {
+        loadingStatus = true;
+        confirmedEnabled = false;
+        autoBidToggle.setSelected(false);
+        loadingStatus = false;
+        autoBidToggle.setDisable(true);
+        maxAmountInput.setDisable(true);
+        stepAmountInput.setDisable(true);
+        enableAutoBidButton.setDisable(true);
+        clearForm();
+        showError("Người bán không được bật auto-bid cho sản phẩm của chính mình.");
     }
 
     /**

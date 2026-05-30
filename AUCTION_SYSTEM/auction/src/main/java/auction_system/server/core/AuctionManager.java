@@ -2,9 +2,14 @@ package auction_system.server.core;
 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
+import auction_system.common.models.auctions.AuctionStatus;
+import auction_system.common.models.items.Art;
+import auction_system.common.models.items.Electronic;
 import auction_system.common.models.items.Item;
+import auction_system.common.models.items.Vehicle;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.Protocol;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -169,12 +174,109 @@ public class AuctionManager {
         settlementService.settleFinishedAuction(auction);
     }
 
+    /**
+     * Thông báo realtime rằng danh sách người dùng đã thay đổi.
+     *
+     * <p>Client nhận được sự kiện này có thể chủ động gọi lại API danh sách user
+     * để lấy snapshot mới nhất từ server.
+     */
+    public void notifyUserListChanged() {
+        final String message = Protocol.Response.USER_LIST_CHANGED.name();
+        onlineUsers.getObservers().forEach(observer -> observer.update(message));
+    }
+
+    /**
+     * Huỷ một phiên đấu giá theo ID.
+     *
+     * @param auctionId ID phiên cần huỷ.
+     * @return true nếu huỷ thành công, false nếu không tìm thấy.
+     */
     public boolean cancelAuction(final String auctionId) {
         return administrationService.cancelAuction(auctionId);
     }
 
     public boolean deleteAuction(final String auctionId) {
         return administrationService.deleteAuction(auctionId);
+    }
+
+    /**
+     * Cập nhật thông tin phiên do seller sở hữu.
+     *
+     * @param auctionId mã phiên cần chỉnh sửa
+     * @param userId mã user đang thao tác
+     * @param category danh mục mới
+     * @param itemName tên tài sản mới
+     * @param description mô tả mới
+     * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
+     * @return true nếu cập nhật thành công
+     */
+    public boolean updateMyAuctionInfo(
+            final String auctionId,
+            final String userId,
+            final String category,
+            final String itemName,
+            final String description,
+            final String condition,
+            final LocalDateTime endTime) {
+        final Auction auction = auctionRegistry.findById(auctionId);
+        if (auction == null) {
+            return false;
+        }
+        if (auction.getParticipant() == null
+                || !userId.equals(auction.getParticipant().getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền chỉnh sửa phiên này.");
+        }
+        if (auction.getCurrentHighestBid() != null) {
+            throw new IllegalArgumentException("Phiên đã có người đặt giá, không thể chỉnh sửa.");
+        }
+        if (auction.getStatus() != AuctionStatus.OPEN) {
+            throw new IllegalArgumentException("Chỉ được chỉnh sửa phiên chưa bắt đầu.");
+        }
+
+        // Cập nhật các trường cho phép sửa theo yêu cầu.
+        if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
+            throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
+        }
+
+        final String normalizedCategory = category.trim().toUpperCase();
+        final Item currentItem = auction.getItem();
+        final String fullDescription = description + "\nTình trạng: " + condition;
+
+        if (normalizedCategory.equals(currentItem.getCategory())) {
+            // Cùng danh mục: giữ nguyên class item cũ, chỉ cập nhật nội dung.
+            currentItem.setItemName(itemName);
+            currentItem.setDescription(fullDescription);
+            currentItem.setCategory(normalizedCategory);
+        } else {
+            // Khác danh mục: phải tạo item mới đúng class để category hoạt động đúng theo model.
+            final Item replacementItem = switch (normalizedCategory) {
+                case "ART" -> new Art(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                case "ELECTRONIC" -> new Electronic(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                case "VEHICLE" -> new Vehicle(
+                        itemName,
+                        fullDescription,
+                        currentItem.getStartPrice(),
+                        currentItem.getSellerId());
+                default -> throw new IllegalArgumentException("Danh mục không hợp lệ.");
+            };
+            replacementItem.setCurrentPrice(currentItem.getCurrentPrice());
+            auction.setItem(replacementItem);
+        }
+
+        auction.setEndTime(endTime);
+        database.items().save(auction.getItem());
+        database.auctions().save(auction);
+        database.flushAll();
+        return true;
     }
 
     public Auction updateAntiSniping(
@@ -205,6 +307,7 @@ public class AuctionManager {
         onlineUsers.userLoggedIn(user, observer);
         LOGGER.debug("Online: " + user.getUsername()
                 + " (total: " + onlineUsers.getOnlineCount() + ")");
+        notifyUserListChanged();
     }
 
     /**
@@ -216,6 +319,7 @@ public class AuctionManager {
         onlineUsers.userLoggedOut(user);
         LOGGER.debug("Offline: " + user.getUsername()
                 + " (total: " + onlineUsers.getOnlineCount() + ")");
+        notifyUserListChanged();
     }
 
     public void notifyBalanceUpdated(final Participant participant) {
@@ -279,7 +383,11 @@ public class AuctionManager {
         onlineUsers.remove(target);
         userRegistry.remove(target);
 
-        return database.users().deleteById(userId);
+        final boolean deleted = database.users().deleteById(userId);
+        if (deleted) {
+            notifyUserListChanged();
+        }
+        return deleted;
     }
 
     public List<User> getAllBidders() {

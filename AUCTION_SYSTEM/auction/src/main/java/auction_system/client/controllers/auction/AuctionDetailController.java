@@ -139,6 +139,7 @@ public class AuctionDetailController implements Initializable {
 
         // Đồng bộ các control phụ thuộc quyền người bán trước khi bật timer và tải dữ liệu.
         applySellerObserveOnlyPolicy(context);
+        autoBidForm.applySellerPolicy(sellerObserveOnly);
         antiSnipingControl.applyInitialState(context.antiSnipingEnabled(), sellerObserveOnly);
 
         // Khởi tạo lại biểu đồ, đồng hồ, lịch sử bid và trạng thái auto-bid theo phiên mới.
@@ -441,6 +442,69 @@ public class AuctionDetailController implements Initializable {
     @FXML
     private void goBack() {
         handleCancel();
+    }
+
+    /**
+     * Làm mới dữ liệu phiên đấu giá từ server theo ảnh chụp mới nhất.
+     *
+     * <p>Luồng này chỉ kéo lại snapshot bằng GET_AUCTION + BID_HISTORY,
+     * không thay thế cơ chế realtime UPDATE_PRICE đang chạy sẵn.
+     */
+    @FXML
+    private void refreshAuction() {
+        if (activeAuctionId == null || activeAuctionId.isBlank()) {
+            return;
+        }
+
+        AuctionService.getInstance().fetchAuctionDetail(activeAuctionId, parts -> {
+            if (parts == null || parts.length < 12) {
+                return;
+            }
+
+            try {
+                final AuctionDisplayContext context = new AuctionDisplayContext(
+                        parts[1],
+                        parts[2],
+                        (long) Double.parseDouble(parts[4]),
+                        (long) Double.parseDouble(parts[5]),
+                        parts[6],
+                        LocalDateTime.parse(parts[7]),
+                        LocalDateTime.parse(parts[8]),
+                        parts[10],
+                        Boolean.parseBoolean(parts[11]),
+                        parts.length > 12 ? parts[12] : "");
+
+                Platform.runLater(() -> {
+                    viewModel.init(context);
+                    activeAuctionId = context.auctionId();
+                    activeEndTime = context.endTime();
+                    applySellerObserveOnlyPolicy(context);
+                    autoBidForm.applySellerPolicy(sellerObserveOnly);
+                    syncAntiSnipingCheckbox(context.antiSnipingEnabled());
+                    AuctionPriceChartConfigurer.updateAxes(
+                            numberXaxis,
+                            numberYaxis,
+                            viewModel.getOpeningPriceValue(),
+                            priceSeries
+                    );
+                    startCountdownTimer(context.startTime(), context.endTime(), context.status());
+                    loadBidHistory(context.auctionId());
+                });
+            } catch (RuntimeException exception) {
+                LOGGER.warn("Không thể làm mới dữ liệu phiên đấu giá: {}",
+                        activeAuctionId,
+                        exception);
+            }
+        });
+    }
+
+    /**
+     * Đồng bộ trạng thái checkbox anti-sniping theo snapshot mới từ server.
+     *
+     * @param antiSnipingEnabled true nếu anti-sniping đang bật
+     */
+    private void syncAntiSnipingCheckbox(final boolean antiSnipingEnabled) {
+        antiSnipingControl.applyInitialState(antiSnipingEnabled, sellerObserveOnly);
     }
 
     @FXML

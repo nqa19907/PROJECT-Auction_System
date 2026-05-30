@@ -151,6 +151,46 @@ public class AuctionBidService {
     }
 
     /**
+     * Bật hoặc cập nhật auto-bid cho một phiên đấu giá sau khi kiểm tra quyền server-side.
+     *
+     * <p>Command phía client không được tự lưu setting auto-bid vì server phải đọc phiên mới nhất
+     * trong database để chặn người bán tự bật auto-bid cho sản phẩm của chính mình.
+     *
+     * @param auctionId mã phiên đấu giá
+     * @param currentUser người dùng đang đăng nhập
+     * @param maxAmount giá tối đa user cho phép auto-bid
+     * @param stepAmount bước tăng mỗi lần bị vượt giá
+     */
+    public void enableAutoBid(
+            final String auctionId,
+            final User currentUser,
+            final long maxAmount,
+            final long stepAmount) {
+
+        bidRequestValidator.validateAuctionId(auctionId);
+
+        if (!(currentUser instanceof Participant participant)) {
+            throw new InvalidBidException("Chỉ người mua mới có thể bật auto-bid.");
+        }
+
+        database.executeInTransaction(() -> {
+            final Auction auction = findAuctionOrThrow(auctionId);
+            lifecycleRefresher.refreshAuctionLifecycle(auction);
+            validateNotSellerAutoBidder(auction, participant);
+
+            autoBidService.enableAutoBid(
+                    auctionId,
+                    participant,
+                    maxAmount,
+                    stepAmount);
+            database.flushAll();
+            return null;
+        });
+
+        triggerAutoBidAfterEnable(auctionId, participant);
+    }
+
+    /**
      * Kích hoạt auto-bid ngay sau khi một participant bật hoặc cập nhật setting.
      *
      * <p>Nếu phiên chưa có bid nào, service thử tạo bid mở đầu bằng giá khởi
@@ -313,6 +353,30 @@ public class AuctionBidService {
      * <p>Command phía network dùng dữ liệu này để dựng response BID_HISTORY;
      * service giữ quyền truy cập repository để command không phụ thuộc trực
      * tiếp vào tầng persistence.
+     *
+     * @param auction phiên đấu giá cần kiểm tra
+     * @param participant người đang yêu cầu bật auto-bid
+     */
+    private void validateNotSellerAutoBidder(
+            final Auction auction,
+            final Participant participant) {
+
+        final String sellerIdFromAuction = auction.getParticipant() != null
+                ? auction.getParticipant().getId()
+                : null;
+        final String sellerIdFromItem = auction.getItem() != null
+                ? auction.getItem().getSellerId()
+                : null;
+
+        if (participant.getId().equals(sellerIdFromAuction)
+                || participant.getId().equals(sellerIdFromItem)) {
+            throw new InvalidBidException(
+                    "Người bán không được bật auto-bid cho sản phẩm của chính mình.");
+        }
+    }
+
+    /**
+     * Lấy lịch sử đặt giá của một phiên theo thứ tự thời gian tăng dần.
      *
      * @param auctionId mã phiên đấu giá cần lấy lịch sử
      * @return danh sách giao dịch đặt giá của phiên

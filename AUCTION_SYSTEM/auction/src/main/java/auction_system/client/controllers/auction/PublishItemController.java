@@ -3,6 +3,7 @@ package auction_system.client.controllers.auction;
 import auction_system.client.network.NetworkClient;
 import auction_system.client.services.ItemPublishService;
 import auction_system.client.services.ItemPublishService.PublishItemCallback;
+import auction_system.client.services.MyAuctionRow;
 import auction_system.client.services.ProductImageStorage;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
@@ -58,6 +59,8 @@ public class PublishItemController implements Initializable {
     @FXML
     private Label lblError;
     @FXML
+    private Label lblPageTitle;
+    @FXML
     private Label lblSelectedImage;
     @FXML
     private Button btnChooseImage;
@@ -67,6 +70,8 @@ public class PublishItemController implements Initializable {
     private Button btnConfirm;
 
     private Path selectedImageSource;
+    private boolean editMode;
+    private String editingAuctionId;
 
     /**
      * Khởi tạo dữ liệu mặc định cho màn hình đăng bán.
@@ -149,6 +154,11 @@ public class PublishItemController implements Initializable {
         try {
             clearError();
 
+            if (editMode) {
+                submitEditAuction();
+                return;
+            }
+
             final String itemName = readRequired(
                     fieldTenTaiSan,
                     "Tên tài sản không được để trống.");
@@ -204,6 +214,48 @@ public class PublishItemController implements Initializable {
     }
 
     /**
+     * Chuyển form sang chế độ chỉnh sửa và nạp dữ liệu phiên hiện có.
+     *
+     * @param row dữ liệu phiên cần chỉnh sửa
+     */
+    public void startEditMode(final MyAuctionRow row) {
+        editMode = true;
+        editingAuctionId = row.getId();
+        lblPageTitle.setText("Chỉnh sửa phiên đấu giá");
+        btnConfirm.setText("Lưu thay đổi");
+
+        fieldTenTaiSan.setText(row.getProductName());
+        comboCategory.setValue(row.getCategory());
+        comboCondition.setValue(row.getCondition());
+        fieldDescription.setText(row.getDescription());
+
+        fieldStartingPrice.clear();
+        fieldStartingPrice.setPromptText("Không chỉnh sửa ở màn hình này");
+        fieldStartingPrice.setDisable(true);
+        fieldStartingTime.setText(formatDateTimeForInput(row.getStartTime()));
+        fieldStartingTime.setDisable(true);
+        fieldEndingTime.setText(formatDateTimeForInput(row.getEndTime()));
+        fieldBidStep.setDisable(true);
+        btnChooseImage.setDisable(true);
+    }
+
+    /**
+     * Gửi request cập nhật phiên hiện tại.
+     */
+    private void submitEditAuction() {
+        ItemPublishService.getInstance().updateMyAuction(
+                editingAuctionId,
+                readRequired(comboCategory, "Vui lòng chọn danh mục."),
+                readRequired(fieldTenTaiSan, "Tên tài sản không được để trống."),
+                readRequired(fieldDescription, "Mô tả không được để trống."),
+                readRequired(comboCondition, "Vui lòng chọn tình trạng."),
+                parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc"),
+                (success, message) -> Platform.runLater(
+                        () -> handleUpdateResult(success, message)));
+        setLoadingState(true);
+    }
+
+    /**
      * Lưu ảnh đã chọn vào thư mục dữ liệu ứng dụng.
      *
      * @return đường dẫn ảnh đã lưu hoặc chuỗi rỗng nếu chưa chọn ảnh
@@ -235,6 +287,16 @@ public class PublishItemController implements Initializable {
             return;
         }
 
+        showError(message);
+    }
+
+    private void handleUpdateResult(final boolean success, final String message) {
+        setLoadingState(false);
+        if (success) {
+            LOGGER.info("Cập nhật phiên đấu giá thành công.");
+            Router.navigateContent(btnConfirm, ViewConstants.MY_AUCTION_MANAGEMENT_VIEW);
+            return;
+        }
         showError(message);
     }
 
@@ -316,6 +378,17 @@ public class PublishItemController implements Initializable {
         }
     }
 
+    private String formatDateTimeForInput(final String rawDateTime) {
+        if (rawDateTime == null || rawDateTime.trim().isEmpty()) {
+            return "";
+        }
+        try {
+            return LocalDateTime.parse(rawDateTime.trim()).format(DATE_TIME_FORMATTER);
+        } catch (DateTimeParseException exception) {
+            return rawDateTime;
+        }
+    }
+
     /**
      * Hiển thị thông báo lỗi trên giao diện.
      *
@@ -359,6 +432,6 @@ public class PublishItemController implements Initializable {
     private void setLoadingState(final boolean loading) {
         btnConfirm.setDisable(loading);
         btnCancel.setDisable(loading);
-        btnChooseImage.setDisable(loading);
+        btnChooseImage.setDisable(loading || editMode);
     }
 }

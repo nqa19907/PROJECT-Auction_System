@@ -1,5 +1,6 @@
 package auction_system.server.network.command.bidding;
 
+import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
@@ -83,7 +84,7 @@ public final class AutoBidCommand implements Command {
             );
 
             return success(auctionId, maxAmount, stepAmount);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidBidException | IllegalArgumentException e) {
             return fail(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Lỗi khi xử lý yêu cầu auto-bid.", e);

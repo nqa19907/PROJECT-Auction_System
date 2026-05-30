@@ -73,6 +73,8 @@ public class DashboardController {
 
         sidebarController.setOnCategorySelected(this::loadItemList);
         sidebarController.setOnPublishItemSelected(this::loadPublishItemView);
+        // Nối sự kiện cho mục mới "Quản lý phiên của tôi" (hiện tại chỉ UI).
+        sidebarController.setOnMyAuctionManagementSelected(this::loadMyAuctionManagementView);
         sidebarController.setOnAdminSelected(this::loadAdminView);
         applySidebarPolicyByRole();
     }
@@ -163,5 +165,11 @@ public class DashboardController {
     private void loadAdminView() {
         LOGGER.info("Chuyển sang giao diện admin trong Dashboard.");
         Router.navigateContent(contentArea, ViewConstants.ADMIN_DEMO_VIEW);
+    }
+
+    // Mục mới: điều hướng tới màn hình FXML quản lý phiên của tôi (chưa có logic dữ liệu).
+    private void loadMyAuctionManagementView() {
+        LOGGER.info("Chuyển sang màn hình quản lý phiên của tôi.");
+        Router.navigateContent(contentArea, ViewConstants.MY_AUCTION_MANAGEMENT_VIEW);
     }
 }
