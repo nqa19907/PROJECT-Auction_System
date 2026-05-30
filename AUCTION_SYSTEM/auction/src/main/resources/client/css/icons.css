@@ -7,6 +7,19 @@
     -fx-icon-size: 24px;                      /* Icon size lg: 24px */
 }
 
+.sidebar-icon {
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+}
+
+.sidebar-icon .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
+}
+
 .icon-gavel {
     -fx-shape: "M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z";
     -fx-background-color: -color-primary;
@@ -128,11 +141,14 @@
 }
 
 .product-image-placeholder {
-    -fx-background-color: -color-icon-theme;
     -fx-min-width: 64px;
     -fx-min-height: 64px;
     -fx-max-width: 64px;
     -fx-max-height: 64px;
+}
+
+.product-image-placeholder .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
 }
 
 .product-detail-placeholder {

@@ -1,5 +1,6 @@
 package auction_system.client.utils;
 
+import auction_system.client.components.SvgIcon;
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
@@ -56,20 +57,28 @@ public final class ProductImageStyleUtil {
         placeholderIcon.setManaged(showPlaceholder);
         placeholderIcon.setVisible(showPlaceholder);
 
-        placeholderIcon.getStyleClass().removeAll(CATEGORY_ICON_CLASSES);
-        placeholderIcon.getStyleClass().add(categoryIconClass(category));
+        if (placeholderIcon instanceof SvgIcon svgIcon) {
+            svgIcon.setIcon(categoryIconName(category));
+        } else {
+            placeholderIcon.getStyleClass().removeAll(CATEGORY_ICON_CLASSES);
+            placeholderIcon.getStyleClass().add(categoryIconClass(category));
+        }
     }
 
     private static String categoryIconClass(final String category) {
+        return "icon-" + categoryIconName(category);
+    }
+
+    private static String categoryIconName(final String category) {
         if (category == null) {
-            return "icon-category";
+            return "category";
         }
 
         return switch (category.trim().toUpperCase(Locale.ROOT)) {
-            case "ART" -> "icon-art";
-            case "ELECTRONIC" -> "icon-electronic";
-            case "VEHICLE" -> "icon-vehicle";
-            default -> "icon-category";
+            case "ART" -> "art";
+            case "ELECTRONIC" -> "electronic";
+            case "VEHICLE" -> "vehicle";
+            default -> "category";
         };
     }
 

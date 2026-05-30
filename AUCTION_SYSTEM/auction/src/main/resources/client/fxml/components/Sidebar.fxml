@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
+<?import auction_system.client.components.SvgIcon?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
@@ -16,25 +17,25 @@
         </Label>
         <HBox id="categoryAll" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-category" />
+                <SvgIcon icon="category" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Tất cả" />
             </children>
         </HBox>
         <HBox id="categoryArt" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-art" />
+                <SvgIcon icon="art" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Nghệ thuật" />
             </children>
         </HBox>
         <HBox id="categoryElectronic" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-electronic" />
+                <SvgIcon icon="electronic" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Đồ điện tử" />
             </children>
         </HBox>
         <HBox id="categoryVehicle" alignment="CENTER_LEFT" onMouseClicked="#handleCategoryFilter" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-vehicle" />
+                <SvgIcon icon="vehicle" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Phương tiện giao thông" />
             </children>
         </HBox>
@@ -45,7 +46,7 @@
         </Region>
         <HBox id="publishItem" fx:id="publishItem" alignment="CENTER_LEFT" onMouseClicked="#handlePublishItem" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-add" />
+                <SvgIcon icon="add" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Đăng bán" />
             </children>
         </HBox>
@@ -53,14 +54,14 @@
         <!-- Mục mới cho user quản lý các phiên đấu giá đã đăng -->
         <HBox id="myAuctionManagement" fx:id="myAuctionManagement" alignment="CENTER_LEFT" onMouseClicked="#handleMyAuctionManagement" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-format-list-bulleted" />
+                <SvgIcon icon="format-list-bulleted" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Quản lý phiên của tôi" />
             </children>
         </HBox>
 
         <HBox id="testAdminView" fx:id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
             <children>
-                <Region styleClass="icon-add" />
+                <SvgIcon icon="add" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Thử màn hình admin" />
             </children>
         </HBox>
