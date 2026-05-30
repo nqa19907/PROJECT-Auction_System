@@ -16,20 +16,6 @@ public final class JsonProtocol {
     }
 
     /**
-     * Kiểm tra nhanh một dòng socket có thể là JSON object hay không.
-     *
-     * @param rawMessage dòng nhận/gửi qua socket
-     * @return true nếu dòng bắt đầu bằng object JSON
-     */
-    public static boolean isJsonObject(final String rawMessage) {
-        if (rawMessage == null) {
-            return false;
-        }
-
-        return rawMessage.trim().startsWith("{");
-    }
-
-    /**
      * Parse raw JSON thành {@link JsonMessage}.
      *
      * @param rawJson dòng JSON nhận qua socket
@@ -49,6 +35,22 @@ public final class JsonProtocol {
      */
     public static String stringify(final JsonMessage message) throws JsonProcessingException {
         return OBJECT_MAPPER.writeValueAsString(message);
+    }
+
+    /**
+     * Serialize message hoặc dừng xử lý nếu JSON không thể tạo được.
+     *
+     * <p>Socket protocol chỉ hỗ trợ JSON; không fallback về text protocol cũ.
+     *
+     * @param message message cần gửi qua socket
+     * @return JSON một dòng
+     */
+    public static String stringifyRequired(final JsonMessage message) {
+        try {
+            return stringify(message);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Không thể tạo JSON message.", exception);
+        }
     }
 
     /**

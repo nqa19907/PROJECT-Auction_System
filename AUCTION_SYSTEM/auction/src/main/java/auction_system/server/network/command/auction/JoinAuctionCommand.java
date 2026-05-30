@@ -28,9 +28,7 @@ public class JoinAuctionCommand implements Command {
     /**
      * Thực thi lệnh tham gia phiên đấu giá.
      *
-     * <p>Lệnh:       {@code JOIN_AUCTION|auctionId}
-     * Thành công: {@code JOIN_OK|auctionId}
-     * Thất bại:   {@code JOIN_FAIL|message}
+     * <p>Nhận request JSON {@code JOIN_AUCTION} và trả JSON {@code JOIN_OK} hoặc {@code JOIN_FAIL}.
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
      * @param session Phiên làm việc của Client.
@@ -84,9 +82,7 @@ public class JoinAuctionCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response tham gia phiên: {}",
                     exception.getMessage());
-            return Protocol.Response.JOIN_OK.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON JOIN_OK.", exception);
         }
     }
 
@@ -109,9 +105,7 @@ public class JoinAuctionCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi tham gia phiên: {}", exception.getMessage());
-            return type
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON JOIN_FAIL.", exception);
         }
     }
 }

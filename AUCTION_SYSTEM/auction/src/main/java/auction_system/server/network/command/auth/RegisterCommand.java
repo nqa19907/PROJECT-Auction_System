@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <p>Lệnh client gửi lên:
  *
  * <pre>{@code
- * REGISTER|username|email|password|role
+ * JSON REGISTER chứa username, email, password và role trong payload.
  * }</pre>
  *
  * <p>Phản hồi thành công:
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * <p>Phản hồi thất bại:
  *
  * <pre>{@code
- * REGISTER_FAIL|message
+ * JSON REGISTER_FAIL chứa lý do thất bại trong trường message.
  * }</pre>
  */
 public class RegisterCommand implements Command {
@@ -130,9 +130,7 @@ public class RegisterCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi đăng ký: {}", exception.getMessage());
-            return Protocol.Response.REGISTER_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON REGISTER_FAIL.", exception);
         }
     }
 }

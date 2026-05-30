@@ -31,9 +31,7 @@ public class ListAuctionsCommand implements Command {
      * Thực thi lệnh lấy danh sách phiên đấu giá.
      *
      * <p>Lệnh:       {@code LIST_AUCTIONS}
-     * Thành công: {@code AUCTION_LIST|n} và theo sau là n dòng, mỗi dòng có định dạng:
-     * {@code auctionId|itemName|currentPrice|status|endTime|itemType|startPrice}
-     * Thất bại:   {@code ERROR|message}
+     * Trả JSON {@code AUCTION_LIST} chứa danh sách phiên trong payload.
      *
      * @param parts   Mảng tham số từ lệnh đã tách (không dùng).
      * @param session Phiên làm việc của Client (không dùng).

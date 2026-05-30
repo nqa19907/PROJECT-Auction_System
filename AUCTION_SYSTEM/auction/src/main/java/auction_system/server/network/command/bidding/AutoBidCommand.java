@@ -51,6 +51,7 @@ public final class AutoBidCommand implements Command {
     @Override
     public String execute(final String[] parts, final ClientSession session) {
         try {
+            // Kiểm tra session và payload trước khi đọc cấu hình auto-bid.
             if (session.getCurrentUser() == null) {
                 return fail("Bạn cần đăng nhập trước khi bật auto-bid.");
             }
@@ -63,6 +64,7 @@ public final class AutoBidCommand implements Command {
             final long maxAmount = parsePositiveAmount(parts[IDX_MAX_AMOUNT], "Giá tối đa");
             final long stepAmount = parsePositiveAmount(parts[IDX_STEP_AMOUNT], "Bước tăng");
             
+            // Lưu cấu hình và kích hoạt vòng bid tự động ngay sau khi enable.
             autoBidService.enableAutoBid(
                     auctionId,
                     session.getCurrentUser(),
@@ -83,6 +85,7 @@ public final class AutoBidCommand implements Command {
                     stepAmount
             );
 
+            // Trả lại cấu hình đã lưu để client đồng bộ trạng thái form.
             return success(auctionId, maxAmount, stepAmount);
         } catch (InvalidBidException | IllegalArgumentException e) {
             return fail(e.getMessage());
@@ -106,6 +109,7 @@ public final class AutoBidCommand implements Command {
 
     private String fail(final String message) {
         try {
+            // Đóng gói lỗi nghiệp vụ thành JSON để client route qua AUTO_BID_FAIL.
             return JsonProtocol.stringify(
                     new JsonMessage(
                             Protocol.Response.AUTO_BID_FAIL.name(),
@@ -115,9 +119,7 @@ public final class AutoBidCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi bật auto-bid: {}", exception.getMessage());
-            return Protocol.Response.AUTO_BID_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_FAIL.", exception);
         }
     }
 
@@ -127,6 +129,7 @@ public final class AutoBidCommand implements Command {
             final long stepAmount) {
         final String message = "Đã bật đấu giá tự động.";
         try {
+            // Trả đầy đủ cấu hình đã lưu trong payload JSON.
             return JsonProtocol.stringify(
                     new JsonMessage(
                             Protocol.Response.AUTO_BID_OK.name(),
@@ -140,9 +143,7 @@ public final class AutoBidCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response bật auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Response.AUTO_BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_OK.", exception);
         }
     }
 }

@@ -189,7 +189,7 @@ public class Auction extends Entity {
      */
     public void notifyObservers() {
         // Đóng gói thông báo thành một chuỗi chuẩn để đẩy qua Socket
-        // (UPDATE_PRICE|giá_mới)
+        // Phát notification JSON UPDATE_PRICE cho các observer đang theo dõi.
         double currentPrice = (currentHighestBid != null)
                 ? currentHighestBid.getAmount()
                 : item.getStartPrice();

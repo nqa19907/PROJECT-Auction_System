@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh nạp tiền vào ví người dùng.
  *
- * <p>Định dạng lệnh: {@code DEPOSIT|amount}
+ * <p>Lệnh JSON {@code DEPOSIT} nhận số tiền trong payload.
  */
 public class DepositCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepositCommand.class);
@@ -96,9 +96,7 @@ public class DepositCommand implements Command {
                             "Nạp tiền thành công."));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response nạp tiền: {}", exception.getMessage());
-            return Protocol.Response.DEPOSIT_OK.name()
-                    + Protocol.SEPARATOR
-                    + balance;
+            throw new IllegalStateException("Không tạo được JSON DEPOSIT_OK.", exception);
         }
     }
 
@@ -134,9 +132,7 @@ public class DepositCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi nạp tiền: {}", exception.getMessage());
-            return Protocol.Response.DEPOSIT_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON DEPOSIT_FAIL.", exception);
         }
     }
 }

@@ -343,7 +343,7 @@ public class AuctionService {
     /**
      * Gửi yêu cầu bật auto-bid cho một phiên đấu giá.
      *
-     * <p>Format request: {@code ENABLE_AUTO_BID|auctionId|maxAmount|stepAmount}.
+     * <p>Request JSON gồm auctionId, giá tối đa và bước tăng trong payload.
      *
      * @param auctionId mã phiên đấu giá
      * @param maxAmount giá tối đa người dùng cho phép auto-bid
@@ -592,7 +592,7 @@ public class AuctionService {
 
         LOGGER.info("AuctionService nhận lịch sử bid: " + response);
 
-        // Parser bỏ header BID_HISTORY|auctionId|count và giữ lại từng dòng bid hợp lệ.
+        // Parser giữ lại từng dòng bid hợp lệ từ payload JSON.
         List<String[]> bidHistoryRows = responseParser.parseBidHistory(response);
         currentBidHistoryCallback.onResult(bidHistoryRows);
         currentBidHistoryCallback = null;

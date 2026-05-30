@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
  * {@link AuctionBidService}.
  *
  * <p>Định dạng lệnh:
- * {@code PLACE_BID|auctionId|amount}
+ * JSON {@code PLACE_BID} chứa auctionId và amount trong payload.
  *
  * <p>Phản hồi thành công:
- * {@code BID_OK|auctionId|amount|newBalance}
+ * JSON {@code BID_OK} trả auctionId, amount và newBalance trong payload.
  */
 public class PlaceBidCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
@@ -151,13 +151,7 @@ public class PlaceBidCommand implements Command {
                             "Đặt giá thành công."));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response đặt giá: {}", exception.getMessage());
-            return Protocol.Response.BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + auctionId
-                    + Protocol.SEPARATOR
-                    + amount
-                    + Protocol.SEPARATOR
-                    + newBalance;
+            throw new IllegalStateException("Không tạo được JSON BID_OK.", exception);
         }
     }
 
@@ -172,9 +166,7 @@ public class PlaceBidCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi đặt giá: {}", exception.getMessage());
-            return type
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON BID_FAIL.", exception);
         }
     }
 }

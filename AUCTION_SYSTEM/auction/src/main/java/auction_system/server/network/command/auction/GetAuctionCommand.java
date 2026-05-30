@@ -29,10 +29,7 @@ public class GetAuctionCommand implements Command {
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
      *
-     * <p>Lệnh:       {@code GET_AUCTION|auctionId}
-     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice}
-     *             {@code |status|endTime|sellerName}
-     * Thất bại:   {@code ERROR|message}
+     * <p>Nhận request JSON {@code GET_AUCTION} và trả JSON {@code AUCTION_DETAIL}.
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
      * @param session Phiên làm việc của Client (không dùng).

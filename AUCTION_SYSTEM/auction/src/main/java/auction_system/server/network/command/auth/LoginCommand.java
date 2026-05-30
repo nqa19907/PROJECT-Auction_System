@@ -44,7 +44,7 @@ public class LoginCommand implements Command {
     /**
      * Thực thi lệnh đăng nhập.
      *
-     * @param parts mảng tham số theo dạng {@code LOGIN|email|password}
+     * @param parts mảng tham số được chuyển từ payload JSON {@code LOGIN}
      * @param session phiên làm việc của client hiện tại
      * @return phản hồi gửi về client
      */
@@ -105,17 +105,7 @@ public class LoginCommand implements Command {
                             "Đăng nhập thành công."));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response đăng nhập: {}", exception.getMessage());
-            return Protocol.Response.LOGIN_OK.name()
-                    + Protocol.SEPARATOR
-                    + user.getId()
-                    + Protocol.SEPARATOR
-                    + user.getUsername()
-                    + Protocol.SEPARATOR
-                    + user.getEmail()
-                    + Protocol.SEPARATOR
-                    + user.getRoleName()
-                    + Protocol.SEPARATOR
-                    + getBalance(user);
+            throw new IllegalStateException("Không tạo được JSON LOGIN_OK.", exception);
         }
     }
 
@@ -150,9 +140,7 @@ public class LoginCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi đăng nhập: {}", exception.getMessage());
-            return Protocol.Response.LOGIN_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON LOGIN_FAIL.", exception);
         }
     }
 }

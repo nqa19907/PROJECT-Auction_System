@@ -70,9 +70,7 @@ public final class GetAutoBidStatusCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON trạng thái tắt auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Response.AUTO_BID_STATUS.name()
-                    + Protocol.SEPARATOR
-                    + "DISABLED";
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_STATUS.", exception);
         }
     }
 
@@ -91,13 +89,7 @@ public final class GetAutoBidStatusCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON trạng thái bật auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Response.AUTO_BID_STATUS.name()
-                    + Protocol.SEPARATOR
-                    + "ENABLED"
-                    + Protocol.SEPARATOR
-                    + maxAmount
-                    + Protocol.SEPARATOR
-                    + stepAmount;
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_STATUS.", exception);
         }
     }
 }

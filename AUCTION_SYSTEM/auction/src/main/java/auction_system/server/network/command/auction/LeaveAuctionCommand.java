@@ -26,9 +26,7 @@ public class LeaveAuctionCommand implements Command {
     /**
      * Thực thi lệnh rời phiên đấu giá.
      *
-     * <p>Lệnh:       {@code LEAVE_AUCTION|auctionId}
-     * Thành công: {@code LEAVE_OK|auctionId}
-     * Thất bại:   {@code ERROR|message}
+     * <p>Nhận request JSON {@code LEAVE_AUCTION} và trả JSON {@code LEAVE_OK} hoặc {@code ERROR}.
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
      * @param session Phiên làm việc của Client.
@@ -65,9 +63,7 @@ public class LeaveAuctionCommand implements Command {
                             "Rời phiên đấu giá thành công."));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response rời phiên: {}", exception.getMessage());
-            return Protocol.Response.LEAVE_OK.name()
-                    + Protocol.SEPARATOR
-                    + auctionId;
+            throw new IllegalStateException("Không tạo được JSON LEAVE_OK.", exception);
         }
     }
 
@@ -82,9 +78,7 @@ public class LeaveAuctionCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi rời phiên: {}", exception.getMessage());
-            return Protocol.Response.ERROR.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 }

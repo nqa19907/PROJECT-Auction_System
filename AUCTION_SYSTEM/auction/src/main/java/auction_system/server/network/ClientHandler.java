@@ -210,6 +210,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param rawCommand dòng lệnh thô nhận từ client
      */
     private void handleCommand(final String rawCommand) {
+        // Chuyển JSON request thành command name và các tham số tương thích command layer.
         final String[] parts = parseCommandParts(rawCommand);
         if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
             send(buildErrorResponse("Lệnh JSON không hợp lệ."));
@@ -219,14 +220,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
         final String commandName = parts[0].toUpperCase();
         final Command command = commandMap.get(commandName);
 
+        // Từ chối command không đăng ký trước khi gọi xử lý nghiệp vụ.
         if (command == null) {
             send(buildErrorResponse("Lệnh không hợp lệ: " + commandName));
             return;
         }
 
+        // Mỗi command trả tối đa một JSON response một dòng.
         final String response = command.execute(parts, session);
         if (response != null) {
-            sendResponseLines(response);
+            send(response);
         }
     }
 
@@ -238,6 +241,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      */
     private String[] parseCommandParts(final String rawCommand) {
         try {
+            // Phần tử đầu là command; payload array được nối tiếp thành tham số tuần tự.
             final JsonMessage message = JsonProtocol.parse(rawCommand);
             final List<String> parts = new ArrayList<>();
             parts.add(message.command());
@@ -271,19 +275,6 @@ public class ClientHandler implements Runnable, AuctionObserver {
         } catch (IOException exception) {
             LOGGER.warn("Không tạo được JSON ERROR: {}", exception.getMessage());
             throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
-        }
-    }
-
-    /**
-     * Gửi từng dòng phản hồi về client.
-     *
-     * @param response phản hồi có thể gồm một hoặc nhiều dòng
-     */
-    private void sendResponseLines(final String response) {
-        final String[] responseLines = response.split("\n");
-
-        for (final String responseLine : responseLines) {
-            send(responseLine);
         }
     }
 

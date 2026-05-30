@@ -28,7 +28,7 @@ public class LogoutCommand implements Command {
      *
      * <p>Lệnh:       {@code LOGOUT}
      * Thành công: {@code LOGOUT_OK}
-     * Thất bại:   {@code ERROR|message}
+     * Thất bại trả JSON {@code ERROR} với nội dung trong trường message.
      *
      * @param parts   Mảng tham số từ lệnh đã tách (không dùng).
      * @param session Phiên làm việc của Client.

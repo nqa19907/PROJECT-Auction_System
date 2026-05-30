@@ -73,9 +73,7 @@ public final class DisableAutoBidCommand implements Command {
                             message));
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON lỗi tắt auto-bid: {}", exception.getMessage());
-            return Protocol.Response.AUTO_BID_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_FAIL.", exception);
         }
     }
 
@@ -92,9 +90,7 @@ public final class DisableAutoBidCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Không tạo được JSON response tắt auto-bid: {}",
                     exception.getMessage());
-            return Protocol.Response.AUTO_BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_OK.", exception);
         }
     }
 }

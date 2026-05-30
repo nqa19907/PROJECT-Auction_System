@@ -195,7 +195,7 @@ public class AuctionObserverTest {
         RecordingObserver obs2 = new RecordingObserver();
         auction.attach(obs1);
         auction.attach(obs2);
-        String customMessage = "AUCTION_EXTENDED|" + auction.getId() + "|2099-01-01T00:00";
+        String customMessage = "{\"type\":\"CUSTOM_NOTIFICATION\"}";
 
         auction.notifyObservers(customMessage);
 

@@ -23,51 +23,9 @@ import org.slf4j.LoggerFactory;
  * Lắng nghe kết nối TCP từ client và tạo một {@link ClientHandler}
  * trên thread riêng cho mỗi kết nối mới.
  *
- * <p>Giao thức (text-based, UTF-8, mỗi lệnh một dòng):
- * * <pre>
- * Client → Server : COMMAND|param1|param2|...
- * Server → Client : RESPONSE_CODE|data...
- * </pre>
- *
- * <p>Lệnh client gửi lên:
- * * <pre>
- * LOGIN|username|password
- * REGISTER|username|email|password|role   (role: ADMIN / PARTICIPANT)
- * LIST_AUCTIONS
- * GET_AUCTION|auctionId
- * JOIN_AUCTION|auctionId
- * LEAVE_AUCTION|auctionId
- * PLACE_BID|auctionId|amount
- * DEPOSIT|amount
- * LOGOUT
- * </pre>
- *
- * <p>Phản hồi server gửi xuống:
- * <pre>
- *   LOGIN_OK|userId|username|email|role|balance
- *   LOGIN_FAIL|message
- *   REGISTER_OK
- *   REGISTER_FAIL|message
- *   AUCTION_LIST|n   (sau đó n dòng:
- *       auctionId|itemName|currentPrice|status|endTime|itemType|startPrice)
- *   AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice|status|endTime|sellerName
- *   JOIN_OK|auctionId
- *   JOIN_FAIL|message
- *   LEAVE_OK|auctionId
- *   BID_OK|auctionId|amount|newBalance
- *   BID_FAIL|message
- *   DEPOSIT_OK|balance
- *   DEPOSIT_FAIL|message
- *   LOGOUT_OK
- *   ERROR|message
- * </pre>
- *
- * <p>Broadcast server tự push khi có sự kiện (đến các client đang JOIN phiên):
- * * <pre>
- * UPDATE_PRICE|auctionId|newPrice
- * AUCTION_STARTED|auctionId
- * AUCTION_ENDED|auctionId|winnerUsername
- * </pre>
+ * <p>Giao thức socket dùng JSON UTF-8, mỗi request, response hoặc notification nằm trên một dòng.
+ * Request dùng trường {@code command}; response và notification dùng trường {@code type}.
+ * Dữ liệu nghiệp vụ được đặt trong trường {@code payload}.
  */
 public class SocketServer {
 

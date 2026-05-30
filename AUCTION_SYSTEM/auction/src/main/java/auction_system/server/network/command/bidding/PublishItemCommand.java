@@ -62,14 +62,16 @@ public final class PublishItemCommand implements Command {
      *
      * @param parts Các phần đã tách từ request.
      * @param session Phiên làm việc của client hiện tại.
-     * @return Response dạng text protocol.
+     * @return Response JSON một dòng.
      */
     @Override
     public String execute(String[] parts, ClientSession session) {
         try {
+            // Validate payload và chuyển user đăng nhập thành participant người bán.
             validateRequest(parts, session);
 
             Participant seller = requireParticipant(session.getCurrentUser());
+            // Tạo item, lưu item rồi mở auction theo mốc thời gian client gửi lên.
             Item item = createItem(parts, seller.getId());
             Item savedItem = participantItemService.listItemForAuction(seller, item);
 
@@ -131,6 +133,7 @@ public final class PublishItemCommand implements Command {
      * @return Item domain tương ứng với danh mục.
      */
     private Item createItem(String[] parts, String sellerId) {
+        // Đọc và chuẩn hóa các field item trước khi gọi factory theo category.
         String category = required(parts[CATEGORY_INDEX], "Danh mục không được để trống.");
         String itemName = required(parts[ITEM_NAME_INDEX], "Tên sản phẩm không được để trống.");
         String description = required(parts[DESCRIPTION_INDEX], "Mô tả không được để trống.");
@@ -139,6 +142,7 @@ public final class PublishItemCommand implements Command {
         // Đọc metadata ảnh nếu client mới có gửi kèm.
         String imagePath = optional(parts, IMAGE_PATH_INDEX);
 
+        // Ghép tình trạng vào mô tả theo format domain hiện tại đang lưu trữ.
         String fullDescription = description + "\nTình trạng: " + condition;
         return ItemCreatorFactory.createItem(
                 category,
@@ -194,6 +198,7 @@ public final class PublishItemCommand implements Command {
     private String buildSuccessResponse(final String itemId, final String auctionId) {
         final String message = "Đăng bán sản phẩm thành công.";
         try {
+            // Trả id item và auction mới để client có thể đồng bộ sau khi đăng bán.
             return JsonProtocol.stringify(
                     new JsonMessage(
                             Protocol.Response.PUBLISH_ITEM_OK.name(),
@@ -206,9 +211,7 @@ public final class PublishItemCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warning("Không tạo được JSON response đăng bán sản phẩm: "
                     + exception.getMessage());
-            return Protocol.Response.PUBLISH_ITEM_OK.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON PUBLISH_ITEM_OK.", exception);
         }
     }
 
@@ -224,9 +227,7 @@ public final class PublishItemCommand implements Command {
         } catch (JsonProcessingException exception) {
             LOGGER.warning("Không tạo được JSON lỗi đăng bán sản phẩm: "
                     + exception.getMessage());
-            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + message;
+            throw new IllegalStateException("Không tạo được JSON PUBLISH_ITEM_FAIL.", exception);
         }
     }
 }

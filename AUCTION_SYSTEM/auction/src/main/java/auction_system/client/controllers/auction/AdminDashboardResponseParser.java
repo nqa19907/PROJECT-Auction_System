@@ -21,7 +21,7 @@ final class AdminDashboardResponseParser {
     /**
      * Parse danh sách user từ response ADMIN_USER_LIST.
      *
-     * @param response response dạng header|count~userId|username|email|status|role~...
+     * @param response response JSON chứa danh sách user trong payload
      * @return danh sách row user hợp lệ
      */
     List<AdminUserRow> parseUsers(final String response) {
@@ -32,7 +32,7 @@ final class AdminDashboardResponseParser {
      * Parse danh sách phiên đấu giá từ response ADMIN_AUCTION_LIST.
      *
      * @param response response dạng
-     *     header|count~auctionId|productName|seller|currentPrice|status~...
+     *     response JSON chứa danh sách phiên trong payload
      * @return danh sách row auction hợp lệ
      */
     List<AdminAuctionRow> parseAuctions(final String response) {

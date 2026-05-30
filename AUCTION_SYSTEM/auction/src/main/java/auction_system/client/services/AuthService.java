@@ -172,7 +172,7 @@ public final class AuthService {
                             null));
         } catch (JsonProcessingException exception) {
             logger.warning("Không tạo được JSON request đăng xuất: " + exception.getMessage());
-            return Protocol.Command.LOGOUT.name();
+            throw new IllegalStateException("Không tạo được JSON LOGOUT.", exception);
         }
     }
 

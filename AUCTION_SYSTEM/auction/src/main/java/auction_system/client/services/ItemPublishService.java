@@ -4,7 +4,6 @@ import auction_system.client.network.NetworkClient;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -165,18 +164,24 @@ public final class ItemPublishService {
             final String condition,
             final LocalDateTime endTime,
             final PublishItemCallback callback) {
+        // Ghi nhớ callback update riêng để không xung đột với request đăng bán.
         Objects.requireNonNull(callback, "Callback không được null.");
         updateCallback = callback;
 
-        final String request = String.join(
-                Protocol.SEPARATOR,
-                Protocol.Command.UPDATE_MY_AUCTION.name(),
-                clean(auctionId),
-                clean(category),
-                clean(itemName),
-                clean(description),
-                clean(condition),
-                FORMATTER.format(endTime));
+        // Đóng gói các field chỉnh sửa theo đúng thứ tự command server đang đọc.
+        final String request = JsonProtocol.stringifyRequired(
+                new JsonMessage(
+                        null,
+                        Protocol.Command.UPDATE_MY_AUCTION.name(),
+                        null,
+                        JsonProtocol.payloadOf(List.of(
+                                nullToEmpty(auctionId),
+                                nullToEmpty(category),
+                                nullToEmpty(itemName),
+                                nullToEmpty(description),
+                                nullToEmpty(condition),
+                                FORMATTER.format(endTime))),
+                        null));
 
         if (!NetworkClient.getInstance().sendCommand(request)) {
             LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
@@ -226,6 +231,7 @@ public final class ItemPublishService {
     }
 
     private void notifyUpdateCallback(final boolean success, final String message) {
+        // Giải phóng callback update ngay sau khi trả kết quả về controller.
         final PublishItemCallback callback = updateCallback;
         updateCallback = null;
         if (callback != null) {
@@ -241,37 +247,16 @@ public final class ItemPublishService {
      * @return Thông báo đã tách được.
      */
     private String extractMessage(String response, String fallback) {
-        if (JsonProtocol.isJsonObject(response)) {
-            try {
-                final JsonMessage message = JsonProtocol.parse(response);
-                return message.message() == null || message.message().isBlank()
-                        ? fallback
-                        : message.message();
-            } catch (IOException exception) {
+        try {
+            // Chỉ đọc message từ JSON response; không hỗ trợ text protocol cũ.
+            final JsonMessage message = JsonProtocol.parse(response);
+            if (message.message() == null || message.message().isBlank()) {
                 return fallback;
             }
-        }
-
-        String[] parts = response.split("\\" + Protocol.SEPARATOR, 2);
-        if (parts.length < 2 || parts[1].isBlank()) {
+            return message.message();
+        } catch (IOException exception) {
             return fallback;
         }
-        return parts[1];
-    }
-
-    /**
-     * Làm sạch dữ liệu text trước khi đưa vào text protocol.
-     *
-     * @param value Giá trị đầu vào.
-     * @return Giá trị đã loại bỏ ký tự phân tách protocol.
-     */
-    private String clean(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value
-                .replace(Protocol.SEPARATOR, " ")
-                .trim();
     }
 
     private String buildPublishItemRequest(
@@ -283,37 +268,22 @@ public final class ItemPublishService {
             final LocalDateTime startTime,
             final LocalDateTime endTime,
             final String imagePath) {
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            Protocol.Command.PUBLISH_ITEM.name(),
-                            null,
-                            JsonProtocol.payloadOf(List.of(
-                                    nullToEmpty(category),
-                                    nullToEmpty(itemName),
-                                    nullToEmpty(description),
-                                    nullToEmpty(condition),
-                                    startPrice,
-                                    FORMATTER.format(startTime),
-                                    FORMATTER.format(endTime),
-                                    nullToEmpty(imagePath))),
-                            null));
-        } catch (JsonProcessingException exception) {
-            LOGGER.warning("Không tạo được JSON request đăng bán sản phẩm: "
-                    + exception.getMessage());
-            return String.join(
-                    Protocol.SEPARATOR,
-                    Protocol.Command.PUBLISH_ITEM.name(),
-                    clean(category),
-                    clean(itemName),
-                    clean(description),
-                    clean(condition),
-                    String.valueOf(startPrice),
-                    FORMATTER.format(startTime),
-                    FORMATTER.format(endTime),
-                    clean(imagePath));
-        }
+        // Payload array giữ nguyên thứ tự field mà PublishItemCommand yêu cầu.
+        return JsonProtocol.stringifyRequired(
+                new JsonMessage(
+                        null,
+                        Protocol.Command.PUBLISH_ITEM.name(),
+                        null,
+                        JsonProtocol.payloadOf(List.of(
+                                nullToEmpty(category),
+                                nullToEmpty(itemName),
+                                nullToEmpty(description),
+                                nullToEmpty(condition),
+                                startPrice,
+                                FORMATTER.format(startTime),
+                                FORMATTER.format(endTime),
+                                nullToEmpty(imagePath))),
+                        null));
     }
 
     private String nullToEmpty(final String value) {
@@ -326,6 +296,7 @@ public final class ItemPublishService {
      * @param response phản hồi lỗi từ server
      */
     private void handleError(final String response) {
+        // ERROR chung được chuyển tới mọi thao tác publish hoặc update đang chờ.
         final String message = extractMessage(response, "Server không xử lý được yêu cầu.");
         if (publishCallback != null) {
             notifyCallback(false, message);
