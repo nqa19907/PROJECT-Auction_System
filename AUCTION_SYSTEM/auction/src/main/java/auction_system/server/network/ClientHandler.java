@@ -3,6 +3,8 @@ package auction_system.server.network;
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
@@ -40,6 +42,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -129,7 +133,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
                         new PlaceBidCommand(auctionBidService)),
                 Map.entry(
                         Protocol.Command.ENABLE_AUTO_BID.name(),
-                        new AutoBidCommand(auctionBidService)),
+                        new AutoBidCommand(autoBidService, auctionBidService)),
                 Map.entry(
                         Protocol.Command.DISABLE_AUTO_BID.name(),
                         new DisableAutoBidCommand(autoBidService)),
@@ -206,35 +210,71 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param rawCommand dòng lệnh thô nhận từ client
      */
     private void handleCommand(final String rawCommand) {
-        final String[] parts = rawCommand.split(Protocol.SEPARATOR_REGEX, -1);
-        final String commandName = parts[0].toUpperCase();
-        final Command command = commandMap.get(commandName);
-
-        if (command == null) {
-            send(
-                    Protocol.Response.ERROR.name()
-                            + Protocol.SEPARATOR
-                            + "Lệnh không hợp lệ: "
-                            + commandName);
+        // Chuyển JSON request thành command name và các tham số tương thích command layer.
+        final String[] parts = parseCommandParts(rawCommand);
+        if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
+            send(buildErrorResponse("Lệnh JSON không hợp lệ."));
             return;
         }
 
+        final String commandName = parts[0].toUpperCase();
+        final Command command = commandMap.get(commandName);
+
+        // Từ chối command không đăng ký trước khi gọi xử lý nghiệp vụ.
+        if (command == null) {
+            send(buildErrorResponse("Lệnh không hợp lệ: " + commandName));
+            return;
+        }
+
+        // Mỗi command trả tối đa một JSON response một dòng.
         final String response = command.execute(parts, session);
         if (response != null) {
-            sendResponseLines(response);
+            send(response);
         }
     }
 
     /**
-     * Gửi từng dòng phản hồi về client.
+     * Chuyển request JSON thành mảng parts cho command hiện tại.
      *
-     * @param response phản hồi có thể gồm một hoặc nhiều dòng
+     * @param rawCommand dòng request nhận từ client
+     * @return parts tương thích với command layer hiện tại
      */
-    private void sendResponseLines(final String response) {
-        final String[] responseLines = response.split("\n");
+    private String[] parseCommandParts(final String rawCommand) {
+        try {
+            // Phần tử đầu là command; payload array được nối tiếp thành tham số tuần tự.
+            final JsonMessage message = JsonProtocol.parse(rawCommand);
+            final List<String> parts = new ArrayList<>();
+            parts.add(message.command());
 
-        for (final String responseLine : responseLines) {
-            send(responseLine);
+            if (message.payload() == null || message.payload().isNull()) {
+                return parts.toArray(String[]::new);
+            }
+
+            if (message.payload().isArray()) {
+                message.payload().forEach(value -> parts.add(value.asText()));
+            } else if (message.payload().isValueNode()) {
+                parts.add(message.payload().asText());
+            }
+
+            return parts.toArray(String[]::new);
+        } catch (IOException exception) {
+            LOGGER.warn("Không parse được JSON request: {}", exception.getMessage());
+            return new String[0];
+        }
+    }
+
+    private String buildErrorResponse(final String message) {
+        try {
+            // Đóng gói lỗi dispatch bằng JSON để client route qua ERROR.
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.ERROR.name(),
+                    null,
+                    "FAIL",
+                    null,
+                    message));
+        } catch (IOException exception) {
+            LOGGER.warn("Không tạo được JSON ERROR: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
         }
     }
 

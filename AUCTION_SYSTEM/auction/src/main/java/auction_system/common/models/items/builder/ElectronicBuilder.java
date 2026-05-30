@@ -12,6 +12,7 @@ public class ElectronicBuilder implements Builder<Electronic> {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
+    private String imagePath;
 
     public ElectronicBuilder itemName(String itemName) {
         this.itemName = itemName;
@@ -38,6 +39,12 @@ public class ElectronicBuilder implements Builder<Electronic> {
         return this;
     }
 
+    // Gắn đường dẫn ảnh vào item đang được build.
+    public ElectronicBuilder imagePath(final String imagePath) {
+        this.imagePath = imagePath;
+        return this;
+    }
+
     /**
      * Xây dựng và trả về đối tượng Electronic.
      *
@@ -50,6 +57,8 @@ public class ElectronicBuilder implements Builder<Electronic> {
         if (this.currentPrice > 0) {
             electronic.setCurrentPrice(this.currentPrice);
         }
+        // Áp dụng ảnh sản phẩm sau khi tạo domain object.
+        electronic.setImagePath(this.imagePath);
         return electronic;
     }
 }

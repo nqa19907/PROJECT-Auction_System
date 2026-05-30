@@ -2,20 +2,21 @@ package auction_system.server.network.command.bidding;
 
 import auction_system.common.exceptions.InvalidItemException;
 import auction_system.common.models.auctions.Auction;
-import auction_system.common.models.items.Art;
-import auction_system.common.models.items.Electronic;
 import auction_system.common.models.items.Item;
-import auction_system.common.models.items.Vehicle;
+import auction_system.common.models.items.factory.ItemCreatorFactory;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +39,7 @@ public final class PublishItemCommand implements Command {
     private static final int START_PRICE_INDEX = 5;
     private static final int START_TIME_INDEX = 6;
     private static final int END_TIME_INDEX = 7;
+    private static final int IMAGE_PATH_INDEX = 8;
 
     private final ParticipantItemService participantItemService;
     private final AuctionManager auctionManager;
@@ -60,14 +62,16 @@ public final class PublishItemCommand implements Command {
      *
      * @param parts Các phần đã tách từ request.
      * @param session Phiên làm việc của client hiện tại.
-     * @return Response dạng text protocol.
+     * @return Response JSON một dòng.
      */
     @Override
     public String execute(String[] parts, ClientSession session) {
         try {
+            // Validate payload và chuyển user đăng nhập thành participant người bán.
             validateRequest(parts, session);
 
             Participant seller = requireParticipant(session.getCurrentUser());
+            // Tạo item, lưu item rồi mở auction theo mốc thời gian client gửi lên.
             Item item = createItem(parts, seller.getId());
             Item savedItem = participantItemService.listItemForAuction(seller, item);
 
@@ -78,23 +82,17 @@ public final class PublishItemCommand implements Command {
             LOGGER.info("Đăng bán thành công item " + savedItem.getId()
                     + " với auction " + auction.getId());
 
-            return Protocol.Response.PUBLISH_ITEM_OK.name()
-                    + Protocol.SEPARATOR
-                    + "Đăng bán sản phẩm thành công.";
+            return buildSuccessResponse(savedItem.getId(), auction.getId());
         } catch (IllegalArgumentException
             | DateTimeParseException
             | InvalidItemException exception) {
             LOGGER.warning("Đăng bán sản phẩm thất bại: " + exception.getMessage());
 
-            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + exception.getMessage();
+            return buildFailResponse(exception.getMessage());
         } catch (RuntimeException exception) {
             LOGGER.log(Level.SEVERE, "Lỗi hệ thống khi đăng bán sản phẩm.", exception);
 
-            return Protocol.Response.PUBLISH_ITEM_FAIL.name()
-                    + Protocol.SEPARATOR
-                    + "Lỗi hệ thống khi đăng bán sản phẩm. Vui lòng thử lại sau.";
+            return buildFailResponse("Lỗi hệ thống khi đăng bán sản phẩm. Vui lòng thử lại sau.");
         }
     }
 
@@ -135,21 +133,24 @@ public final class PublishItemCommand implements Command {
      * @return Item domain tương ứng với danh mục.
      */
     private Item createItem(String[] parts, String sellerId) {
+        // Đọc và chuẩn hóa các field item trước khi gọi factory theo category.
         String category = required(parts[CATEGORY_INDEX], "Danh mục không được để trống.");
         String itemName = required(parts[ITEM_NAME_INDEX], "Tên sản phẩm không được để trống.");
         String description = required(parts[DESCRIPTION_INDEX], "Mô tả không được để trống.");
         String condition = required(parts[CONDITION_INDEX], "Tình trạng không được để trống.");
         double startPrice = parsePositivePrice(parts[START_PRICE_INDEX]);
+        // Đọc metadata ảnh nếu client mới có gửi kèm.
+        String imagePath = optional(parts, IMAGE_PATH_INDEX);
 
+        // Ghép tình trạng vào mô tả theo format domain hiện tại đang lưu trữ.
         String fullDescription = description + "\nTình trạng: " + condition;
-        String normalizedCategory = category.toUpperCase(Locale.ROOT);
-
-        return switch (normalizedCategory) {
-            case "ART" -> new Art(itemName, fullDescription, startPrice, sellerId);
-            case "ELECTRONIC" -> new Electronic(itemName, fullDescription, startPrice, sellerId);
-            case "VEHICLE" -> new Vehicle(itemName, fullDescription, startPrice, sellerId);
-            default -> throw new IllegalArgumentException("Danh mục sản phẩm không hợp lệ.");
-        };
+        return ItemCreatorFactory.createItem(
+                category,
+                itemName,
+                fullDescription,
+                startPrice,
+                sellerId,
+                imagePath);
     }
 
     /**
@@ -167,6 +168,20 @@ public final class PublishItemCommand implements Command {
     }
 
     /**
+     * Đọc chuỗi tùy chọn từ request.
+     *
+     * @param parts Các phần request đã tách.
+     * @param index Vị trí dữ liệu cần đọc.
+     * @return Giá trị đã trim hoặc chuỗi rỗng.
+     */
+    private String optional(final String[] parts, final int index) {
+        if (parts.length <= index || parts[index] == null) {
+            return "";
+        }
+        return parts[index].trim();
+    }
+
+    /**
      * Chuyển giá khởi điểm thành số dương.
      *
      * @param value Giá trị dạng text.
@@ -178,5 +193,41 @@ public final class PublishItemCommand implements Command {
             throw new IllegalArgumentException("Giá khởi điểm phải lớn hơn 0.");
         }
         return price;
+    }
+
+    private String buildSuccessResponse(final String itemId, final String auctionId) {
+        final String message = "Đăng bán sản phẩm thành công.";
+        try {
+            // Trả id item và auction mới để client có thể đồng bộ sau khi đăng bán.
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.PUBLISH_ITEM_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "itemId", itemId,
+                                    "auctionId", auctionId)),
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warning("Không tạo được JSON response đăng bán sản phẩm: "
+                    + exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON PUBLISH_ITEM_OK.", exception);
+        }
+    }
+
+    private String buildFailResponse(final String message) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.PUBLISH_ITEM_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warning("Không tạo được JSON lỗi đăng bán sản phẩm: "
+                    + exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON PUBLISH_ITEM_FAIL.", exception);
+        }
     }
 }

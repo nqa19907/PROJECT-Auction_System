@@ -133,7 +133,7 @@ public class AuctionViewModel {
      * Nạp lịch sử đặt giá đã lấy từ server vào bảng và biểu đồ.
      *
      * <p>Dữ liệu đầu vào dùng format đã parse từ BID_HISTORY:
-     * {@code time|bidder|amount}. Server trả theo thứ tự thời gian tăng dần,
+     * {@code time}, {@code bidder}, {@code amount}. Server trả theo thứ tự thời gian tăng dần,
      * còn bảng UI hiển thị lượt mới nhất ở đầu danh sách.
      *
      * @param rows danh sách dòng lịch sử bid đã parse từ response socket

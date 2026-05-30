@@ -120,10 +120,33 @@
     -fx-text-fill: #A07040;
 }
 
+/* ── Ảnh sản phẩm chi tiết ───────────────── */
+.root-pane .product-detail-image {
+    -fx-background-image: url("../images/rolex.jpg");
+    -fx-background-color: #F4E4CB;
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-radius: 14;
+    -fx-border-color: #F0D9B5;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+}
+
 .root-pane .timer-value {
     -fx-font-size: 40px;
     -fx-font-weight: bold;
     -fx-text-fill: #D4860B;
+}
+
+.root-pane .auction-time-panel {
+    -fx-min-width: 190px;
+}
+
+.root-pane .auction-time-text {
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #8A5A17;
 }
 
 .root-pane .metric-label {

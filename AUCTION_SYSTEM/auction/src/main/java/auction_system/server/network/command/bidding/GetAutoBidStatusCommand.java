@@ -2,17 +2,25 @@ package auction_system.server.network.command.bidding;
 
 import auction_system.common.models.auctions.AutoBidSetting;
 import auction_system.common.models.users.Participant;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Command trả trạng thái auto-bid hiện tại của user trong một phiên đấu giá.
  */
 public final class GetAutoBidStatusCommand implements Command {
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(GetAutoBidStatusCommand.class);
 
     private static final int MIN_GET_AUTO_BID_PARTS = 2;
     private static final int IDX_AUCTION_ID = 1;
@@ -47,18 +55,41 @@ public final class GetAutoBidStatusCommand implements Command {
         }
 
         final AutoBidSetting activeSetting = setting.get();
-        return Protocol.Response.AUTO_BID_STATUS.name()
-                + Protocol.SEPARATOR
-                + "ENABLED"
-                + Protocol.SEPARATOR
-                + activeSetting.getMaxAmount()
-                + Protocol.SEPARATOR
-                + activeSetting.getStepAmount();
+        return enabledStatus(activeSetting.getMaxAmount(), activeSetting.getStepAmount());
     }
 
     private String disabledStatus() {
-        return Protocol.Response.AUTO_BID_STATUS.name()
-                + Protocol.SEPARATOR
-                + "DISABLED";
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_STATUS.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of("enabled", false)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON trạng thái tắt auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_STATUS.", exception);
+        }
+    }
+
+    private String enabledStatus(final long maxAmount, final long stepAmount) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_STATUS.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "enabled", true,
+                                    "maxAmount", maxAmount,
+                                    "stepAmount", stepAmount)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON trạng thái bật auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_STATUS.", exception);
+        }
     }
 }

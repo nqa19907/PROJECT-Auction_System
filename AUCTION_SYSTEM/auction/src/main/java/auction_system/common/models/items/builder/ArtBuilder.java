@@ -11,6 +11,7 @@ public class ArtBuilder implements Builder<Art> {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
+    private String imagePath;
 
     public ArtBuilder itemName(String itemName) {
         this.itemName = itemName;
@@ -37,6 +38,12 @@ public class ArtBuilder implements Builder<Art> {
         return this;
     }
 
+    // Gắn đường dẫn ảnh vào item đang được build.
+    public ArtBuilder imagePath(final String imagePath) {
+        this.imagePath = imagePath;
+        return this;
+    }
+
     /**
      * Xây dựng và trả về đối tượng Art.
      *
@@ -49,6 +56,8 @@ public class ArtBuilder implements Builder<Art> {
         if (this.currentPrice > 0) {
             art.setCurrentPrice(this.currentPrice);
         }
+        // Áp dụng ảnh sản phẩm sau khi tạo domain object.
+        art.setImagePath(this.imagePath);
         return art;
     }
 

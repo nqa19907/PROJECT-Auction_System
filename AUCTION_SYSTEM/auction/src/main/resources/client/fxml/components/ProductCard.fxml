@@ -6,11 +6,11 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox id="productCard" fx:id="cardContainer" alignment="CENTER" prefHeight="220" prefWidth="280" spacing="12" styleClass="product-card" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProductCardController">
+<VBox id="productCard" fx:id="cardContainer" alignment="TOP_CENTER" prefHeight="310" prefWidth="260" spacing="10" styleClass="product-card" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.components.ProductCardController">
    <children>
-      <Region fx:id="imageRegion" prefHeight="200.0" prefWidth="200.0" styleClass="img-product-rolex" />
-      <Label fx:id="titleLabel" alignment="CENTER" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Đồng hồ Rolex Submariner Date 2004" wrapText="true" />
-      <Label fx:id="priceLabel" style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: Đang tải ..." />
+      <Region fx:id="imageRegion" maxHeight="180.0" maxWidth="180.0" minHeight="180.0" minWidth="180.0" prefHeight="180.0" prefWidth="180.0" styleClass="product-image" />
+      <Label fx:id="titleLabel" alignment="CENTER" maxWidth="220.0" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #1A2744;" text="Đồng hồ Rolex Submariner Date 2004" wrapText="true" />
+      <Label fx:id="priceLabel" maxWidth="220.0" style="-fx-font-size: 13; -fx-text-fill: #888;" text="Giá hiện tại: Đang tải ..." />
       <Button fx:id="bidButton" styleClass="btn-bid" text="Đấu giá ngay" />
    </children>
    <stylesheets>

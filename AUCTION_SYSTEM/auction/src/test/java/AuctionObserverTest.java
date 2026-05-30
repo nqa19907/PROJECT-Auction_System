@@ -7,6 +7,9 @@ import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.items.Electronic;
 import auction_system.common.models.items.Item;
 import auction_system.common.models.users.Participant;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
+import auction_system.common.network.Protocol;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,11 +148,10 @@ public class AuctionObserverTest {
     // =========================================================================
 
     /**
-     * notifyObservers() (không tham số) phải gửi message chứa tiền tố
-     * UPDATE_PRICE tới observer đang attach.
+     * notifyObservers() (không tham số) phải gửi JSON UPDATE_PRICE tới observer đang attach.
      */
     @Test
-    void notifyObserversNoArgSendsUpdatePriceMessage() {
+    void notifyObserversNoArgSendsUpdatePriceMessage() throws Exception {
         RecordingObserver observer = new RecordingObserver();
         auction.attach(observer);
 
@@ -157,9 +159,11 @@ public class AuctionObserverTest {
 
         assertEquals(1, observer.getMessages().size(),
                 "Observer phai nhan dung 1 thong bao.");
-        assertTrue(
-                observer.getMessages().get(0).startsWith("UPDATE_PRICE"),
-                "Message phai bat dau bang 'UPDATE_PRICE'.");
+        final JsonMessage message = JsonProtocol.parse(observer.getMessages().get(0));
+        assertEquals(
+                Protocol.Response.UPDATE_PRICE.name(),
+                message.type(),
+                "Message phai co type UPDATE_PRICE.");
     }
 
     /**
@@ -191,7 +195,7 @@ public class AuctionObserverTest {
         RecordingObserver obs2 = new RecordingObserver();
         auction.attach(obs1);
         auction.attach(obs2);
-        String customMessage = "AUCTION_EXTENDED|" + auction.getId() + "|2099-01-01T00:00";
+        String customMessage = "{\"type\":\"CUSTOM_NOTIFICATION\"}";
 
         auction.notifyObservers(customMessage);
 

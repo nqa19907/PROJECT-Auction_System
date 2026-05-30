@@ -1,7 +1,10 @@
 package auction_system.client.services;
 
 import auction_system.client.network.NetworkClient;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
 import java.util.OptionalDouble;
 import org.slf4j.Logger;
@@ -50,10 +53,7 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.JOIN_AUCTION.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildJoinAuctionRequest(auctionId));
     }
 
     /**
@@ -66,10 +66,7 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.LEAVE_AUCTION.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildLeaveAuctionRequest(auctionId));
     }
 
     /**
@@ -83,12 +80,172 @@ public class AuctionService {
             return;
         }
 
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.SET_ANTI_SNIPING.name()
-                        + Protocol.SEPARATOR
-                        + auctionId
-                        + Protocol.SEPARATOR
-                        + enabled);
+        NetworkClient.getInstance().sendCommand(buildSetAntiSnipingRequest(auctionId, enabled));
+    }
+
+    private String buildJoinAuctionRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.JOIN_AUCTION.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request tham gia phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON JOIN_AUCTION.", exception);
+        }
+    }
+
+    private String buildLeaveAuctionRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LEAVE_AUCTION.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request rời phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON LEAVE_AUCTION.", exception);
+        }
+    }
+
+    private String buildSetAntiSnipingRequest(final String auctionId, final boolean enabled) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.SET_ANTI_SNIPING.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, enabled)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request chống đặt giá phút chót: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON SET_ANTI_SNIPING.", exception);
+        }
+    }
+
+    private String buildPlaceBidRequest(final String auctionId, final double amount) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.PLACE_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, amount)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request đặt giá: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON PLACE_BID.", exception);
+        }
+    }
+
+    private String buildEnableAutoBidRequest(
+            final String auctionId,
+            final long maxAmount,
+            final long stepAmount) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.ENABLE_AUTO_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(List.of(auctionId, maxAmount, stepAmount)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request bật auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON ENABLE_AUTO_BID.", exception);
+        }
+    }
+
+    private String buildDisableAutoBidRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.DISABLE_AUTO_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request tắt auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON DISABLE_AUTO_BID.", exception);
+        }
+    }
+
+    private String buildGetAutoBidRequest(final String auctionId) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.GET_AUTO_BID.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy trạng thái auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON GET_AUTO_BID.", exception);
+        }
+    }
+
+    private String buildListAuctionsRequest() {
+        // Gửi LIST_AUCTIONS bằng JSON không payload cho ClientHandler.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.LIST_AUCTIONS.name(),
+                            null,
+                            null,
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy danh sách phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON LIST_AUCTIONS.", exception);
+        }
+    }
+
+    private String buildGetAuctionRequest(final String auctionId) {
+        // Gửi GET_AUCTION với auctionId dạng payload scalar để adapter server map parts.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.GET_AUCTION.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy chi tiết phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON GET_AUCTION.", exception);
+        }
+    }
+
+    private String buildGetBidHistoryRequest(final String auctionId) {
+        // Gửi GET_BID_HISTORY với auctionId dạng payload scalar để giữ request đơn giản.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            null,
+                            Protocol.Command.GET_BID_HISTORY.name(),
+                            null,
+                            JsonProtocol.payloadOf(auctionId),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON request lấy lịch sử bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON GET_BID_HISTORY.", exception);
+        }
     }
 
     /**
@@ -149,7 +306,7 @@ public class AuctionService {
      */
     public void fetchAuctionList(final FetchAuctionsCallback callback) {
         this.currentListCallback = callback;
-        NetworkClient.getInstance().sendCommand(Protocol.Command.LIST_AUCTIONS.name());
+        NetworkClient.getInstance().sendCommand(buildListAuctionsRequest());
     }
 
     /**
@@ -163,10 +320,7 @@ public class AuctionService {
             final FetchAuctionDetailCallback callback) {
 
         this.currentDetailCallback = callback;
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.GET_AUCTION.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildGetAuctionRequest(auctionId));
     }
 
     /**
@@ -183,17 +337,13 @@ public class AuctionService {
 
         this.currentBidCallback = callback;
 
-        // Giữ format request đúng protocol server: PLACE_BID|auctionId|amount.
-        String request = Protocol.Command.PLACE_BID.name()
-                + Protocol.SEPARATOR + auctionId
-                + Protocol.SEPARATOR + amount;
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(buildPlaceBidRequest(auctionId, amount));
     }
 
     /**
      * Gửi yêu cầu bật auto-bid cho một phiên đấu giá.
      *
-     * <p>Format request: {@code ENABLE_AUTO_BID|auctionId|maxAmount|stepAmount}.
+     * <p>Request JSON gồm auctionId, giá tối đa và bước tăng trong payload.
      *
      * @param auctionId mã phiên đấu giá
      * @param maxAmount giá tối đa người dùng cho phép auto-bid
@@ -208,12 +358,8 @@ public class AuctionService {
 
         this.currentAutoBidCallback = callback;
 
-        final String request = Protocol.Command.ENABLE_AUTO_BID.name()
-                + Protocol.SEPARATOR + auctionId
-                + Protocol.SEPARATOR + maxAmount
-                + Protocol.SEPARATOR + stepAmount;
-
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(
+                buildEnableAutoBidRequest(auctionId, maxAmount, stepAmount));
     }
 
     /**
@@ -228,10 +374,7 @@ public class AuctionService {
 
         this.currentAutoBidCallback = callback;
 
-        final String request = Protocol.Command.DISABLE_AUTO_BID.name()
-                + Protocol.SEPARATOR + auctionId;
-
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(buildDisableAutoBidRequest(auctionId));
     }
 
     /**
@@ -246,10 +389,7 @@ public class AuctionService {
 
         this.currentAutoBidStatusCallback = callback;
 
-        final String request = Protocol.Command.GET_AUTO_BID.name()
-                + Protocol.SEPARATOR + auctionId;
-
-        NetworkClient.getInstance().sendCommand(request);
+        NetworkClient.getInstance().sendCommand(buildGetAutoBidRequest(auctionId));
     }
 
     /**
@@ -263,10 +403,7 @@ public class AuctionService {
             final FetchBidHistoryCallback callback) {
 
         this.currentBidHistoryCallback = callback;
-        NetworkClient.getInstance().sendCommand(
-                Protocol.Command.GET_BID_HISTORY.name()
-                        + Protocol.SEPARATOR
-                        + auctionId);
+        NetworkClient.getInstance().sendCommand(buildGetBidHistoryRequest(auctionId));
     }
 
     /**
@@ -389,7 +526,6 @@ public class AuctionService {
 
         LOGGER.warn("AuctionService đặt giá thất bại: " + response);
 
-        // Server cũ hoặc lỗi mạng có thể trả thiếu message, nên fallback message vẫn cần có.
         String message = responseParser.parseBidFailureMessage(response);
         currentBidCallback.onResult(false, message, 0);
         currentBidCallback = null;
@@ -456,7 +592,7 @@ public class AuctionService {
 
         LOGGER.info("AuctionService nhận lịch sử bid: " + response);
 
-        // Parser bỏ header BID_HISTORY|auctionId|count và giữ lại từng dòng bid hợp lệ.
+        // Parser giữ lại từng dòng bid hợp lệ từ payload JSON.
         List<String[]> bidHistoryRows = responseParser.parseBidHistory(response);
         currentBidHistoryCallback.onResult(bidHistoryRows);
         currentBidHistoryCallback = null;

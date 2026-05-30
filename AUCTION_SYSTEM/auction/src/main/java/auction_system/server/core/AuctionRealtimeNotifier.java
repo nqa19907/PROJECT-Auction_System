@@ -4,16 +4,23 @@ import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.auctions.AuctionObserver;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Gom toàn bộ realtime notification liên quan tới auction/user online.
  */
 final class AuctionRealtimeNotifier {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuctionRealtimeNotifier.class);
 
     private final SerializedDatabase database;
     private final OnlineUserRegistry onlineUsers;
@@ -26,17 +33,14 @@ final class AuctionRealtimeNotifier {
     }
 
     void notifyAuctionCreated(final Auction auction) {
-        // Gói thông báo tối giản: client sẽ dùng auctionId để tự tải chi tiết.
-        final String message = Protocol.Response.AUCTION_CREATED.name()
-                + Protocol.SEPARATOR
-                + auction.getId();
+        final String message = buildAuctionCreatedMessage(auction.getId());
         onlineUsers.getObservers().forEach(observer -> observer.update(message));
     }
 
     void notifyAntiSnipingUpdated(final Auction auction) {
-        final String message = Protocol.Response.ANTI_SNIPING_UPDATED.name()
-                + Protocol.SEPARATOR + auction.getId()
-                + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+        final String message = buildAntiSnipingUpdatedMessage(
+                auction.getId(),
+                auction.isAntiSnipingEnabled());
         auction.notifyObservers(message);
     }
 
@@ -51,10 +55,7 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Client chỉ cần số dư mới để cập nhật UI ví.
-        final String message = Protocol.Response.BALANCE_UPDATED.name()
-                + Protocol.SEPARATOR
-                + participant.getBalance();
+        final String message = buildBalanceUpdatedMessage(participant.getBalance());
         observer.update(message);
     }
 
@@ -84,12 +85,7 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Thông báo winner chứa itemName để UI hiển thị popup ngay.
-        final String message = Protocol.Response.AUCTION_WINNER.name()
-                + Protocol.SEPARATOR
-                + auctionId
-                + Protocol.SEPARATOR
-                + itemName;
+        final String message = buildAuctionWinnerMessage(auctionId, itemName);
         winnerObserver.update(message);
     }
 
@@ -125,14 +121,100 @@ final class AuctionRealtimeNotifier {
             return;
         }
 
-        // Gửi đủ ngữ cảnh để client hiển thị tên vật phẩm và người thắng.
-        final String message = Protocol.Response.AUCTION_LOST.name()
-                + Protocol.SEPARATOR
-                + auctionId
-                + Protocol.SEPARATOR
-                + itemName
-                + Protocol.SEPARATOR
-                + winnerUsername;
+        final String message = buildAuctionLostMessage(auctionId, itemName, winnerUsername);
         loserObserver.update(message);
+    }
+
+    private String buildAuctionCreatedMessage(final String auctionId) {
+        // Gửi thông báo tạo phiên bằng JSON cho dashboard đang mở.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_CREATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of("auctionId", String.valueOf(auctionId))),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_CREATED: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUCTION_CREATED.", exception);
+        }
+    }
+
+    private String buildAntiSnipingUpdatedMessage(
+            final String auctionId,
+            final boolean enabled) {
+        // Gửi trạng thái anti-sniping bằng JSON cho các observer của phiên.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", String.valueOf(auctionId),
+                            "enabled", enabled)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON ANTI_SNIPING_UPDATED: {}",
+                    exception.getMessage());
+            throw new IllegalStateException(
+                    "Không tạo được JSON ANTI_SNIPING_UPDATED.",
+                    exception);
+        }
+    }
+
+    private String buildBalanceUpdatedMessage(final double balance) {
+        // Gửi số dư realtime bằng JSON cho client đang online.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.BALANCE_UPDATED.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of("balance", balance)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON BALANCE_UPDATED: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON BALANCE_UPDATED.", exception);
+        }
+    }
+
+    private String buildAuctionWinnerMessage(final String auctionId, final String itemName) {
+        // Gửi thông báo winner bằng JSON cho popup của người thắng.
+        final String safeItemName = itemName == null ? "" : itemName;
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_WINNER.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", auctionId,
+                            "itemName", safeItemName)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_WINNER: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUCTION_WINNER.", exception);
+        }
+    }
+
+    private String buildAuctionLostMessage(
+            final String auctionId,
+            final String itemName,
+            final String winnerUsername) {
+        // Gửi thông báo loser bằng JSON cho popup của người thua.
+        final String safeItemName = itemName == null ? "" : itemName;
+        final String safeWinnerUsername = winnerUsername == null ? "NONE" : winnerUsername;
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    Protocol.Response.AUCTION_LOST.name(),
+                    null,
+                    "OK",
+                    JsonProtocol.payloadOf(Map.of(
+                            "auctionId", auctionId,
+                            "itemName", safeItemName,
+                            "winnerUsername", safeWinnerUsername)),
+                    null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON AUCTION_LOST: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUCTION_LOST.", exception);
+        }
     }
 }
