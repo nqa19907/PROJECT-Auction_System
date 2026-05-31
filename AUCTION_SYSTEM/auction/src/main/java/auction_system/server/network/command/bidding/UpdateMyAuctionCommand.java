@@ -14,13 +14,14 @@ import java.util.Objects;
  */
 public final class UpdateMyAuctionCommand implements Command {
 
-    private static final int REQUIRED_PART_COUNT = 7;
+    private static final int REQUIRED_PART_COUNT = 8;
     private static final int AUCTION_ID_INDEX = 1;
     private static final int CATEGORY_INDEX = 2;
     private static final int ITEM_NAME_INDEX = 3;
     private static final int DESCRIPTION_INDEX = 4;
     private static final int CONDITION_INDEX = 5;
     private static final int END_TIME_INDEX = 6;
+    private static final int IMAGE_PATH_INDEX = 7;
     private final AuctionManager auctionManager;
 
     public UpdateMyAuctionCommand(final AuctionManager auctionManager) {
@@ -47,7 +48,8 @@ public final class UpdateMyAuctionCommand implements Command {
                     required(parts[DESCRIPTION_INDEX], "Thiếu mô tả."),
                     required(parts[CONDITION_INDEX], "Thiếu tình trạng."),
                     LocalDateTime.parse(required(parts[END_TIME_INDEX],
-                            "Thiếu thời gian kết thúc.")));
+                            "Thiếu thời gian kết thúc.")),
+                    optional(parts[IMAGE_PATH_INDEX]));
 
             // Phân biệt cập nhật thành công với trường hợp auction không còn tồn tại.
             return updated
@@ -65,6 +67,10 @@ public final class UpdateMyAuctionCommand implements Command {
             throw new IllegalArgumentException(message);
         }
         return value.trim();
+    }
+
+    private String optional(final String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String failure(final String message) {

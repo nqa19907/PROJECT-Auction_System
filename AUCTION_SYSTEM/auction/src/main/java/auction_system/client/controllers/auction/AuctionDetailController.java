@@ -307,7 +307,7 @@ public class AuctionDetailController implements Initializable {
         setupChart();
         CheckBoxIconUtil.apply(autoBidToggle);
         CheckBoxIconUtil.apply(chkAntiShipping);
-        ProductImageStyleUtil.applyRoundedClip(productImage, 14);
+        ProductImageStyleUtil.applyRoundedClip(productImage, 13);
         bindViewModel();
         bidForm.registerHandlers();
         autoBidForm.registerHandlers();

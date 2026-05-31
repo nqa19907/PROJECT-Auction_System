@@ -195,6 +195,7 @@ public final class ItemPublishService {
      * @param description mô tả mới
      * @param condition tình trạng mới
      * @param endTime thời gian kết thúc mới
+     * @param imagePath đường dẫn ảnh mới hoặc chuỗi rỗng để giữ ảnh hiện tại
      * @param callback callback nhận kết quả
      */
     public void updateMyAuction(
@@ -204,6 +205,7 @@ public final class ItemPublishService {
             final String description,
             final String condition,
             final LocalDateTime endTime,
+            final String imagePath,
             final PublishItemCallback callback) {
         // Ghi nhớ callback update riêng để không xung đột với request đăng bán.
         Objects.requireNonNull(callback, "Callback không được null.");
@@ -221,7 +223,8 @@ public final class ItemPublishService {
                                 nullToEmpty(itemName),
                                 nullToEmpty(description),
                                 nullToEmpty(condition),
-                                FORMATTER.format(endTime))),
+                                FORMATTER.format(endTime),
+                                nullToEmpty(imagePath))),
                         null));
 
         if (!NetworkClient.getInstance().sendCommand(request)) {

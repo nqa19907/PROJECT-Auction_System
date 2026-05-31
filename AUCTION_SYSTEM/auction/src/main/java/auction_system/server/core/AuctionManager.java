@@ -233,6 +233,7 @@ public class AuctionManager {
      * @param description mô tả mới
      * @param condition tình trạng mới
      * @param endTime thời gian kết thúc mới
+     * @param imagePath đường dẫn ảnh mới hoặc chuỗi rỗng để giữ ảnh hiện tại
      * @return true nếu cập nhật thành công
      */
     public boolean updateMyAuctionInfo(
@@ -242,7 +243,8 @@ public class AuctionManager {
             final String itemName,
             final String description,
             final String condition,
-            final LocalDateTime endTime) {
+            final LocalDateTime endTime,
+            final String imagePath) {
         final Auction auction = auctionRegistry.findById(auctionId);
         if (auction == null) {
             return false;
@@ -266,12 +268,16 @@ public class AuctionManager {
         final String normalizedCategory = category.trim().toUpperCase();
         final Item currentItem = auction.getItem();
         final String fullDescription = description + "\nTình trạng: " + condition;
+        final String normalizedImagePath = imagePath == null ? "" : imagePath.trim();
 
         if (normalizedCategory.equals(currentItem.getCategory())) {
             // Cùng danh mục: giữ nguyên class item cũ, chỉ cập nhật nội dung.
             currentItem.setItemName(itemName);
             currentItem.setDescription(fullDescription);
             currentItem.setCategory(normalizedCategory);
+            if (!normalizedImagePath.isEmpty()) {
+                currentItem.setImagePath(normalizedImagePath);
+            }
         } else {
             // Khác danh mục: phải tạo item mới đúng class để category hoạt động đúng theo model.
             final Item replacementItem = switch (normalizedCategory) {
@@ -293,6 +299,9 @@ public class AuctionManager {
                 default -> throw new IllegalArgumentException("Danh mục không hợp lệ.");
             };
             replacementItem.setCurrentPrice(currentItem.getCurrentPrice());
+            replacementItem.setImagePath(normalizedImagePath.isEmpty()
+                    ? currentItem.getImagePath()
+                    : normalizedImagePath);
             auction.setItem(replacementItem);
         }
 

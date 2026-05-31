@@ -243,13 +243,13 @@ public class PublishItemController implements Initializable {
         fieldEndingTime.setText(formatDateTimeForInput(row.getEndTime()));
         fieldBidStep.setDisable(true);
         chkAntiSniping.setDisable(true);
-        btnChooseImage.setDisable(true);
+        updateSelectedImageLabel();
     }
 
     /**
      * Gửi request cập nhật phiên hiện tại.
      */
-    private void submitEditAuction() {
+    private void submitEditAuction() throws IOException {
         ItemPublishService.getInstance().updateMyAuction(
                 editingAuctionId,
                 readRequired(comboCategory, "Vui lòng chọn danh mục."),
@@ -257,6 +257,7 @@ public class PublishItemController implements Initializable {
                 readRequired(fieldDescription, "Mô tả không được để trống."),
                 readRequired(comboCondition, "Vui lòng chọn tình trạng."),
                 parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc"),
+                storeSelectedImage(),
                 (success, message) -> Platform.runLater(
                         () -> handleUpdateResult(success, message)));
         setLoadingState(true);
@@ -426,7 +427,7 @@ public class PublishItemController implements Initializable {
 
         // Hiển thị tên file ảnh để người dùng biết ảnh nào đang được chọn.
         String imageName = selectedImageSource == null
-                ? "Chưa chọn ảnh"
+                ? editMode ? "Giữ ảnh hiện tại" : "Chưa chọn ảnh"
                 : selectedImageSource.getFileName().toString();
         lblSelectedImage.setText(imageName);
     }
@@ -439,6 +440,6 @@ public class PublishItemController implements Initializable {
     private void setLoadingState(final boolean loading) {
         btnConfirm.setDisable(loading);
         btnCancel.setDisable(loading);
-        btnChooseImage.setDisable(loading || editMode);
+        btnChooseImage.setDisable(loading);
     }
 }
