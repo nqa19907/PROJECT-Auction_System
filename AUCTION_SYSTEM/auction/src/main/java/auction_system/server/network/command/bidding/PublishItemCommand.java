@@ -148,18 +148,21 @@ public final class PublishItemCommand implements JsonPayloadCommand {
         String description = required(payload.description(), "Mô tả không được để trống.");
         String condition = required(payload.condition(), "Tình trạng không được để trống.");
         double startPrice = parsePositivePrice(payload.startPrice());
+        double bidStep = parsePositivePrice(payload.bidStep());
         // Đọc metadata ảnh nếu client mới có gửi kèm.
         String imagePath = optional(payload.imagePath());
 
         // Ghép tình trạng vào mô tả theo format domain hiện tại đang lưu trữ.
         String fullDescription = description + "\nTình trạng: " + condition;
-        return ItemCreatorFactory.createItem(
+        Item item = ItemCreatorFactory.createItem(
                 category,
                 itemName,
                 fullDescription,
                 startPrice,
                 sellerId,
                 imagePath);
+        item.setBidStep(bidStep);
+        return item;
     }
 
     /**

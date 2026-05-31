@@ -74,6 +74,7 @@ public final class ItemPublishService {
      * @param description Mô tả sản phẩm.
      * @param condition Tình trạng sản phẩm.
      * @param startPrice Giá khởi điểm.
+     * @param bidStep Giá tối thiểu để bắt đầu đấu giá.
      * @param startTime Thời điểm bắt đầu đấu giá.
      * @param endTime Thời điểm kết thúc đấu giá.
      * @param callback Callback nhận kết quả.
@@ -84,6 +85,7 @@ public final class ItemPublishService {
             String description,
             String condition,
             double startPrice,
+            double bidStep,
             LocalDateTime startTime,
             LocalDateTime endTime,
             PublishItemCallback callback) {
@@ -94,6 +96,7 @@ public final class ItemPublishService {
                 description,
                 condition,
                 startPrice,
+                bidStep,
                 startTime,
                 endTime,
                 "",
@@ -109,6 +112,7 @@ public final class ItemPublishService {
      * @param description Mô tả sản phẩm.
      * @param condition Tình trạng sản phẩm.
      * @param startPrice Giá khởi điểm.
+     * @param bidStep Giá tối thiểu để bắt đầu đấu giá.
      * @param startTime Thời điểm bắt đầu đấu giá.
      * @param endTime Thời điểm kết thúc đấu giá.
      * @param imagePath Đường dẫn ảnh sản phẩm đã được lưu.
@@ -120,6 +124,7 @@ public final class ItemPublishService {
             String description,
             String condition,
             double startPrice,
+            double bidStep,
             LocalDateTime startTime,
             LocalDateTime endTime,
             String imagePath,
@@ -131,6 +136,7 @@ public final class ItemPublishService {
                 description,
                 condition,
                 startPrice,
+                bidStep,
                 startTime,
                 endTime,
                 imagePath,
@@ -146,6 +152,7 @@ public final class ItemPublishService {
      * @param description Mô tả sản phẩm.
      * @param condition Tình trạng sản phẩm.
      * @param startPrice Giá khởi điểm.
+     * @param bidStep Giá tối thiểu để bắt đầu đấu giá.
      * @param startTime Thời điểm bắt đầu đấu giá.
      * @param endTime Thời điểm kết thúc đấu giá.
      * @param imagePath Đường dẫn ảnh sản phẩm đã được lưu.
@@ -158,6 +165,7 @@ public final class ItemPublishService {
             String description,
             String condition,
             double startPrice,
+            double bidStep,
             LocalDateTime startTime,
             LocalDateTime endTime,
             String imagePath,
@@ -174,6 +182,7 @@ public final class ItemPublishService {
                 description,
                 condition,
                 startPrice,
+                bidStep,
                 startTime,
                 endTime,
                 imagePath,
@@ -194,8 +203,11 @@ public final class ItemPublishService {
      * @param itemName tên tài sản mới
      * @param description mô tả mới
      * @param condition tình trạng mới
+     * @param startPrice giá khởi đầu mới
+     * @param bidStep bước nhảy mới
+     * @param imagePath đường dẫn ảnh mới hoặc ảnh hiện tại
+     * @param startTime thời gian bắt đầu mới
      * @param endTime thời gian kết thúc mới
-     * @param imagePath đường dẫn ảnh mới hoặc chuỗi rỗng để giữ ảnh hiện tại
      * @param callback callback nhận kết quả
      */
     public void updateMyAuction(
@@ -204,8 +216,11 @@ public final class ItemPublishService {
             final String itemName,
             final String description,
             final String condition,
-            final LocalDateTime endTime,
+            final double startPrice,
+            final double bidStep,
             final String imagePath,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime,
             final PublishItemCallback callback) {
         // Ghi nhớ callback update riêng để không xung đột với request đăng bán.
         Objects.requireNonNull(callback, "Callback không được null.");
@@ -220,8 +235,11 @@ public final class ItemPublishService {
                         "itemName", nullToEmpty(itemName),
                         "description", nullToEmpty(description),
                         "condition", nullToEmpty(condition),
-                        "endTime", FORMATTER.format(endTime),
-                        "imagePath", nullToEmpty(imagePath)));
+                        "startPrice", startPrice,
+                        "bidStep", bidStep,
+                        "imagePath", nullToEmpty(imagePath),
+                        "startTime", FORMATTER.format(startTime),
+                        "endTime", FORMATTER.format(endTime)));
 
         if (!NetworkClient.getInstance().sendMessage(request)) {
             LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
@@ -305,10 +323,11 @@ public final class ItemPublishService {
             final String description,
             final String condition,
             final double startPrice,
+            final double bidStep,
             final LocalDateTime startTime,
             final LocalDateTime endTime,
             final String imagePath,
-        final boolean antiSnipingEnabled) {
+            final boolean antiSnipingEnabled) {
         // Payload object giữ tên field rõ ràng; dispatcher sẽ map sang command hiện tại.
         return JsonProtocol.request(Protocol.Command.PUBLISH_ITEM, Map.of(
                 "category", nullToEmpty(category),
@@ -316,6 +335,7 @@ public final class ItemPublishService {
                 "description", nullToEmpty(description),
                 "condition", nullToEmpty(condition),
                 "startPrice", startPrice,
+                "bidStep", bidStep,
                 "startTime", FORMATTER.format(startTime),
                 "endTime", FORMATTER.format(endTime),
                 "imagePath", nullToEmpty(imagePath),

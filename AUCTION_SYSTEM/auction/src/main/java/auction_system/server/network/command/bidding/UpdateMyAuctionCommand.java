@@ -49,9 +49,13 @@ public final class UpdateMyAuctionCommand implements JsonPayloadCommand {
                     required(updatePayload.itemName(), "Thiếu tên tài sản."),
                     required(updatePayload.description(), "Thiếu mô tả."),
                     required(updatePayload.condition(), "Thiếu tình trạng."),
+                    parsePositiveMoney(updatePayload.startPrice(), "giá khởi điểm"),
+                    parsePositiveMoney(updatePayload.bidStep(), "giá tối thiểu"),
+                    optional(updatePayload.imagePath()),
+                    LocalDateTime.parse(required(updatePayload.startTime(),
+                            "Thiếu thời gian bắt đầu.")),
                     LocalDateTime.parse(required(updatePayload.endTime(),
-                            "Thiếu thời gian kết thúc.")),
-                    optional(updatePayload.imagePath()));
+                            "Thiếu thời gian kết thúc.")));
 
             // Phân biệt cập nhật thành công với trường hợp auction không còn tồn tại.
             return updated
@@ -73,6 +77,14 @@ public final class UpdateMyAuctionCommand implements JsonPayloadCommand {
 
     private String optional(final String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private double parsePositiveMoney(final String value, final String fieldName) {
+        final double amount = Double.parseDouble(required(value, "Thiếu " + fieldName + "."));
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Trường " + fieldName + " phải lớn hơn 0.");
+        }
+        return amount;
     }
 
     private String failure(final String message) {

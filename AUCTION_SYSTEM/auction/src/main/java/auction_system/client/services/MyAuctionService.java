@@ -104,6 +104,9 @@ public final class MyAuctionService {
                         text(row, "status"),
                         text(row, "startTime"),
                         text(row, "endTime"),
+                        text(row, "startPrice"),
+                        text(row, "bidStep"),
+                        text(row, "imagePath"),
                         text(row, "category"),
                         text(row, "description"),
                         text(row, "condition")));

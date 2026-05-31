@@ -63,6 +63,9 @@ public final class ListMyAuctionsCommand implements JsonPayloadCommand {
         row.put("status", String.valueOf(auction.getStatus()));
         row.put("startTime", String.valueOf(auction.getStartTime()));
         row.put("endTime", String.valueOf(auction.getEndTime()));
+        row.put("startPrice", String.valueOf(auction.getItem().getStartPrice()));
+        row.put("bidStep", String.valueOf(auction.getItem().getBidStep()));
+        row.put("imagePath", safe(auction.getItem().getImagePath()));
         row.put("category", safe(auction.getItem().getCategory()));
         row.put("description", description[0]);
         row.put("condition", description[1]);

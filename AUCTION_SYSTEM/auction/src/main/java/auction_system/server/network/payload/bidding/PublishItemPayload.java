@@ -9,6 +9,7 @@ public record PublishItemPayload(
         String description,
         String condition,
         String startPrice,
+        String bidStep,
         String startTime,
         String endTime,
         String imagePath,
@@ -26,6 +27,7 @@ public record PublishItemPayload(
                 || isBlank(description)
                 || isBlank(condition)
                 || isBlank(startPrice)
+                || isBlank(bidStep)
                 || isBlank(startTime)
                 || isBlank(endTime);
     }

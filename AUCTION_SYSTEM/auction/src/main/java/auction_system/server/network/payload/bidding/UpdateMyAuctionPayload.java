@@ -9,8 +9,11 @@ public record UpdateMyAuctionPayload(
         String itemName,
         String description,
         String condition,
-        String endTime,
-        String imagePath) {
+        String startPrice,
+        String bidStep,
+        String imagePath,
+        String startTime,
+        String endTime) {
 
     /**
      * Kiểm tra payload thiếu dữ liệu bắt buộc.
@@ -24,6 +27,9 @@ public record UpdateMyAuctionPayload(
                 || isBlank(itemName)
                 || isBlank(description)
                 || isBlank(condition)
+                || isBlank(startPrice)
+                || isBlank(bidStep)
+                || isBlank(startTime)
                 || isBlank(endTime);
     }
 
