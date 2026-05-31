@@ -10,6 +10,7 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
+import auction_system.server.network.command.bidding.UpdateMyAuctionCommand;
 import auction_system.server.network.command.auction.JoinAuctionCommand;
 import auction_system.server.network.command.auction.LeaveAuctionCommand;
 import auction_system.server.network.command.wallet.DepositCommand;
@@ -50,8 +51,11 @@ public class AuctionCommandTest {
     private AuthService authService;
     private AuctionBidService bidService;
 
-    /** Observer không làm gì, dùng để dựng ClientSession trong test. */
-    private static final AuctionObserver NOOP_OBSERVER = msg -> { };
+    /**
+     * Observer không làm gì, dùng để dựng ClientSession trong test.
+     */
+    private static final AuctionObserver NOOP_OBSERVER = msg -> {
+    };
 
     @BeforeEach
     void setUp() throws Exception {
@@ -68,14 +72,18 @@ public class AuctionCommandTest {
         resetSingleton();
     }
 
-    /** Reset AuctionManager singleton để các test độc lập nhau. */
+    /**
+     * Reset AuctionManager singleton để các test độc lập nhau.
+     */
     private void resetSingleton() throws Exception {
         Field field = AuctionManager.class.getDeclaredField("instance");
         field.setAccessible(true);
         field.set(null, null);
     }
 
-    /** Tạo ClientSession mới chưa đăng nhập. */
+    /**
+     * Tạo ClientSession mới chưa đăng nhập.
+     */
     private ClientSession newSession() {
         return new ClientSession(NOOP_OBSERVER, manager);
     }
@@ -403,5 +411,209 @@ public class AuctionCommandTest {
         assertNotNull(response, "Response khong duoc null.");
         assertTrue(response.contains(Protocol.Response.DEPOSIT_OK.name()),
                 "Amount hop le phai tra DEPOSIT_OK.");
+    }
+    // =========================================================================
+    // UpdateMyAuctionCommand
+    // =========================================================================
+
+    /**
+     * UpdateMyAuction khi chưa đăng nhập phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_NotLoggedIn_ReturnsFail() {
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+
+        String response = cmd.execute(null, newSession());
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "Chua dang nhap phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction với payload null phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_NullPayload_ReturnsFail() {
+        Participant p = makeParticipant();
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+
+        String response = cmd.execute(null, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "Payload null phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction thiếu itemName phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_MissingItemName_ReturnsFail() {
+        Participant p = makeParticipant();
+        String auctionId = createActiveAuction(p);
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", auctionId,
+                "category", "Electronic",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "1000000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "Thieu itemName phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction thiếu auctionId phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_MissingAuctionId_ReturnsFail() {
+        Participant p = makeParticipant();
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "category", "Electronic",
+                "itemName", "Laptop",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "1000000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "Thieu auctionId phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction với startPrice âm phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_NegativeStartPrice_ReturnsFail() {
+        Participant p = makeParticipant();
+        String auctionId = createActiveAuction(p);
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", auctionId,
+                "category", "Electronic",
+                "itemName", "Laptop",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "-1000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "StartPrice am phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction với bidStep bằng 0 phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_ZeroBidStep_ReturnsFail() {
+        Participant p = makeParticipant();
+        String auctionId = createActiveAuction(p);
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", auctionId,
+                "category", "Electronic",
+                "itemName", "Laptop",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "1000000",
+                "bidStep", "0",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "BidStep bang 0 phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction với auctionId không tồn tại phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_UnknownAuctionId_ReturnsFail() {
+        Participant p = makeParticipant();
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", "NOTEXIST-999",
+                "category", "Electronic",
+                "itemName", "Laptop",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "1000000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "AuctionId khong ton tai phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction phiên không phải của mình phải trả UPDATE_MY_AUCTION_FAIL.
+     */
+    @Test
+    void updateMyAuctionCommand_NotOwner_ReturnsFail() {
+        Participant owner = makeParticipant();
+        Participant other = new Participant("other01", "other01@test.com", "pass",
+                10_000.0, "PARTICIPANT");
+        manager.registerUser(other);
+        String auctionId = createActiveAuction(owner);
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", auctionId,
+                "category", "Electronic",
+                "itemName", "Laptop",
+                "description", "Mo ta",
+                "condition", "Moi",
+                "startPrice", "1000000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(3).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(other));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_FAIL.name()),
+                "Khong phai chu so huu phai tra UPDATE_MY_AUCTION_FAIL.");
+    }
+
+    /**
+     * UpdateMyAuction với đầy đủ dữ liệu hợp lệ phải trả UPDATE_MY_AUCTION_OK.
+     */
+    @Test
+    void updateMyAuctionCommand_ValidPayload_ReturnsOk() {
+        Participant p = makeParticipant();
+        String auctionId = createActiveAuction(p);
+        UpdateMyAuctionCommand cmd = new UpdateMyAuctionCommand(manager);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of(
+                "auctionId", auctionId,
+                "category", "Electronic",
+                "itemName", "Laptop Pro Updated",
+                "description", "Mo ta cap nhat",
+                "condition", "Moi 99%",
+                "startPrice", "5500000",
+                "bidStep", "100000",
+                "startTime", LocalDateTime.now().plusMinutes(5).toString(),
+                "endTime", LocalDateTime.now().plusHours(4).toString()));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.UPDATE_MY_AUCTION_OK.name()),
+                "Payload hop le phai tra UPDATE_MY_AUCTION_OK.");
     }
 }
