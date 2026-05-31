@@ -44,12 +44,18 @@ jobs:
     # Mục tiêu: Đóng gói sản phẩm và đưa đến tay người dùng (hoặc giảng viên)
     # ---------------------------------------------------------
 
-    # CD: Lưu trữ file .jar vừa build được vào bộ nhớ tạm của GitHub Actions
+    # CD: Lưu trữ JAR và script chạy release vào bộ nhớ tạm của GitHub Actions
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: auction-system-jar
-        path: AUCTION_SYSTEM/auction/target/*.jar
+        name: auction-system-release
+        path: |
+          AUCTION_SYSTEM/auction/target/*-client.jar
+          AUCTION_SYSTEM/auction/target/*-server.jar
+          scripts/release/release-run-client.ps1
+          scripts/release/release-run-server.ps1
+          scripts/release/release-run-client.sh
+          scripts/release/release-run-server.sh
 
     # CD: Tự động tạo bản Release trên GitHub
     # Bước này "quyền lực" nhất: Nó biến đống code thành một phiên bản có thể tải về
@@ -62,8 +68,13 @@ jobs:
         name: Release Build ${{ github.run_number }}
         draft: false
         prerelease: false
-        # Đính kèm sản phẩm (file .jar) vào bản Release
+        # Đính kèm JAR và script chạy không cần Maven vào bản Release
         files: |
-          AUCTION_SYSTEM/auction/target/*.jar
+          AUCTION_SYSTEM/auction/target/*-client.jar
+          AUCTION_SYSTEM/auction/target/*-server.jar
+          scripts/release/release-run-client.ps1
+          scripts/release/release-run-server.ps1
+          scripts/release/release-run-client.sh
+          scripts/release/release-run-server.sh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
