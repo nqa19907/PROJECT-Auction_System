@@ -191,7 +191,7 @@
 
                     <!-- Ô chọn bật/tắt anti shipping ngay trong khu vực đặt giá -->
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <CheckBox fx:id="chkAntiShipping" styleClass="anti-snipping-checkbox" text="Anti Shipping" />
+                        <CheckBox fx:id="chkAntiShipping" styleClass="anti-snipping-checkbox" text="Anti Snipping" />
                     </HBox>
 
                     <HBox alignment="CENTER_RIGHT" spacing="12">
