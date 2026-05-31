@@ -229,5 +229,5 @@ bidding.
 
 ## 7. Link báo cáo PDF và video demo
 
-- Link báo cáo PDF: file:///D:/Auction_Project/BaoCaoDuAn.pdf
+- báo cáo PDF: BaoCaoDuAn.pdf trong folder gốc
 - Link video demo: https://youtu.be/eMDtJN-CxMA
