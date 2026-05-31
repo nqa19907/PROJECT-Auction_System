@@ -4,24 +4,18 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.UpdateMyAuctionPayload;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
  * Command cho phép user chỉnh sửa thông tin phiên do chính mình đăng.
  */
-public final class UpdateMyAuctionCommand implements Command {
+public final class UpdateMyAuctionCommand implements JsonPayloadCommand {
 
-    private static final int REQUIRED_PART_COUNT = 8;
-    private static final int AUCTION_ID_INDEX = 1;
-    private static final int CATEGORY_INDEX = 2;
-    private static final int ITEM_NAME_INDEX = 3;
-    private static final int DESCRIPTION_INDEX = 4;
-    private static final int CONDITION_INDEX = 5;
-    private static final int END_TIME_INDEX = 6;
-    private static final int IMAGE_PATH_INDEX = 7;
     private final AuctionManager auctionManager;
 
     public UpdateMyAuctionCommand(final AuctionManager auctionManager) {
@@ -29,27 +23,35 @@ public final class UpdateMyAuctionCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         // Kiểm tra session và số lượng field trước khi đọc payload đã chuyển thành parts.
         if (session == null || session.getCurrentUser() == null) {
             return failure("Chưa đăng nhập.");
         }
-        if (parts.length < REQUIRED_PART_COUNT) {
+
+        final UpdateMyAuctionPayload updatePayload;
+        try {
+            updatePayload = JsonProtocol.payloadAs(payload, UpdateMyAuctionPayload.class);
+        } catch (IllegalArgumentException exception) {
+            return failure("Thiếu dữ liệu cập nhật phiên.");
+        }
+
+        if (updatePayload.hasMissingRequiredFields()) {
             return failure("Thiếu dữ liệu cập nhật phiên.");
         }
 
         try {
             // Validate từng field và chỉ cập nhật auction thuộc user hiện tại.
             final boolean updated = auctionManager.updateMyAuctionInfo(
-                    required(parts[AUCTION_ID_INDEX], "Thiếu mã phiên."),
+                    required(updatePayload.auctionId(), "Thiếu mã phiên."),
                     session.getCurrentUser().getId(),
-                    required(parts[CATEGORY_INDEX], "Thiếu danh mục."),
-                    required(parts[ITEM_NAME_INDEX], "Thiếu tên tài sản."),
-                    required(parts[DESCRIPTION_INDEX], "Thiếu mô tả."),
-                    required(parts[CONDITION_INDEX], "Thiếu tình trạng."),
-                    LocalDateTime.parse(required(parts[END_TIME_INDEX],
+                    required(updatePayload.category(), "Thiếu danh mục."),
+                    required(updatePayload.itemName(), "Thiếu tên tài sản."),
+                    required(updatePayload.description(), "Thiếu mô tả."),
+                    required(updatePayload.condition(), "Thiếu tình trạng."),
+                    LocalDateTime.parse(required(updatePayload.endTime(),
                             "Thiếu thời gian kết thúc.")),
-                    optional(parts[IMAGE_PATH_INDEX]));
+                    optional(updatePayload.imagePath()));
 
             // Phân biệt cập nhật thành công với trường hợp auction không còn tồn tại.
             return updated

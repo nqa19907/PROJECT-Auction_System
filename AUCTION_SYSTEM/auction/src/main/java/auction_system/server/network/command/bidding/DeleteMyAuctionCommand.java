@@ -6,17 +6,18 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 
 /**
  * Command cho phép user xóa phiên đấu giá của chính mình.
  */
-public final class DeleteMyAuctionCommand implements Command {
+public final class DeleteMyAuctionCommand implements JsonPayloadCommand {
 
-    private static final int IDX_AUCTION_ID = 1;
     private final AuctionManager auctionManager;
 
     public DeleteMyAuctionCommand(final AuctionManager auctionManager) {
@@ -24,18 +25,26 @@ public final class DeleteMyAuctionCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         // Chặn request chưa đăng nhập hoặc thiếu mã phiên trước khi truy cập dữ liệu.
         final User currentUser = session == null ? null : session.getCurrentUser();
         if (currentUser == null) {
             return failure("Bạn chưa đăng nhập.");
         }
-        if (parts.length <= IDX_AUCTION_ID || parts[IDX_AUCTION_ID].isBlank()) {
+
+        final AuctionIdPayload auctionIdPayload;
+        try {
+            auctionIdPayload = JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+        } catch (IllegalArgumentException exception) {
+            return failure("Thiếu mã phiên đấu giá.");
+        }
+
+        if (auctionIdPayload.hasMissingAuctionId()) {
             return failure("Thiếu mã phiên đấu giá.");
         }
 
         // Chỉ cho phép chủ phiên xóa auction thuộc tài khoản hiện tại.
-        final String auctionId = parts[IDX_AUCTION_ID].trim();
+        final String auctionId = auctionIdPayload.auctionId().trim();
         final Auction auction = auctionManager.getAuctionById(auctionId);
         if (auction == null) {
             return failure("Không tìm thấy phiên để xóa.");

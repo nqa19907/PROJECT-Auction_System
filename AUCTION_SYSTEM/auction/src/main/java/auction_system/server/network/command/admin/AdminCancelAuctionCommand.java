@@ -5,9 +5,11 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +17,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Command cho phép ADMIN dừng (cancel) một phiên đấu giá.
  */
-public class AdminCancelAuctionCommand implements Command {
+public class AdminCancelAuctionCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminCancelAuctionCommand.class);
 
-    private static final int IDX_AUCTION_ID = 1;
     private final AuctionManager auctionManager;
 
     public AdminCancelAuctionCommand(final AuctionManager auctionManager) {
@@ -26,7 +27,7 @@ public class AdminCancelAuctionCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         // 1) Kiểm tra đăng nhập
         User currentUser = session.getCurrentUser();
         if (currentUser == null) {
@@ -39,11 +40,20 @@ public class AdminCancelAuctionCommand implements Command {
         }
 
         // 3) Kiểm tra tham số
-        if (parts.length <= IDX_AUCTION_ID || parts[IDX_AUCTION_ID].isBlank()) {
+        final AuctionIdPayload auctionIdPayload;
+        try {
+            auctionIdPayload = JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload dừng phiên admin: {}",
+                    exception.getMessage());
             return buildFailureResponse("Thiếu mã phiên đấu giá.");
         }
 
-        String auctionId = parts[IDX_AUCTION_ID];
+        if (auctionIdPayload.hasMissingAuctionId()) {
+            return buildFailureResponse("Thiếu mã phiên đấu giá.");
+        }
+
+        String auctionId = auctionIdPayload.auctionId().trim();
 
         // 4) Dừng phiên
         boolean canceled = auctionManager.cancelAuction(auctionId);

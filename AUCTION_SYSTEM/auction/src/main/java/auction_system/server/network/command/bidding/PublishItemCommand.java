@@ -10,10 +10,12 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.PublishItemPayload;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -28,19 +30,8 @@ import java.util.logging.Logger;
  * Logic lưu item nằm trong {@link ParticipantItemService}, còn logic tạo phiên
  * đấu giá nằm trong {@link AuctionManager}.</p>
  */
-public final class PublishItemCommand implements Command {
+public final class PublishItemCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = Logger.getLogger(PublishItemCommand.class.getName());
-
-    private static final int REQUIRED_PART_COUNT = 8;
-    private static final int CATEGORY_INDEX = 1;
-    private static final int ITEM_NAME_INDEX = 2;
-    private static final int DESCRIPTION_INDEX = 3;
-    private static final int CONDITION_INDEX = 4;
-    private static final int START_PRICE_INDEX = 5;
-    private static final int START_TIME_INDEX = 6;
-    private static final int END_TIME_INDEX = 7;
-    private static final int IMAGE_PATH_INDEX = 8;
-    private static final int ANTI_SNIPING_ENABLED_INDEX = 9;
 
     private final ParticipantItemService participantItemService;
     private final AuctionManager auctionManager;
@@ -61,25 +52,29 @@ public final class PublishItemCommand implements Command {
     /**
      * Xử lý request đăng bán sản phẩm.
      *
-     * @param parts Các phần đã tách từ request.
+     * @param payload Payload JSON của request.
      * @param session Phiên làm việc của client hiện tại.
      * @return Response JSON một dòng.
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
-            // Validate payload và chuyển user đăng nhập thành participant người bán.
-            validateRequest(parts, session);
+            // Chặn request chưa đăng nhập trước khi đọc payload nghiệp vụ.
+            validateSession(session);
+            // Map payload JSON theo field name sang DTO đăng bán.
+            final PublishItemPayload publishItemPayload = readPayload(payload);
 
+            // Chỉ Participant mới được tạo item và mở phiên đấu giá.
             Participant seller = requireParticipant(session.getCurrentUser());
             // Tạo item, lưu item rồi mở auction theo mốc thời gian client gửi lên.
-            Item item = createItem(parts, seller.getId());
+            Item item = createItem(publishItemPayload, seller.getId());
             Item savedItem = participantItemService.listItemForAuction(seller, item);
 
-            LocalDateTime startTime = LocalDateTime.parse(parts[START_TIME_INDEX]);
-            LocalDateTime endTime = LocalDateTime.parse(parts[END_TIME_INDEX]);
-            boolean antiSnipingEnabled = Boolean.parseBoolean(
-                    optional(parts, ANTI_SNIPING_ENABLED_INDEX));
+            // Chuyển các field thời gian/boolean từ DTO sang kiểu domain cần dùng.
+            LocalDateTime startTime = LocalDateTime.parse(publishItemPayload.startTime());
+            LocalDateTime endTime = LocalDateTime.parse(publishItemPayload.endTime());
+            boolean antiSnipingEnabled = Boolean.TRUE.equals(
+                    publishItemPayload.antiSnipingEnabled());
             Auction auction = auctionManager.createAuction(
                     savedItem,
                     seller,
@@ -107,16 +102,22 @@ public final class PublishItemCommand implements Command {
     /**
      * Kiểm tra request và session trước khi xử lý.
      *
-     * @param parts Các phần của request.
      * @param session Phiên làm việc hiện tại.
      */
-    private void validateRequest(String[] parts, ClientSession session) {
-        if (parts.length < REQUIRED_PART_COUNT) {
-            throw new IllegalArgumentException("Thiếu dữ liệu đăng bán sản phẩm.");
-        }
+    private void validateSession(final ClientSession session) {
         if (session == null || session.getCurrentUser() == null) {
             throw new IllegalArgumentException("Bạn cần đăng nhập trước khi đăng bán.");
         }
+    }
+
+    private PublishItemPayload readPayload(final JsonNode payload) {
+        // JsonProtocol dùng Jackson treeToValue để map JsonNode sang record DTO.
+        final PublishItemPayload publishItemPayload =
+                JsonProtocol.payloadAs(payload, PublishItemPayload.class);
+        if (publishItemPayload.hasMissingRequiredFields()) {
+            throw new IllegalArgumentException("Thiếu dữ liệu đăng bán sản phẩm.");
+        }
+        return publishItemPayload;
     }
 
     /**
@@ -126,29 +127,29 @@ public final class PublishItemCommand implements Command {
      * @return Participant hợp lệ.
      */
     private Participant requireParticipant(User user) {
-        Participant participant = (Participant) user;
         if (!(user instanceof Participant)) {
             throw new IllegalArgumentException("Tài khoản hiện tại không có quyền đăng bán.");
         }
+        Participant participant = (Participant) user;
         return participant;
     }
 
     /**
      * Tạo domain item từ dữ liệu request.
      *
-     * @param parts Các phần request đã tách.
+     * @param payload Payload đăng bán đã map từ JSON.
      * @param sellerId Mã người bán.
      * @return Item domain tương ứng với danh mục.
      */
-    private Item createItem(String[] parts, String sellerId) {
+    private Item createItem(final PublishItemPayload payload, final String sellerId) {
         // Đọc và chuẩn hóa các field item trước khi gọi factory theo category.
-        String category = required(parts[CATEGORY_INDEX], "Danh mục không được để trống.");
-        String itemName = required(parts[ITEM_NAME_INDEX], "Tên sản phẩm không được để trống.");
-        String description = required(parts[DESCRIPTION_INDEX], "Mô tả không được để trống.");
-        String condition = required(parts[CONDITION_INDEX], "Tình trạng không được để trống.");
-        double startPrice = parsePositivePrice(parts[START_PRICE_INDEX]);
+        String category = required(payload.category(), "Danh mục không được để trống.");
+        String itemName = required(payload.itemName(), "Tên sản phẩm không được để trống.");
+        String description = required(payload.description(), "Mô tả không được để trống.");
+        String condition = required(payload.condition(), "Tình trạng không được để trống.");
+        double startPrice = parsePositivePrice(payload.startPrice());
         // Đọc metadata ảnh nếu client mới có gửi kèm.
-        String imagePath = optional(parts, IMAGE_PATH_INDEX);
+        String imagePath = optional(payload.imagePath());
 
         // Ghép tình trạng vào mô tả theo format domain hiện tại đang lưu trữ.
         String fullDescription = description + "\nTình trạng: " + condition;
@@ -178,15 +179,11 @@ public final class PublishItemCommand implements Command {
     /**
      * Đọc chuỗi tùy chọn từ request.
      *
-     * @param parts Các phần request đã tách.
-     * @param index Vị trí dữ liệu cần đọc.
+     * @param value Giá trị cần đọc.
      * @return Giá trị đã trim hoặc chuỗi rỗng.
      */
-    private String optional(final String[] parts, final int index) {
-        if (parts.length <= index || parts[index] == null) {
-            return "";
-        }
-        return parts[index].trim();
+    private String optional(final String value) {
+        return value == null ? "" : value.trim();
     }
 
     /**
@@ -225,6 +222,7 @@ public final class PublishItemCommand implements Command {
 
     private String buildFailResponse(final String message) {
         try {
+            // Mọi lỗi đăng bán đều trả cùng response type để client route về callback.
             return JsonProtocol.stringify(
                     new JsonMessage(
                             Protocol.Response.PUBLISH_ITEM_FAIL.name(),

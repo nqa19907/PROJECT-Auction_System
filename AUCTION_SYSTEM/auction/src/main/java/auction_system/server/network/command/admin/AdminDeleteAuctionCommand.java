@@ -7,9 +7,11 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +19,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Command cho phép ADMIN xóa hẳn một phiên đấu giá.
  */
-public class AdminDeleteAuctionCommand implements Command {
+public class AdminDeleteAuctionCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminDeleteAuctionCommand.class);
 
-    private static final int IDX_AUCTION_ID = 1;
     private final AuctionManager auctionManager;
 
     public AdminDeleteAuctionCommand(final AuctionManager auctionManager) {
@@ -28,7 +29,7 @@ public class AdminDeleteAuctionCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         User currentUser = session.getCurrentUser();
         if (currentUser == null) {
             return buildFailureResponse("Bạn chưa đăng nhập.");
@@ -38,11 +39,20 @@ public class AdminDeleteAuctionCommand implements Command {
             return buildFailureResponse("Bạn không có quyền quản trị.");
         }
 
-        if (parts.length <= IDX_AUCTION_ID || parts[IDX_AUCTION_ID].isBlank()) {
+        final AuctionIdPayload auctionIdPayload;
+        try {
+            auctionIdPayload = JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload xóa phiên admin: {}",
+                    exception.getMessage());
             return buildFailureResponse("Thiếu mã phiên đấu giá.");
         }
 
-        String auctionId = parts[IDX_AUCTION_ID].trim();
+        if (auctionIdPayload.hasMissingAuctionId()) {
+            return buildFailureResponse("Thiếu mã phiên đấu giá.");
+        }
+
+        String auctionId = auctionIdPayload.auctionId().trim();
         boolean deleted = auctionManager.deleteAuction(auctionId);
 
         if (!deleted) {

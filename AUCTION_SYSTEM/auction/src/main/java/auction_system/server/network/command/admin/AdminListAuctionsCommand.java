@@ -6,9 +6,10 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Command cho phép ADMIN lấy danh sách toàn bộ phiên đấu giá qua socket.
  */
-public class AdminListAuctionsCommand implements Command {
+public class AdminListAuctionsCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminListAuctionsCommand.class);
     private final AuctionManager auctionManager;
 
@@ -27,7 +28,7 @@ public class AdminListAuctionsCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         /*
          * Command admin tự kiểm tra quyền từ session hiện tại. Client có gửi được
          * lệnh hay không không quyết định quyền truy cập dữ liệu quản trị.

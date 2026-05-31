@@ -5,8 +5,9 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ import java.util.Objects;
 /**
  * Command trả về danh sách phiên đấu giá do user hiện tại đăng bán.
  */
-public final class ListMyAuctionsCommand implements Command {
+public final class ListMyAuctionsCommand implements JsonPayloadCommand {
 
     private static final String CONDITION_PREFIX = "\nTình trạng: ";
     private final AuctionManager auctionManager;
@@ -25,7 +26,7 @@ public final class ListMyAuctionsCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         // Danh sách cá nhân chỉ được truy vấn sau khi session đã đăng nhập.
         if (session == null || session.getCurrentUser() == null) {
             return response(Protocol.Response.ERROR, "FAIL", null, "Chưa đăng nhập.");
