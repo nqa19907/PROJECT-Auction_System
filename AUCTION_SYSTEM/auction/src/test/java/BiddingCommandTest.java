@@ -7,12 +7,14 @@ import auction_system.common.models.items.Item;
 import auction_system.common.models.items.builder.ElectronicBuilder;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.Participant;
+import auction_system.common.models.auctions.AuctionStatus;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.auction.GetAuctionCommand;
 import auction_system.server.network.command.auction.ListAuctionsCommand;
 import auction_system.server.network.command.bidding.AutoBidCommand;
+import auction_system.server.network.command.bidding.PlaceBidCommand;
 import auction_system.server.network.command.bidding.DeleteMyAuctionCommand;
 import auction_system.server.network.command.bidding.DisableAutoBidCommand;
 import auction_system.server.network.command.bidding.GetAutoBidStatusCommand;
@@ -68,8 +70,11 @@ public class BiddingCommandTest {
     private AuctionBidService bidService;
     private ParticipantItemService participantItemService;
 
-    /** Observer không làm gì, dùng để dựng ClientSession trong test. */
-    private static final AuctionObserver NOOP_OBSERVER = msg -> { };
+    /**
+     * Observer không làm gì, dùng để dựng ClientSession trong test.
+     */
+    private static final AuctionObserver NOOP_OBSERVER = msg -> {
+    };
 
     @BeforeEach
     void setUp() throws Exception {
@@ -87,14 +92,18 @@ public class BiddingCommandTest {
         resetSingleton();
     }
 
-    /** Reset AuctionManager singleton để các test độc lập nhau. */
+    /**
+     * Reset AuctionManager singleton để các test độc lập nhau.
+     */
     private void resetSingleton() throws Exception {
         Field field = AuctionManager.class.getDeclaredField("instance");
         field.setAccessible(true);
         field.set(null, null);
     }
 
-    /** Tạo ClientSession mới chưa đăng nhập. */
+    /**
+     * Tạo ClientSession mới chưa đăng nhập.
+     */
     private ClientSession newSession() {
         return new ClientSession(NOOP_OBSERVER, manager);
     }
@@ -710,5 +719,192 @@ public class BiddingCommandTest {
 
         assertTrue(response.contains(Protocol.Response.AUCTION_LIST.name()),
                 "Co phien dang chay phai tra AUCTION_LIST.");
+    }
+// =========================================================================
+// PlaceBidCommand
+// =========================================================================
+
+    /**
+     * PlaceBid khi chưa đăng nhập phải trả ERROR.
+     */
+    @Test
+    void placeBidCommand_NotLoggedIn_ReturnsError() {
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", "any-id", "amount", "1000"));
+
+        String response = cmd.execute(payload, newSession());
+
+        assertTrue(response.contains(Protocol.Response.ERROR.name()),
+                "Chua dang nhap phai tra ERROR.");
+    }
+
+    /**
+     * PlaceBid với payload null phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_NullPayload_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+
+        String response = cmd.execute(null, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Payload null phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid thiếu amount trong payload phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_MissingAmount_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", "some-id"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Thieu amount phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid với amount âm phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_NegativeAmount_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        String auctionId = createAuction(p);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", auctionId, "amount", "-500"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Amount am phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid với amount bằng 0 phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_ZeroAmount_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        String auctionId = createAuction(p);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", auctionId, "amount", "0"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Amount bang 0 phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid với amount không phải số phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_NonNumericAmount_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        String auctionId = createAuction(p);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", auctionId, "amount", "abc"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Amount khong phai so phai tra BID_FAIL.");
+    }
+
+    /**
+     * Admin đặt giá phải trả BID_FAIL (chỉ Participant được phép đặt giá).
+     */
+    @Test
+    void placeBidCommand_AdminUser_ReturnsBidFail() {
+        Admin admin = new Admin("adm", "adm@test.com", "pass");
+        ClientSession session = new ClientSession(NOOP_OBSERVER, manager);
+        session.setCurrentUser(admin);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", "any-id", "amount", "1000"));
+
+        String response = cmd.execute(payload, session);
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Admin dat gia phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid với auctionId không tồn tại phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_UnknownAuctionId_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(
+                Map.of("auctionId", "NOTEXIST-999", "amount", "2000"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "AuctionId khong ton tai phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid vào phiên đã kết thúc phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_FinishedAuction_ReturnsBidFail() {
+        Participant p = makeParticipant();
+        String auctionId = createAuction(p);
+        manager.getAllAuctions().stream()
+                .filter(a -> a.getId().equals(auctionId))
+                .findFirst()
+                .ifPresent(a -> a.setStatus(AuctionStatus.FINISHED));
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", auctionId, "amount", "2000"));
+
+        String response = cmd.execute(payload, loggedInSession(p));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "Phien da ket thuc phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid khi số dư không đủ phải trả BID_FAIL.
+     */
+    @Test
+    void placeBidCommand_InsufficientBalance_ReturnsBidFail() {
+        Participant seller = makeParticipant();
+        Participant poorBidder = new Participant("poor01", "poor01@test.com", "pass",
+                100.0, "PARTICIPANT");
+        manager.registerUser(poorBidder);
+        String auctionId = createAuction(seller);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(
+                Map.of("auctionId", auctionId, "amount", "10000"));
+
+        String response = cmd.execute(payload, loggedInSession(poorBidder));
+
+        assertTrue(response.contains(Protocol.Response.BID_FAIL.name()),
+                "So du khong du phai tra BID_FAIL.");
+    }
+
+    /**
+     * PlaceBid hợp lệ với đủ số dư phải trả BID_OK.
+     */
+    @Test
+    void placeBidCommand_ValidBid_ReturnsBidOk() {
+        Participant seller = makeParticipant();
+        Participant richBidder = new Participant("rich01", "rich01@test.com", "pass",
+                100_000.0, "PARTICIPANT");
+        manager.registerUser(richBidder);
+        String auctionId = createAuction(seller);
+        PlaceBidCommand cmd = new PlaceBidCommand(bidService);
+        JsonNode payload = JsonProtocol.payloadOf(Map.of("auctionId", auctionId, "amount", "2000"));
+
+        String response = cmd.execute(payload, loggedInSession(richBidder));
+
+        assertNotNull(response, "Response khong duoc null.");
+        assertTrue(response.contains(Protocol.Response.BID_OK.name()),
+                "Dat gia hop le phai tra BID_OK.");
     }
 }
