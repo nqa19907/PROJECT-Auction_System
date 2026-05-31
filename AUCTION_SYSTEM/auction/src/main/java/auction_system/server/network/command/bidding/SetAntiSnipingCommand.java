@@ -5,9 +5,11 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.SetAntiSnipingPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -16,12 +18,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý yêu cầu bật/tắt chống đặt giá phút chót cho phiên đấu giá.
  */
-public class SetAntiSnipingCommand implements Command {
+public class SetAntiSnipingCommand implements JsonPayloadCommand {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(SetAntiSnipingCommand.class);
-    private static final int MIN_PARTS = 3;
-    private static final int IDX_AUCTION_ID = 1;
-    private static final int IDX_ENABLED = 2;
 
     /** Manager điều phối trạng thái auction và lưu database. */
     private final AuctionManager auctionManager;
@@ -38,23 +37,33 @@ public class SetAntiSnipingCommand implements Command {
     /**
      * Thực thi yêu cầu bật/tắt chống đặt giá phút chót.
      *
-     * @param parts tham số request đã tách theo protocol
+     * @param payload payload JSON của request
      * @param session phiên làm việc của client
      * @return response cập nhật trạng thái hoặc lỗi
      */
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
                 return buildFailResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (parts.length < MIN_PARTS) {
+            final SetAntiSnipingPayload antiSnipingPayload;
+            try {
+                antiSnipingPayload =
+                        JsonProtocol.payloadAs(payload, SetAntiSnipingPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload chống đặt giá phút chót: {}",
+                        exception.getMessage());
                 return buildFailResponse("Thiếu thông tin chống đặt giá phút chót.");
             }
 
-            final String auctionId = parts[IDX_AUCTION_ID];
-            final boolean enabled = Boolean.parseBoolean(parts[IDX_ENABLED]);
+            if (antiSnipingPayload.hasMissingRequiredFields()) {
+                return buildFailResponse("Thiếu thông tin chống đặt giá phút chót.");
+            }
+
+            final String auctionId = antiSnipingPayload.auctionId();
+            final boolean enabled = antiSnipingPayload.enabled();
             final Auction auction = auctionManager.updateAntiSniping(
                     auctionId,
                     session.getCurrentUser(),

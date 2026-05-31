@@ -2,6 +2,7 @@
 
 <?import java.net.URL?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -143,6 +144,12 @@
                   <RowConstraints />
                </rowConstraints>
                  </GridPane>
+
+                 <!-- Tự động gia hạn khi có bid phút chót -->
+                 <VBox spacing="6">
+                     <Label styleClass="field-title" text="Gia hạn phút chót" />
+                     <CheckBox fx:id="chkAntiSniping" styleClass="publish-option-toggle" text="Tự động gia hạn 30 giây khi có lượt trả giá trong 30 giây cuối" />
+                 </VBox>
              </VBox>
 
              <!-- Label lỗi -->

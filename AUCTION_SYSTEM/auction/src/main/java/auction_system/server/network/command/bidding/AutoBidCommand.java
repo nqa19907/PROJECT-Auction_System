@@ -4,11 +4,13 @@ import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.AutoBidPayload;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -21,16 +23,11 @@ import org.slf4j.LoggerFactory;
  * {@link AutoBidService}; phần tạo bid ngay sau enable thuộc
  * {@link AuctionBidService}.
  */
-public final class AutoBidCommand implements Command {
+public final class AutoBidCommand implements JsonPayloadCommand {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AutoBidCommand.class);
 
-    private static final int MIN_ENABLE_AUTO_BID_PARTS = 4;
-    private static final int IDX_AUCTION_ID = 1;
-    private static final int IDX_MAX_AMOUNT = 2;
-    private static final int IDX_STEP_AMOUNT = 3;
-    
     private final AutoBidService autoBidService;
     private final AuctionBidService auctionBidService;
 
@@ -49,21 +46,33 @@ public final class AutoBidCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             // Kiểm tra session và payload trước khi đọc cấu hình auto-bid.
             if (session.getCurrentUser() == null) {
                 return fail("Bạn cần đăng nhập trước khi bật auto-bid.");
             }
 
-            if (parts.length < MIN_ENABLE_AUTO_BID_PARTS) {
+            final AutoBidPayload autoBidPayload;
+            try {
+                autoBidPayload = JsonProtocol.payloadAs(payload, AutoBidPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload auto-bid: {}", exception.getMessage());
                 return fail("Thiếu thông tin auto-bid.");
             }
 
-            final String auctionId = parts[IDX_AUCTION_ID];
-            final long maxAmount = parsePositiveAmount(parts[IDX_MAX_AMOUNT], "Giá tối đa");
-            final long stepAmount = parsePositiveAmount(parts[IDX_STEP_AMOUNT], "Bước tăng");
-            
+            if (autoBidPayload.hasMissingRequiredFields()) {
+                return fail("Thiếu thông tin auto-bid.");
+            }
+
+            final String auctionId = autoBidPayload.auctionId();
+            final long maxAmount = parsePositiveAmount(
+                    autoBidPayload.maxAmount(),
+                    "Giá tối đa");
+            final long stepAmount = parsePositiveAmount(
+                    autoBidPayload.stepAmount(),
+                    "Bước tăng");
+
             // Lưu cấu hình và kích hoạt vòng bid tự động ngay sau khi enable.
             autoBidService.enableAutoBid(
                     auctionId,

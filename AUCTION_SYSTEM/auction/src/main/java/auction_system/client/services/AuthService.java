@@ -6,10 +6,9 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -83,15 +82,17 @@ public final class AuthService {
             final AuthCallback callback) {
         loginCallback = callback;
 
-        final String request = buildLoginRequest(email, password);
-
         final NetworkClient networkClient = NetworkClient.getInstance();
         if (!networkClient.ensureConnected()) {
             notifyLoginAndClear(new AuthResult(false, "Mất kết nối tới máy chủ"));
             return;
         }
 
-        final boolean sent = networkClient.sendCommand(request);
+        final boolean sent = networkClient.sendMessage(JsonProtocol.request(
+                Protocol.Command.LOGIN,
+                Map.of(
+                        "email", email,
+                        "password", password)));
         if (!sent) {
             notifyLoginAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
@@ -114,15 +115,19 @@ public final class AuthService {
             final AuthCallback callback) {
         registerCallback = callback;
 
-        final String request = buildRegisterRequest(username, email, password, roleName);
-
         final NetworkClient networkClient = NetworkClient.getInstance();
         if (!networkClient.ensureConnected()) {
             notifyRegisterAndClear(new AuthResult(false, "Mất kết nối tới máy chủ"));
             return;
         }
 
-        final boolean sent = networkClient.sendCommand(request);
+        final boolean sent = networkClient.sendMessage(JsonProtocol.request(
+                Protocol.Command.REGISTER,
+                Map.of(
+                        "username", username,
+                        "email", email,
+                        "password", password,
+                        "roleName", roleName)));
         if (!sent) {
             notifyRegisterAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
         }
@@ -150,79 +155,10 @@ public final class AuthService {
             return;
         }
 
-        final boolean sent = networkClient.sendCommand(buildLogoutRequest());
+        final boolean sent = networkClient.sendMessage(
+                JsonProtocol.request(Protocol.Command.LOGOUT));
         if (!sent) {
             notifyLogoutAndClear(new AuthResult(false, "Mất kết nối tới máy chủ."));
-        }
-    }
-
-    /**
-     * Tạo request JSON cho lệnh đăng xuất.
-     *
-     * @return request JSON
-     */
-    private String buildLogoutRequest() {
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            Protocol.Command.LOGOUT.name(),
-                            null,
-                            null,
-                            null));
-        } catch (JsonProcessingException exception) {
-            logger.warning("Không tạo được JSON request đăng xuất: " + exception.getMessage());
-            throw new IllegalStateException("Không tạo được JSON LOGOUT.", exception);
-        }
-    }
-
-    /**
-     * Tạo request JSON cho lệnh đăng nhập.
-     *
-     * @param email email người dùng nhập
-     * @param password mật khẩu gốc
-     * @return request JSON
-     */
-    private String buildLoginRequest(final String email, final String password) {
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            Protocol.Command.LOGIN.name(),
-                            null,
-                            JsonProtocol.payloadOf(List.of(email, password)),
-                            null));
-        } catch (JsonProcessingException exception) {
-            logger.warning("Không tạo được JSON request đăng nhập: " + exception.getMessage());
-            throw new IllegalStateException("Không tạo được JSON LOGIN.", exception);
-        }
-    }
-
-    /**
-     * Tạo request JSON cho lệnh đăng ký.
-     *
-     * @param username tên đăng nhập
-     * @param email email đăng ký
-     * @param password mật khẩu gốc
-     * @param roleName vai trò người dùng
-     * @return request JSON
-     */
-    private String buildRegisterRequest(
-            final String username,
-            final String email,
-            final String password,
-            final String roleName) {
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            Protocol.Command.REGISTER.name(),
-                            null,
-                            JsonProtocol.payloadOf(List.of(username, email, password, roleName)),
-                            null));
-        } catch (JsonProcessingException exception) {
-            logger.warning("Không tạo được JSON request đăng ký: " + exception.getMessage());
-            throw new IllegalStateException("Không tạo được JSON REGISTER.", exception);
         }
     }
 

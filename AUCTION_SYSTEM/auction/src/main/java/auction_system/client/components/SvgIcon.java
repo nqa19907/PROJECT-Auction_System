@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Bounds;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.FillRule;
 import javafx.scene.shape.SVGPath;
 
 /**
@@ -57,6 +58,14 @@ public final class SvgIcon extends Region {
                     + "-23.5 56.5T200-400Zm-56.5-263.5Q120-687 120-720t23.5-56.5Q167-800 "
                     + "200-800t56.5 23.5Q280-753 280-720t-23.5 56.5Q233-640 200-640"
                     + "t-56.5-23.5Z";
+    private static final String CHECK_BOX_CHECKED_PATH =
+            "M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560"
+                    + "q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z"
+                    + "M424-312 706-594 650-650 424-424 310-538 254-482Z";
+    private static final String CHECK_BOX_UNCHECKED_PATH =
+            "M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840"
+                    + "h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120"
+                    + "H200Zm0-80h560v-560H200v560Z";
 
     private final SVGPath path = new SVGPath();
     private final StringProperty icon = new SimpleStringProperty(this, "icon");
@@ -70,6 +79,7 @@ public final class SvgIcon extends Region {
         getChildren().add(path);
         icon.addListener((observable, oldValue, newValue) -> {
             path.setContent(resolvePath(newValue));
+            path.setFillRule(resolveFillRule(newValue));
             requestLayout();
         });
     }
@@ -115,8 +125,16 @@ public final class SvgIcon extends Region {
             case "vehicle" -> VEHICLE_PATH;
             case "add" -> ADD_PATH;
             case "format-list-bulleted" -> FORMAT_LIST_BULLETED_PATH;
+            case "check-box-checked" -> CHECK_BOX_CHECKED_PATH;
+            case "check-box-unchecked" -> CHECK_BOX_UNCHECKED_PATH;
             case null, default -> throw new IllegalArgumentException(
                     "Unsupported SVG icon: " + iconName);
         };
+    }
+
+    private static FillRule resolveFillRule(final String iconName) {
+        return "check-box-checked".equals(iconName)
+                ? FillRule.EVEN_ODD
+                : FillRule.NON_ZERO;
     }
 }

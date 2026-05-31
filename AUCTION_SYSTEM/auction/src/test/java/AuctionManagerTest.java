@@ -124,6 +124,47 @@ public class AuctionManagerTest {
     }
 
     // =========================================================================
+    // updateMyAuctionInfo
+    // =========================================================================
+
+    @Test
+    void testUpdateMyAuctionInfo_NewImagePath_ReplacesCurrentImage() {
+        Participant seller = makeSeller();
+        Auction auction = makeAuction(seller);
+        auction.getItem().setImagePath("old-image.png");
+
+        assertTrue(manager.updateMyAuctionInfo(
+                auction.getId(),
+                seller.getId(),
+                "ELECTRONIC",
+                "Updated Item",
+                "Updated description",
+                "Like new",
+                auction.getEndTime().plusHours(1),
+                "new-image.png"));
+        assertEquals("new-image.png", auction.getItem().getImagePath());
+    }
+
+    @Test
+    void testUpdateMyAuctionInfo_ChangedCategoryWithoutNewImage_KeepsCurrentImage() {
+        Participant seller = makeSeller();
+        Auction auction = makeAuction(seller);
+        auction.getItem().setImagePath("old-image.png");
+
+        assertTrue(manager.updateMyAuctionInfo(
+                auction.getId(),
+                seller.getId(),
+                "ART",
+                "Updated Item",
+                "Updated description",
+                "Like new",
+                auction.getEndTime().plusHours(1),
+                ""));
+        assertEquals("ART", auction.getItem().getCategory());
+        assertEquals("old-image.png", auction.getItem().getImagePath());
+    }
+
+    // =========================================================================
     // cancelAuction
     // =========================================================================
 

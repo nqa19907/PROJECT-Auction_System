@@ -188,6 +188,23 @@
     -fx-text-fill: -color-text-sub;
 }
 
+.content-card .publish-option-toggle {
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-text-title;
+    -fx-cursor: hand;
+}
+
+.content-card .publish-option-toggle .box {
+    -fx-opacity: 0;
+    -fx-padding: 0;
+    -fx-min-width: 0;
+    -fx-min-height: 0;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+    -fx-max-width: 0;
+    -fx-max-height: 0;
+}
+
 /* 4. Dấu sao đỏ bắt buộc */
 .content-card .asterisk {
     -fx-text-fill: -color-error-text;

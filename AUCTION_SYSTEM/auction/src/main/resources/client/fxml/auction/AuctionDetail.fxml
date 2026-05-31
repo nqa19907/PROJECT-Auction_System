@@ -177,7 +177,7 @@
                 <VBox fx:id="antiSnipingCard" spacing="14" styleClass="place-bid-card">
                     <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
                     <Label styleClass="section-title" text="Gia hạn phút chót" />
-                    <CheckBox fx:id="chkAntiShipping" styleClass="auto-bid-toggle" text="Tự động gia hạn khi có lượt trả giá phút chót" />
+                    <CheckBox fx:id="chkAntiShipping" styleClass="auto-bid-toggle" text="Tự động gia hạn 30 giây khi có lượt trả giá trong 30 giây cuối" />
                 </VBox>
 
                 <VBox fx:id="placeBidCard" spacing="14" styleClass="place-bid-card">
@@ -205,11 +205,6 @@
                      </HBox>
                   </children>
                </VBox>
-                    <!-- Ô chọn bật/tắt anti shipping ngay trong khu vực đặt giá -->
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <CheckBox fx:id="chkAntiShipping" styleClass="anti-snipping-checkbox" text="Anti Snipping" />
-                    </HBox>
-
                     <HBox alignment="CENTER_RIGHT" spacing="12">
                         <Label fx:id="minBidHint" styleClass="hint-label" text="Giá tối thiểu: 160.000 VNĐ" />
                         <Region HBox.hgrow="ALWAYS" />

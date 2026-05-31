@@ -4,8 +4,8 @@ import auction_system.client.network.NetworkClient;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,33 +51,12 @@ public final class WalletService {
     public void deposit(final double amount, final WalletCallback callback) {
         this.currentDepositCallback = callback;
 
-        String request = buildDepositRequest(amount);
-
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        boolean sent = NetworkClient.getInstance().sendMessage(JsonProtocol.request(
+                Protocol.Command.DEPOSIT,
+                Map.of("amount", amount)));
         if (!sent && currentDepositCallback != null) {
             currentDepositCallback.onResult(false, "Mất kết nối tới máy chủ.", 0);
             currentDepositCallback = null;
-        }
-    }
-
-    /**
-     * Tạo request JSON cho lệnh nạp tiền.
-     *
-     * @param amount số tiền cần nạp
-     * @return request JSON
-     */
-    private String buildDepositRequest(final double amount) {
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            Protocol.Command.DEPOSIT.name(),
-                            null,
-                            JsonProtocol.payloadOf(amount),
-                            null));
-        } catch (JsonProcessingException exception) {
-            LOGGER.warn("Không tạo được JSON request nạp tiền: {}", exception.getMessage());
-            throw new IllegalStateException("Không tạo được JSON DEPOSIT.", exception);
         }
     }
 

@@ -161,3 +161,16 @@
 .product-detail-placeholder .svg-icon-shape {
     -fx-fill: -color-icon-theme;
 }
+
+.checkbox-svg-icon {
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+}
+
+.checkbox-svg-icon .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
+}

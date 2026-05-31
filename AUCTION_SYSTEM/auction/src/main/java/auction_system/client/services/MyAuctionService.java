@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -61,8 +62,8 @@ public final class MyAuctionService {
         Objects.requireNonNull(callback, "callback");
         currentCallback = callback;
 
-        if (!NetworkClient.getInstance().sendCommand(request(
-                Protocol.Command.LIST_MY_AUCTIONS, null))) {
+        if (!NetworkClient.getInstance().sendMessage(
+                JsonProtocol.request(Protocol.Command.LIST_MY_AUCTIONS))) {
             notifyCallback(false, "Không gửi được yêu cầu lấy phiên của tôi.", List.of());
         }
     }
@@ -82,22 +83,12 @@ public final class MyAuctionService {
             return;
         }
 
-        // Gửi mã phiên trong payload array để dispatcher server chuyển thành parts.
-        if (!NetworkClient.getInstance().sendCommand(request(
+        // Gửi mã phiên trong payload object để field có tên rõ ràng.
+        if (!NetworkClient.getInstance().sendMessage(JsonProtocol.request(
                 Protocol.Command.DELETE_MY_AUCTION,
-                List.of(auctionId.trim())))) {
+                Map.of("auctionId", auctionId.trim())))) {
             notifyDeleteCallback(false, "Không gửi được yêu cầu xóa phiên.", null);
         }
-    }
-
-    private String request(final Protocol.Command command, final Object payload) {
-        // Tạo request JSON chung cho các thao tác quản lý phiên.
-        return JsonProtocol.stringifyRequired(new JsonMessage(
-                null,
-                command.name(),
-                null,
-                payload == null ? null : JsonProtocol.payloadOf(payload),
-                null));
     }
 
     private void handleMyAuctionList(final String response) {

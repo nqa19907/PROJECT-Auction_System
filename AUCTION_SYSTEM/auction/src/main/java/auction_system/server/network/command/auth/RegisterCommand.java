@@ -5,10 +5,12 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.auth.RegisterPayload;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * JSON REGISTER_FAIL chứa lý do thất bại trong trường message.
  * }</pre>
  */
-public class RegisterCommand implements Command {
+public class RegisterCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegisterCommand.class);
     private final AuthService authService;
     private final AuctionManager auctionManager;
@@ -55,24 +57,27 @@ public class RegisterCommand implements Command {
     /**
      * Thực thi lệnh đăng ký tài khoản.
      *
-     * @param parts mảng tham số được tách từ lệnh client gửi lên
+     * @param payload payload JSON của request
      * @param session phiên làm việc hiện tại của client
      * @return phản hồi gửi về client
      */
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
-        if (parts.length < 5) {
+    public String execute(final JsonNode payload, final ClientSession session) {
+        final RegisterPayload registerPayload;
+        try {
+            registerPayload = JsonProtocol.payloadAs(payload, RegisterPayload.class);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload đăng ký: {}", exception.getMessage());
             return buildFailResponse("Thiếu thông tin đăng ký");
         }
 
-        final String username = parts[1];
-        final String email = parts[2];
-        final String password = parts[3];
-        final String roleName = parts[4];
+        if (registerPayload.hasMissingRequiredFields()) {
+            return buildFailResponse("Thiếu thông tin đăng ký");
+        }
 
         try {
             final User registeredUser =
-                    authService.register(username, email, password, roleName);
+                    authService.register(registerPayload.toRegisterRequest());
 
             LOGGER.info(
                     "Đăng ký mới: "
@@ -91,7 +96,7 @@ public class RegisterCommand implements Command {
             return buildFailResponse(exception.getMessage());
         } catch (RuntimeException exception) {
             LOGGER.error(
-                    "Lỗi hệ thống khi xử lý đăng ký cho email: " + email,
+                    "Lỗi hệ thống khi xử lý đăng ký cho email: " + registerPayload.email(),
                     exception);
 
             return buildFailResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");

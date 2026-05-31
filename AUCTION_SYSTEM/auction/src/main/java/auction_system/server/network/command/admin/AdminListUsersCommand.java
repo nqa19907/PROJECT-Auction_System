@@ -5,9 +5,10 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Command cho phép ADMIN lấy danh sách người dùng qua socket.
  */
-public class AdminListUsersCommand implements Command {
+public class AdminListUsersCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminListUsersCommand.class);
     private final AuctionManager auctionManager;
 
@@ -26,7 +27,7 @@ public class AdminListUsersCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         /*
          * Danh sách user là dữ liệu quản trị nên command kiểm tra quyền ở server.
          * Controller client không thể tự quyết định quyền chỉ bằng màn hình đang mở.

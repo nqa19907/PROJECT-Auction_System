@@ -3,6 +3,7 @@ package auction_system.server.services.auth;
 import auction_system.common.models.users.User;
 import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import auction_system.server.services.auth.request.RegisterRequest;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
@@ -29,11 +30,11 @@ public final class SeedUser {
                 new SerializedDatabase(DatabasePathProvider.defaultDataDirectory());
         final AuthService authService = new AuthService(database);
 
-        final User user = authService.register(
+        final User user = authService.register(new RegisterRequest(
                 "ad1",
                 "ad1@gmail.com",
                 "123456",
-                "ADMIN");
+                "ADMIN"));
 
         System.out.println("Đã tạo user: " + user.getUsername());
         System.out.println("Email: " + user.getEmail());

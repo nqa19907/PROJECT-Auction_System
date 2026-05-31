@@ -7,7 +7,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.network.command.admin.AdminCancelAuctionCommand;
 import auction_system.server.network.command.admin.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.admin.AdminDeleteUserCommand;
@@ -42,8 +42,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -66,7 +64,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final AutoBidService autoBidService;
     private final AuctionBidService auctionBidService;
     private final ParticipantItemService participantItemService;
-    private final Map<String, Command> commandMap;
+    // Dispatcher chỉ giữ command JSON mới; không còn adapter String[] legacy.
+    private final Map<String, JsonPayloadCommand> commandMap;
     private final ClientSession session;
 
     private BufferedReader inputReader;
@@ -105,7 +104,8 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @return map chứa các command handler của kết nối hiện tại
      */
-    private Map<String, Command> createCommandMap() {
+    private Map<String, JsonPayloadCommand> createCommandMap() {
+        // Mỗi protocol command được route tới một handler tự map payload JSON của nó.
         return Map.ofEntries(
                 Map.entry(
                         Protocol.Command.LOGIN.name(),
@@ -191,6 +191,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
 
             String line;
             while ((line = inputReader.readLine()) != null) {
+                // Socket protocol là JSON một dòng; mỗi readLine tương ứng một request.
                 final String commandText = line.trim();
 
                 if (!commandText.isEmpty()) {
@@ -210,15 +211,16 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param rawCommand dòng lệnh thô nhận từ client
      */
     private void handleCommand(final String rawCommand) {
-        // Chuyển JSON request thành command name và các tham số tương thích command layer.
-        final String[] parts = parseCommandParts(rawCommand);
-        if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
+        // Parse raw JSON trước, rồi chỉ dispatch khi command name hợp lệ.
+        final JsonMessage message = parseMessage(rawCommand);
+        if (message == null || message.command() == null || message.command().isBlank()) {
             send(buildErrorResponse("Lệnh JSON không hợp lệ."));
             return;
         }
 
-        final String commandName = parts[0].toUpperCase();
-        final Command command = commandMap.get(commandName);
+        // Lookup handler theo enum name để tầng network không biết chi tiết payload.
+        final String commandName = message.command().toUpperCase();
+        final JsonPayloadCommand command = commandMap.get(commandName);
 
         // Từ chối command không đăng ký trước khi gọi xử lý nghiệp vụ.
         if (command == null) {
@@ -227,39 +229,24 @@ public class ClientHandler implements Runnable, AuctionObserver {
         }
 
         // Mỗi command trả tối đa một JSON response một dòng.
-        final String response = command.execute(parts, session);
+        final String response = executeCommand(command, message);
         if (response != null) {
             send(response);
         }
     }
 
-    /**
-     * Chuyển request JSON thành mảng parts cho command hiện tại.
-     *
-     * @param rawCommand dòng request nhận từ client
-     * @return parts tương thích với command layer hiện tại
-     */
-    private String[] parseCommandParts(final String rawCommand) {
+    private String executeCommand(final JsonPayloadCommand command, final JsonMessage message) {
+        // Payload JsonNode được truyền nguyên vẹn; command tự map sang DTO cần dùng.
+        return command.execute(message.payload(), session);
+    }
+
+    private JsonMessage parseMessage(final String rawCommand) {
         try {
-            // Phần tử đầu là command; payload array được nối tiếp thành tham số tuần tự.
-            final JsonMessage message = JsonProtocol.parse(rawCommand);
-            final List<String> parts = new ArrayList<>();
-            parts.add(message.command());
-
-            if (message.payload() == null || message.payload().isNull()) {
-                return parts.toArray(String[]::new);
-            }
-
-            if (message.payload().isArray()) {
-                message.payload().forEach(value -> parts.add(value.asText()));
-            } else if (message.payload().isValueNode()) {
-                parts.add(message.payload().asText());
-            }
-
-            return parts.toArray(String[]::new);
+            // Jackson parse dòng socket thành envelope JsonMessage chung của protocol.
+            return JsonProtocol.parse(rawCommand);
         } catch (IOException exception) {
             LOGGER.warn("Không parse được JSON request: {}", exception.getMessage());
-            return new String[0];
+            return null;
         }
     }
 

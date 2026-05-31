@@ -7,6 +7,7 @@ import auction_system.server.persistence.serialization.DatabasePathProvider;
 import auction_system.server.persistence.serialization.SerializedDatabase;
 import auction_system.server.services.auction.ParticipantItemService;
 import auction_system.server.services.auth.AuthService;
+import auction_system.server.services.auth.request.RegisterRequest;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import java.nio.file.Path;
@@ -55,11 +56,11 @@ public class ServerApp {
         final ParticipantItemService participantItemService = new ParticipantItemService(database);
 
         if (!authService.isEmailTaken("qa@gmail.com")) {
-            authService.register(
+            authService.register(new RegisterRequest(
                 "qa",
                 "qa@gmail.com",
                 "123456",
-                "PARTICIPANT");
+                "PARTICIPANT"));
         }
 
         final SocketServer socketServer = SocketServer.getInstance(

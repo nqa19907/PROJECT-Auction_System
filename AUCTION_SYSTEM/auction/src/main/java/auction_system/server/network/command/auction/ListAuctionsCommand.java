@@ -7,9 +7,10 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh lấy danh sách tất cả các phiên đấu giá.
  */
-public class ListAuctionsCommand implements Command {
+public class ListAuctionsCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListAuctionsCommand.class);
     private final AuctionManager auctionManager;
 
@@ -33,13 +34,13 @@ public class ListAuctionsCommand implements Command {
      * <p>Lệnh:       {@code LIST_AUCTIONS}
      * Trả JSON {@code AUCTION_LIST} chứa danh sách phiên trong payload.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách (không dùng).
+     * @param payload Payload JSON của request (không dùng).
      * @param session Phiên làm việc của Client (không dùng).
      * @return Chuỗi phản hồi cho client, có thể chứa nhiều dòng.
      */
 
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             List<Auction> auctions = auctionManager.getAllAuctions().stream()
                     .filter(this::isVisibleToClient)

@@ -5,6 +5,8 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
 import auction_system.common.utils.SecurityUtils;
 import auction_system.server.persistence.serialization.SerializedDatabase;
+import auction_system.server.services.auth.request.LoginRequest;
+import auction_system.server.services.auth.request.RegisterRequest;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,18 +45,19 @@ public final class AuthService {
      * logout và session runtime vẫn nên do ClientSession hoặc AuctionManager
      * quản lý vì đó là trạng thái của kết nối socket.
      *
-     * @param email email người dùng gửi từ client
-     * @param password mật khẩu dạng plaintext người dùng gửi từ client
+     * @param request dữ liệu đăng nhập tài khoản
      * @return người dùng nếu đăng nhập hợp lệ
      * @throws IllegalArgumentException nếu email hoặc mật khẩu rỗng
      */
-    public Optional<User> login(final String email, final String password) {
-        validateText(email, "Email không được rỗng.");
-        validateText(password, "Mật khẩu không được rỗng.");
+    public Optional<User> login(final LoginRequest request) {
+        Objects.requireNonNull(request, "request");
 
-        final String normalizedEmail = email.trim();
+        validateText(request.email(), "Email không được rỗng.");
+        validateText(request.password(), "Mật khẩu không được rỗng.");
+
+        final String normalizedEmail = request.email().trim();
         return database.executeInTransaction(
-            () -> findValidUser(normalizedEmail, password)
+            () -> findValidUser(normalizedEmail, request.password())
         );
     
     }
@@ -65,30 +68,24 @@ public final class AuthService {
      * <p>Service sẽ hash mật khẩu trước khi lưu xuống database. Command chỉ nên
      * đọc request, gọi service và trả response cho client.
      *
-     * @param username tên đăng nhập
-     * @param email email đăng nhập
-     * @param password mật khẩu plaintext từ client
-     * @param roleName vai trò tài khoản
+     * @param request dữ liệu đăng ký tài khoản
      * @return người dùng đã được tạo và lưu
      * @throws IllegalArgumentException nếu dữ liệu đăng ký không hợp lệ
      */
-    public User register(
-        final String username,
-        final String email,
-        final String password,
-        final String roleName) {
+    public User register(final RegisterRequest request) {
+        Objects.requireNonNull(request, "request");
 
-        validateRegisterRequest(username, email, password, roleName);
+        validateRegisterRequest(request);
 
-        final String normalizedUsername = username.trim();
-        final String normalizedEmail = email.trim();
-        final String normalizedRoleName = roleName.trim();
+        final String normalizedUsername = request.username().trim();
+        final String normalizedEmail = request.email().trim();
+        final String normalizedRoleName = request.roleName().trim();
 
         return database.executeInTransaction(
             () -> registerInTransaction(
                 normalizedUsername,
                 normalizedEmail,
-                password,
+                request.password(),
                 normalizedRoleName
             )
         );
@@ -226,34 +223,26 @@ public final class AuthService {
     /**
      * Kiểm tra dữ liệu đăng ký.
      *
-     * @param username tên đăng nhập
-     * @param email email đăng nhập
-     * @param password mật khẩu plaintext
-     * @param roleName vai trò tài khoản
+     * @param request dữ liệu đăng ký tài khoản
      * @throws IllegalArgumentException nếu dữ liệu đăng ký không hợp lệ
      */
-    private void validateRegisterRequest(
-        final String username,
-        final String email,
-        final String password,
-        final String roleName) {
+    private void validateRegisterRequest(final RegisterRequest request) {
+        validateText(request.username(), "Tên đăng nhập không được rỗng.");
+        validateText(request.email(), "Email không được rỗng.");
+        validateText(request.password(), "Mật khẩu không được rỗng.");
+        validateText(request.roleName(), "Vai trò không được rỗng.");
 
-        validateText(username, "Tên đăng nhập không được rỗng.");
-        validateText(email, "Email không được rỗng.");
-        validateText(password, "Mật khẩu không được rỗng.");
-        validateText(roleName, "Vai trò không được rỗng.");
-
-        if (!isValidEmail(email.trim())) {
+        if (!isValidEmail(request.email().trim())) {
             throw new IllegalArgumentException("Email không hợp lệ.");
         }
 
-        if (password.length() < minimumPasswordLength) {
+        if (request.password().length() < minimumPasswordLength) {
             throw new IllegalArgumentException(
                 "Mật khẩu phải có ít nhất " + minimumPasswordLength + " ký tự."
             );
         }
 
-        validateRoleName(roleName.trim());
+        validateRoleName(request.roleName().trim());
     }
 
     /**

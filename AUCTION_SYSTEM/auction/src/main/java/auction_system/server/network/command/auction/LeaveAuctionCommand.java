@@ -4,9 +4,11 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -15,7 +17,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh rời khỏi một phiên đấu giá mà client đang theo dõi.
  */
-public class LeaveAuctionCommand implements Command {
+public class LeaveAuctionCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(LeaveAuctionCommand.class);
     private final AuctionManager auctionManager;
 
@@ -28,18 +30,18 @@ public class LeaveAuctionCommand implements Command {
      *
      * <p>Nhận request JSON {@code LEAVE_AUCTION} và trả JSON {@code LEAVE_OK} hoặc {@code ERROR}.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách.
+     * @param payload Payload JSON của request.
      * @param session Phiên làm việc của Client.
      * @return Chuỗi phản hồi cho client.
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
-            if (parts.length < 2) {
+            final String auctionId = readAuctionId(payload);
+            if (auctionId.isBlank()) {
                 return buildErrorResponse("Thiếu auctionId");
             }
 
-            String auctionId = parts[1];
             session.leaveAuction(auctionId);
 
             return buildSuccessResponse(auctionId);
@@ -49,6 +51,20 @@ public class LeaveAuctionCommand implements Command {
             LOGGER.error("Lỗi hệ thống khi xử lý lệnh rời phiên đấu giá cho "
                     + username, e);
             return buildErrorResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
+        }
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        try {
+            final AuctionIdPayload auctionIdPayload =
+                    JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+            if (auctionIdPayload.hasMissingAuctionId()) {
+                return "";
+            }
+            return auctionIdPayload.auctionId();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload rời phiên: {}", exception.getMessage());
+            return "";
         }
     }
 

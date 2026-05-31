@@ -5,9 +5,10 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh đăng xuất của người dùng.
  */
-public class LogoutCommand implements Command {
+public class LogoutCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogoutCommand.class);
     private final AuctionManager auctionManager;
 
@@ -30,12 +31,12 @@ public class LogoutCommand implements Command {
      * Thành công: {@code LOGOUT_OK}
      * Thất bại trả JSON {@code ERROR} với nội dung trong trường message.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách (không dùng).
+     * @param payload Payload JSON của request (không dùng).
      * @param session Phiên làm việc của Client.
      * @return Chuỗi phản hồi cho client.
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             User currentUser = session.getCurrentUser();
             if (currentUser != null) {

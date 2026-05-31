@@ -7,7 +7,7 @@ import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -100,6 +100,7 @@ public final class ItemPublishService {
                 startTime,
                 endTime,
                 "",
+                false,
                 callback);
     }
 
@@ -128,12 +129,8 @@ public final class ItemPublishService {
             LocalDateTime endTime,
             String imagePath,
             PublishItemCallback callback) {
-
-        Objects.requireNonNull(callback, "Callback không được null.");
-        this.publishCallback = callback;
-
-        // Đóng gói request đăng sản phẩm cùng metadata ảnh.
-        String request = buildPublishItemRequest(
+        // Giữ caller cũ hoạt động với anti-sniping mặc định tắt.
+        publishItem(
                 category,
                 itemName,
                 description,
@@ -142,9 +139,56 @@ public final class ItemPublishService {
                 bidStep,
                 startTime,
                 endTime,
-                imagePath);
+                imagePath,
+                false,
+                callback);
+    }
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
+    /**
+     * Gửi yêu cầu đăng bán sản phẩm kèm cấu hình gia hạn phút chót.
+     *
+     * @param category Loại sản phẩm.
+     * @param itemName Tên sản phẩm.
+     * @param description Mô tả sản phẩm.
+     * @param condition Tình trạng sản phẩm.
+     * @param startPrice Giá khởi điểm.
+     * @param bidStep Giá tối thiểu để bắt đầu đấu giá.
+     * @param startTime Thời điểm bắt đầu đấu giá.
+     * @param endTime Thời điểm kết thúc đấu giá.
+     * @param imagePath Đường dẫn ảnh sản phẩm đã được lưu.
+     * @param antiSnipingEnabled true nếu bật tự động gia hạn phút chót.
+     * @param callback Callback nhận kết quả.
+     */
+    public void publishItem(
+            String category,
+            String itemName,
+            String description,
+            String condition,
+            double startPrice,
+            double bidStep,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String imagePath,
+            boolean antiSnipingEnabled,
+            PublishItemCallback callback) {
+
+        Objects.requireNonNull(callback, "Callback không được null.");
+        this.publishCallback = callback;
+
+        // Đóng gói request đăng sản phẩm cùng metadata ảnh.
+        JsonMessage request = buildPublishItemRequest(
+                category,
+                itemName,
+                description,
+                condition,
+                startPrice,
+                bidStep,
+                startTime,
+                endTime,
+                imagePath,
+                antiSnipingEnabled);
+
+        boolean sent = NetworkClient.getInstance().sendMessage(request);
         if (!sent) {
             LOGGER.warning("Không thể gửi yêu cầu đăng bán sản phẩm tới Server.");
             callback.onResult(false, "Không thể kết nối tới Server.");
@@ -159,11 +203,11 @@ public final class ItemPublishService {
      * @param itemName tên tài sản mới
      * @param description mô tả mới
      * @param condition tình trạng mới
-     * @param endTime thời gian kết thúc mới
-     * @param startTime thời gian bắt đầu mới
-     * @param imagePath đường dẫn tới hình ảnh mới
      * @param startPrice giá khởi đầu mới
      * @param bidStep bước nhảy mới
+     * @param imagePath đường dẫn ảnh mới hoặc ảnh hiện tại
+     * @param startTime thời gian bắt đầu mới
+     * @param endTime thời gian kết thúc mới
      * @param callback callback nhận kết quả
      */
     public void updateMyAuction(
@@ -182,26 +226,22 @@ public final class ItemPublishService {
         Objects.requireNonNull(callback, "Callback không được null.");
         updateCallback = callback;
 
-        // Đóng gói các field chỉnh sửa theo đúng thứ tự command server đang đọc.
-        final String request = JsonProtocol.stringifyRequired(
-                new JsonMessage(
-                        null,
-                        Protocol.Command.UPDATE_MY_AUCTION.name(),
-                        null,
-                        JsonProtocol.payloadOf(List.of(
-                                nullToEmpty(auctionId),
-                                nullToEmpty(category),
-                                nullToEmpty(itemName),
-                                nullToEmpty(description),
-                                startPrice,
-                                bidStep,
-                                nullToEmpty(imagePath),
-                                nullToEmpty(condition),
-                                FORMATTER.format(startTime),
-                                FORMATTER.format(endTime))),
-                        null));
+        // Đóng gói các field chỉnh sửa bằng payload object có tên field rõ ràng.
+        final JsonMessage request = JsonProtocol.request(
+                Protocol.Command.UPDATE_MY_AUCTION,
+                Map.of(
+                        "auctionId", nullToEmpty(auctionId),
+                        "category", nullToEmpty(category),
+                        "itemName", nullToEmpty(itemName),
+                        "description", nullToEmpty(description),
+                        "condition", nullToEmpty(condition),
+                        "startPrice", startPrice,
+                        "bidStep", bidStep,
+                        "imagePath", nullToEmpty(imagePath),
+                        "startTime", FORMATTER.format(startTime),
+                        "endTime", FORMATTER.format(endTime)));
 
-        if (!NetworkClient.getInstance().sendCommand(request)) {
+        if (!NetworkClient.getInstance().sendMessage(request)) {
             LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
             notifyUpdateCallback(false, "Không thể kết nối tới Server.");
         }
@@ -277,7 +317,7 @@ public final class ItemPublishService {
         }
     }
 
-    private String buildPublishItemRequest(
+    private JsonMessage buildPublishItemRequest(
             final String category,
             final String itemName,
             final String description,
@@ -286,24 +326,20 @@ public final class ItemPublishService {
             final double bidStep,
             final LocalDateTime startTime,
             final LocalDateTime endTime,
-            final String imagePath) {
-        // Payload array giữ nguyên thứ tự field mà PublishItemCommand yêu cầu.
-        return JsonProtocol.stringifyRequired(
-                new JsonMessage(
-                        null,
-                        Protocol.Command.PUBLISH_ITEM.name(),
-                        null,
-                        JsonProtocol.payloadOf(List.of(
-                                nullToEmpty(category),
-                                nullToEmpty(itemName),
-                                nullToEmpty(description),
-                                nullToEmpty(condition),
-                                startPrice,
-                                bidStep,
-                                FORMATTER.format(startTime),
-                                FORMATTER.format(endTime),
-                                nullToEmpty(imagePath))),
-                        null));
+            final String imagePath,
+            final boolean antiSnipingEnabled) {
+        // Payload object giữ tên field rõ ràng; dispatcher sẽ map sang command hiện tại.
+        return JsonProtocol.request(Protocol.Command.PUBLISH_ITEM, Map.of(
+                "category", nullToEmpty(category),
+                "itemName", nullToEmpty(itemName),
+                "description", nullToEmpty(description),
+                "condition", nullToEmpty(condition),
+                "startPrice", startPrice,
+                "bidStep", bidStep,
+                "startTime", FORMATTER.format(startTime),
+                "endTime", FORMATTER.format(endTime),
+                "imagePath", nullToEmpty(imagePath),
+                "antiSnipingEnabled", antiSnipingEnabled));
     }
 
     private String nullToEmpty(final String value) {

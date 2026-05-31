@@ -6,9 +6,11 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,7 +20,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh lấy thông tin chi tiết của một phiên đấu giá.
  */
-public class GetAuctionCommand implements Command {
+public class GetAuctionCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetAuctionCommand.class);
     private final AuctionManager auctionManager;
 
@@ -31,28 +33,43 @@ public class GetAuctionCommand implements Command {
      *
      * <p>Nhận request JSON {@code GET_AUCTION} và trả JSON {@code AUCTION_DETAIL}.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách.
+     * @param payload Payload JSON của request.
      * @param session Phiên làm việc của Client (không dùng).
      * @return Chuỗi phản hồi cho client.
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
+        final String auctionId = readAuctionId(payload);
         try {
-            if (parts.length < 2) {
+            if (auctionId.isBlank()) {
                 return buildErrorResponse("Thiếu auctionId");
             }
 
-            Auction auction = auctionManager.getAuctionById(parts[1]);
+            Auction auction = auctionManager.getAuctionById(auctionId);
             if (auction == null) {
                 return buildErrorResponse("Không tìm thấy phiên đấu giá");
             }
 
             return buildSuccessResponse(auction);
         } catch (Exception e) {
-            String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.error("Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
                     + auctionId, e);
             return buildErrorResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
+        }
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        try {
+            final AuctionIdPayload auctionIdPayload =
+                    JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+            if (auctionIdPayload.hasMissingAuctionId()) {
+                return "";
+            }
+            return auctionIdPayload.auctionId();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload lấy chi tiết phiên: {}",
+                    exception.getMessage());
+            return "";
         }
     }
 

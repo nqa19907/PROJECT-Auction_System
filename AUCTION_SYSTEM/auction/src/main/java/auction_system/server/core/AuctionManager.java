@@ -126,7 +126,31 @@ public class AuctionManager {
             final Participant seller,
             final LocalDateTime startTime,
             final LocalDateTime endTime) {
-        final Auction newAuction = auctionRegistry.createAuction(item, seller, startTime, endTime);
+        return createAuction(item, seller, startTime, endTime, false);
+    }
+
+    /**
+     * Tạo phiên đấu giá mới kèm cấu hình gia hạn phút chót.
+     *
+     * @param item sản phẩm đưa ra đấu giá
+     * @param seller người bán
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @param antiSnipingEnabled true nếu bật tự động gia hạn phút chót
+     * @return phiên đấu giá vừa tạo
+     */
+    public Auction createAuction(
+            final Item item,
+            final Participant seller,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime,
+            final boolean antiSnipingEnabled) {
+        final Auction newAuction = auctionRegistry.createAuction(
+                item,
+                seller,
+                startTime,
+                endTime,
+                antiSnipingEnabled);
 
         // Báo cho các client online cập nhật danh sách phiên đấu giá.
         notifier.notifyAuctionCreated(newAuction);
@@ -197,6 +221,51 @@ public class AuctionManager {
 
     public boolean deleteAuction(final String auctionId) {
         return administrationService.deleteAuction(auctionId);
+    }
+
+    /**
+     * Cập nhật thông tin phiên theo contract cũ, giữ nguyên giá và thời gian bắt đầu.
+     *
+     * @param auctionId mã phiên cần chỉnh sửa
+     * @param userId mã user đang thao tác
+     * @param category danh mục mới
+     * @param itemName tên tài sản mới
+     * @param description mô tả mới
+     * @param condition tình trạng mới
+     * @param endTime thời gian kết thúc mới
+     * @param imagePath đường dẫn ảnh mới hoặc chuỗi rỗng để giữ ảnh hiện tại
+     * @return true nếu cập nhật thành công
+     */
+    public boolean updateMyAuctionInfo(
+            final String auctionId,
+            final String userId,
+            final String category,
+            final String itemName,
+            final String description,
+            final String condition,
+            final LocalDateTime endTime,
+            final String imagePath) {
+        final Auction auction = auctionRegistry.findById(auctionId);
+        if (auction == null || auction.getItem() == null) {
+            return false;
+        }
+
+        final Item currentItem = auction.getItem();
+        final String resolvedImagePath = imagePath == null || imagePath.isBlank()
+                ? currentItem.getImagePath()
+                : imagePath;
+        return updateMyAuctionInfo(
+                auctionId,
+                userId,
+                category,
+                itemName,
+                description,
+                condition,
+                currentItem.getStartPrice(),
+                currentItem.getBidStep(),
+                resolvedImagePath,
+                auction.getStartTime(),
+                endTime);
     }
 
     /**

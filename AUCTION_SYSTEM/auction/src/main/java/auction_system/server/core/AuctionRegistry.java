@@ -35,8 +35,10 @@ final class AuctionRegistry {
             final Item item,
             final Participant seller,
             final LocalDateTime startTime,
-            final LocalDateTime endTime) {
+            final LocalDateTime endTime,
+            final boolean antiSnipingEnabled) {
         final Auction newAuction = new Auction(item, seller, startTime, endTime);
+        newAuction.setAntiSnipingEnabled(antiSnipingEnabled);
 
         // Lưu phiên mới vào cả bộ nhớ runtime và database để server/client cùng thấy.
         auctionList.add(newAuction);

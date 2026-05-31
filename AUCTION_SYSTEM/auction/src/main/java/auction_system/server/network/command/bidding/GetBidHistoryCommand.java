@@ -4,10 +4,12 @@ import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +21,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý các lệnh lấy lịch sử đặt giá của một phiên đấu giá.
  */
-public class GetBidHistoryCommand implements Command {
+public class GetBidHistoryCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetBidHistoryCommand.class);
-    private static final int MIN_PARTS = 2;
-    private static final int IDX_AUCTION_ID = 1;
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -39,13 +39,12 @@ public class GetBidHistoryCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
-            if (parts.length < MIN_PARTS || parts[IDX_AUCTION_ID].isBlank()) {
+            final String auctionId = readAuctionId(payload);
+            if (auctionId.isBlank()) {
                 return buildErrorResponse("Thiếu auctionId");
             }
-
-            final String auctionId = parts[IDX_AUCTION_ID];
 
             final List<BidTransaction> bids = auctionBidService.getBidHistory(auctionId);
 
@@ -53,6 +52,20 @@ public class GetBidHistoryCommand implements Command {
         } catch (Exception e) {
             LOGGER.error("Lỗi khi lấy lịch sử bid.", e);
             return buildErrorResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
+        }
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        try {
+            final AuctionIdPayload auctionIdPayload =
+                    JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+            if (auctionIdPayload.hasMissingAuctionId()) {
+                return "";
+            }
+            return auctionIdPayload.auctionId();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload lịch sử bid: {}", exception.getMessage());
+            return "";
         }
     }
 
