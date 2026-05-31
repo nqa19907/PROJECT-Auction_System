@@ -97,6 +97,7 @@ public final class ItemPublishService {
                 startTime,
                 endTime,
                 "",
+                false,
                 callback);
     }
 
@@ -123,6 +124,45 @@ public final class ItemPublishService {
             LocalDateTime endTime,
             String imagePath,
             PublishItemCallback callback) {
+        // Giữ caller cũ hoạt động với anti-sniping mặc định tắt.
+        publishItem(
+                category,
+                itemName,
+                description,
+                condition,
+                startPrice,
+                startTime,
+                endTime,
+                imagePath,
+                false,
+                callback);
+    }
+
+    /**
+     * Gửi yêu cầu đăng bán sản phẩm kèm cấu hình gia hạn phút chót.
+     *
+     * @param category Loại sản phẩm.
+     * @param itemName Tên sản phẩm.
+     * @param description Mô tả sản phẩm.
+     * @param condition Tình trạng sản phẩm.
+     * @param startPrice Giá khởi điểm.
+     * @param startTime Thời điểm bắt đầu đấu giá.
+     * @param endTime Thời điểm kết thúc đấu giá.
+     * @param imagePath Đường dẫn ảnh sản phẩm đã được lưu.
+     * @param antiSnipingEnabled true nếu bật tự động gia hạn phút chót.
+     * @param callback Callback nhận kết quả.
+     */
+    public void publishItem(
+            String category,
+            String itemName,
+            String description,
+            String condition,
+            double startPrice,
+            LocalDateTime startTime,
+            LocalDateTime endTime,
+            String imagePath,
+            boolean antiSnipingEnabled,
+            PublishItemCallback callback) {
 
         Objects.requireNonNull(callback, "Callback không được null.");
         this.publishCallback = callback;
@@ -136,7 +176,8 @@ public final class ItemPublishService {
                 startPrice,
                 startTime,
                 endTime,
-                imagePath);
+                imagePath,
+                antiSnipingEnabled);
 
         boolean sent = NetworkClient.getInstance().sendCommand(request);
         if (!sent) {
@@ -267,7 +308,8 @@ public final class ItemPublishService {
             final double startPrice,
             final LocalDateTime startTime,
             final LocalDateTime endTime,
-            final String imagePath) {
+            final String imagePath,
+            final boolean antiSnipingEnabled) {
         // Payload array giữ nguyên thứ tự field mà PublishItemCommand yêu cầu.
         return JsonProtocol.stringifyRequired(
                 new JsonMessage(
@@ -282,7 +324,8 @@ public final class ItemPublishService {
                                 startPrice,
                                 FORMATTER.format(startTime),
                                 FORMATTER.format(endTime),
-                                nullToEmpty(imagePath))),
+                                nullToEmpty(imagePath),
+                                antiSnipingEnabled)),
                         null));
     }
 

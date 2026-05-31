@@ -12,6 +12,7 @@ import auction_system.client.models.AuctionDisplayContext;
 import auction_system.client.models.AuctionViewModel;
 import auction_system.client.services.AuctionService;
 import auction_system.client.services.UserSessionService;
+import auction_system.client.utils.CheckBoxIconUtil;
 import auction_system.client.utils.ProductImageStyleUtil;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.ViewConstants;
@@ -304,6 +305,8 @@ public class AuctionDetailController implements Initializable {
 
         setupTable();
         setupChart();
+        CheckBoxIconUtil.apply(autoBidToggle);
+        CheckBoxIconUtil.apply(chkAntiShipping);
         ProductImageStyleUtil.applyRoundedClip(productImage, 14);
         bindViewModel();
         bidForm.registerHandlers();

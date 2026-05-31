@@ -126,7 +126,31 @@ public class AuctionManager {
             final Participant seller,
             final LocalDateTime startTime,
             final LocalDateTime endTime) {
-        final Auction newAuction = auctionRegistry.createAuction(item, seller, startTime, endTime);
+        return createAuction(item, seller, startTime, endTime, false);
+    }
+
+    /**
+     * Tạo phiên đấu giá mới kèm cấu hình gia hạn phút chót.
+     *
+     * @param item sản phẩm đưa ra đấu giá
+     * @param seller người bán
+     * @param startTime thời gian bắt đầu
+     * @param endTime thời gian kết thúc
+     * @param antiSnipingEnabled true nếu bật tự động gia hạn phút chót
+     * @return phiên đấu giá vừa tạo
+     */
+    public Auction createAuction(
+            final Item item,
+            final Participant seller,
+            final LocalDateTime startTime,
+            final LocalDateTime endTime,
+            final boolean antiSnipingEnabled) {
+        final Auction newAuction = auctionRegistry.createAuction(
+                item,
+                seller,
+                startTime,
+                endTime,
+                antiSnipingEnabled);
 
         // Báo cho các client online cập nhật danh sách phiên đấu giá.
         notifier.notifyAuctionCreated(newAuction);

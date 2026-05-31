@@ -5,6 +5,7 @@ import auction_system.client.services.ItemPublishService;
 import auction_system.client.services.ItemPublishService.PublishItemCallback;
 import auction_system.client.services.MyAuctionRow;
 import auction_system.client.services.ProductImageStorage;
+import auction_system.client.utils.CheckBoxIconUtil;
 import auction_system.client.utils.Router;
 import auction_system.client.utils.SceneManager;
 import auction_system.client.utils.ViewConstants;
@@ -22,6 +23,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -56,6 +58,8 @@ public class PublishItemController implements Initializable {
     private TextField fieldStartingPrice;
     @FXML
     private TextField fieldBidStep;
+    @FXML
+    private CheckBox chkAntiSniping;
     @FXML
     private Label lblError;
     @FXML
@@ -92,6 +96,7 @@ public class PublishItemController implements Initializable {
                 "Tốt (80–94%)",
                 "Trung bình");
 
+        CheckBoxIconUtil.apply(chkAntiSniping);
         clearError();
         updateSelectedImageLabel();
     }
@@ -200,6 +205,7 @@ public class PublishItemController implements Initializable {
                 startTime,
                 endTime,
                 imagePath,
+                chkAntiSniping.isSelected(),
                 (success, message) -> Platform.runLater(
                     () -> handlePublishResult(success, message)));
     
@@ -236,6 +242,7 @@ public class PublishItemController implements Initializable {
         fieldStartingTime.setDisable(true);
         fieldEndingTime.setText(formatDateTimeForInput(row.getEndTime()));
         fieldBidStep.setDisable(true);
+        chkAntiSniping.setDisable(true);
         btnChooseImage.setDisable(true);
     }
 

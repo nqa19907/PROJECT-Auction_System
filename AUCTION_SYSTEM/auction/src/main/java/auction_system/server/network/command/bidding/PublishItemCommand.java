@@ -40,6 +40,7 @@ public final class PublishItemCommand implements Command {
     private static final int START_TIME_INDEX = 6;
     private static final int END_TIME_INDEX = 7;
     private static final int IMAGE_PATH_INDEX = 8;
+    private static final int ANTI_SNIPING_ENABLED_INDEX = 9;
 
     private final ParticipantItemService participantItemService;
     private final AuctionManager auctionManager;
@@ -77,7 +78,14 @@ public final class PublishItemCommand implements Command {
 
             LocalDateTime startTime = LocalDateTime.parse(parts[START_TIME_INDEX]);
             LocalDateTime endTime = LocalDateTime.parse(parts[END_TIME_INDEX]);
-            Auction auction = auctionManager.createAuction(savedItem, seller, startTime, endTime);
+            boolean antiSnipingEnabled = Boolean.parseBoolean(
+                    optional(parts, ANTI_SNIPING_ENABLED_INDEX));
+            Auction auction = auctionManager.createAuction(
+                    savedItem,
+                    seller,
+                    startTime,
+                    endTime,
+                    antiSnipingEnabled);
 
             LOGGER.info("Đăng bán thành công item " + savedItem.getId()
                     + " với auction " + auction.getId());

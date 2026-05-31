@@ -177,7 +177,7 @@
                 <VBox fx:id="antiSnipingCard" spacing="14" styleClass="place-bid-card">
                     <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
                     <Label styleClass="section-title" text="Gia hạn phút chót" />
-                    <CheckBox fx:id="chkAntiShipping" styleClass="auto-bid-toggle" text="Tự động gia hạn khi có lượt trả giá phút chót" />
+                    <CheckBox fx:id="chkAntiShipping" styleClass="auto-bid-toggle" text="Tự động gia hạn 30 giây khi có lượt trả giá trong 30 giây cuối" />
                 </VBox>
 
                 <VBox fx:id="placeBidCard" spacing="14" styleClass="place-bid-card">
