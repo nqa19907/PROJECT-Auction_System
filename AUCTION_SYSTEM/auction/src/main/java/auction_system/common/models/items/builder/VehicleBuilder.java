@@ -12,6 +12,7 @@ public class VehicleBuilder implements Builder<Vehicle> {
     private double startPrice;
     private double currentPrice;
     private String sellerId;
+    private String imagePath;
 
     // Các hàm builder
     public VehicleBuilder itemName(String itemName) {
@@ -39,6 +40,12 @@ public class VehicleBuilder implements Builder<Vehicle> {
         return this;
     }
 
+    // Gắn đường dẫn ảnh vào item đang được build.
+    public VehicleBuilder imagePath(final String imagePath) {
+        this.imagePath = imagePath;
+        return this;
+    }
+
     /**
      * Xây dựng và trả về đối tượng Vehicle.
      *
@@ -51,6 +58,8 @@ public class VehicleBuilder implements Builder<Vehicle> {
         if (this.currentPrice > 0) {
             vehicle.setCurrentPrice(this.currentPrice);
         }
+        // Áp dụng ảnh sản phẩm sau khi tạo domain object.
+        vehicle.setImagePath(this.imagePath);
         return vehicle;
     }
 }

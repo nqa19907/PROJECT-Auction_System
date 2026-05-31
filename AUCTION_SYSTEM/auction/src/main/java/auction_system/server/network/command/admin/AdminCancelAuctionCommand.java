@@ -1,15 +1,22 @@
 package auction_system.server.network.command.admin;
 
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Command cho phép ADMIN dừng (cancel) một phiên đấu giá.
  */
 public class AdminCancelAuctionCommand implements Command {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminCancelAuctionCommand.class);
 
     private static final int IDX_AUCTION_ID = 1;
     private final AuctionManager auctionManager;
@@ -23,20 +30,17 @@ public class AdminCancelAuctionCommand implements Command {
         // 1) Kiểm tra đăng nhập
         User currentUser = session.getCurrentUser();
         if (currentUser == null) {
-            return Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL.name()
-                    + Protocol.SEPARATOR + "Bạn chưa đăng nhập.";
+            return buildFailureResponse("Bạn chưa đăng nhập.");
         }
 
         // 2) Kiểm tra quyền ADMIN
         if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleName())) {
-            return Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL.name()
-                    + Protocol.SEPARATOR + "Bạn không có quyền quản trị.";
+            return buildFailureResponse("Bạn không có quyền quản trị.");
         }
 
         // 3) Kiểm tra tham số
         if (parts.length <= IDX_AUCTION_ID || parts[IDX_AUCTION_ID].isBlank()) {
-            return Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL.name()
-                    + Protocol.SEPARATOR + "Thiếu mã phiên đấu giá.";
+            return buildFailureResponse("Thiếu mã phiên đấu giá.");
         }
 
         String auctionId = parts[IDX_AUCTION_ID];
@@ -44,11 +48,47 @@ public class AdminCancelAuctionCommand implements Command {
         // 4) Dừng phiên
         boolean canceled = auctionManager.cancelAuction(auctionId);
         if (!canceled) {
-            return Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL.name()
-                    + Protocol.SEPARATOR + "Không tìm thấy phiên đấu giá.";
+            return buildFailureResponse("Không tìm thấy phiên đấu giá.");
         }
 
-        return Protocol.Response.ADMIN_CANCEL_AUCTION_OK.name()
-                + Protocol.SEPARATOR + auctionId;
+        return buildSuccessResponse(auctionId);
+    }
+
+    private String buildSuccessResponse(final String auctionId) {
+        // OK response JSON mang id phiên đã dừng để client có thể đồng bộ UI.
+        return buildJsonResponse(
+                Protocol.Response.ADMIN_CANCEL_AUCTION_OK,
+                "OK",
+                JsonProtocol.payloadOf(Map.of("id", auctionId, "auctionId", auctionId)),
+                "Dừng phiên đấu giá thành công.");
+    }
+
+    private String buildFailureResponse(final String message) {
+        // FAIL response JSON mang message để dashboard hiển thị lỗi rõ ràng.
+        return buildJsonResponse(
+                Protocol.Response.ADMIN_CANCEL_AUCTION_FAIL,
+                "FAIL",
+                null,
+                message);
+    }
+
+    private String buildJsonResponse(
+            final Protocol.Response type,
+            final String status,
+            final com.fasterxml.jackson.databind.JsonNode payload,
+            final String message) {
+        // Dùng một helper chung để đóng gói response dừng phiên bằng JSON.
+        try {
+            return JsonProtocol.stringify(new JsonMessage(
+                    type.name(),
+                    null,
+                    status,
+                    payload,
+                    message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response dừng phiên admin: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON " + type.name(), exception);
+        }
     }
 }

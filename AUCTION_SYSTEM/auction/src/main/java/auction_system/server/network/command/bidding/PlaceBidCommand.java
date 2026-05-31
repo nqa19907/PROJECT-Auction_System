@@ -5,11 +5,15 @@ import auction_system.common.exceptions.InvalidBidException;
 import auction_system.common.models.auctions.BidTransaction;
 import auction_system.common.models.users.Participant;
 import auction_system.common.models.users.User;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +26,10 @@ import org.slf4j.LoggerFactory;
  * {@link AuctionBidService}.
  *
  * <p>Định dạng lệnh:
- * {@code PLACE_BID|auctionId|amount}
+ * JSON {@code PLACE_BID} chứa auctionId và amount trong payload.
  *
  * <p>Phản hồi thành công:
- * {@code BID_OK|auctionId|amount|newBalance}
+ * JSON {@code BID_OK} trả auctionId, amount và newBalance trong payload.
  */
 public class PlaceBidCommand implements Command {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
@@ -72,13 +76,10 @@ public class PlaceBidCommand implements Command {
                     auctionBidService.placeBid(auctionId, currentUser, amount);
             Participant bidder = bidTransaction.getParticipant();
 
-            return Protocol.Response.BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + auctionId
-                    + Protocol.SEPARATOR
-                    + bidTransaction.getAmount()
-                    + Protocol.SEPARATOR
-                    + bidder.getBalance();
+            return buildSuccessResponse(
+                    auctionId,
+                    bidTransaction.getAmount(),
+                    bidder.getBalance());
         } catch (NumberFormatException e) {
             return buildBidFailResponse("Số tiền không hợp lệ.");
         } catch (AuctionClosedException
@@ -120,9 +121,7 @@ public class PlaceBidCommand implements Command {
      * @return response theo protocol
      */
     private String buildErrorResponse(final String message) {
-        return Protocol.Response.ERROR.name()
-                + Protocol.SEPARATOR
-                + message;
+        return buildFailureLikeResponse(Protocol.Response.ERROR.name(), message);
     }
 
     /**
@@ -132,8 +131,42 @@ public class PlaceBidCommand implements Command {
      * @return response theo protocol
      */
     private String buildBidFailResponse(final String message) {
-        return Protocol.Response.BID_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        return buildFailureLikeResponse(Protocol.Response.BID_FAIL.name(), message);
+    }
+
+    private String buildSuccessResponse(
+            final String auctionId,
+            final double amount,
+            final double newBalance) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.BID_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "auctionId", auctionId,
+                                    "amount", amount,
+                                    "newBalance", newBalance)),
+                            "Đặt giá thành công."));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response đặt giá: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON BID_OK.", exception);
+        }
+    }
+
+    private String buildFailureLikeResponse(final String type, final String message) {
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            type,
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi đặt giá: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON BID_FAIL.", exception);
+        }
     }
 }

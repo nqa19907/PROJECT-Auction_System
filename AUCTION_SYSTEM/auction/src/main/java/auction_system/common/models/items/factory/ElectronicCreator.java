@@ -11,10 +11,20 @@ public class ElectronicCreator implements ItemCreator {
     @Override
     public Item createItem(Map<String, Object> properties) {
         return new ElectronicBuilder()
-                .itemName((String) properties.getOrDefault("itemName", "New Electronic Item"))
-                .description((String) properties.getOrDefault("description", "Description here"))
-                .startPrice(((Number) properties.getOrDefault("startPrice", 0.0)).doubleValue())
-                .sellerId((String) properties.getOrDefault("sellerId", "SYSTEM"))
+                .itemName((String) properties.getOrDefault(
+                        PROPERTY_ITEM_NAME,
+                        DEFAULT_ELECTRONIC_ITEM_NAME))
+                .description((String) properties.getOrDefault(
+                        PROPERTY_DESCRIPTION,
+                        DEFAULT_DESCRIPTION))
+                .startPrice(((Number) properties.getOrDefault(
+                        PROPERTY_START_PRICE,
+                        0.0)).doubleValue())
+                .sellerId((String) properties.getOrDefault(PROPERTY_SELLER_ID, DEFAULT_SELLER_ID))
+                // Truyền metadata ảnh từ factory sang domain item.
+                .imagePath((String) properties.getOrDefault(
+                        PROPERTY_IMAGE_PATH,
+                        DEFAULT_IMAGE_PATH))
                 .build();
     }
 }

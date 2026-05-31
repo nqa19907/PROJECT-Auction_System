@@ -1,10 +1,15 @@
 package auction_system.server.network.command.bidding;
 
 import auction_system.common.exceptions.InvalidBidException;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.Command;
+import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +17,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Command nhận yêu cầu bật hoặc cập nhật đấu giá tự động.
  *
- * <p>Command chỉ đọc request và trả response. Nghiệp vụ kiểm tra quyền, lưu cấu hình và kích
- * hoạt auto-bid ngay sau enable thuộc {@link AuctionBidService}.
+ * <p>Command chỉ đọc request và trả response. Nghiệp vụ lưu cấu hình thuộc
+ * {@link AutoBidService}; phần tạo bid ngay sau enable thuộc
+ * {@link AuctionBidService}.
  */
 public final class AutoBidCommand implements Command {
 
@@ -24,21 +30,28 @@ public final class AutoBidCommand implements Command {
     private static final int IDX_AUCTION_ID = 1;
     private static final int IDX_MAX_AMOUNT = 2;
     private static final int IDX_STEP_AMOUNT = 3;
-
+    
+    private final AutoBidService autoBidService;
     private final AuctionBidService auctionBidService;
 
     /**
      * Khởi tạo command bật auto-bid.
      *
-     * @param auctionBidService service xử lý kiểm tra và bật auto-bid
+     * @param autoBidService service quản lý cấu hình auto-bid
+     * @param auctionBidService service xử lý đặt giá và trigger auto-bid ngay
      */
-    public AutoBidCommand(final AuctionBidService auctionBidService) {
+    public AutoBidCommand(
+            final AutoBidService autoBidService,
+            final AuctionBidService auctionBidService) {
+
+        this.autoBidService = Objects.requireNonNull(autoBidService, "autoBidService");
         this.auctionBidService = Objects.requireNonNull(auctionBidService, "auctionBidService");
     }
 
     @Override
     public String execute(final String[] parts, final ClientSession session) {
         try {
+            // Kiểm tra session và payload trước khi đọc cấu hình auto-bid.
             if (session.getCurrentUser() == null) {
                 return fail("Bạn cần đăng nhập trước khi bật auto-bid.");
             }
@@ -50,26 +63,31 @@ public final class AutoBidCommand implements Command {
             final String auctionId = parts[IDX_AUCTION_ID];
             final long maxAmount = parsePositiveAmount(parts[IDX_MAX_AMOUNT], "Giá tối đa");
             final long stepAmount = parsePositiveAmount(parts[IDX_STEP_AMOUNT], "Bước tăng");
-
-            auctionBidService.enableAutoBid(
+            
+            // Lưu cấu hình và kích hoạt vòng bid tự động ngay sau khi enable.
+            autoBidService.enableAutoBid(
                     auctionId,
                     session.getCurrentUser(),
                     maxAmount,
-                    stepAmount);
+                    stepAmount
+            );
+
+            // Sau khi lưu setting, thử tạo auto-bid ngay nếu phiên hiện tại đã đủ điều kiện.
+            auctionBidService.triggerAutoBidAfterEnable(
+                    auctionId,
+                    session.getCurrentUser());
 
             LOGGER.info(
                     "Đã lưu auto-bid. user={}, auctionId={}, maxAmount={}, stepAmount={}",
                     session.getCurrentUser().getUsername(),
                     auctionId,
                     maxAmount,
-                    stepAmount);
+                    stepAmount
+            );
 
-            return Protocol.Response.AUTO_BID_OK.name()
-                    + Protocol.SEPARATOR
-                    + "Đã bật đấu giá tự động.";
-        } catch (InvalidBidException e) {
-            return fail(e.getMessage());
-        } catch (IllegalArgumentException e) {
+            // Trả lại cấu hình đã lưu để client đồng bộ trạng thái form.
+            return success(auctionId, maxAmount, stepAmount);
+        } catch (InvalidBidException | IllegalArgumentException e) {
             return fail(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Lỗi khi xử lý yêu cầu auto-bid.", e);
@@ -90,8 +108,42 @@ public final class AutoBidCommand implements Command {
     }
 
     private String fail(final String message) {
-        return Protocol.Response.AUTO_BID_FAIL.name()
-                + Protocol.SEPARATOR
-                + message;
+        try {
+            // Đóng gói lỗi nghiệp vụ thành JSON để client route qua AUTO_BID_FAIL.
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_FAIL.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi bật auto-bid: {}", exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_FAIL.", exception);
+        }
+    }
+
+    private String success(
+            final String auctionId,
+            final long maxAmount,
+            final long stepAmount) {
+        final String message = "Đã bật đấu giá tự động.";
+        try {
+            // Trả đầy đủ cấu hình đã lưu trong payload JSON.
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUTO_BID_OK.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of(
+                                    "auctionId", auctionId,
+                                    "maxAmount", maxAmount,
+                                    "stepAmount", stepAmount)),
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response bật auto-bid: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUTO_BID_OK.", exception);
+        }
     }
 }

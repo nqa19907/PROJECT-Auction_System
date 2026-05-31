@@ -10,11 +10,6 @@ public final class Protocol {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    // --- KÝ TỰ NGĂN CÁCH ---
-    public static final String SEPARATOR = "|";
-    public static final String SEPARATOR_REGEX = "\\|";
-    public static final String RECORD_SEPARATOR = "~";
-
     /**
      * Định nghĩa các mã lệnh gửi từ Client lên Server.
      */
@@ -91,7 +86,7 @@ public final class Protocol {
         USER_LIST_CHANGED,
 
         // Admin responses
-        // Response dạng header|count~record1~record2 để truyền bảng quản trị qua một dòng socket.
+        // Response danh sách quản trị được đóng gói trong payload JSON.
         ADMIN_CANCEL_AUCTION_OK,
         ADMIN_CANCEL_AUCTION_FAIL,
         ADMIN_DELETE_AUCTION_OK,

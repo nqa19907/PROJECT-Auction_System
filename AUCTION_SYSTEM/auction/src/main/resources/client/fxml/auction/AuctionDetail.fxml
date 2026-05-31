@@ -45,13 +45,16 @@
 
                 <HBox alignment="CENTER_LEFT" spacing="16" styleClass="info-card">
                     <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
+                    <Region fx:id="productImage" maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220" styleClass="product-detail-image" />
                     <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
                         <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />
                     </VBox>
-                    <VBox alignment="CENTER_RIGHT" spacing="4">
-                        <Label styleClass="metric-label" text="Thời gian còn lại" />
+                    <VBox alignment="CENTER_RIGHT" spacing="4" styleClass="auction-time-panel">
+                        <Label fx:id="timerCaption" styleClass="metric-label" text="Thời gian còn lại" />
                         <Label fx:id="timerLabel" styleClass="timer-value" text="14:32" />
+                        <Label fx:id="auctionStartTime" styleClass="auction-time-text" text="Bắt đầu: --/--/---- --:--" />
+                        <Label fx:id="auctionEndTime" styleClass="auction-time-text" text="Kết thúc: --/--/---- --:--" />
                     </VBox>
                 </HBox>
 

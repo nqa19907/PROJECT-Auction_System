@@ -2,10 +2,15 @@ package auction_system.server.network.command.auction;
 
 import auction_system.common.models.auctions.Auction;
 import auction_system.common.models.items.Item;
+import auction_system.common.network.JsonMessage;
+import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +29,7 @@ public class GetAuctionCommand implements Command {
     /**
      * Thực thi lệnh lấy chi tiết phiên đấu giá.
      *
-     * <p>Lệnh:       {@code GET_AUCTION|auctionId}
-     * Thành công: {@code AUCTION_DETAIL|auctionId|itemName|desc|startPrice|currentPrice}
-     *             {@code |status|endTime|sellerName}
-     * Thất bại:   {@code ERROR|message}
+     * <p>Nhận request JSON {@code GET_AUCTION} và trả JSON {@code AUCTION_DETAIL}.
      *
      * @param parts   Mảng tham số từ lệnh đã tách.
      * @param session Phiên làm việc của Client (không dùng).
@@ -37,42 +39,88 @@ public class GetAuctionCommand implements Command {
     public String execute(String[] parts, ClientSession session) {
         try {
             if (parts.length < 2) {
-                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR + "Thiếu auctionId";
+                return buildErrorResponse("Thiếu auctionId");
             }
 
             Auction auction = auctionManager.getAuctionById(parts[1]);
             if (auction == null) {
-                return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
-                        + "Không tìm thấy phiên đấu giá";
+                return buildErrorResponse("Không tìm thấy phiên đấu giá");
             }
 
-            Item item = auction.getItem();
-            // Ưu tiên hiển thị giá đấu cao nhất hiện tại, nếu chưa có ai đặt thì dùng giá khởi điểm
-            double currentPrice = (auction.getCurrentHighestBid() != null)
-                    ? auction.getCurrentHighestBid().getAmount()
-                    : item.getStartPrice();
-
-            // TODO: Review this longass return;
-            // Trả về toàn bộ chi tiết phiên đấu giá nối với nhau bằng dấu phân cách
-            return Protocol.Response.AUCTION_DETAIL.name()
-                    + Protocol.SEPARATOR + auction.getId()
-                    + Protocol.SEPARATOR + item.getItemName()
-                    + Protocol.SEPARATOR + item.getDescription()
-                    + Protocol.SEPARATOR + item.getStartPrice()
-                    + Protocol.SEPARATOR + currentPrice
-                    + Protocol.SEPARATOR + auction.getStatus().name()
-                    + Protocol.SEPARATOR + auction.getStartTime()
-                    + Protocol.SEPARATOR + auction.getEndTime()
-                    + Protocol.SEPARATOR + auction.getParticipant().getUsername()
-                    + Protocol.SEPARATOR + resolveSellerId(auction)
-                    + Protocol.SEPARATOR + auction.isAntiSnipingEnabled();
+            return buildSuccessResponse(auction);
         } catch (Exception e) {
             String auctionId = (parts.length > 1) ? parts[1] : "unknown";
             LOGGER.error("Lỗi hệ thống khi lấy chi tiết phiên đấu giá "
                     + auctionId, e);
-            return Protocol.Response.ERROR.name() + Protocol.SEPARATOR 
-                    + "Lỗi máy chủ nội bộ. Vui lòng thử lại sau.";
+            return buildErrorResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
         }
+    }
+
+    private String buildSuccessResponse(final Auction auction) {
+        List<String> auctionRecord = toAuctionRecord(auction);
+
+        // Trả chi tiết phiên bằng JSON cho callback String[] phía client.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.AUCTION_DETAIL.name(),
+                            null,
+                            "OK",
+                            JsonProtocol.payloadOf(Map.of("auction", auctionRecord)),
+                            null));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON response chi tiết phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON AUCTION_DETAIL.", exception);
+        }
+    }
+
+    private List<String> toAuctionRecord(final Auction auction) {
+        Item item = auction.getItem();
+        double currentPrice = (auction.getCurrentHighestBid() != null)
+                ? auction.getCurrentHighestBid().getAmount()
+                : item.getStartPrice();
+
+        // Giữ thứ tự field detail giống protocol cũ để callback String[] không đổi.
+        return List.of(
+                String.valueOf(auction.getId()),
+                String.valueOf(item.getItemName()),
+                String.valueOf(item.getDescription()),
+                String.valueOf(item.getStartPrice()),
+                String.valueOf(currentPrice),
+                String.valueOf(auction.getStatus()),
+                String.valueOf(auction.getStartTime()),
+                String.valueOf(auction.getEndTime()),
+                resolveSellerName(auction),
+                resolveSellerId(auction),
+                String.valueOf(auction.isAntiSnipingEnabled()),
+                // Trả metadata ảnh để màn chi tiết có thể hiển thị ảnh sản phẩm.
+                resolveImagePath(item));
+    }
+
+    private String buildErrorResponse(final String message) {
+        // Trả lỗi dạng JSON để client nhận cùng luồng ERROR hiện có.
+        try {
+            return JsonProtocol.stringify(
+                    new JsonMessage(
+                            Protocol.Response.ERROR.name(),
+                            null,
+                            "FAIL",
+                            null,
+                            message));
+        } catch (JsonProcessingException exception) {
+            LOGGER.warn("Không tạo được JSON lỗi lấy chi tiết phiên: {}",
+                    exception.getMessage());
+            throw new IllegalStateException("Không tạo được JSON ERROR.", exception);
+        }
+    }
+
+    private String resolveSellerName(final Auction auction) {
+        if (auction.getParticipant() != null && auction.getParticipant().getUsername() != null) {
+            return auction.getParticipant().getUsername();
+        }
+
+        return "";
     }
 
     /**
@@ -91,5 +139,18 @@ public class GetAuctionCommand implements Command {
         }
 
         return "";
+    }
+
+    /**
+     * Lấy đường dẫn ảnh sản phẩm từ item.
+     *
+     * @param item sản phẩm của phiên đấu giá
+     * @return đường dẫn ảnh hoặc chuỗi rỗng nếu chưa có
+     */
+    private String resolveImagePath(final Item item) {
+        if (item == null || item.getImagePath() == null) {
+            return "";
+        }
+        return item.getImagePath();
     }
 }

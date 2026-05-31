@@ -9,7 +9,7 @@
 
 <ScrollPane id="mainContentScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="transparent-scroll" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="auction_system.client.controllers.auction.ItemListController">
     <content>
-        <VBox id="scrollContentWrapper">
+        <VBox fx:id="scrollContentWrapper" fillWidth="true">
             <children>
                 <!-- Chữ Trang chủ -->
                 <Label fx:id="categoryTitle" styleClass="page-title" text="Tất cả">
@@ -20,7 +20,7 @@
                   <Insets bottom="20.0" />
                </padding>
                 </Label>
-            <FlowPane fx:id="productsGrid" prefHeight="200.0" prefWidth="200.0" />
+            <FlowPane fx:id="productsGrid" styleClass="products-grid" />
             </children>
         </VBox>
     </content>

@@ -62,11 +62,15 @@ public class ItemListController {
     /** Vị trí trạng thái chống đặt giá phút chót trong response danh sách. */
     private static final int IDX_ANTI_SNIPING_ENABLED = 9;
 
+    /** Vị trí đường dẫn ảnh sản phẩm trong response danh sách. */
+    private static final int IDX_IMAGE_PATH = 10;
+
     /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 8;
 
     @FXML private FlowPane productsGrid;
     @FXML private Label categoryTitle;
+    @FXML private VBox scrollContentWrapper;
 
     private List<String[]> allAuctions = new ArrayList<>();
     private String filterCategory = AppConstants.CATEGORY_ALL;
@@ -82,8 +86,15 @@ public class ItemListController {
         LOGGER.info("Đang khởi tạo màn hình danh sách đấu giá...");
 
         if (productsGrid != null) {
-            productsGrid.setHgap(12);
-            productsGrid.setVgap(12);
+            productsGrid.setHgap(16);
+            productsGrid.setVgap(16);
+            productsGrid.setMaxWidth(Double.MAX_VALUE);
+        }
+
+        if (productsGrid != null && scrollContentWrapper != null) {
+            scrollContentWrapper.setMaxWidth(Double.MAX_VALUE);
+            productsGrid.prefWrapLengthProperty().bind(
+                    scrollContentWrapper.widthProperty());
         }
 
         registerRealtimeHandlers();
@@ -139,11 +150,14 @@ public class ItemListController {
             String auctionId = parts[IDX_ID];
             String itemName = parts[IDX_NAME];
             double currentPrice = Double.parseDouble(parts[IDX_PRICE]);
+            // Lấy metadata ảnh nếu server đã trả kèm.
+            String imagePath = parts.length > IDX_IMAGE_PATH ? parts[IDX_IMAGE_PATH] : "";
 
             controller.setCardDetails(
                     auctionId,
                     itemName,
                     currentPrice,
+                    imagePath,
                     selectedItemId -> navigateToAuctionDetail(parts)
             );
 
@@ -167,6 +181,10 @@ public class ItemListController {
         String selectedItemId = selectedParts[IDX_ID];
         String itemName = selectedParts[IDX_NAME];
         String status = selectedParts[IDX_STATUS];
+        // Lấy metadata ảnh để truyền sang màn chi tiết.
+        String imagePath = selectedParts.length > IDX_IMAGE_PATH
+                ? selectedParts[IDX_IMAGE_PATH]
+                : "";
         LocalDateTime startTime;
         LocalDateTime endTime;
 
@@ -225,7 +243,8 @@ public class ItemListController {
                                     : "",
                             selectedParts.length > IDX_ANTI_SNIPING_ENABLED
                                     && Boolean.parseBoolean(
-                                            selectedParts[IDX_ANTI_SNIPING_ENABLED])
+                                            selectedParts[IDX_ANTI_SNIPING_ENABLED]),
+                            imagePath
                     )
             );
         }

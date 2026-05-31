@@ -1,5 +1,6 @@
 package auction_system.client.controllers.components;
 
+import auction_system.client.utils.ProductImageStyleUtil;
 import java.util.function.Consumer;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -31,6 +32,7 @@ public class ProductCardController {
     public void initialize() {
         // Tạm thời vô hiệu hóa nút bấm khi chưa có dữ liệu thật
         bidButton.setDisable(true);
+        ProductImageStyleUtil.applyRoundedClip(imageRegion, 16);
 
         // Gán sự kiện bằng code. Khi bấm, ném ID sản phẩm cho Handler
         bidButton.setOnAction(event -> {
@@ -51,13 +53,40 @@ public class ProductCardController {
      */
     public void setCardDetails(String itemId, String title, double currentPrice,
                                 Consumer<String> onBidClickCallback) {
+        // Giữ API cũ hoạt động khi card chưa nhận ảnh.
+        setCardDetails(itemId, title, currentPrice, "", onBidClickCallback);
+    }
+
+    /**
+     * Cập nhật thông tin hiển thị của thẻ sản phẩm kèm ảnh.
+     *
+     * @param itemId             Mã định danh của sản phẩm.
+     * @param title              Tiêu đề hiển thị của sản phẩm.
+     * @param currentPrice       Giá thầu hiện tại.
+     * @param imagePath          Đường dẫn ảnh sản phẩm.
+     * @param onBidClickCallback Hàm callback tiếp nhận ID gửi tín hiệu lên màn hình cha.
+     */
+    public void setCardDetails(String itemId, String title, double currentPrice,
+                                String imagePath, Consumer<String> onBidClickCallback) {
         this.currentItemId = itemId;
         this.titleLabel.setText(title);
         this.priceLabel.setText(String.format("Giá hiện tại: %,.0f VNĐ", currentPrice));
+        // Áp dụng ảnh sản phẩm động nếu dữ liệu có đường dẫn hợp lệ.
+        applyProductImage(imagePath);
         
         // Nhận handler ủy quyền từ cha
         this.onBidActionHandler = onBidClickCallback;
 
         bidButton.setDisable(false);
+    }
+
+    /**
+     * Áp dụng ảnh sản phẩm vào vùng ảnh của card.
+     *
+     * @param imagePath đường dẫn ảnh sản phẩm
+     */
+    private void applyProductImage(final String imagePath) {
+        // Ghi đè background mặc định bằng ảnh sản phẩm thật.
+        imageRegion.setStyle(ProductImageStyleUtil.toBackgroundImageStyle(imagePath));
     }
 }
