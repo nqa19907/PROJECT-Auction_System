@@ -7,7 +7,7 @@ import auction_system.common.network.Protocol;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -168,7 +168,7 @@ public final class ItemPublishService {
         this.publishCallback = callback;
 
         // Đóng gói request đăng sản phẩm cùng metadata ảnh.
-        String request = buildPublishItemRequest(
+        JsonMessage request = buildPublishItemRequest(
                 category,
                 itemName,
                 description,
@@ -179,7 +179,7 @@ public final class ItemPublishService {
                 imagePath,
                 antiSnipingEnabled);
 
-        boolean sent = NetworkClient.getInstance().sendCommand(request);
+        boolean sent = NetworkClient.getInstance().sendMessage(request);
         if (!sent) {
             LOGGER.warning("Không thể gửi yêu cầu đăng bán sản phẩm tới Server.");
             callback.onResult(false, "Không thể kết nối tới Server.");
@@ -211,23 +211,19 @@ public final class ItemPublishService {
         Objects.requireNonNull(callback, "Callback không được null.");
         updateCallback = callback;
 
-        // Đóng gói các field chỉnh sửa theo đúng thứ tự command server đang đọc.
-        final String request = JsonProtocol.stringifyRequired(
-                new JsonMessage(
-                        null,
-                        Protocol.Command.UPDATE_MY_AUCTION.name(),
-                        null,
-                        JsonProtocol.payloadOf(List.of(
-                                nullToEmpty(auctionId),
-                                nullToEmpty(category),
-                                nullToEmpty(itemName),
-                                nullToEmpty(description),
-                                nullToEmpty(condition),
-                                FORMATTER.format(endTime),
-                                nullToEmpty(imagePath))),
-                        null));
+        // Đóng gói các field chỉnh sửa bằng payload object có tên field rõ ràng.
+        final JsonMessage request = JsonProtocol.request(
+                Protocol.Command.UPDATE_MY_AUCTION,
+                Map.of(
+                        "auctionId", nullToEmpty(auctionId),
+                        "category", nullToEmpty(category),
+                        "itemName", nullToEmpty(itemName),
+                        "description", nullToEmpty(description),
+                        "condition", nullToEmpty(condition),
+                        "endTime", FORMATTER.format(endTime),
+                        "imagePath", nullToEmpty(imagePath)));
 
-        if (!NetworkClient.getInstance().sendCommand(request)) {
+        if (!NetworkClient.getInstance().sendMessage(request)) {
             LOGGER.warning("Không thể gửi yêu cầu cập nhật phiên tới Server.");
             notifyUpdateCallback(false, "Không thể kết nối tới Server.");
         }
@@ -303,7 +299,7 @@ public final class ItemPublishService {
         }
     }
 
-    private String buildPublishItemRequest(
+    private JsonMessage buildPublishItemRequest(
             final String category,
             final String itemName,
             final String description,
@@ -312,24 +308,18 @@ public final class ItemPublishService {
             final LocalDateTime startTime,
             final LocalDateTime endTime,
             final String imagePath,
-            final boolean antiSnipingEnabled) {
-        // Payload array giữ nguyên thứ tự field mà PublishItemCommand yêu cầu.
-        return JsonProtocol.stringifyRequired(
-                new JsonMessage(
-                        null,
-                        Protocol.Command.PUBLISH_ITEM.name(),
-                        null,
-                        JsonProtocol.payloadOf(List.of(
-                                nullToEmpty(category),
-                                nullToEmpty(itemName),
-                                nullToEmpty(description),
-                                nullToEmpty(condition),
-                                startPrice,
-                                FORMATTER.format(startTime),
-                                FORMATTER.format(endTime),
-                                nullToEmpty(imagePath),
-                                antiSnipingEnabled)),
-                        null));
+        final boolean antiSnipingEnabled) {
+        // Payload object giữ tên field rõ ràng; dispatcher sẽ map sang command hiện tại.
+        return JsonProtocol.request(Protocol.Command.PUBLISH_ITEM, Map.of(
+                "category", nullToEmpty(category),
+                "itemName", nullToEmpty(itemName),
+                "description", nullToEmpty(description),
+                "condition", nullToEmpty(condition),
+                "startPrice", startPrice,
+                "startTime", FORMATTER.format(startTime),
+                "endTime", FORMATTER.format(endTime),
+                "imagePath", nullToEmpty(imagePath),
+                "antiSnipingEnabled", antiSnipingEnabled));
     }
 
     private String nullToEmpty(final String value) {

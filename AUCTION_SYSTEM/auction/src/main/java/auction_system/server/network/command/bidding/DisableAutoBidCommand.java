@@ -3,10 +3,11 @@ package auction_system.server.network.command.bidding;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -15,13 +16,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Command nhận yêu cầu tắt đấu giá tự động của user hiện tại.
  */
-public final class DisableAutoBidCommand implements Command {
+public final class DisableAutoBidCommand implements JsonPayloadCommand {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(DisableAutoBidCommand.class);
-
-    private static final int MIN_DISABLE_AUTO_BID_PARTS = 2;
-    private static final int IDX_AUCTION_ID = 1;
 
     private final AutoBidService autoBidService;
 
@@ -35,17 +33,17 @@ public final class DisableAutoBidCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             if (session.getCurrentUser() == null) {
                 return fail("Bạn cần đăng nhập trước khi tắt auto-bid.");
             }
 
-            if (parts.length < MIN_DISABLE_AUTO_BID_PARTS) {
+            final String auctionId = readAuctionId(payload);
+            if (auctionId.isBlank()) {
                 return fail("Thiếu mã phiên đấu giá.");
             }
 
-            final String auctionId = parts[IDX_AUCTION_ID];
             autoBidService.disableAutoBid(auctionId, session.getCurrentUser());
 
             LOGGER.info(
@@ -60,6 +58,13 @@ public final class DisableAutoBidCommand implements Command {
             LOGGER.error("Lỗi khi xử lý yêu cầu tắt auto-bid.", exception);
             return fail("Không thể tắt đấu giá tự động.");
         }
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        if (payload == null) {
+            return "";
+        }
+        return payload.path("auctionId").asText("");
     }
 
     private String fail(final String message) {

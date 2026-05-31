@@ -8,6 +8,7 @@ import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.network.command.admin.AdminCancelAuctionCommand;
 import auction_system.server.network.command.admin.AdminDeleteAuctionCommand;
 import auction_system.server.network.command.admin.AdminDeleteUserCommand;
@@ -36,6 +37,7 @@ import auction_system.server.services.auth.AuthService;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -66,7 +68,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
     private final AutoBidService autoBidService;
     private final AuctionBidService auctionBidService;
     private final ParticipantItemService participantItemService;
-    private final Map<String, Command> commandMap;
+    private final Map<String, Object> commandMap;
     private final ClientSession session;
 
     private BufferedReader inputReader;
@@ -105,7 +107,7 @@ public class ClientHandler implements Runnable, AuctionObserver {
      *
      * @return map chứa các command handler của kết nối hiện tại
      */
-    private Map<String, Command> createCommandMap() {
+    private Map<String, Object> createCommandMap() {
         return Map.ofEntries(
                 Map.entry(
                         Protocol.Command.LOGIN.name(),
@@ -210,15 +212,14 @@ public class ClientHandler implements Runnable, AuctionObserver {
      * @param rawCommand dòng lệnh thô nhận từ client
      */
     private void handleCommand(final String rawCommand) {
-        // Chuyển JSON request thành command name và các tham số tương thích command layer.
-        final String[] parts = parseCommandParts(rawCommand);
-        if (parts.length == 0 || parts[0] == null || parts[0].isBlank()) {
+        final JsonMessage message = parseMessage(rawCommand);
+        if (message == null || message.command() == null || message.command().isBlank()) {
             send(buildErrorResponse("Lệnh JSON không hợp lệ."));
             return;
         }
 
-        final String commandName = parts[0].toUpperCase();
-        final Command command = commandMap.get(commandName);
+        final String commandName = message.command().toUpperCase();
+        final Object command = commandMap.get(commandName);
 
         // Từ chối command không đăng ký trước khi gọi xử lý nghiệp vụ.
         if (command == null) {
@@ -227,40 +228,129 @@ public class ClientHandler implements Runnable, AuctionObserver {
         }
 
         // Mỗi command trả tối đa một JSON response một dòng.
-        final String response = command.execute(parts, session);
+        final String response = executeCommand(command, message);
         if (response != null) {
             send(response);
         }
     }
 
-    /**
-     * Chuyển request JSON thành mảng parts cho command hiện tại.
-     *
-     * @param rawCommand dòng request nhận từ client
-     * @return parts tương thích với command layer hiện tại
-     */
-    private String[] parseCommandParts(final String rawCommand) {
+    private String executeCommand(final Object command, final JsonMessage message) {
+        if (command instanceof JsonPayloadCommand jsonPayloadCommand) {
+            return jsonPayloadCommand.execute(message.payload(), session);
+        }
+
+        if (command instanceof Command legacyCommand) {
+            return legacyCommand.execute(parseCommandParts(message), session);
+        }
+
+        throw new IllegalStateException("Command handler không được hỗ trợ: "
+                + command.getClass().getName());
+    }
+
+    private JsonMessage parseMessage(final String rawCommand) {
         try {
-            // Phần tử đầu là command; payload array được nối tiếp thành tham số tuần tự.
-            final JsonMessage message = JsonProtocol.parse(rawCommand);
-            final List<String> parts = new ArrayList<>();
-            parts.add(message.command());
-
-            if (message.payload() == null || message.payload().isNull()) {
-                return parts.toArray(String[]::new);
-            }
-
-            if (message.payload().isArray()) {
-                message.payload().forEach(value -> parts.add(value.asText()));
-            } else if (message.payload().isValueNode()) {
-                parts.add(message.payload().asText());
-            }
-
-            return parts.toArray(String[]::new);
+            return JsonProtocol.parse(rawCommand);
         } catch (IOException exception) {
             LOGGER.warn("Không parse được JSON request: {}", exception.getMessage());
-            return new String[0];
+            return null;
         }
+    }
+
+    /**
+     * Chuyển request JSON thành mảng parts cho command legacy hiện tại.
+     *
+     * @param message request đã parse từ client
+     * @return parts tương thích với command layer hiện tại
+     */
+    private String[] parseCommandParts(final JsonMessage message) {
+        // Phần tử đầu là command; payload object được map theo field từng command.
+        final List<String> parts = new ArrayList<>();
+        parts.add(message.command());
+
+        if (message.payload() == null || message.payload().isNull()) {
+            return parts.toArray(String[]::new);
+        }
+
+        if (message.payload().isObject()) {
+            appendObjectPayloadParts(message.command(), message.payload(), parts);
+        } else if (message.payload().isArray()) {
+            message.payload().forEach(value -> parts.add(value.asText()));
+        } else if (message.payload().isValueNode()) {
+            parts.add(message.payload().asText());
+        }
+
+        return parts.toArray(String[]::new);
+    }
+
+    private void appendObjectPayloadParts(
+            final String command,
+            final JsonNode payload,
+            final List<String> parts) {
+        if (command == null) {
+            return;
+        }
+
+        switch (command.toUpperCase()) {
+            case "LOGIN" -> {
+                addPayloadField(payload, parts, "email");
+                addPayloadField(payload, parts, "password");
+            }
+            case "REGISTER" -> {
+                addPayloadField(payload, parts, "username");
+                addPayloadField(payload, parts, "email");
+                addPayloadField(payload, parts, "password");
+                addPayloadField(payload, parts, "roleName");
+            }
+            case "PLACE_BID" -> {
+                addPayloadField(payload, parts, "auctionId");
+                addPayloadField(payload, parts, "amount");
+            }
+            case "ENABLE_AUTO_BID" -> {
+                addPayloadField(payload, parts, "auctionId");
+                addPayloadField(payload, parts, "maxAmount");
+                addPayloadField(payload, parts, "stepAmount");
+            }
+            case "SET_ANTI_SNIPING" -> {
+                addPayloadField(payload, parts, "auctionId");
+                addPayloadField(payload, parts, "enabled");
+            }
+            case "DEPOSIT" -> addPayloadField(payload, parts, "amount");
+            case "ADMIN_DELETE_USER" -> addPayloadField(payload, parts, "userId");
+            case "ADMIN_DELETE_AUCTION", "ADMIN_CANCEL_AUCTION" ->
+                    addPayloadField(payload, parts, "auctionId");
+            case "PUBLISH_ITEM" -> {
+                addPayloadField(payload, parts, "category");
+                addPayloadField(payload, parts, "itemName");
+                addPayloadField(payload, parts, "description");
+                addPayloadField(payload, parts, "condition");
+                addPayloadField(payload, parts, "startPrice");
+                addPayloadField(payload, parts, "startTime");
+                addPayloadField(payload, parts, "endTime");
+                addPayloadField(payload, parts, "imagePath");
+                addPayloadField(payload, parts, "antiSnipingEnabled");
+            }
+            case "UPDATE_MY_AUCTION" -> {
+                addPayloadField(payload, parts, "auctionId");
+                addPayloadField(payload, parts, "category");
+                addPayloadField(payload, parts, "itemName");
+                addPayloadField(payload, parts, "description");
+                addPayloadField(payload, parts, "condition");
+                addPayloadField(payload, parts, "endTime");
+                addPayloadField(payload, parts, "imagePath");
+            }
+            default -> {
+                if (payload.has("auctionId")) {
+                    addPayloadField(payload, parts, "auctionId");
+                }
+            }
+        }
+    }
+
+    private void addPayloadField(
+            final JsonNode payload,
+            final List<String> parts,
+            final String fieldName) {
+        parts.add(payload.path(fieldName).asText());
     }
 
     private String buildErrorResponse(final String message) {

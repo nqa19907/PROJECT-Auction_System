@@ -8,11 +8,12 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -31,11 +32,8 @@ import org.slf4j.LoggerFactory;
  * <p>Phản hồi thành công:
  * JSON {@code BID_OK} trả auctionId, amount và newBalance trong payload.
  */
-public class PlaceBidCommand implements Command {
+public class PlaceBidCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlaceBidCommand.class);
-    private static final int MIN_PLACE_BID_PARTS = 3;
-    private static final int IDX_REQUEST_AUCTION_ID = 1;
-    private static final int IDX_REQUEST_AMOUNT = 2;
 
     /** Service xử lý nghiệp vụ đặt giá. */
     private final AuctionBidService auctionBidService;
@@ -53,23 +51,25 @@ public class PlaceBidCommand implements Command {
     /**
      * Thực thi lệnh đặt giá từ client.
      *
-     * @param parts   mảng tham số đã tách từ request
+     * @param payload payload JSON của request
      * @param session phiên làm việc của client
      * @return response gửi lại cho client
      */
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
                 return buildErrorResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (parts.length < MIN_PLACE_BID_PARTS) {
+            if (payload == null
+                    || payload.path("auctionId").asText("").isBlank()
+                    || payload.path("amount").isMissingNode()) {
                 return buildBidFailResponse("Thiếu thông tin đặt giá.");
             }
 
-            String auctionId = parts[IDX_REQUEST_AUCTION_ID];
-            double amount = parseAmount(parts[IDX_REQUEST_AMOUNT]);
+            String auctionId = payload.path("auctionId").asText();
+            double amount = parseAmount(payload.path("amount").asText());
             User currentUser = session.getCurrentUser();
 
             BidTransaction bidTransaction =

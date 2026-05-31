@@ -3,7 +3,7 @@ package auction_system.common.models.users;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +33,15 @@ public class Admin extends User {
      * @param auctionId id của phiên đấu giá cần xóa
      * @return command gửi lên server
      */
-    public String deleteAuction(final String auctionId) {
+    public JsonMessage deleteAuction(final String auctionId) {
         LOGGER.info(
                 "Admin [{}] đang yêu cầu xóa phiên đấu giá: {}",
                 getUsername(),
                 auctionId
         );
-        return buildAdminActionRequest(Protocol.Command.ADMIN_DELETE_AUCTION, auctionId);
+        return JsonProtocol.request(
+                Protocol.Command.ADMIN_DELETE_AUCTION,
+                Map.of("auctionId", auctionId));
     }
 
     /**
@@ -48,31 +50,15 @@ public class Admin extends User {
      * @param userId id của người dùng cần xóa
      * @return command gửi lên server
      */
-    public String deleteUser(final String userId) {
+    public JsonMessage deleteUser(final String userId) {
         LOGGER.info(
                 "Admin [{}] đang yêu cầu xóa người dùng: {}",
                 getUsername(),
                 userId
         );
-        return buildAdminActionRequest(Protocol.Command.ADMIN_DELETE_USER, userId);
-    }
-
-    private String buildAdminActionRequest(
-            final Protocol.Command command,
-            final String entityId) {
-        // Gửi request admin action bằng JSON scalar id cho ClientHandler.
-        try {
-            return JsonProtocol.stringify(
-                    new JsonMessage(
-                            null,
-                            command.name(),
-                            null,
-                            JsonProtocol.payloadOf(entityId),
-                            null));
-        } catch (JsonProcessingException exception) {
-            LOGGER.warn("Không tạo được JSON request admin action: {}", exception.getMessage());
-            throw new IllegalStateException("Không tạo được JSON " + command.name(), exception);
-        }
+        return JsonProtocol.request(
+                Protocol.Command.ADMIN_DELETE_USER,
+                Map.of("userId", userId));
     }
 
     @Override

@@ -54,6 +54,32 @@ public final class JsonProtocol {
     }
 
     /**
+     * Tạo request message không payload cho command.
+     *
+     * @param command command cần gửi
+     * @return message request JSON
+     */
+    public static JsonMessage request(final Protocol.Command command) {
+        return request(command, null);
+    }
+
+    /**
+     * Tạo request message có payload cho command.
+     *
+     * @param command command cần gửi
+     * @param payload object payload, hoặc null nếu request không có payload
+     * @return message request JSON
+     */
+    public static JsonMessage request(final Protocol.Command command, final Object payload) {
+        return new JsonMessage(
+                null,
+                command.name(),
+                null,
+                payload == null ? null : payloadOf(payload),
+                null);
+    }
+
+    /**
      * Chuyển object payload thành {@link JsonNode}.
      *
      * @param payload object payload

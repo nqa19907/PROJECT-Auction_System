@@ -5,10 +5,11 @@ import auction_system.common.models.users.Participant;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,12 +19,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Command trả trạng thái auto-bid hiện tại của user trong một phiên đấu giá.
  */
-public final class GetAutoBidStatusCommand implements Command {
+public final class GetAutoBidStatusCommand implements JsonPayloadCommand {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(GetAutoBidStatusCommand.class);
-
-    private static final int MIN_GET_AUTO_BID_PARTS = 2;
-    private static final int IDX_AUCTION_ID = 1;
 
     private final AutoBidService autoBidService;
 
@@ -37,16 +35,16 @@ public final class GetAutoBidStatusCommand implements Command {
     }
 
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         if (!(session.getCurrentUser() instanceof Participant participant)) {
             return disabledStatus();
         }
 
-        if (parts.length < MIN_GET_AUTO_BID_PARTS) {
+        final String auctionId = readAuctionId(payload);
+        if (auctionId.isBlank()) {
             return disabledStatus();
         }
 
-        final String auctionId = parts[IDX_AUCTION_ID];
         final Optional<AutoBidSetting> setting =
                 autoBidService.findSetting(auctionId, participant.getId());
 
@@ -56,6 +54,13 @@ public final class GetAutoBidStatusCommand implements Command {
 
         final AutoBidSetting activeSetting = setting.get();
         return enabledStatus(activeSetting.getMaxAmount(), activeSetting.getStepAmount());
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        if (payload == null) {
+            return "";
+        }
+        return payload.path("auctionId").asText("");
     }
 
     private String disabledStatus() {

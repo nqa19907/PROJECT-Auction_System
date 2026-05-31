@@ -6,9 +6,10 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Xử lý lệnh tham gia một phiên đấu giá.
  */
-public class JoinAuctionCommand implements Command {
+public class JoinAuctionCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(JoinAuctionCommand.class);
     private final AuctionManager auctionManager;
 
@@ -30,21 +31,21 @@ public class JoinAuctionCommand implements Command {
      *
      * <p>Nhận request JSON {@code JOIN_AUCTION} và trả JSON {@code JOIN_OK} hoặc {@code JOIN_FAIL}.
      *
-     * @param parts   Mảng tham số từ lệnh đã tách.
+     * @param payload Payload JSON của request.
      * @param session Phiên làm việc của Client.
      * @return Chuỗi phản hồi cho client.
      */
     @Override
-    public String execute(String[] parts, ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             if (!session.isLoggedIn()) {
                 return buildErrorResponse("Bạn cần đăng nhập trước");
             }
-            if (parts.length < 2) {
+            final String auctionId = readAuctionId(payload);
+            if (auctionId.isBlank()) {
                 return buildFailResponse("Thiếu auctionId");
             }
 
-            String auctionId = parts[1];
             Auction auction = auctionManager.getAuctionById(auctionId);
 
             if (auction == null) {
@@ -68,6 +69,13 @@ public class JoinAuctionCommand implements Command {
                     + username, e);
             return buildFailResponse("Lỗi máy chủ nội bộ. Vui lòng thử lại sau.");
         }
+    }
+
+    private String readAuctionId(final JsonNode payload) {
+        if (payload == null) {
+            return "";
+        }
+        return payload.path("auctionId").asText("");
     }
 
     private String buildSuccessResponse(final String auctionId) {

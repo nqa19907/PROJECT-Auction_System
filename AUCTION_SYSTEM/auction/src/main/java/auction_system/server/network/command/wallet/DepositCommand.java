@@ -5,11 +5,12 @@ import auction_system.common.models.users.User;
 import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>Lệnh JSON {@code DEPOSIT} nhận số tiền trong payload.
  */
-public class DepositCommand implements Command {
+public class DepositCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepositCommand.class);
 
     private final AuthService authService;
@@ -42,24 +43,24 @@ public class DepositCommand implements Command {
     /**
      * Thực thi lệnh nạp tiền.
      *
-     * @param parts tham số request đã tách
+     * @param payload payload JSON của request
      * @param session phiên làm việc hiện tại
      * @return response gửi về client
      */
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
+    public String execute(final JsonNode payload, final ClientSession session) {
         try {
             // Kiểm tra trạng thái đăng nhập. Chỉ user đã đăng nhập mới được nạp tiền.
             if (!session.isLoggedIn()) {
                 return buildFailResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (parts.length < 2) {
+            if (payload == null || payload.path("amount").isMissingNode()) {
                 return buildFailResponse("Thiếu số tiền cần nạp.");
             }
 
             // Parse và validate số tiền từ chuỗi text
-            double amount = parseAmount(parts[1]);
+            double amount = parseAmount(payload.path("amount").asText());
             
             // Giữ lại user trong session để retry auto-bid bằng object đã được nạp tiền.
             final User currentUser = session.getCurrentUser();

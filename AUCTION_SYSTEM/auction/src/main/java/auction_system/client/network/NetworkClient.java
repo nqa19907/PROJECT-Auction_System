@@ -161,18 +161,26 @@ public class NetworkClient {
     }
 
     /**
-     * Gui mot lenh len server.
+     * Gửi một message JSON lên server.
      *
-     * @param command chuoi lenh can gui
-     * @return true neu gui thanh cong, false neu chua ket noi hoac co loi
+     * @param message message cần gửi
+     * @return true nếu gửi thành công, false nếu chưa kết nối hoặc serialize lỗi
      */
-    public boolean sendCommand(String command) {
+    public boolean sendMessage(final JsonMessage message) {
+        final String rawMessage;
+        try {
+            rawMessage = JsonProtocol.stringify(message);
+        } catch (IOException exception) {
+            LOGGER.warn("Không thể serialize JSON message: {}", exception.getMessage());
+            return false;
+        }
+
         if (isConnected()) {
-            out.println(command);
-            LOGGER.info("Gửi tới Server: " + command);
+            out.println(rawMessage);
+            LOGGER.info("Gửi tới Server: " + rawMessage);
             return true;
         } else {
-            LOGGER.warn("Không thể gửi lệnh, chưa kết nối: " + command);
+            LOGGER.warn("Không thể gửi message, chưa kết nối: " + rawMessage);
             return false;
         }
     }
