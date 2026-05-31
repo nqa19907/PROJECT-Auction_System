@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
+<?import auction_system.client.components.SvgIcon?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
@@ -14,6 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.shape.Rectangle?>
@@ -43,18 +45,24 @@
             <VBox spacing="20" styleClass="content-area">
                 <padding><Insets bottom="32" left="32" right="32" top="24" /></padding>
 
-                <HBox alignment="CENTER_LEFT" spacing="16" styleClass="info-card">
+                <HBox alignment="TOP_LEFT" spacing="16" styleClass="info-card">
                     <padding><Insets bottom="16" left="20" right="20" top="16" /></padding>
-                    <Region fx:id="productImage" maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220" styleClass="product-detail-image" />
+                    <StackPane maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220">
+                        <Region fx:id="productImage" maxHeight="220" maxWidth="220" minHeight="220" minWidth="220" prefHeight="220" prefWidth="220" styleClass="product-detail-image" />
+                        <SvgIcon fx:id="productImagePlaceholderIcon" icon="category" styleClass="product-detail-placeholder" />
+                    </StackPane>
                     <VBox spacing="4" HBox.hgrow="ALWAYS">
                         <Label fx:id="auctionTitle" styleClass="product-detail-title" text="Đồng hồ Rolex Submariner Date" />
+                        <Label fx:id="productDescription" maxWidth="Infinity" styleClass="product-detail-description" text="Thông tin chi tiết sản phẩm" wrapText="true" />
+                        <Region VBox.vgrow="ALWAYS" />
+                        <Label fx:id="productCondition" styleClass="product-detail-condition" text="Tình trạng: Mới" />
                         <Label fx:id="auctionId" managed="false" styleClass="auction-subtitle" text="" visible="false" />
                     </VBox>
-                    <VBox alignment="CENTER_RIGHT" spacing="4" styleClass="auction-time-panel">
-                        <Label fx:id="timerCaption" styleClass="metric-label" text="Thời gian còn lại" />
-                        <Label fx:id="timerLabel" styleClass="timer-value" text="14:32" />
-                        <Label fx:id="auctionStartTime" styleClass="auction-time-text" text="Bắt đầu: --/--/---- --:--" />
-                        <Label fx:id="auctionEndTime" styleClass="auction-time-text" text="Kết thúc: --/--/---- --:--" />
+                    <VBox alignment="TOP_RIGHT" spacing="4" styleClass="auction-time-panel">
+                        <Label fx:id="timerCaption" alignment="CENTER_RIGHT" maxWidth="Infinity" styleClass="metric-label" text="Thời gian còn lại" />
+                        <Label fx:id="timerLabel" alignment="CENTER_RIGHT" maxWidth="Infinity" styleClass="timer-value" text="14:32" />
+                        <Label fx:id="auctionStartTime" alignment="CENTER_RIGHT" maxWidth="Infinity" styleClass="auction-time-text" text="Bắt đầu: --/--/---- --:--" />
+                        <Label fx:id="auctionEndTime" alignment="CENTER_RIGHT" maxWidth="Infinity" styleClass="auction-time-text" text="Kết thúc: --/--/---- --:--" />
                     </VBox>
                 </HBox>
 
@@ -129,10 +137,10 @@
                         </placeholder>
                     </TableView>
                 </VBox>
-                <VBox spacing="14" styleClass="place-bid-card">
+                <VBox fx:id="autoBidCard" spacing="14" styleClass="place-bid-card">
                     <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
                     <Label styleClass="section-title" text="Đấu giá tự động" />
-                     <CheckBox fx:id="autoBidToggle" styleClass="auto-bid-toggle" text="Tự động trả giá khi có người vượt bạn" />
+                    <CheckBox fx:id="autoBidToggle" styleClass="auto-bid-toggle" text="Tự động trả giá khi có người vượt bạn" />
 
                     <VBox spacing="10">
                         <Label styleClass="metric-label" text="Giá tối đa bạn sẵn sàng trả" />
@@ -166,7 +174,13 @@
                     </HBox>
                 </VBox>
 
-                <VBox spacing="14" styleClass="place-bid-card">
+                <VBox fx:id="antiSnipingCard" spacing="14" styleClass="place-bid-card">
+                    <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
+                    <Label styleClass="section-title" text="Gia hạn phút chót" />
+                    <CheckBox fx:id="chkAntiShipping" styleClass="auto-bid-toggle" text="Tự động gia hạn khi có lượt trả giá phút chót" />
+                </VBox>
+
+                <VBox fx:id="placeBidCard" spacing="14" styleClass="place-bid-card">
                     <padding><Insets bottom="20" left="24" right="24" top="20" /></padding>
                     <Label styleClass="section-title" text="Đặt giá của bạn" />
                <VBox spacing="7.0">
@@ -191,7 +205,6 @@
                      </HBox>
                   </children>
                </VBox>
-
                     <!-- Ô chọn bật/tắt anti shipping ngay trong khu vực đặt giá -->
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <CheckBox fx:id="chkAntiShipping" styleClass="anti-snipping-checkbox" text="Anti Snipping" />

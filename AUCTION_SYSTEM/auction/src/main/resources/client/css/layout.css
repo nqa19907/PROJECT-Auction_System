@@ -97,8 +97,8 @@
 }
 
 /* Đổi màu icon tối hơn khi active */
-.category-option.active Region {
-    -fx-background-color: -color-orange-800;
+.category-option.active .svg-icon-shape {
+    -fx-fill: -color-orange-800;
 }
 
 /* --- THẺ SẢN PHẨM (PRODUCT CARD) --- */

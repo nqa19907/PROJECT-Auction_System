@@ -7,6 +7,19 @@
     -fx-icon-size: 24px;                      /* Icon size lg: 24px */
 }
 
+.sidebar-icon {
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-pref-width: 20px;
+    -fx-pref-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+}
+
+.sidebar-icon .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
+}
+
 .icon-gavel {
     -fx-shape: "M160-120v-80h480v80H160Zm226-194L160-540l84-86 228 226-86 86Zm254-254L414-796l86-84 226 226-86 86Zm184 408L302-682l56-56 522 522-56 56Z";
     -fx-background-color: -color-primary;
@@ -95,4 +108,56 @@
     -fx-min-height: 20px;                     /* Icon height sm: 16px */
     -fx-max-width: 20px;                      /* Icon width md: 20px */
     -fx-max-height: 20px;                     /* Icon height sm: 16px */
+}
+
+.icon-format-list-bulleted {
+    -fx-shape: "M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.5-23.5T120-240q0-33 23.5-56.5T200-320q33 0 56.5 23.5T280-240q0 33-23.5 56.5T200-160Zm0-240q-33 0-56.5-23.5T120-480q0-33 23.5-56.5T200-560q33 0 56.5 23.5T280-480q0 33-23.5 56.5T200-400Zm-56.5-263.5Q120-687 120-720t23.5-56.5Q167-800 200-800t56.5 23.5Q280-753 280-720t-23.5 56.5Q233-640 200-640t-56.5-23.5Z";
+    -fx-background-color: -color-icon-theme;
+    -fx-scale-shape: true;
+    -fx-min-width: 20px;
+    -fx-min-height: 20px;
+    -fx-max-width: 20px;
+    -fx-max-height: 20px;
+}
+
+.icon-edit {
+    -fx-shape: "M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z";
+    -fx-background-color: #8a5500;
+    -fx-scale-shape: true;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+}
+
+.icon-delete {
+    -fx-shape: "M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z";
+    -fx-background-color: white;
+    -fx-scale-shape: true;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+}
+
+.product-image-placeholder {
+    -fx-min-width: 64px;
+    -fx-min-height: 64px;
+    -fx-max-width: 64px;
+    -fx-max-height: 64px;
+}
+
+.product-image-placeholder .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
+}
+
+.product-detail-placeholder {
+    -fx-min-width: 84px;
+    -fx-min-height: 84px;
+    -fx-max-width: 84px;
+    -fx-max-height: 84px;
+}
+
+.product-detail-placeholder .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
 }

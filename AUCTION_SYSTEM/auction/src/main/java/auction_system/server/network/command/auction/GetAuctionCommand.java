@@ -95,7 +95,8 @@ public class GetAuctionCommand implements Command {
                 resolveSellerId(auction),
                 String.valueOf(auction.isAntiSnipingEnabled()),
                 // Trả metadata ảnh để màn chi tiết có thể hiển thị ảnh sản phẩm.
-                resolveImagePath(item));
+                resolveImagePath(item),
+                String.valueOf(item.getCategory()));
     }
 
     private String buildErrorResponse(final String message) {

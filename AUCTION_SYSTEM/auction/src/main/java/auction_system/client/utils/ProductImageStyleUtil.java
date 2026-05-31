@@ -1,6 +1,9 @@
 package auction_system.client.utils;
 
+import auction_system.client.components.SvgIcon;
 import java.io.File;
+import java.util.List;
+import java.util.Locale;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 
@@ -8,6 +11,9 @@ import javafx.scene.shape.Rectangle;
  * Tiện ích chuyển đường dẫn ảnh sản phẩm thành CSS background cho JavaFX.
  */
 public final class ProductImageStyleUtil {
+    private static final List<String> CATEGORY_ICON_CLASSES =
+            List.of("icon-art", "icon-electronic", "icon-vehicle", "icon-category");
+
     private ProductImageStyleUtil() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
@@ -26,6 +32,54 @@ public final class ProductImageStyleUtil {
 
         // Escape URL trước khi đưa vào CSS inline của JavaFX.
         return "-fx-background-image: url('" + escapeCssUrl(imageUrl) + "');";
+    }
+
+    /**
+     * Hiển thị ảnh thật nếu hợp lệ, nếu không hiển thị icon theo danh mục.
+     *
+     * @param imageRegion vùng hiển thị ảnh nền
+     * @param placeholderIcon icon fallback đặt giữa vùng ảnh
+     * @param imagePath đường dẫn ảnh sản phẩm
+     * @param category danh mục sản phẩm
+     */
+    public static void applyImageOrPlaceholder(
+            final Region imageRegion,
+            final Region placeholderIcon,
+            final String imagePath,
+            final String category) {
+        if (imageRegion == null || placeholderIcon == null) {
+            return;
+        }
+
+        final String imageStyle = toBackgroundImageStyle(imagePath);
+        final boolean showPlaceholder = imageStyle.isBlank();
+        imageRegion.setStyle(imageStyle);
+        placeholderIcon.setManaged(showPlaceholder);
+        placeholderIcon.setVisible(showPlaceholder);
+
+        if (placeholderIcon instanceof SvgIcon svgIcon) {
+            svgIcon.setIcon(categoryIconName(category));
+        } else {
+            placeholderIcon.getStyleClass().removeAll(CATEGORY_ICON_CLASSES);
+            placeholderIcon.getStyleClass().add(categoryIconClass(category));
+        }
+    }
+
+    private static String categoryIconClass(final String category) {
+        return "icon-" + categoryIconName(category);
+    }
+
+    private static String categoryIconName(final String category) {
+        if (category == null) {
+            return "category";
+        }
+
+        return switch (category.trim().toUpperCase(Locale.ROOT)) {
+            case "ART" -> "art";
+            case "ELECTRONIC" -> "electronic";
+            case "VEHICLE" -> "vehicle";
+            default -> "category";
+        };
     }
 
     /**

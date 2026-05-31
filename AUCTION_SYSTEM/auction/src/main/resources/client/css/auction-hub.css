@@ -114,6 +114,21 @@
     -fx-wrap-text: true;
 }
 
+.root-pane .product-detail-description {
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #8A5A17;
+}
+
+.root-pane .product-detail-condition {
+    -fx-background-color: #FFF0D6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 9 5 9;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8E5608;
+}
+
 .root-pane .auction-subtitle {
     -fx-font-size: 12px;
     -fx-font-weight: normal;
@@ -122,7 +137,6 @@
 
 /* ── Ảnh sản phẩm chi tiết ───────────────── */
 .root-pane .product-detail-image {
-    -fx-background-image: url("../images/rolex.jpg");
     -fx-background-color: #F4E4CB;
     -fx-background-size: cover;
     -fx-background-position: center center;
@@ -141,6 +155,7 @@
 
 .root-pane .auction-time-panel {
     -fx-min-width: 190px;
+    -fx-alignment: TOP_RIGHT;
 }
 
 .root-pane .auction-time-text {
@@ -379,29 +394,6 @@
 
 .root-pane .bid-input:focused {
     -fx-border-color: #D4860B;
-}
-
-/* Checkbox anti shipping trong khối đặt giá */
-.root-pane .anti-shipping-checkbox {
-    -fx-font-size: 13px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #6E4A22;
-}
-
-.root-pane .anti-shipping-checkbox .box {
-    -fx-background-color: #FFF8EE;
-    -fx-border-color: #D8A65B;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-}
-
-.root-pane .anti-shipping-checkbox:selected .box {
-    -fx-background-color: #D4860B;
-    -fx-border-color: #B8700A;
-}
-
-.root-pane .anti-shipping-checkbox:selected .mark {
-    -fx-background-color: white;
 }
 
 /* ── Buttons ─────────────────────────────── */

@@ -65,6 +65,9 @@ public class ItemListController {
     /** Vị trí đường dẫn ảnh sản phẩm trong response danh sách. */
     private static final int IDX_IMAGE_PATH = 10;
 
+    /** Vị trí mô tả sản phẩm trong response danh sách. */
+    private static final int IDX_DESCRIPTION = 11;
+
     /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 8;
 
@@ -152,12 +155,14 @@ public class ItemListController {
             double currentPrice = Double.parseDouble(parts[IDX_PRICE]);
             // Lấy metadata ảnh nếu server đã trả kèm.
             String imagePath = parts.length > IDX_IMAGE_PATH ? parts[IDX_IMAGE_PATH] : "";
+            String category = parts.length > IDX_CATEGORY ? parts[IDX_CATEGORY] : "";
 
             controller.setCardDetails(
                     auctionId,
                     itemName,
                     currentPrice,
                     imagePath,
+                    category,
                     selectedItemId -> navigateToAuctionDetail(parts)
             );
 
@@ -233,6 +238,9 @@ public class ItemListController {
                     new AuctionDisplayContext(
                             selectedItemId,
                             itemName,
+                            selectedParts.length > IDX_DESCRIPTION
+                                    ? selectedParts[IDX_DESCRIPTION]
+                                    : "",
                             openingPrice,
                             currentPrice,
                             status,
@@ -244,7 +252,10 @@ public class ItemListController {
                             selectedParts.length > IDX_ANTI_SNIPING_ENABLED
                                     && Boolean.parseBoolean(
                                             selectedParts[IDX_ANTI_SNIPING_ENABLED]),
-                            imagePath
+                            imagePath,
+                            selectedParts.length > IDX_CATEGORY
+                                    ? selectedParts[IDX_CATEGORY]
+                                    : ""
                     )
             );
         }

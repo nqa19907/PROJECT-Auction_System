@@ -77,10 +77,16 @@
                                         onAction="#handleCancelManagement"
                                         styleClass="btn-secondary"
                                         text="Hủy" />
-                                <!-- Nút chỉnh sửa phiên: mới là UI, chưa gắn xử lý cập nhật -->
-                                <Button fx:id="btnEditMyAuction" styleClass="secondary-button" text="✏  Chỉnh sửa phiên" />
-                                <!-- Nút xóa phiên: mới là UI, chưa gắn xử lý -->
-                                <Button fx:id="btnDeleteMyAuction" styleClass="danger-button" text="🗑  Xóa phiên" />
+                                <Button fx:id="btnEditMyAuction" styleClass="secondary-button" text="Chỉnh sửa phiên">
+                                    <graphic>
+                                        <Region styleClass="icon-edit" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="btnDeleteMyAuction" styleClass="danger-button" text="Xóa">
+                                    <graphic>
+                                        <Region styleClass="icon-delete" />
+                                    </graphic>
+                                </Button>
                             </children>
                         </HBox>
                     </children>
@@ -93,5 +99,6 @@
         <URL value="@../../css/buttons.css" />
         <URL value="@../../css/global.css" />
         <URL value="@../../css/admin-dashboard.css" />
+        <URL value="@../../css/icons.css" />
     </stylesheets>
 </BorderPane>

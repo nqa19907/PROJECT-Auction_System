@@ -15,6 +15,7 @@ public class ProductCardController {
 
     @FXML private VBox cardContainer;
     @FXML private Region imageRegion;
+    @FXML private Region imagePlaceholderIcon;
     @FXML private Label titleLabel;
     @FXML private Label priceLabel;
     @FXML private Button bidButton;
@@ -54,7 +55,7 @@ public class ProductCardController {
     public void setCardDetails(String itemId, String title, double currentPrice,
                                 Consumer<String> onBidClickCallback) {
         // Giữ API cũ hoạt động khi card chưa nhận ảnh.
-        setCardDetails(itemId, title, currentPrice, "", onBidClickCallback);
+        setCardDetails(itemId, title, currentPrice, "", "", onBidClickCallback);
     }
 
     /**
@@ -68,11 +69,27 @@ public class ProductCardController {
      */
     public void setCardDetails(String itemId, String title, double currentPrice,
                                 String imagePath, Consumer<String> onBidClickCallback) {
+        setCardDetails(itemId, title, currentPrice, imagePath, "", onBidClickCallback);
+    }
+
+    /**
+     * Cập nhật thông tin hiển thị của thẻ sản phẩm kèm ảnh và danh mục.
+     *
+     * @param itemId             Mã định danh của sản phẩm.
+     * @param title              Tiêu đề hiển thị của sản phẩm.
+     * @param currentPrice       Giá thầu hiện tại.
+     * @param imagePath          Đường dẫn ảnh sản phẩm.
+     * @param category           Danh mục sản phẩm.
+     * @param onBidClickCallback Hàm callback tiếp nhận ID gửi tín hiệu lên màn hình cha.
+     */
+    public void setCardDetails(String itemId, String title, double currentPrice,
+                                String imagePath, String category,
+                                Consumer<String> onBidClickCallback) {
         this.currentItemId = itemId;
         this.titleLabel.setText(title);
         this.priceLabel.setText(String.format("Giá hiện tại: %,.0f VNĐ", currentPrice));
         // Áp dụng ảnh sản phẩm động nếu dữ liệu có đường dẫn hợp lệ.
-        applyProductImage(imagePath);
+        applyProductImage(imagePath, category);
         
         // Nhận handler ủy quyền từ cha
         this.onBidActionHandler = onBidClickCallback;
@@ -84,9 +101,13 @@ public class ProductCardController {
      * Áp dụng ảnh sản phẩm vào vùng ảnh của card.
      *
      * @param imagePath đường dẫn ảnh sản phẩm
+     * @param category danh mục sản phẩm
      */
-    private void applyProductImage(final String imagePath) {
-        // Ghi đè background mặc định bằng ảnh sản phẩm thật.
-        imageRegion.setStyle(ProductImageStyleUtil.toBackgroundImageStyle(imagePath));
+    private void applyProductImage(final String imagePath, final String category) {
+        ProductImageStyleUtil.applyImageOrPlaceholder(
+                imageRegion,
+                imagePlaceholderIcon,
+                imagePath,
+                category);
     }
 }

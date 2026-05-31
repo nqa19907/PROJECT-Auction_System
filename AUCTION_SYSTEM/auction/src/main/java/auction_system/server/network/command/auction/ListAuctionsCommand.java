@@ -94,7 +94,8 @@ public class ListAuctionsCommand implements Command {
                 resolveSellerId(auction),
                 String.valueOf(auction.isAntiSnipingEnabled()),
                 // Trả metadata ảnh để client render card sản phẩm ở bước sau.
-                resolveImagePath(item));
+                resolveImagePath(item),
+                String.valueOf(item.getDescription()));
     }
 
     private String buildErrorResponse(final String message) {
