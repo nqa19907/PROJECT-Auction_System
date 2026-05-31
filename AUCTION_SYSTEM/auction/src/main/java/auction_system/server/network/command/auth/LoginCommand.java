@@ -6,10 +6,12 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
-import auction_system.server.network.command.Command;
+import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.auth.LoginPayload;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * <p>Command này chỉ đọc request, gọi AuthService để xác thực bằng database,
  * sau đó cập nhật trạng thái online thông qua AuctionManager.
  */
-public class LoginCommand implements Command {
+public class LoginCommand implements JsonPayloadCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoginCommand.class);
 
     private final AuthService authService;
@@ -44,22 +46,30 @@ public class LoginCommand implements Command {
     /**
      * Thực thi lệnh đăng nhập.
      *
-     * @param parts mảng tham số được chuyển từ payload JSON {@code LOGIN}
+     * @param payload payload JSON {@code LOGIN}
      * @param session phiên làm việc của client hiện tại
      * @return phản hồi gửi về client
      */
     @Override
-    public String execute(final String[] parts, final ClientSession session) {
-        if (parts.length < 3) {
+    public String execute(final JsonNode payload, final ClientSession session) {
+        final LoginPayload loginPayload;
+        try {
+            loginPayload = JsonProtocol.payloadAs(payload, LoginPayload.class);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload đăng nhập: {}", exception.getMessage());
+            return buildFailResponse("Thiếu thông tin đăng nhập.");
+        }
+
+        if (loginPayload.hasMissingRequiredFields()) {
             LOGGER.warn("Từ chối đăng nhập vì request thiếu tham số.");
             return buildFailResponse("Thiếu thông tin đăng nhập.");
         }
 
-        final String email = parts[1].trim();
-        final String password = parts[2];
+        final String email = loginPayload.email().trim();
 
         try {
-            final Optional<User> authenticatedUser = authService.login(email, password);
+            final Optional<User> authenticatedUser =
+                    authService.login(loginPayload.toLoginRequest());
             if (authenticatedUser.isEmpty()) {
                 return buildFailResponse("Email hoặc mật khẩu không đúng.");
             }

@@ -88,4 +88,27 @@ public final class JsonProtocol {
     public static JsonNode payloadOf(final Object payload) {
         return OBJECT_MAPPER.valueToTree(payload);
     }
+
+    /**
+     * Map JSON payload tree thành DTO/record request.
+     *
+     * @param payload payload JSON nhận từ socket
+     * @param payloadType class DTO đích
+     * @param <T> kiểu DTO đích
+     * @return DTO đã map
+     * @throws IllegalArgumentException nếu payload null hoặc không map được sang DTO
+     */
+    public static <T> T payloadAs(
+            final JsonNode payload,
+            final Class<T> payloadType) {
+        if (payload == null || payload.isNull()) {
+            throw new IllegalArgumentException("Payload không hợp lệ.");
+        }
+
+        try {
+            return OBJECT_MAPPER.treeToValue(payload, payloadType);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalArgumentException("Payload không đúng định dạng.", exception);
+        }
+    }
 }
