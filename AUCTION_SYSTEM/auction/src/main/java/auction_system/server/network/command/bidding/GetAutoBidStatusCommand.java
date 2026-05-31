@@ -6,7 +6,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
-import auction_system.server.network.payload.bidding.AuctionIdPayload;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;

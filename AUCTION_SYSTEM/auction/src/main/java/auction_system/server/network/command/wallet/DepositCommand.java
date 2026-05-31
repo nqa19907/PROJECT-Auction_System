@@ -6,6 +6,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.wallet.DepositPayload;
 import auction_system.server.services.auth.AuthService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
@@ -55,12 +56,20 @@ public class DepositCommand implements JsonPayloadCommand {
                 return buildFailResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (payload == null || payload.path("amount").isMissingNode()) {
+            final DepositPayload depositPayload;
+            try {
+                depositPayload = JsonProtocol.payloadAs(payload, DepositPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload nạp tiền: {}", exception.getMessage());
+                return buildFailResponse("Thiếu số tiền cần nạp.");
+            }
+
+            if (depositPayload.hasMissingAmount()) {
                 return buildFailResponse("Thiếu số tiền cần nạp.");
             }
 
             // Parse và validate số tiền từ chuỗi text
-            double amount = parseAmount(payload.path("amount").asText());
+            double amount = parseAmount(depositPayload.amount());
             
             // Giữ lại user trong session để retry auto-bid bằng object đã được nạp tiền.
             final User currentUser = session.getCurrentUser();

@@ -5,6 +5,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.AuctionIdPayload;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -55,10 +56,17 @@ public class GetBidHistoryCommand implements JsonPayloadCommand {
     }
 
     private String readAuctionId(final JsonNode payload) {
-        if (payload == null) {
+        try {
+            final AuctionIdPayload auctionIdPayload =
+                    JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+            if (auctionIdPayload.hasMissingAuctionId()) {
+                return "";
+            }
+            return auctionIdPayload.auctionId();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload lịch sử bid: {}", exception.getMessage());
             return "";
         }
-        return payload.path("auctionId").asText("");
     }
 
     private String buildSuccessResponse(

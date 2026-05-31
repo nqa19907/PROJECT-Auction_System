@@ -1,4 +1,4 @@
-package auction_system.server.network.payload.bidding;
+package auction_system.server.network.payload;
 
 /**
  * Payload JSON cho request chỉ cần mã phiên đấu giá.

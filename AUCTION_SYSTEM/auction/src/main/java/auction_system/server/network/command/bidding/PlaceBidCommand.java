@@ -9,6 +9,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.PlaceBidPayload;
 import auction_system.server.persistence.exceptions.DatabaseException;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
@@ -62,14 +63,20 @@ public class PlaceBidCommand implements JsonPayloadCommand {
                 return buildErrorResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (payload == null
-                    || payload.path("auctionId").asText("").isBlank()
-                    || payload.path("amount").isMissingNode()) {
+            final PlaceBidPayload bidPayload;
+            try {
+                bidPayload = JsonProtocol.payloadAs(payload, PlaceBidPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload đặt giá: {}", exception.getMessage());
                 return buildBidFailResponse("Thiếu thông tin đặt giá.");
             }
 
-            String auctionId = payload.path("auctionId").asText();
-            double amount = parseAmount(payload.path("amount").asText());
+            if (bidPayload.hasMissingRequiredFields()) {
+                return buildBidFailResponse("Thiếu thông tin đặt giá.");
+            }
+
+            String auctionId = bidPayload.auctionId();
+            double amount = parseAmount(bidPayload.amount());
             User currentUser = session.getCurrentUser();
 
             BidTransaction bidTransaction =
