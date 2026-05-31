@@ -2,17 +2,10 @@ package auction_system.client;
 
 import auction_system.client.network.NetworkClient;
 import auction_system.client.utils.ViewConstants;
-import auction_system.common.models.users.Participant;
+import auction_system.client.utils.WindowTitleUtil;
 import auction_system.common.network.NetworkConfig;
-import auction_system.server.core.AuctionManager;
-import auction_system.server.network.SocketServer;
-import auction_system.server.persistence.serialization.DatabasePathProvider;
-import auction_system.server.persistence.serialization.SerializedDatabase;
-import auction_system.server.services.auction.ParticipantItemService;
-import auction_system.server.services.auth.AuthService;
-import auction_system.server.services.autobid.AutoBidService;
-import auction_system.server.services.bidding.AuctionBidService;
 import java.io.IOException;
+import java.util.Map;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -24,18 +17,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Lớp chính để khởi chạy ứng dụng Client.
- *
- * <p>Lớp này ưu tiên kết nối tới server có sẵn. Nếu không kết nối được, ứng dụng
- * sẽ tự khởi chạy một server nội bộ phục vụ môi trường chạy thử local.
  */
 public class ClientApp extends Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientApp.class);
     private static final int windowWidth = 900;
     private static final int windowHeight = 700;
     private static final int minimumWindowWidth = 900;
-    private static final int serverStartupDelayMillis = 1000;
 
-    private SocketServer localServer;
+    private String serverHost;
+    private int serverPort;
 
     /**
      * Khởi chạy giao diện client.
@@ -46,14 +36,12 @@ public class ClientApp extends Application {
     @Override
     public void start(final Stage stage) throws Exception {
         try {
+            resolveServerAddress();
             try {
-                NetworkClient.getInstance().connect(
-                    NetworkConfig.SERVER_HOST,
-                    NetworkConfig.SERVER_PORT
-                );
+                NetworkClient.getInstance().connect(serverHost, serverPort);
             } catch (IOException e) {
-                LOGGER.warn("Không thể kết nối tới server. Đang khởi chạy server nội bộ...");
-                startLocalServerAndConnect();
+                LOGGER.error("Không thể kết nối tới server {}:{}.", serverHost, serverPort);
+                throw e;
             }
 
             loadFonts();
@@ -65,54 +53,31 @@ public class ClientApp extends Application {
     }
 
     /**
-     * Tự động khởi chạy server nội bộ trên một luồng daemon và kết nối lại.
-     *
-     * <p>Phần này được phép dùng class server vì nó đang đóng vai trò boot local
-     * server cho môi trường chạy thử. Controller phía client vẫn không được gọi
-     * trực tiếp service server khi đăng nhập.
+     * Xác định địa chỉ server từ JavaFX args, system property/env hoặc mặc định.
      */
-    private void startLocalServerAndConnect() {
-        final SerializedDatabase database = new SerializedDatabase(
-            DatabasePathProvider.defaultDataDirectory());
-        final int port = NetworkConfig.SERVER_PORT;
-        final AuctionManager auctionManager = AuctionManager.getInstance(database);
-        final AuthService authService = new AuthService(database);
-        final AutoBidService autoBidService = new AutoBidService(database.autoBidSettings());
-        final AuctionBidService auctionBidService =
-                new AuctionBidService(database, auctionManager, autoBidService);
-        final ParticipantItemService participantItemService = new ParticipantItemService(database);
-
-        localServer = SocketServer.getInstance(
-            port,
-            authService,
-            auctionManager,
-            autoBidService,
-            auctionBidService,
-            participantItemService
-        );
-
-        final Thread serverThread = new Thread(localServer::start);
-        serverThread.setDaemon(true);
-        serverThread.start();
-
-        reconnectToLocalServer();
+    private void resolveServerAddress() {
+        final Map<String, String> namedArgs = getParameters().getNamed();
+        serverHost = namedArgs.getOrDefault("server-host", NetworkConfig.SERVER_HOST);
+        serverPort = parsePort(namedArgs.get("server-port"), NetworkConfig.SERVER_PORT);
     }
 
     /**
-     * Kết nối lại tới server nội bộ sau khi server được khởi chạy.
+     * Parse cổng kết nối, nếu sai thì giữ nguyên cổng mặc định.
+     *
+     * @param rawPort giá trị cổng dạng chuỗi
+     * @param defaultPort cổng mặc định
+     * @return cổng hợp lệ để kết nối
      */
-    private void reconnectToLocalServer() {
+    private int parsePort(final String rawPort, final int defaultPort) {
+        if (rawPort == null || rawPort.isBlank()) {
+            return defaultPort;
+        }
+
         try {
-            Thread.sleep(serverStartupDelayMillis);
-            NetworkClient.getInstance().connect(
-                NetworkConfig.SERVER_HOST,
-                NetworkConfig.SERVER_PORT
-            );
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            LOGGER.warn("Luồng chờ kết nối lại server nội bộ bị gián đoạn.");
-        } catch (IOException e) {
-            LOGGER.error("Kết nối lại server nội bộ thất bại: {}", e.getMessage());
+            return Integer.parseInt(rawPort);
+        } catch (NumberFormatException exception) {
+            LOGGER.warn("Cổng server không hợp lệ '{}', dùng cổng {}", rawPort, defaultPort);
+            return defaultPort;
         }
     }
 
@@ -132,7 +97,7 @@ public class ClientApp extends Application {
         stage.setScene(scene);
         stage.setMinWidth(minimumWindowWidth);
         stage.setMinHeight(windowHeight);
-        stage.setTitle("Đăng nhập - AuctionHub");
+        WindowTitleUtil.applyTitle(stage, ViewConstants.LOGIN_VIEW);
         stage.show();
     }
 
@@ -166,11 +131,6 @@ public class ClientApp extends Application {
     public void stop() throws Exception {
         // Ngắt kết nối khi đóng ứng dụng
         NetworkClient.getInstance().disconnect();
-
-        // Tắt server nội bộ nếu nó đang chạy ngầm
-        if (localServer != null && localServer.isRunning()) {
-            localServer.stop();
-        }
 
         super.stop();
         // Ép JVM tắt hoàn toàn, dọn sạch mọi Thread còn sót lại trên RAM

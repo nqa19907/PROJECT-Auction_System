@@ -85,7 +85,7 @@ public class AuctionManager {
 
         loadPersistentState();
         lifecycleScheduler.start();
-        generateTestDataIfNeeded();
+        seedDefaultAdminIfNeeded();
     }
 
     private void loadPersistentState() {
@@ -97,14 +97,11 @@ public class AuctionManager {
                 + " phiên đấu giá từ database.");
     }
 
-    private void generateTestDataIfNeeded() {
+    private void seedDefaultAdminIfNeeded() {
         try {
-            // Nếu không có dữ liệu cũ, tạo dữ liệu mẫu.
-            if (userRegistry.isEmpty() || auctionRegistry.isEmpty()) {
-                TestDataGenerator.generate(this);
-            }
+            TestDataGenerator.generate(this);
         } catch (Exception exception) {
-            LOGGER.warn("Không thể khởi tạo user mẫu: " + exception.getMessage());
+            LOGGER.warn("Không thể khởi tạo admin mặc định: " + exception.getMessage());
         }
     }
 

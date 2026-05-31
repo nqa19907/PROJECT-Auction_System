@@ -3,6 +3,7 @@ package auction_system.client.controllers.auth;
 import auction_system.client.network.dto.AuthResult;
 import auction_system.client.services.AuthService;
 import auction_system.client.utils.ViewConstants;
+import auction_system.client.utils.WindowTitleUtil;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -81,7 +82,7 @@ public class RegisterController {
      */
     @FXML
     private void handleGoToLogin() {
-        navigateTo(ViewConstants.LOGIN_VIEW, "Đăng nhập");
+        navigateTo(ViewConstants.LOGIN_VIEW);
     }
 
     /**
@@ -122,7 +123,7 @@ public class RegisterController {
     private void handleRegisterResult(final AuthResult result) {
         if (result.isSuccess()) {
             logger.info("Đăng ký thành công, chuyển về màn đăng nhập.");
-            navigateTo(ViewConstants.LOGIN_VIEW, "Đăng nhập");
+            navigateTo(ViewConstants.LOGIN_VIEW);
             return;
         }
 
@@ -133,16 +134,15 @@ public class RegisterController {
      * Chuyển sang màn hình khác.
      *
      * @param path đường dẫn FXML
-     * @param title tiêu đề cửa sổ
      */
-    private void navigateTo(final String path, final String title) {
+    private void navigateTo(final String path) {
         try {
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
             final Parent root = loader.load();
             final Stage stage = (Stage) nameField.getScene().getWindow();
 
             stage.setScene(new Scene(root));
-            stage.setTitle(title);
+            WindowTitleUtil.applyTitle(stage, path);
         } catch (IOException exception) {
             logger.error("Lỗi điều hướng: " + exception.getMessage(), exception);
         }

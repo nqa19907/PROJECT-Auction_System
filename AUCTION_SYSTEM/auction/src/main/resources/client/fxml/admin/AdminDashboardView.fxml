@@ -89,8 +89,13 @@
                         <HBox alignment="CENTER_RIGHT">
                             <children>
                                 <Button fx:id="btnDeleteUser"
-                                        text="🗑  Xoá người dùng"
-                                        styleClass="danger-button"/>
+                                        text="Xoá người dùng"
+                                        graphicTextGap="8"
+                                        styleClass="danger-button">
+                                    <graphic>
+                                        <Region styleClass="icon-delete"/>
+                                    </graphic>
+                                </Button>
                             </children>
                         </HBox>
                     </children>
@@ -130,8 +135,13 @@
                         <HBox alignment="CENTER_RIGHT">
                             <children>
                                 <Button fx:id="btnDeleteAuction"
-                                        text="🗑  Xoá phiên"
-                                        styleClass="danger-button"/>
+                                        text="Xoá phiên"
+                                        graphicTextGap="8"
+                                        styleClass="danger-button">
+                                    <graphic>
+                                        <Region styleClass="icon-delete"/>
+                                    </graphic>
+                                </Button>
                             </children>
                         </HBox>
                     </children>
@@ -142,6 +152,7 @@
 
     <stylesheets>
         <URL value="@../../css/global.css"/>
+        <URL value="@../../css/icons.css"/>
         <URL value="@../../css/admin-dashboard.css"/>
     </stylesheets>
 

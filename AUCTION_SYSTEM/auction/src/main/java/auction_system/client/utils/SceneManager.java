@@ -112,8 +112,8 @@ public final class SceneManager {
             Stage newStage = new Stage();
             newStage.setScene(newScene);
 
-            // 2. Kế thừa tiêu đề (title) từ cửa sổ cũ
-            newStage.setTitle(currentStage.getTitle());
+            // 2. Đặt tiêu đề theo màn hình mới.
+            WindowTitleUtil.applyTitle(newStage, fxmlName);
 
             // 3. Xử lý kích thước cho cửa sổ mới
             if (width > 0 && height > 0) {

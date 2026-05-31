@@ -58,6 +58,15 @@ public final class SvgIcon extends Region {
                     + "-23.5 56.5T200-400Zm-56.5-263.5Q120-687 120-720t23.5-56.5Q167-800 "
                     + "200-800t56.5 23.5Q280-753 280-720t-23.5 56.5Q233-640 200-640"
                     + "t-56.5-23.5Z";
+    private static final String ADMIN_PANEL_SETTINGS_PATH =
+            "M722.5-297.5Q740-315 740-340t-17.5-42.5Q705-400 680-400t-42.5 "
+                    + "17.5Q620-365 620-340t17.5 42.5Q655-280 680-280t42.5-17.5ZM680-160q31 "
+                    + "0 57-14.5t42-38.5q-22-13-47-20t-52-7q-27 0-52 7t-47 20q16 24 "
+                    + "42 38.5t57 14.5ZM480-80q-139-35-229.5-159.5T160-516v-244l320-120 "
+                    + "320 120v227q-19-8-39-14.5t-41-9.5v-147l-240-90-240 90v188q0 "
+                    + "47 12.5 94t35 89.5Q310-290 342-254t71 60q11 32 29 61t41 "
+                    + "52q-1 0-1.5.5t-1.5.5Zm200 0q-83 0-141.5-58.5T480-280q0-83 "
+                    + "58.5-141.5T680-480q83 0 141.5 58.5T880-280q0 83-58.5 141.5T680-80ZM480-494Z";
     private static final String CHECK_BOX_CHECKED_PATH =
             "M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560"
                     + "q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z"
@@ -125,6 +134,7 @@ public final class SvgIcon extends Region {
             case "vehicle" -> VEHICLE_PATH;
             case "add" -> ADD_PATH;
             case "format-list-bulleted" -> FORMAT_LIST_BULLETED_PATH;
+            case "admin-panel-settings" -> ADMIN_PANEL_SETTINGS_PATH;
             case "check-box-checked" -> CHECK_BOX_CHECKED_PATH;
             case "check-box-unchecked" -> CHECK_BOX_UNCHECKED_PATH;
             case null, default -> throw new IllegalArgumentException(
