@@ -152,9 +152,12 @@
 }
 
 .product-detail-placeholder {
-    -fx-background-color: -color-icon-theme;
     -fx-min-width: 84px;
     -fx-min-height: 84px;
     -fx-max-width: 84px;
     -fx-max-height: 84px;
+}
+
+.product-detail-placeholder .svg-icon-shape {
+    -fx-fill: -color-icon-theme;
 }

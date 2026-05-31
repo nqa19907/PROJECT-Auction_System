@@ -65,6 +65,9 @@ public class ItemListController {
     /** Vị trí đường dẫn ảnh sản phẩm trong response danh sách. */
     private static final int IDX_IMAGE_PATH = 10;
 
+    /** Vị trí mô tả sản phẩm trong response danh sách. */
+    private static final int IDX_DESCRIPTION = 11;
+
     /** Số trường tối thiểu của một dòng response hợp lệ. */
     private static final int MIN_PARTS_LENGTH = 8;
 
@@ -235,6 +238,9 @@ public class ItemListController {
                     new AuctionDisplayContext(
                             selectedItemId,
                             itemName,
+                            selectedParts.length > IDX_DESCRIPTION
+                                    ? selectedParts[IDX_DESCRIPTION]
+                                    : "",
                             openingPrice,
                             currentPrice,
                             status,
