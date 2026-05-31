@@ -10,6 +10,7 @@ import org.slf4j.Logger;
  * Scheduler định kỳ cập nhật lifecycle cho tất cả phiên đấu giá.
  */
 final class AuctionLifecycleScheduler {
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 5;
 
     private final ScheduledExecutorService scheduler;
     private final AuctionRegistry auctionRegistry;
@@ -44,5 +45,13 @@ final class AuctionLifecycleScheduler {
 
     void shutdown() {
         scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException exception) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
