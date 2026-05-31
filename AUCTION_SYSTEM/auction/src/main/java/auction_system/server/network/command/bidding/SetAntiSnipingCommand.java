@@ -6,6 +6,7 @@ import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.core.AuctionManager;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.SetAntiSnipingPayload;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,14 +48,22 @@ public class SetAntiSnipingCommand implements JsonPayloadCommand {
                 return buildFailResponse("Bạn cần đăng nhập trước.");
             }
 
-            if (payload == null
-                    || payload.path("auctionId").asText("").isBlank()
-                    || payload.path("enabled").isMissingNode()) {
+            final SetAntiSnipingPayload antiSnipingPayload;
+            try {
+                antiSnipingPayload =
+                        JsonProtocol.payloadAs(payload, SetAntiSnipingPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload chống đặt giá phút chót: {}",
+                        exception.getMessage());
                 return buildFailResponse("Thiếu thông tin chống đặt giá phút chót.");
             }
 
-            final String auctionId = payload.path("auctionId").asText();
-            final boolean enabled = payload.path("enabled").asBoolean(false);
+            if (antiSnipingPayload.hasMissingRequiredFields()) {
+                return buildFailResponse("Thiếu thông tin chống đặt giá phút chót.");
+            }
+
+            final String auctionId = antiSnipingPayload.auctionId();
+            final boolean enabled = antiSnipingPayload.enabled();
             final Auction auction = auctionManager.updateAntiSniping(
                     auctionId,
                     session.getCurrentUser(),

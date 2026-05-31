@@ -4,6 +4,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.AuctionIdPayload;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,11 +40,19 @@ public final class DisableAutoBidCommand implements JsonPayloadCommand {
                 return fail("Bạn cần đăng nhập trước khi tắt auto-bid.");
             }
 
-            final String auctionId = readAuctionId(payload);
-            if (auctionId.isBlank()) {
+            final AuctionIdPayload auctionIdPayload;
+            try {
+                auctionIdPayload = JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload tắt auto-bid: {}", exception.getMessage());
                 return fail("Thiếu mã phiên đấu giá.");
             }
 
+            if (auctionIdPayload.hasMissingAuctionId()) {
+                return fail("Thiếu mã phiên đấu giá.");
+            }
+
+            final String auctionId = auctionIdPayload.auctionId();
             autoBidService.disableAutoBid(auctionId, session.getCurrentUser());
 
             LOGGER.info(
@@ -58,13 +67,6 @@ public final class DisableAutoBidCommand implements JsonPayloadCommand {
             LOGGER.error("Lỗi khi xử lý yêu cầu tắt auto-bid.", exception);
             return fail("Không thể tắt đấu giá tự động.");
         }
-    }
-
-    private String readAuctionId(final JsonNode payload) {
-        if (payload == null) {
-            return "";
-        }
-        return payload.path("auctionId").asText("");
     }
 
     private String fail(final String message) {

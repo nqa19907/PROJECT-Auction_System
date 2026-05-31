@@ -6,6 +6,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.AuctionIdPayload;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.session.ClientSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,11 +41,20 @@ public final class GetAutoBidStatusCommand implements JsonPayloadCommand {
             return disabledStatus();
         }
 
-        final String auctionId = readAuctionId(payload);
-        if (auctionId.isBlank()) {
+        final AuctionIdPayload auctionIdPayload;
+        try {
+            auctionIdPayload = JsonProtocol.payloadAs(payload, AuctionIdPayload.class);
+        } catch (IllegalArgumentException exception) {
+            LOGGER.warn("Không map được payload trạng thái auto-bid: {}",
+                    exception.getMessage());
             return disabledStatus();
         }
 
+        if (auctionIdPayload.hasMissingAuctionId()) {
+            return disabledStatus();
+        }
+
+        final String auctionId = auctionIdPayload.auctionId();
         final Optional<AutoBidSetting> setting =
                 autoBidService.findSetting(auctionId, participant.getId());
 
@@ -54,13 +64,6 @@ public final class GetAutoBidStatusCommand implements JsonPayloadCommand {
 
         final AutoBidSetting activeSetting = setting.get();
         return enabledStatus(activeSetting.getMaxAmount(), activeSetting.getStepAmount());
-    }
-
-    private String readAuctionId(final JsonNode payload) {
-        if (payload == null) {
-            return "";
-        }
-        return payload.path("auctionId").asText("");
     }
 
     private String disabledStatus() {

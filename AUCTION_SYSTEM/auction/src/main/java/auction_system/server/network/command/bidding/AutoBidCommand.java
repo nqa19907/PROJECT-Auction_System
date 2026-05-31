@@ -5,6 +5,7 @@ import auction_system.common.network.JsonMessage;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import auction_system.server.network.command.JsonPayloadCommand;
+import auction_system.server.network.payload.bidding.AutoBidPayload;
 import auction_system.server.services.autobid.AutoBidService;
 import auction_system.server.services.bidding.AuctionBidService;
 import auction_system.server.session.ClientSession;
@@ -52,19 +53,24 @@ public final class AutoBidCommand implements JsonPayloadCommand {
                 return fail("Bạn cần đăng nhập trước khi bật auto-bid.");
             }
 
-            if (payload == null
-                    || payload.path("auctionId").asText("").isBlank()
-                    || payload.path("maxAmount").isMissingNode()
-                    || payload.path("stepAmount").isMissingNode()) {
+            final AutoBidPayload autoBidPayload;
+            try {
+                autoBidPayload = JsonProtocol.payloadAs(payload, AutoBidPayload.class);
+            } catch (IllegalArgumentException exception) {
+                LOGGER.warn("Không map được payload auto-bid: {}", exception.getMessage());
                 return fail("Thiếu thông tin auto-bid.");
             }
 
-            final String auctionId = payload.path("auctionId").asText();
+            if (autoBidPayload.hasMissingRequiredFields()) {
+                return fail("Thiếu thông tin auto-bid.");
+            }
+
+            final String auctionId = autoBidPayload.auctionId();
             final long maxAmount = parsePositiveAmount(
-                    payload.path("maxAmount").asText(),
+                    autoBidPayload.maxAmount(),
                     "Giá tối đa");
             final long stepAmount = parsePositiveAmount(
-                    payload.path("stepAmount").asText(),
+                    autoBidPayload.stepAmount(),
                     "Bước tăng");
 
             // Lưu cấu hình và kích hoạt vòng bid tự động ngay sau khi enable.
