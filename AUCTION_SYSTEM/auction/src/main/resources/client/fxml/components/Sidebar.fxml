@@ -61,7 +61,7 @@
 
         <HBox id="testAdminView" fx:id="testAdminView" alignment="CENTER_LEFT" onMouseClicked="#loadAdminView" spacing="15.0" styleClass="category-option">
             <children>
-                <SvgIcon icon="add" styleClass="sidebar-icon" />
+                <SvgIcon icon="admin-panel-settings" styleClass="sidebar-icon" />
                 <Label styleClass="text-body" text="Thử màn hình admin" />
             </children>
         </HBox>

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import java.net.URL?>
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -23,19 +21,10 @@
                     <Region prefHeight="200.0" prefWidth="200.0" styleClass="icon-gavel" />
                     <Label styleClass="text-header" text="AuctionHub" />
                 </HBox>
+            <Region maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
 
-                <!-- Search bar -->
-                <HBox id="searchWrapper" alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="8" styleClass="search-box" HBox.hgrow="ALWAYS">
-                    <Region maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="20.0" prefWidth="20.0" styleClass="icon-search" />
-                    <TextField fx:id="searchField" maxWidth="1.7976931348623157E308" promptText="Search for brand, model, artist..." styleClass="search-input" HBox.hgrow="ALWAYS" />
-                </HBox>
-
-                <!-- Right side -->
-                <HBox id="actionButtonsWrapper" alignment="CENTER" minWidth="300" spacing="16">
-
-                    <!-- button sign in -->
-                    <Button fx:id="btnSignOut" onAction="#handleSignOut" styleClass="btn-primary" text="Đăng xuất" />
-                </HBox>
+                 <!-- button sign in -->
+                 <Button fx:id="btnSignOut" onAction="#handleSignOut" styleClass="btn-primary" text="Đăng xuất" />
 
             </HBox>
 
@@ -47,10 +36,10 @@
     </center>
     <left>
         <!-- Đưa id="sidebar" để JavaFX tự mapping vào biến sidebarController bên trong DashboardController -->
-        <fx:include source="../components/Sidebar.fxml" fx:id="sidebar" BorderPane.alignment="CENTER"/>
+        <fx:include fx:id="sidebar" source="../components/Sidebar.fxml" BorderPane.alignment="CENTER" />
     </left>
     <right>
-        <fx:include source="../components/Profile.fxml" fx:id="profile" BorderPane.alignment="CENTER"/>
+        <fx:include fx:id="profile" source="../components/Profile.fxml" BorderPane.alignment="CENTER" />
     </right>
     <stylesheets>
         <URL value="@../../css/global.css" />

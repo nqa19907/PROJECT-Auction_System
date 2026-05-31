@@ -5,6 +5,7 @@ import auction_system.common.models.users.Admin;
 import auction_system.common.network.JsonProtocol;
 import auction_system.common.network.Protocol;
 import java.util.List;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,14 @@ final class AdminDashboardService {
     private DeleteCallback deleteUserCallback;
     private DeleteCallback deleteAuctionCallback;
     private FailureCallback failureCallback;
+    private final Consumer<String> userListHandler = this::handleUserList;
+    private final Consumer<String> userListFailHandler = this::handleUserListFail;
+    private final Consumer<String> auctionListHandler = this::handleAuctionList;
+    private final Consumer<String> auctionListFailHandler = this::handleAuctionListFail;
+    private final Consumer<String> deleteUserOkHandler = this::handleDeleteUserOk;
+    private final Consumer<String> deleteUserFailHandler = this::handleDeleteUserFail;
+    private final Consumer<String> deleteAuctionOkHandler = this::handleDeleteAuctionOk;
+    private final Consumer<String> deleteAuctionFailHandler = this::handleDeleteAuctionFail;
 
     AdminDashboardService() {
         registerResponseHandlers();
@@ -85,21 +94,51 @@ final class AdminDashboardService {
 
     private void registerResponseHandlers() {
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_USER_LIST.name(), this::handleUserList);
+                Protocol.Response.ADMIN_USER_LIST.name(), userListHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_USER_LIST_FAIL.name(), this::handleUserListFail);
+                Protocol.Response.ADMIN_USER_LIST_FAIL.name(), userListFailHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_AUCTION_LIST.name(), this::handleAuctionList);
+                Protocol.Response.ADMIN_AUCTION_LIST.name(), auctionListHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(), this::handleAuctionListFail);
+                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(), auctionListFailHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_OK.name(), this::handleDeleteUserOk);
+                Protocol.Response.ADMIN_DELETE_USER_OK.name(), deleteUserOkHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(), this::handleDeleteUserFail);
+                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(), deleteUserFailHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(), this::handleDeleteAuctionOk);
+                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(), deleteAuctionOkHandler);
         NetworkClient.getInstance().registerHandler(
-                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(), this::handleDeleteAuctionFail);
+                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(), deleteAuctionFailHandler);
+    }
+
+    void dispose() {
+        final NetworkClient client = NetworkClient.getInstance();
+        client.unregisterHandler(Protocol.Response.ADMIN_USER_LIST.name(), userListHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_USER_LIST_FAIL.name(),
+                userListFailHandler);
+        client.unregisterHandler(Protocol.Response.ADMIN_AUCTION_LIST.name(), auctionListHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_AUCTION_LIST_FAIL.name(),
+                auctionListFailHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_DELETE_USER_OK.name(),
+                deleteUserOkHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_DELETE_USER_FAIL.name(),
+                deleteUserFailHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_DELETE_AUCTION_OK.name(),
+                deleteAuctionOkHandler);
+        client.unregisterHandler(
+                Protocol.Response.ADMIN_DELETE_AUCTION_FAIL.name(),
+                deleteAuctionFailHandler);
+
+        userListCallback = null;
+        auctionListCallback = null;
+        deleteUserCallback = null;
+        deleteAuctionCallback = null;
+        failureCallback = null;
     }
 
     private void handleUserList(final String response) {

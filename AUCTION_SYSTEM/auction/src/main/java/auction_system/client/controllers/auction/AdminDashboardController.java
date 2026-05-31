@@ -4,6 +4,7 @@ import auction_system.client.network.NetworkClient;
 import auction_system.client.services.AuthService;
 import auction_system.client.services.UserSessionService;
 import auction_system.client.utils.ViewConstants;
+import auction_system.client.utils.WindowTitleUtil;
 import auction_system.common.models.users.Admin;
 import auction_system.common.models.users.User;
 import auction_system.common.network.Protocol;
@@ -88,9 +89,17 @@ public class AdminDashboardController {
      * Handler realtime cho các sự kiện đấu giá.
      * Khi có thay đổi từ server, dashboard sẽ kéo lại snapshot mới nhất.
      */
-    private final Consumer<String> auctionRealtimeHandler = response -> refreshAuctions();
+    private final Consumer<String> auctionRealtimeHandler = response -> {
+        if (isAdminDashboardActive()) {
+            refreshAuctions();
+        }
+    };
     /** Handler realtime cho thay đổi danh sách người dùng. */
-    private final Consumer<String> userRealtimeHandler = response -> refreshUsers();
+    private final Consumer<String> userRealtimeHandler = response -> {
+        if (isAdminDashboardActive()) {
+            refreshUsers();
+        }
+    };
 
     /**
      * Khởi tạo controller sau khi FXML inject xong.
@@ -180,6 +189,10 @@ public class AdminDashboardController {
      * Nạp lại dữ liệu user qua server.
      */
     private void refreshUsers() {
+        if (getCurrentAdmin() == null) {
+            return;
+        }
+
         if (!dashboardService.fetchUsers()) {
             showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách người dùng.");
         }
@@ -189,6 +202,10 @@ public class AdminDashboardController {
      * Nạp lại dữ liệu auction qua server.
      */
     private void refreshAuctions() {
+        if (getCurrentAdmin() == null) {
+            return;
+        }
+
         if (!dashboardService.fetchAuctions()) {
             showInfo("Lỗi", "Không gửi được yêu cầu tải danh sách phiên đấu giá.");
         }
@@ -236,29 +253,27 @@ public class AdminDashboardController {
         cleanupRegistered = true;
         root.sceneProperty().addListener((obs, oldScene, newScene) -> {
             if (oldScene != null && newScene == null) {
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.AUCTION_CREATED.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.UPDATE_PRICE.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.AUCTION_STARTED.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.AUCTION_ENDED.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.AUCTION_EXTENDED.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.ANTI_SNIPING_UPDATED.name(),
-                        auctionRealtimeHandler);
-                NetworkClient.getInstance().unregisterHandler(
-                        Protocol.Response.USER_LIST_CHANGED.name(),
-                        userRealtimeHandler);
+                dispose();
             }
         });
+    }
+
+    private void dispose() {
+        final NetworkClient client = NetworkClient.getInstance();
+        client.unregisterHandler(Protocol.Response.AUCTION_CREATED.name(), auctionRealtimeHandler);
+        client.unregisterHandler(Protocol.Response.UPDATE_PRICE.name(), auctionRealtimeHandler);
+        client.unregisterHandler(Protocol.Response.AUCTION_STARTED.name(), auctionRealtimeHandler);
+        client.unregisterHandler(Protocol.Response.AUCTION_ENDED.name(), auctionRealtimeHandler);
+        client.unregisterHandler(Protocol.Response.AUCTION_EXTENDED.name(), auctionRealtimeHandler);
+        client.unregisterHandler(
+                Protocol.Response.ANTI_SNIPING_UPDATED.name(),
+                auctionRealtimeHandler);
+        client.unregisterHandler(Protocol.Response.USER_LIST_CHANGED.name(), userRealtimeHandler);
+        dashboardService.dispose();
+    }
+
+    private boolean isAdminDashboardActive() {
+        return root != null && root.getScene() != null && getCurrentAdmin() != null;
     }
 
     /**
@@ -403,7 +418,7 @@ public class AdminDashboardController {
                 final Parent loginRoot = loader.load();
                 final Stage stage = (Stage) root.getScene().getWindow();
                 stage.setScene(new Scene(loginRoot));
-                stage.setTitle("Đăng nhập");
+                WindowTitleUtil.applyTitle(stage, ViewConstants.LOGIN_VIEW);
             } catch (IOException e) {
                 showInfo("Lỗi", "Không thể chuyển về màn đăng nhập.");
             }

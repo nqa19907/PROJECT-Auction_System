@@ -68,10 +68,11 @@ public class AuctionManagerTest {
                 .startPrice(1000.0)
                 .sellerId(seller.getId())
                 .build();
+        LocalDateTime startTime = LocalDateTime.now().plusMinutes(5);
         return manager.createAuction(
                 item, seller,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusHours(2));
+                startTime,
+                startTime.plusHours(2));
     }
 
     // =========================================================================

@@ -6,6 +6,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ public class Router {
                 if (contentArea != null) {
                     // Thay thế toàn bộ giao diện cũ bằng giao diện mới
                     contentArea.getChildren().setAll(view);
+                    WindowTitleUtil.applyTitle((Stage) scene.getWindow(), fxmlPath);
                 } else {
                     LOGGER.warn("Không tìm thấy #contentArea trong Scene.");
                 }
