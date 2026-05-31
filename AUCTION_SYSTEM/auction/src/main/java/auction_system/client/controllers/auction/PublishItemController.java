@@ -72,6 +72,7 @@ public class PublishItemController implements Initializable {
     private Path selectedImageSource;
     private boolean editMode;
     private String editingAuctionId;
+    private String editingImagePath;
 
     /**
      * Khởi tạo dữ liệu mặc định cho màn hình đăng bán.
@@ -168,6 +169,9 @@ public class PublishItemController implements Initializable {
             final double startPrice = parsePositiveMoney(
                     fieldStartingPrice.getText(),
                     "giá khởi điểm");
+            final double bidStep = parsePositiveMoney(
+                    fieldBidStep.getText(),
+                    "giá tối thiểu");
 
             LocalDateTime startTime = parseDateTime(
                     fieldStartingTime.getText(),
@@ -197,6 +201,7 @@ public class PublishItemController implements Initializable {
                 description,
                 condition,
                 startPrice,
+                bidStep,
                 startTime,
                 endTime,
                 imagePath,
@@ -221,6 +226,7 @@ public class PublishItemController implements Initializable {
     public void startEditMode(final MyAuctionRow row) {
         editMode = true;
         editingAuctionId = row.getId();
+        editingImagePath = row.getImagePath();
         lblPageTitle.setText("Chỉnh sửa phiên đấu giá");
         btnConfirm.setText("Lưu thay đổi");
 
@@ -229,26 +235,35 @@ public class PublishItemController implements Initializable {
         comboCondition.setValue(row.getCondition());
         fieldDescription.setText(row.getDescription());
 
-        fieldStartingPrice.clear();
-        fieldStartingPrice.setPromptText("Không chỉnh sửa ở màn hình này");
-        fieldStartingPrice.setDisable(true);
+        fieldStartingPrice.setText(row.getStartPrice());
+        fieldStartingPrice.setPromptText("0");
+        fieldStartingPrice.setDisable(false);
         fieldStartingTime.setText(formatDateTimeForInput(row.getStartTime()));
-        fieldStartingTime.setDisable(true);
+        fieldStartingTime.setDisable(false);
         fieldEndingTime.setText(formatDateTimeForInput(row.getEndTime()));
-        fieldBidStep.setDisable(true);
-        btnChooseImage.setDisable(true);
+        fieldBidStep.setText(row.getBidStep());
+        fieldBidStep.setDisable(false);
+        btnChooseImage.setDisable(false);
+        updateSelectedImageLabel();
     }
 
     /**
      * Gửi request cập nhật phiên hiện tại.
      */
-    private void submitEditAuction() {
+    private void submitEditAuction() throws IOException {
+        final String imagePath = selectedImageSource == null
+                ? nullToEmpty(editingImagePath)
+                : storeSelectedImage();
         ItemPublishService.getInstance().updateMyAuction(
                 editingAuctionId,
                 readRequired(comboCategory, "Vui lòng chọn danh mục."),
                 readRequired(fieldTenTaiSan, "Tên tài sản không được để trống."),
                 readRequired(fieldDescription, "Mô tả không được để trống."),
                 readRequired(comboCondition, "Vui lòng chọn tình trạng."),
+                parsePositiveMoney(fieldStartingPrice.getText(), "giá khởi điểm"),
+                parsePositiveMoney(fieldBidStep.getText(), "giá tối thiểu"),
+                imagePath,
+                parseDateTime(fieldStartingTime.getText(), "thời gian bắt đầu"),
                 parseDateTime(fieldEndingTime.getText(), "thời gian kết thúc"),
                 (success, message) -> Platform.runLater(
                         () -> handleUpdateResult(success, message)));
@@ -419,9 +434,20 @@ public class PublishItemController implements Initializable {
 
         // Hiển thị tên file ảnh để người dùng biết ảnh nào đang được chọn.
         String imageName = selectedImageSource == null
-                ? "Chưa chọn ảnh"
+                ? existingImageLabel()
                 : selectedImageSource.getFileName().toString();
         lblSelectedImage.setText(imageName);
+    }
+
+    private String existingImageLabel() {
+        if (editMode && editingImagePath != null && !editingImagePath.isBlank()) {
+            return Path.of(editingImagePath).getFileName().toString();
+        }
+        return "Chưa chọn ảnh";
+    }
+
+    private String nullToEmpty(final String value) {
+        return value == null ? "" : value.trim();
     }
 
     /**

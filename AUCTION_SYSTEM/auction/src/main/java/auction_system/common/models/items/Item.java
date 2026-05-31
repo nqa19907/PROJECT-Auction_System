@@ -12,6 +12,7 @@ public abstract class Item extends Entity {
     private String description;
     private double startPrice;
     private double currentPrice;
+    private double bidStep;
     private String sellerId;
     private String imagePath;
     protected String category;
@@ -31,6 +32,7 @@ public abstract class Item extends Entity {
         this.description = description;
         this.startPrice = startPrice;
         this.currentPrice = startPrice;
+        this.bidStep = startPrice;
         this.sellerId = sellerId;
 
     }
@@ -43,6 +45,10 @@ public abstract class Item extends Entity {
 
     public double getStartPrice() {
         return startPrice;
+    }
+
+    public double getBidStep() {
+        return bidStep <= 0 ? startPrice : bidStep;
     }
 
     public String getItemName() {
@@ -63,6 +69,10 @@ public abstract class Item extends Entity {
 
     public void setStartPrice(double startPrice) {
         this.startPrice = startPrice;
+    }
+
+    public void setBidStep(final double bidStep) {
+        this.bidStep = bidStep;
     }
 
     public double getCurrentPrice() {
@@ -97,6 +107,7 @@ public abstract class Item extends Entity {
                 + ", description='" + description + '\''
                 + ", startPrice=" + startPrice
                 + ", currentPrice=" + currentPrice
+                + ", bidStep=" + bidStep
                 + ", sellerId='" + sellerId + '\''
                 + ", imagePath='" + imagePath + '\''
                 + '}';

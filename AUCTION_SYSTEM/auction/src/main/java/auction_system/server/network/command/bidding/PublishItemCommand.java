@@ -31,15 +31,16 @@ import java.util.logging.Logger;
 public final class PublishItemCommand implements Command {
     private static final Logger LOGGER = Logger.getLogger(PublishItemCommand.class.getName());
 
-    private static final int REQUIRED_PART_COUNT = 8;
+    private static final int REQUIRED_PART_COUNT = 9;
     private static final int CATEGORY_INDEX = 1;
     private static final int ITEM_NAME_INDEX = 2;
     private static final int DESCRIPTION_INDEX = 3;
     private static final int CONDITION_INDEX = 4;
     private static final int START_PRICE_INDEX = 5;
-    private static final int START_TIME_INDEX = 6;
-    private static final int END_TIME_INDEX = 7;
-    private static final int IMAGE_PATH_INDEX = 8;
+    private static final int BID_STEP_INDEX = 6;
+    private static final int START_TIME_INDEX = 7;
+    private static final int END_TIME_INDEX = 8;
+    private static final int IMAGE_PATH_INDEX = 9;
 
     private final ParticipantItemService participantItemService;
     private final AuctionManager auctionManager;
@@ -139,18 +140,21 @@ public final class PublishItemCommand implements Command {
         String description = required(parts[DESCRIPTION_INDEX], "Mô tả không được để trống.");
         String condition = required(parts[CONDITION_INDEX], "Tình trạng không được để trống.");
         double startPrice = parsePositivePrice(parts[START_PRICE_INDEX]);
+        double bidStep = parsePositivePrice(parts[BID_STEP_INDEX]);
         // Đọc metadata ảnh nếu client mới có gửi kèm.
         String imagePath = optional(parts, IMAGE_PATH_INDEX);
 
         // Ghép tình trạng vào mô tả theo format domain hiện tại đang lưu trữ.
         String fullDescription = description + "\nTình trạng: " + condition;
-        return ItemCreatorFactory.createItem(
+        Item item = ItemCreatorFactory.createItem(
                 category,
                 itemName,
                 fullDescription,
                 startPrice,
                 sellerId,
                 imagePath);
+        item.setBidStep(bidStep);
+        return item;
     }
 
     /**

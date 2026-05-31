@@ -208,6 +208,10 @@ public class AuctionManager {
      * @param itemName tên tài sản mới
      * @param description mô tả mới
      * @param condition tình trạng mới
+     * @param startPrice giá khởi điểm mới
+     * @param bidStep giá tối thiểu hiển thị từ form client
+     * @param imagePath đường dẫn ảnh sản phẩm mới hoặc ảnh hiện tại
+     * @param startTime thời gian bắt đầu mới
      * @param endTime thời gian kết thúc mới
      * @return true nếu cập nhật thành công
      */
@@ -218,6 +222,10 @@ public class AuctionManager {
             final String itemName,
             final String description,
             final String condition,
+            final double startPrice,
+            final double bidStep,
+            final String imagePath,
+            final LocalDateTime startTime,
             final LocalDateTime endTime) {
         final Auction auction = auctionRegistry.findById(auctionId);
         if (auction == null) {
@@ -235,43 +243,54 @@ public class AuctionManager {
         }
 
         // Cập nhật các trường cho phép sửa theo yêu cầu.
-        if (endTime == null || !endTime.isAfter(auction.getStartTime())) {
+        if (startPrice <= 0 || bidStep <= 0) {
+            throw new IllegalArgumentException("Giá khởi điểm và giá tối thiểu phải lớn hơn 0.");
+        }
+        if (startTime == null || endTime == null || !endTime.isAfter(startTime)) {
             throw new IllegalArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu.");
         }
 
         final String normalizedCategory = category.trim().toUpperCase();
         final Item currentItem = auction.getItem();
         final String fullDescription = description + "\nTình trạng: " + condition;
+        final String normalizedImagePath = imagePath == null ? "" : imagePath.trim();
 
         if (normalizedCategory.equals(currentItem.getCategory())) {
             // Cùng danh mục: giữ nguyên class item cũ, chỉ cập nhật nội dung.
             currentItem.setItemName(itemName);
             currentItem.setDescription(fullDescription);
             currentItem.setCategory(normalizedCategory);
+            currentItem.setStartPrice(startPrice);
+            currentItem.setCurrentPrice(startPrice);
+            currentItem.setBidStep(bidStep);
+            currentItem.setImagePath(normalizedImagePath);
         } else {
             // Khác danh mục: phải tạo item mới đúng class để category hoạt động đúng theo model.
             final Item replacementItem = switch (normalizedCategory) {
                 case "ART" -> new Art(
                         itemName,
                         fullDescription,
-                        currentItem.getStartPrice(),
+                        startPrice,
                         currentItem.getSellerId());
                 case "ELECTRONIC" -> new Electronic(
                         itemName,
                         fullDescription,
-                        currentItem.getStartPrice(),
+                        startPrice,
                         currentItem.getSellerId());
                 case "VEHICLE" -> new Vehicle(
                         itemName,
                         fullDescription,
-                        currentItem.getStartPrice(),
+                        startPrice,
                         currentItem.getSellerId());
                 default -> throw new IllegalArgumentException("Danh mục không hợp lệ.");
             };
-            replacementItem.setCurrentPrice(currentItem.getCurrentPrice());
+            replacementItem.setCurrentPrice(startPrice);
+            replacementItem.setBidStep(bidStep);
+            replacementItem.setImagePath(normalizedImagePath);
             auction.setItem(replacementItem);
         }
 
+        auction.setStartTime(startTime);
         auction.setEndTime(endTime);
         database.items().save(auction.getItem());
         database.auctions().save(auction);

@@ -10,6 +10,9 @@ public class MyAuctionRow {
     private final String status;
     private final String startTime;
     private final String endTime;
+    private final String startPrice;
+    private final String bidStep;
+    private final String imagePath;
     private final String category;
     private final String description;
     private final String condition;
@@ -23,6 +26,9 @@ public class MyAuctionRow {
      * @param status trạng thái phiên
      * @param startTime thời gian bắt đầu
      * @param endTime thời gian kết thúc
+     * @param startPrice giá khởi điểm
+     * @param bidStep bước giá hiển thị trên form
+     * @param imagePath đường dẫn ảnh sản phẩm
      * @param category danh mục sản phẩm
      * @param description mô tả sản phẩm
      * @param condition tình trạng sản phẩm
@@ -34,6 +40,9 @@ public class MyAuctionRow {
             final String status,
             final String startTime,
             final String endTime,
+            final String startPrice,
+            final String bidStep,
+            final String imagePath,
             final String category,
             final String description,
             final String condition) {
@@ -43,6 +52,9 @@ public class MyAuctionRow {
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.startPrice = startPrice;
+        this.bidStep = bidStep;
+        this.imagePath = imagePath;
         this.category = category;
         this.description = description;
         this.condition = condition;
@@ -70,6 +82,18 @@ public class MyAuctionRow {
 
     public String getEndTime() {
         return endTime;
+    }
+
+    public String getStartPrice() {
+        return startPrice;
+    }
+
+    public String getBidStep() {
+        return bidStep;
+    }
+
+    public String getImagePath() {
+        return imagePath;
     }
 
     public String getCategory() {
